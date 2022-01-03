@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=Quivi
+GenericName=Manga/comic reader and image viewer
+TryExec=quivi
+Exec=quivi
+Icon=quivi
+Type=Application
+Categories=Graphics;Viewer;GTK
+X-Ubuntu-Gettext-Domain=quivi
+

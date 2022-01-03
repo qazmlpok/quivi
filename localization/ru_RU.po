@@ -1,0 +1,653 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Quivi\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-09-04 22:16-0300\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Conrado Porto Lopes Gouvêa <conradoplg@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Russian\n"
+"X-Poedit-Country: RUSSIAN FEDERATION\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: D:\\Conrado\\workspace\\quivi\\quivilib\n"
+
+#: quivilib/control/file_association.py:296
+msgid "Image"
+msgstr "Изображение"
+
+#: quivilib/control/file_list.py:26
+#, python-format
+msgid "Are you sure you want to delete \"%s\"?"
+msgstr "Вы уверены, что хотите удалить \"%s\"?"
+
+#: quivilib/control/file_list.py:27
+msgid "Confirm file deletion"
+msgstr "Подтверждение удаления файла"
+
+#: quivilib/control/file_list.py:294
+msgid "File or directory does not exist"
+msgstr "Файл или каталог не существует"
+
+#: quivilib/control/menu.py:95
+msgid "Set as &wallpaper..."
+msgstr "Сделать &фоном рабочего стола"
+
+#: quivilib/control/menu.py:95
+msgid "Set the opened image as wallpaper"
+msgstr "Сделать открытое изображение фоном рабочего стола"
+
+#: quivilib/control/menu.py:98
+msgid "&Copy"
+msgstr "&Копировать"
+
+#: quivilib/control/menu.py:98
+msgid "Copy the opened image to the clipboard"
+msgstr "Скопировать открытое изображение в буфер обмена"
+
+#: quivilib/control/menu.py:101
+msgid "&Delete"
+msgstr "&Удалить"
+
+#: quivilib/control/menu.py:101
+msgid "Delete the opened image"
+msgstr "Удалить открытое изображение"
+
+#: quivilib/control/menu.py:106
+msgid "&Options..."
+msgstr "&Настройки"
+
+#: quivilib/control/menu.py:106
+msgid "Open the options dialog"
+msgstr "Открыть диалог настроек"
+
+#: quivilib/control/menu.py:110
+msgid "&Quit"
+msgstr "&Выход"
+
+#: quivilib/control/menu.py:110
+msgid "Close the application"
+msgstr "Закрыть приложение"
+
+#: quivilib/control/menu.py:115
+msgid "Select/Open &next"
+msgstr "Выбрать/Открыть &следующее"
+
+#: quivilib/control/menu.py:115
+msgid "Select the next item; if it is an image, show it"
+msgstr "Выбрать следующий пункт, если это изображение, показать его"
+
+#: quivilib/control/menu.py:118
+msgid "Select/Open &previous"
+msgstr "Выбрать/Открыть &предыдущее"
+
+#: quivilib/control/menu.py:118
+msgid "Select the previous item; if it is an image, show it"
+msgstr "Выбрать предыдущий пункт, если это изображение, показать его"
+
+#: quivilib/control/menu.py:121
+msgid "Open selected &directory"
+msgstr "&Открыть выбранный каталог"
+
+#: quivilib/control/menu.py:121
+msgid "If a directory or a compressed file is selected, open it"
+msgstr "Если выбран каталог или архив, открыть его"
+
+#: quivilib/control/menu.py:124
+msgid "Open p&arent"
+msgstr "На уровень &выше"
+
+#: quivilib/control/menu.py:124
+msgid "Open the parent directory or compressed file"
+msgstr "Открыть родительский каталог или архив"
+
+#: quivilib/control/menu.py:127
+msgid "Open ne&xt sibling"
+msgstr "Открыть с&ледующий внутри родителя"
+
+#: quivilib/control/menu.py:127
+msgid "Open the next directory or compressed file inside the parent"
+msgstr "Открыть следующий каталог или архив внутри родительского"
+
+#: quivilib/control/menu.py:130
+msgid "Open previou&s sibling"
+msgstr "Открыть п&редыдущий внутри родителя"
+
+#: quivilib/control/menu.py:130
+msgid "Open the previous directory or compressed file inside the parent"
+msgstr "Открыть предыдущий каталог или архив внутри родительского"
+
+#: quivilib/control/menu.py:133
+msgid "&Refresh"
+msgstr "Об&новить"
+
+#: quivilib/control/menu.py:133
+msgid "Refresh the current directory or compressed file; reload the image shown if any"
+msgstr "Обновить текущий каталог или архив; перезагрузить изображение, если таковое имеется"
+
+#: quivilib/control/menu.py:136
+msgid "Open direc&tory..."
+msgstr "Открыть &каталог"
+
+#: quivilib/control/menu.py:136
+msgid "Browse for a directory to open"
+msgstr "Обзор каталога для открытия"
+
+#: quivilib/control/menu.py:141
+msgid "Zoom &in"
+msgstr "У&величить"
+
+#: quivilib/control/menu.py:141
+msgid "Zoom in"
+msgstr "Увеличить"
+
+#: quivilib/control/menu.py:144
+msgid "Zoom &out"
+msgstr "У&меньшить"
+
+#: quivilib/control/menu.py:144
+msgid "Zoom out"
+msgstr "Уменьшить"
+
+#: quivilib/control/menu.py:147
+msgid "&Zoom 100%"
+msgstr "&Реальный размер"
+
+#: quivilib/control/menu.py:147
+msgid "Show the image in its real size"
+msgstr "Показать изображение в реальном размере"
+
+#: quivilib/control/menu.py:150
+msgid "Fit &width"
+msgstr "Подогнать по &ширине"
+
+#: quivilib/control/menu.py:150
+msgid "Zooms the image in order to make its width fit the window"
+msgstr "Подогнать размер изображения до ширины окна"
+
+#: quivilib/control/menu.py:153
+msgid "Fit &height"
+msgstr "Подогнать по &высоте"
+
+#: quivilib/control/menu.py:153
+msgid "Zooms the image in order to make its height fit the window"
+msgstr "Подогнать размер изображения до высоты окна"
+
+#: quivilib/control/menu.py:156
+msgid "Rotate &clockwise"
+msgstr "Повернуть &по часовой стрелке"
+
+#: quivilib/control/menu.py:156
+msgid "Rotate the image clockwise"
+msgstr "Повернуть изображение по часовой стрелке"
+
+#: quivilib/control/menu.py:159
+msgid "Rotate coun&ter clockwise"
+msgstr "Повернуть п&ротив часовой стрелки"
+
+#: quivilib/control/menu.py:159
+msgid "Rotate the image counter clockwise"
+msgstr "Повернуть изображение против часовой стрелки"
+
+#: quivilib/control/menu.py:163
+msgid "&Full screen"
+msgstr "Полно&экранный режим"
+
+#: quivilib/control/menu.py:163
+msgid "Go to/leave full screen mode"
+msgstr "Переключить полноэкранный/оконный режим"
+
+#: quivilib/control/menu.py:167
+msgid "File &list"
+msgstr "Список &файлов"
+
+#: quivilib/control/menu.py:167
+msgid "Show/hide the file list"
+msgstr "Показать/скрыть список файлов"
+
+#: quivilib/control/menu.py:171
+msgid "Thumb&nails"
+msgstr "&Миниатюры"
+
+#: quivilib/control/menu.py:171
+msgid "Show/hide the thumbnails"
+msgstr "Показать/скрыть миниатюры"
+
+#: quivilib/control/menu.py:175
+msgid "Hi&dden files"
+msgstr "&Скрытые файлы"
+
+#: quivilib/control/menu.py:175
+msgid "Show/hide hidden files in the file list"
+msgstr "Показать/скрыть скрытые файлы в списке"
+
+#: quivilib/control/menu.py:181
+msgid "Add to &favorites"
+msgstr "&Добавить в закладки"
+
+#: quivilib/control/menu.py:181
+msgid "Add the current directory or compressed file to the favorites"
+msgstr "Добавить текущий каталог или архив в закладки"
+
+#: quivilib/control/menu.py:184
+msgid "R&emove from favorites"
+msgstr "&Удалить из закладок"
+
+#: quivilib/control/menu.py:184
+msgid "Remove the current directory or compressed file from the favorites"
+msgstr "Удалить текущий каталог или архив из закладок"
+
+#: quivilib/control/menu.py:189
+msgid "&Help (online)..."
+msgstr "&Справка (онлайн)"
+
+#: quivilib/control/menu.py:189
+msgid "Open the online help"
+msgstr "Открыть онлайн справку"
+
+#: quivilib/control/menu.py:192
+msgid "&Feedback / Support (online)..."
+msgstr "Обратная связь / &Поддержка (онлайн)"
+
+#: quivilib/control/menu.py:192
+msgid "Open the feedback / support online form"
+msgstr "Открыть онлайн форму обратной связи / поддержки"
+
+#: quivilib/control/menu.py:195
+msgid "&About..."
+msgstr "&О программе"
+
+#: quivilib/control/menu.py:195
+msgid "Show information about the application"
+msgstr "Показать информацию о приложении"
+
+#: quivilib/control/menu.py:200
+msgid "Small move up"
+msgstr "Слегка сдвинуть вниз"
+
+#: quivilib/control/menu.py:203
+msgid "Small move down"
+msgstr "Слегка сдвинуть вверх"
+
+#: quivilib/control/menu.py:206
+msgid "Small move left"
+msgstr "Слегка сдвинуть влево"
+
+#: quivilib/control/menu.py:209
+msgid "Small move right"
+msgstr "Слегка сдвинуть вправо"
+
+#: quivilib/control/menu.py:212
+msgid "Large move up"
+msgstr "Сдвинуть вверх"
+
+#: quivilib/control/menu.py:215
+msgid "Large move down"
+msgstr "Сдвинуть вниз"
+
+#: quivilib/control/menu.py:218
+msgid "Large move left"
+msgstr "Сдвинуть влево"
+
+#: quivilib/control/menu.py:221
+msgid "Large move right"
+msgstr "Сдвинуть вправо"
+
+#: quivilib/control/menu.py:226
+#: quivilib/control/options.py:17
+msgid "None"
+msgstr "Не подгонять"
+
+#: quivilib/control/menu.py:229
+#: quivilib/control/options.py:18
+msgid "Width"
+msgstr "По ширине"
+
+#: quivilib/control/menu.py:232
+#: quivilib/control/options.py:19
+msgid "Height"
+msgstr "По высоте"
+
+#: quivilib/control/menu.py:235
+#: quivilib/control/options.py:20
+msgid "Window"
+msgstr "По размеру окна"
+
+#: quivilib/control/menu.py:238
+#: quivilib/control/options.py:21
+msgid "Width if larger"
+msgstr "По ширине, если размер больше"
+
+#: quivilib/control/menu.py:241
+#: quivilib/control/options.py:22
+msgid "Height if larger"
+msgstr "По высоте, если размер больше"
+
+#: quivilib/control/menu.py:244
+#: quivilib/control/options.py:23
+msgid "Window if larger"
+msgstr "По размеру окна, если размер больше"
+
+#: quivilib/control/menu.py:248
+#: quivilib/control/options.py:24
+msgid "Custom width"
+msgstr "Указать ширину"
+
+#: quivilib/control/menu.py:258
+msgid "&File"
+msgstr "&Файл"
+
+#: quivilib/control/menu.py:259
+msgid "F&older"
+msgstr "&Каталог"
+
+#: quivilib/control/menu.py:260
+msgid "&View"
+msgstr "&Вид"
+
+#: quivilib/control/menu.py:261
+msgid "F&avorites"
+msgstr "&Закладки"
+
+#: quivilib/control/menu.py:262
+msgid "&Help"
+msgstr "&Справка"
+
+#: quivilib/control/menu.py:263
+msgid "Move"
+msgstr "Переместить"
+
+#: quivilib/control/menu.py:264
+msgid "Fit"
+msgstr "Подогнать"
+
+#: quivilib/control/menu.py:265
+msgid "Misc"
+msgstr "Дополнительно"
+
+#: quivilib/control/wallpaper.py:41
+msgid "&Actual size"
+msgstr "&Реальный размер"
+
+#: quivilib/control/wallpaper.py:42
+msgid "&Tiled"
+msgstr "&Черепицей"
+
+#: quivilib/control/wallpaper.py:43
+msgid "Stretch to fit screen, c&rop excess"
+msgstr "Растянуть до размеров экрана, &обрезать излишки"
+
+#: quivilib/control/wallpaper.py:44
+msgid "Stretch to &fit screen, show entire image"
+msgstr "Растянуть до размеров экрана, показать изображение &целиком"
+
+#: quivilib/control/wallpaper.py:220
+msgid "Unable to set wallpaper"
+msgstr "Невозможно сделать фоном рабочего стола"
+
+#: quivilib/gui/about.py:25
+msgid "&OK"
+msgstr "&OK"
+
+#: quivilib/gui/about.py:35
+msgid "About"
+msgstr "О программе"
+
+#: quivilib/gui/error.py:21
+msgid "If you think this may be a bug, please report it. Thank you."
+msgstr "Если вы думаете, что это может быть ошибка в программе, пожалуйста, сообщите о ней. Спасибо."
+
+#: quivilib/gui/error.py:22
+msgid "Please copy the error information below and click the link in order to report this error."
+msgstr "Пожалуйста, скопируйте информацию об ошибке ниже и щелкните по ссылке чтобы отправить отчет."
+
+#: quivilib/gui/error.py:24
+msgid "An error has occurred:"
+msgstr "Произошла ошибка:"
+
+#: quivilib/gui/error.py:35
+msgid "&Copy error information"
+msgstr "&Скопировать информацию об ошибке"
+
+#: quivilib/gui/error.py:36
+msgid "Report error"
+msgstr "Сообщить об ошибке"
+
+#: quivilib/gui/error.py:37
+msgid "&Report error"
+msgstr "Сообщить об &ошибке"
+
+#: quivilib/gui/error.py:50
+msgid "Error"
+msgstr "Ошибка"
+
+#: quivilib/gui/main.py:65
+#: quivilib/gui/main.py:388
+msgid "Files"
+msgstr "Файлы"
+
+#: quivilib/gui/main.py:377
+msgid "Loading..."
+msgstr "Загрузка..."
+
+#: quivilib/gui/main.py:391
+#: quivilib/gui/main.py:428
+msgid "&Download"
+msgstr "&Загрузить"
+
+#: quivilib/gui/main.py:392
+#: quivilib/gui/main.py:428
+msgid "Go to the download site"
+msgstr "Перейти на веб-сайт для загрузки"
+
+#: quivilib/gui/main.py:394
+#: quivilib/gui/main.py:429
+msgid "&New version available!"
+msgstr "Доступна &новая версия!"
+
+#: quivilib/gui/main.py:411
+msgid "Choose a directory:"
+msgstr "Выберите каталог:"
+
+#: quivilib/gui/options.py:34
+msgid "Background color"
+msgstr "Цвет фона"
+
+#: quivilib/gui/options.py:39
+msgid "Start directory"
+msgstr "Стартовый каталог"
+
+#: quivilib/gui/options.py:41
+msgid "Default system color"
+msgstr "Системный цвет"
+
+#: quivilib/gui/options.py:42
+msgid "Custom color:"
+msgstr "Указать цвет:"
+
+#: quivilib/gui/options.py:44
+msgid "Hide menu and status on full screen"
+msgstr "Скрыть меню и строку статуса в полноэкранном режиме"
+
+#: quivilib/gui/options.py:45
+msgid "Open first image of the folder automatically"
+msgstr ""
+
+#: quivilib/gui/options.py:46
+msgid "Portable mode (save settings inside the program folder)"
+msgstr "Портативный режим (настройки хранятся в каталоге с программой)"
+
+#: quivilib/gui/options.py:47
+msgid "Commands"
+msgstr "Команды"
+
+#: quivilib/gui/options.py:49
+msgid "Shortcuts for selected command"
+msgstr "Сочетания клавиш для выбранной команды"
+
+#: quivilib/gui/options.py:51
+msgid "Remove"
+msgstr "Удалить"
+
+#: quivilib/gui/options.py:52
+msgid "New shortcut"
+msgstr "Новое сочетание клавиш"
+
+#: quivilib/gui/options.py:53
+msgid "Press key"
+msgstr "Нажмите клавишу"
+
+#: quivilib/gui/options.py:54
+msgid "Assign"
+msgstr "Назначить"
+
+#: quivilib/gui/options.py:56
+msgid "Reset all to defaults"
+msgstr "Сбросить все по умолчанию"
+
+#: quivilib/gui/options.py:58
+msgid "Left click"
+msgstr "Левая кнопка мыши"
+
+#: quivilib/gui/options.py:60
+msgid "Middle click"
+msgstr "Средняя кнопка мыши"
+
+#: quivilib/gui/options.py:62
+msgid "Right click"
+msgstr "Правая кнопка мыши"
+
+#: quivilib/gui/options.py:65
+#: quivilib/gui/wallpaper.py:27
+msgid "&Cancel"
+msgstr "О&тмена"
+
+#: quivilib/gui/options.py:89
+msgid "Options"
+msgstr "Настройки"
+
+#: quivilib/gui/options.py:184
+msgid "&Viewing"
+msgstr "&Просмотр"
+
+#: quivilib/gui/options.py:185
+msgid "&Keys"
+msgstr "&Клавиши"
+
+#: quivilib/gui/options.py:186
+msgid "&Mouse"
+msgstr "&Мышь"
+
+#: quivilib/gui/options.py:187
+msgid "&Language"
+msgstr "&Язык"
+
+#: quivilib/gui/options.py:280
+#, python-format
+msgid "Assigned for \"%s\""
+msgstr "Ассоциировать с \"%s\""
+
+#: quivilib/gui/wallpaper.py:25
+msgid "&Position"
+msgstr "&Расположение"
+
+#: quivilib/gui/wallpaper.py:26
+msgid "&Set wallpaper"
+msgstr "&Сделать фоном рабочего стола"
+
+#: quivilib/gui/wallpaper.py:28
+msgid "Zoom:"
+msgstr "Увеличение:"
+
+#: quivilib/gui/wallpaper.py:32
+msgid "&Color:"
+msgstr "&Цвет:"
+
+#: quivilib/gui/wallpaper.py:65
+msgid "Set as wallpaper"
+msgstr "Сделать фоном рабочего стола"
+
+#: quivilib/gui/file_list_view/list_ctrl.py:147
+msgid "File"
+msgstr "Файл"
+
+#: quivilib/gui/file_list_view/list_ctrl.py:148
+msgid "Extension"
+msgstr "Расширение"
+
+#: quivilib/gui/file_list_view/list_ctrl.py:149
+msgid "Last modified"
+msgstr "Последнее изменение"
+
+#: quivilib/i18n/setup_strings.py:48
+msgid "en_US"
+msgstr "ru_RU"
+
+#: quivilib/i18n/setup_strings.py:49
+msgid "Select users"
+msgstr "Выбор пользователей"
+
+#: quivilib/i18n/setup_strings.py:50
+msgid "Select for which users you want to install $(^Name)"
+msgstr "Выберите, для каких пользователей вы хотите установить $(^Name)"
+
+#: quivilib/i18n/setup_strings.py:51
+msgid "All users"
+msgstr "Все пользователи"
+
+#: quivilib/i18n/setup_strings.py:52
+msgid "Current user"
+msgstr "Текущий пользователь"
+
+#: quivilib/i18n/setup_strings.py:53
+msgid "$(^Name) (required)"
+msgstr "$(^Name) (необходимо)"
+
+#: quivilib/i18n/setup_strings.py:54
+msgid "Start Menu Group"
+msgstr "Группа в меню Пуск"
+
+#: quivilib/i18n/setup_strings.py:55
+msgid "Desktop Shortcut"
+msgstr "Ярлык на рабочем столе"
+
+#: quivilib/i18n/setup_strings.py:56
+msgid "Associate extensions"
+msgstr "Ассоциировать расширения"
+
+#: quivilib/model/container/root.py:28
+msgid "My Computer"
+msgstr "Мой компьютер"
+
+#: quivilib/model/image/freeimage.py:52
+msgid "Error while loading image"
+msgstr "Ошибка при загрузке изображения"
+
+#~ msgid "Drag image"
+#~ msgstr "Перетащить изображение"
+#~ msgid "Sorry, not yet implemented"
+#~ msgstr "Desculpe, ainda não implementado"
+#~ msgid "Fit width"
+#~ msgstr "Ajustar largura"
+#~ msgid "Fit width if oversize"
+#~ msgstr "Ajustar largura se for maior"
+#~ msgid "Fit height if oversize"
+#~ msgstr "Ajustar altura se for maior"
+#~ msgid "Fit window if oversize"
+#~ msgstr "Ajustar na janela se maior"
+#~ msgid "800"
+#~ msgstr "800"
+#~ msgid "Quivi"
+#~ msgstr "Quivi"
+#~ msgid "Name"
+#~ msgstr "Nome"
+#~ msgid "100%"
+#~ msgstr "100%"
+#~ msgid "+"
+#~ msgstr "+"
+#~ msgid "-"
+#~ msgstr "-"
+

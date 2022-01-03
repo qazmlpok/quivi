@@ -1,0 +1,647 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Quivi\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-07-05 22:56-0300\n"
+"PO-Revision-Date: \n"
+"Last-Translator: Conrado Porto Lopes Gouvêa <conradoplg@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Polish\n"
+"X-Poedit-Country: POLAND\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-SearchPath-0: D:\\Conrado\\workspace\\quivi\\quivilib\n"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/file_association.py:296
+msgid "Image"
+msgstr "Obraz"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/file_list.py:27
+#, python-format
+msgid "Are you sure you want to delete \"%s\"?"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/file_list.py:28
+msgid "Confirm file deletion"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/file_list.py:286
+msgid "File or directory does not exist"
+msgstr "Plik albo katalog nie istnieje"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:95
+msgid "Set as &wallpaper..."
+msgstr "Ustaw jako tapetę"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:95
+msgid "Set the opened image as wallpaper"
+msgstr "Ustaw otwarty obraz jako tapetę"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:98
+msgid "&Copy"
+msgstr "Kopiuj"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:98
+msgid "Copy the opened image to the clipboard"
+msgstr "Kopiuj otwarty obraz do schowka"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:101
+msgid "&Delete"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:101
+msgid "Delete the opened image"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:106
+msgid "&Options..."
+msgstr "Opcje"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:106
+msgid "Open the options dialog"
+msgstr "Otwórz opcje"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:110
+msgid "&Quit"
+msgstr "Zakończ"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:110
+msgid "Close the application"
+msgstr "Zamknij program"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:115
+msgid "Select/Open &next"
+msgstr "Wskaż/Otwórz następny"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:115
+msgid "Select the next item; if it is an image, show it"
+msgstr "Wskaż/Otwórz następny obiekt i pokaż jeśli jest obrazem"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:118
+msgid "Select/Open &previous"
+msgstr "Wskaż/Otwórz poprzedni"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:118
+msgid "Select the previous item; if it is an image, show it"
+msgstr "Wskaż/Otwórz poprzedni obiekt i pokaż jeśli jest obrazem"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:121
+msgid "Open selected &directory"
+msgstr "Otwórz wskazany katalog"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:121
+msgid "If a directory or a compressed file is selected, open it"
+msgstr "Otwórz jeśli wskazany został katalog albo skompresowany plik"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:124
+msgid "Open p&arent"
+msgstr "Otwórz nadrzędny katalog"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:124
+msgid "Open the parent directory or compressed file"
+msgstr "Otwórz nadrzędny katalog albo skompresowany plik"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:127
+msgid "Open ne&xt sibling"
+msgstr "Otwórz następny katalog (równorzędny)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:127
+msgid "Open the next directory or compressed file inside the parent"
+msgstr "Otwórz następny katalog albo skompresowany folder (równorzędny)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:130
+msgid "Open previou&s sibling"
+msgstr "Otwórz poprzedni katalog (równorzędny)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:130
+msgid "Open the previous directory or compressed file inside the parent"
+msgstr "Otwórz poprzedni katalog albo skompresowany folder (równorzędny)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:133
+msgid "&Refresh"
+msgstr "Odśwież"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:133
+msgid "Refresh the current directory or compressed file; reload the image shown if any"
+msgstr "Odśwież bieżący katalog albo skompresowany plik i przeładuj obraz jeśli jest wyświetlany"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:136
+msgid "Open direc&tory..."
+msgstr "Otwórz katalog"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:136
+msgid "Browse for a directory to open"
+msgstr "Przeglądaj aby otworzyć katalog"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:141
+msgid "Zoom &in"
+msgstr "Powiększ"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:141
+msgid "Zoom in"
+msgstr "Powiększ"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:144
+msgid "Zoom &out"
+msgstr "Pomniejsz"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:144
+msgid "Zoom out"
+msgstr "Pomniejsz"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:147
+msgid "&Zoom 100%"
+msgstr "Powiększenie 100%"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:147
+msgid "Show the image in its real size"
+msgstr "Pokaż obraz w jego rzeczywistych rozmiarach"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:150
+msgid "Fit &width"
+msgstr "Dopasuj szerokość"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:150
+msgid "Zooms the image in order to make its width fit the window"
+msgstr "Powiększ obraz dopasowując jego szerokość do szerokości okna"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:153
+msgid "Fit &height"
+msgstr "Dopasuj wysokość"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:153
+msgid "Zooms the image in order to make its height fit the window"
+msgstr "Powiększ obraz dopasowując jego wysokość do wysokości okna"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:156
+msgid "Rotate &clockwise"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:156
+msgid "Rotate the image clockwise"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:159
+msgid "Rotate coun&ter clockwise"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:159
+msgid "Rotate the image counter clockwise"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:163
+msgid "&Full screen"
+msgstr "Pełny ekran"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:163
+msgid "Go to/leave full screen mode"
+msgstr "Włącz/Wyłącz tryb pełnoekranowy"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:167
+msgid "File &list"
+msgstr "Lista plików i katalogów"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:167
+msgid "Show/hide the file list"
+msgstr "Pokaż/Ukryj listę plików i katalogów"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:171
+msgid "Thumb&nails"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:171
+msgid "Show/hide the thumbnails"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:175
+msgid "Hi&dden files"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:175
+msgid "Show/hide hidden files in the file list"
+msgstr ""
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:181
+msgid "Add to &favorites"
+msgstr "Dodaj do ulubionych"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:181
+msgid "Add the current directory or compressed file to the favorites"
+msgstr "Dodaj bieżący katalog albo skompresowany folder do ulubionych"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:184
+msgid "R&emove from favorites"
+msgstr "Usuń z ulubionych"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:184
+msgid "Remove the current directory or compressed file from the favorites"
+msgstr "Usuń bieżący katalog albo skompresowany folder z ulubionych"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:189
+msgid "&Help (online)..."
+msgstr "Pomoc (online)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:189
+msgid "Open the online help"
+msgstr "Otwórz pomoc (online)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:192
+msgid "&Feedback / Support (online)..."
+msgstr "Opinie i wsparcie (online)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:192
+msgid "Open the feedback / support online form"
+msgstr "Napisz opinię lub otrzymaj wsparcie (online)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:195
+msgid "&About..."
+msgstr "O programie"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:195
+msgid "Show information about the application"
+msgstr "Pokaż informacje o programie"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:200
+msgid "Small move up"
+msgstr "Małe przesunięcie w górę"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:203
+msgid "Small move down"
+msgstr "Małe przesunięcie w dół"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:206
+msgid "Small move left"
+msgstr "Małe przesunięcie w lewo"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:209
+msgid "Small move right"
+msgstr "Małe przesunięcie w prawo"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:212
+msgid "Large move up"
+msgstr "Duże przesunięcie w górę"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:215
+msgid "Large move down"
+msgstr "Duże przesunięcie w dół"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:218
+msgid "Large move left"
+msgstr "Duże przesunięcie w lewo"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:221
+msgid "Large move right"
+msgstr "Duże przesunięcie w prawo"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:226
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:17
+msgid "None"
+msgstr "Brak dopasowania"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:229
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:18
+msgid "Width"
+msgstr "Szerokość"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:232
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:19
+msgid "Height"
+msgstr "Wysokość"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:235
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:20
+msgid "Window"
+msgstr "Okno"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:238
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:21
+msgid "Width if larger"
+msgstr "Dopasuj szerokość jeśli obraz jest zbyt duży"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:241
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:22
+msgid "Height if larger"
+msgstr "Dopasuj wysokość jeśli obraz jest zbyt duży"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:244
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:23
+msgid "Window if larger"
+msgstr "Dopasuj szerokość i wysokość jeśli obraz jest zbyt duży"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:248
+#: D:\Conrado\workspace\quivi\quivilib/control/options.py:24
+msgid "Custom width"
+msgstr "Własna szerokość"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:258
+msgid "&File"
+msgstr "Plik"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:259
+msgid "F&older"
+msgstr "Katalog"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:260
+msgid "&View"
+msgstr "Widok"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:261
+msgid "F&avorites"
+msgstr "Ulubione"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:262
+msgid "&Help"
+msgstr "Pomoc"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:263
+msgid "Move"
+msgstr "Przesunięcie"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:264
+msgid "Fit"
+msgstr "Dopasowanie"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/menu.py:265
+msgid "Misc"
+msgstr "Różne"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/wallpaper.py:46
+msgid "&Actual size"
+msgstr "Rzeczywisty rozmiar"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/wallpaper.py:47
+msgid "&Tiled"
+msgstr "Układanka (obok siebie)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/wallpaper.py:48
+msgid "Stretch to fit screen, c&rop excess"
+msgstr "Rozciągnij obraz przycinając nadmiar"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/wallpaper.py:49
+msgid "Stretch to &fit screen, show entire image"
+msgstr "Rozciągnij obraz bez przycinania (pokaż cały)"
+
+#: D:\Conrado\workspace\quivi\quivilib/control/wallpaper.py:223
+msgid "Unable to set wallpaper"
+msgstr "Nie można ustawić tapety"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/about.py:25
+msgid "&OK"
+msgstr "OK"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/about.py:35
+msgid "About"
+msgstr "O programie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/error.py:19
+msgid "If you think this may be a bug, please report it. Thank you."
+msgstr "Proszę, jeśli myślisz, że to błąd programu, to wyślij raport o nim. Dziękuję"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/error.py:20
+msgid "Please copy the error information below and click the link in order to report this error."
+msgstr "Proszę, skopiuj poniższą informację o błędzie i kliknij w odnośnik aby wysłać raport o błędzie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/error.py:22
+msgid "An error has occurred:"
+msgstr "Wystąpił błąd programu"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/error.py:33
+msgid "&Copy error information"
+msgstr "Skopiuj informację o błędzie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/error.py:34
+msgid "Report error"
+msgstr "Wyślij raport o błędzie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/error.py:35
+msgid "&Report error"
+msgstr "Wyślij raport o błędzie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/error.py:48
+msgid "Error"
+msgstr "Błąd"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:69
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:388
+msgid "Files"
+msgstr "Pliki"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:377
+msgid "Loading..."
+msgstr "Otwieranie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:391
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:425
+msgid "&Download"
+msgstr "Pobierz"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:392
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:425
+msgid "Go to the download site"
+msgstr "Przejdź na stronę pobierania programu"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:394
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:426
+msgid "&New version available!"
+msgstr "Dostępna jest nowa wersja programu!"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/main.py:409
+msgid "Choose a directory:"
+msgstr "Wybierz katalog"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:34
+msgid "Background color"
+msgstr "Kolor tła"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:39
+msgid "Start directory"
+msgstr "Katalog startowy"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:41
+msgid "Default system color"
+msgstr "Domyślny kolor"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:42
+msgid "Custom color:"
+msgstr "Własny kolor"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:44
+msgid "Hide menu and status on full screen"
+msgstr "Ukryj menu i status podczas trybu pełnoekranowego"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:45
+msgid "Portable mode (save settings inside the program folder)"
+msgstr "Tryb przenośny (ustawienia zapisywane w katalogu programu)"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:46
+msgid "Commands"
+msgstr "Polecenia"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:48
+msgid "Shortcuts for selected command"
+msgstr "Skrót dla wskazanego polecenia"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:50
+msgid "Remove"
+msgstr "Usuń"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:51
+msgid "New shortcut"
+msgstr "Nowy skrót"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:52
+msgid "Press key"
+msgstr "Naciśnij przycisk"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:53
+msgid "Assign"
+msgstr "Przypisz"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:55
+msgid "Reset all to defaults"
+msgstr "Przywróć domyślne ustawienia"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:57
+msgid "Left click"
+msgstr "Lewy przycisk myszy"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:59
+msgid "Middle click"
+msgstr "Środkowy przycisk myszy"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:61
+msgid "Right click"
+msgstr "Prawy przycisk myszy"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:64
+#: D:\Conrado\workspace\quivi\quivilib/gui/wallpaper.py:27
+msgid "&Cancel"
+msgstr "Anuluj"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:88
+msgid "Options"
+msgstr "Opcje"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:94
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:95
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:96
+msgid "Drag image"
+msgstr "Przeciągnij obraz"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:183
+msgid "&Viewing"
+msgstr "Wyświetlanie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:184
+msgid "&Keys"
+msgstr "Klawiatura"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:185
+msgid "&Mouse"
+msgstr "Mysz"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:186
+msgid "&Language"
+msgstr "Język"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/options.py:278
+#, python-format
+msgid "Assigned for \"%s\""
+msgstr "Przypisane do  \"%s\""
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/wallpaper.py:25
+msgid "&Position"
+msgstr "Położenie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/wallpaper.py:26
+msgid "&Set wallpaper"
+msgstr "Ustaw tapetę"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/wallpaper.py:28
+msgid "Zoom:"
+msgstr "Powiększenie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/wallpaper.py:32
+msgid "&Color:"
+msgstr "Kolor"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/wallpaper.py:65
+msgid "Set as wallpaper"
+msgstr "Ustaw jako tapetę"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/file_list_view/list_ctrl.py:146
+msgid "File"
+msgstr "Plik"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/file_list_view/list_ctrl.py:147
+msgid "Extension"
+msgstr "Rozszerzenie"
+
+#: D:\Conrado\workspace\quivi\quivilib/gui/file_list_view/list_ctrl.py:148
+msgid "Last modified"
+msgstr "Ostatnio zmieniony"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:48
+msgid "en_US"
+msgstr "pl_PL"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:49
+msgid "Select users"
+msgstr "Wskaż użytkowników"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:50
+msgid "Select for which users you want to install $(^Name)"
+msgstr "Wskaż dla których użytkowników przeprowadzić instalację $(^Name)"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:51
+msgid "All users"
+msgstr "Wszyscy użytkownicy"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:52
+msgid "Current user"
+msgstr "Bieżący użytkownik"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:53
+msgid "$(^Name) (required)"
+msgstr "$(^Name) (wymagane)"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:54
+msgid "Start Menu Group"
+msgstr "Menu Start"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:55
+msgid "Desktop Shortcut"
+msgstr "Skrót na pulpicie"
+
+#: D:\Conrado\workspace\quivi\quivilib/i18n/setup_strings.py:56
+msgid "Associate extensions"
+msgstr "Skojarz rozszerzenia"
+
+#: D:\Conrado\workspace\quivi\quivilib/model/container/root.py:28
+msgid "My Computer"
+msgstr "Mój komputer"
+
+#: D:\Conrado\workspace\quivi\quivilib/model/image/freeimage.py:59
+msgid "Error while loading image"
+msgstr "Błąd podczas ładowania obrazu"
+
+#~ msgid "Sorry, not yet implemented"
+#~ msgstr "Przykro mi ale ta funkcja jeszcze nie działa"
+#~ msgid "Fit width"
+#~ msgstr "Dopasuj szerokość"
+#~ msgid "Fit height"
+#~ msgstr "Dopasuj wysokość"
+#~ msgid "Fit window"
+#~ msgstr "Dopasuj szerokość i wysokość do rozmiarów okna"
+#~ msgid "Fit width if oversize"
+#~ msgstr "Dopasuj szerokość jeśli obraz jest zbyt duży"
+#~ msgid "Fit height if oversize"
+#~ msgstr "Dopasuj wysokość jeśli obraz jest zbyt duży"
+#~ msgid "Fit window if oversize"
+#~ msgstr "Dopasuj szerokość i wysokość jeśli obraz jest zbyt duży"
+#~ msgid "Fit custom width"
+#~ msgstr "Własne dopasowanie szerokości"
+

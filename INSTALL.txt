@@ -1,0 +1,41 @@
+= Installing Quivi =
+
+These instructions apply only if you're installing from source.
+
+== Required libraries ==
+
+- wxPython 2.8.9.x or more recent (http://wxpython.org/)
+  - On Windows, just intall the most recent Unicode build.
+  - On Ubuntu, the official release is much older. Check
+    http://wiki.wxpython.org/InstallingOnUbuntuOrDebian
+    to find how to install the most recent version.
+  - Other distributions: check the wxPython page.
+- FreeImage (http://freeimage.sourceforge.net/)
+  - On Windows, download the most recent binary distribution and copy
+    FreeImage.dll into the quivi folder.
+  - On Linux, the 'libfreeimage.so.3' library is loaded. The library
+    available on your repository will probably do.
+- UnRAR (http://www.rarlab.com/rar_add.htm)
+  - On Windows, download UnRAR.dll and copy the dll file into the quivi folder.
+  - On Linux, you'll need the command line executable accessible in your PATH.
+
+
+== Installing ==
+
+=== Linux ===
+
+Install the required libraries. Extract the source.
+Now you have two options:
+- Change to the extracted directory and do a "python setup.py install".
+  You can now open Quivi by typing "quivi" in a terminal,
+  or with the shortcut in your desktop manager menu.
+  The downside is that you can't easily uninstall the application.
+- Run the application from the extracted directory. Just change
+  to it, do a "chmod +x quivi.pyw" and type "./quivi.pyw" (you may rename
+  it to "quivi")
+  
+=== Windows ===
+
+Is much easier to use the binary versions, but if you want to run from
+the source, you probably know what you're doing and just do something among
+the lines of the Linux steps.
