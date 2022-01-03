@@ -46,6 +46,8 @@ import Queue
 import threading
 import time
 
+import platform
+
 import ctypes.wintypes
 
 # Low level interface - see UnRARDLL\UNRARDLL.TXT
@@ -81,7 +83,10 @@ UCM_PROCESSDATA = 1
 UCM_NEEDPASSWORD = 2
 
 
-unrar = ctypes.WinDLL('unrar.dll')
+if platform.architecture()[0] == '32bit':
+    unrar = ctypes.WinDLL('unrar.dll')
+else:
+    unrar = ctypes.WinDLL('UnRAR64.dll')
 
 class RAROpenArchiveData(ctypes.Structure):
     def __init__(self, ArcName=None, OpenMode=RAR_OM_LIST):

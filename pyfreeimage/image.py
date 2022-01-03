@@ -177,7 +177,7 @@ class Image(object):
         return self.__class__(dib)
     
     def rotate(self, angle):
-        dib = self._lib.RotateClassic(self._dib, ctypes.c_double(angle))
+        dib = self._lib.Rotate(self._dib, ctypes.c_double(angle))
         if not dib:
             raise RuntimeError('Unable to rescale image')
         return self.__class__(dib)

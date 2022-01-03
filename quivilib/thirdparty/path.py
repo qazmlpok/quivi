@@ -779,11 +779,26 @@ class path(_base):
 
     # --- Methods for querying the filesystem.
 
-    exists = os.path.exists
-    isdir = os.path.isdir
-    isfile = os.path.isfile
+    #exists = os.path.exists
+    #isdir = os.path.isdir
+    #isfile = os.path.isfile
     islink = os.path.islink
     ismount = os.path.ismount
+    
+    #I think python 2 used to support a zero-argument version of these functions, which no longer works.
+    #I'm guessing it would work on cwd or something? The intent is clear but I have no idea how it actually worked
+    def isdir(_test = None):
+        if _test is None:
+            return os.path.isdir(self._base)
+        return os.path.isdir(_test)
+    def exists(_test = None):
+        if _test is None:
+            return os.path.exists(self._base)
+        return os.path.exists(_test)
+    def isfile(_test = None):
+        if _test is None:
+            return os.path.isfile(self._base)
+        return os.path.isfile(_test)
 
     if hasattr(os.path, 'samefile'):
         samefile = os.path.samefile

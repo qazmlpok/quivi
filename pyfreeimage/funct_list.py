@@ -133,7 +133,7 @@ FUNCTION_LIST = (
     ('FreeImage_MakeThumbnail', '@12', CO.COL_1TO32 ),
     
     #Rotation and flipping
-    ('FreeImage_RotateClassic', '@12', CO.COL_1TO32),
+    ('FreeImage_Rotate',        '@12', CO.COL_1TO32),
     ('FreeImage_RotateEx',      '@48', (CO.COL_8, CO.COL_24, CO.COL_32), ),
 
     

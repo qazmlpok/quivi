@@ -66,10 +66,11 @@ class Library(object):
         
         name_to_bind = name.split('_', 1)[1]
         
-        if sys.platform == 'win32':
-            function = getattr(self.lib, '_%s%s' % (name, add)) 
-        else:
-            function = getattr(self.lib, name)
+        #if sys.platform == 'win32':
+        #    function = getattr(self.lib, '_%s%s' % (name, add)) 
+        #else:
+        #    function = getattr(self.lib, name)
+        function = getattr(self.lib, name)
         
         setattr(self, name_to_bind, function)
         
