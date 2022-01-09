@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import unittest
 
@@ -52,10 +52,10 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 0)
-        self.assertEquals(s.get('Update', 'Available'), '0')
+        self.assertEqual(len(lst), 0)
+        self.assertEqual(s.get('Update', 'Available'), '0')
         timeb = datetime.strptime(s.get('Update', 'LastCheck'), _DATE_FMT)
-        self.assert_(timea <= timeb <= timec)
+        self.assertTrue(timea <= timeb <= timec)
         
     def test_first_run_newer(self):
         s = Settings('nonexistantfile')
@@ -74,13 +74,13 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 1)
-        self.assertEquals(lst[0], DOWN_URL)
-        self.assertEquals(s.get('Update', 'Available'), '1')
+        self.assertEqual(len(lst), 1)
+        self.assertEqual(lst[0], DOWN_URL)
+        self.assertEqual(s.get('Update', 'Available'), '1')
         timeb = datetime.strptime(s.get('Update', 'LastCheck'), _DATE_FMT)
-        self.assertEquals(s.get('Update', 'URL'), DOWN_URL)
-        self.assertEquals(s.get('Update', 'Version'), '99.9.0')
-        self.assert_(timea <= timeb <= timec)
+        self.assertEqual(s.get('Update', 'URL'), DOWN_URL)
+        self.assertEqual(s.get('Update', 'Version'), '99.9.0')
+        self.assertTrue(timea <= timeb <= timec)
         
     def test_second_run_older_recent(self):
         s = Settings('nonexistantfile')
@@ -104,11 +104,11 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 0)
-        self.assertEquals(len(called), 0)
-        self.assertEquals(s.get('Update', 'Available'), '0')
+        self.assertEqual(len(lst), 0)
+        self.assertEqual(len(called), 0)
+        self.assertEqual(s.get('Update', 'Available'), '0')
         timeb = datetime.strptime(s.get('Update', 'LastCheck'), _DATE_FMT)
-        self.assert_(timea <= timeb <= timec)
+        self.assertTrue(timea <= timeb <= timec)
         
     def test_second_run_older_not_recent(self):
         s = Settings('nonexistantfile')
@@ -133,11 +133,11 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 0)
-        self.assertEquals(len(called), 1)
-        self.assertEquals(s.get('Update', 'Available'), '0')
+        self.assertEqual(len(lst), 0)
+        self.assertEqual(len(called), 1)
+        self.assertEqual(s.get('Update', 'Available'), '0')
         timeb = datetime.strptime(s.get('Update', 'LastCheck'), _DATE_FMT)
-        self.assert_(timea <= timeb <= timec)
+        self.assertTrue(timea <= timeb <= timec)
         
     def test_second_run_newer_not_recent(self):
         s = Settings('nonexistantfile')
@@ -162,14 +162,14 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 1)
-        self.assertEquals(lst[0], DOWN_URL)
-        self.assertEquals(len(called), 1)
-        self.assertEquals(s.get('Update', 'Available'), '1')
-        self.assertEquals(s.get('Update', 'URL'), DOWN_URL)
-        self.assertEquals(s.get('Update', 'Version'), '99.0')
+        self.assertEqual(len(lst), 1)
+        self.assertEqual(lst[0], DOWN_URL)
+        self.assertEqual(len(called), 1)
+        self.assertEqual(s.get('Update', 'Available'), '1')
+        self.assertEqual(s.get('Update', 'URL'), DOWN_URL)
+        self.assertEqual(s.get('Update', 'Version'), '99.0')
         timeb = datetime.strptime(s.get('Update', 'LastCheck'), _DATE_FMT)
-        self.assert_(timea <= timeb <= timec)
+        self.assertTrue(timea <= timeb <= timec)
     
     def test_available_not_recent(self):
         s = Settings('nonexistantfile')
@@ -197,14 +197,14 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 1)
-        self.assertEquals(lst[0], NEW_URL)
-        self.assertEquals(len(called), 1)
-        self.assertEquals(s.get('Update', 'Available'), '1')
-        self.assertEquals(s.get('Update', 'URL'), NEW_URL)
-        self.assertEquals(s.get('Update', 'Version'), '99.0')
+        self.assertEqual(len(lst), 1)
+        self.assertEqual(lst[0], NEW_URL)
+        self.assertEqual(len(called), 1)
+        self.assertEqual(s.get('Update', 'Available'), '1')
+        self.assertEqual(s.get('Update', 'URL'), NEW_URL)
+        self.assertEqual(s.get('Update', 'Version'), '99.0')
         timeb = datetime.strptime(s.get('Update', 'LastCheck'), _DATE_FMT)
-        self.assert_(timea <= timeb <= timec)
+        self.assertTrue(timea <= timeb <= timec)
     
     def test_available_recent(self):
         s = Settings('nonexistantfile')
@@ -232,14 +232,14 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 1)
-        self.assertEquals(lst[0], DOWN_URL)
-        self.assertEquals(len(called), 0)
-        self.assertEquals(s.get('Update', 'Available'), '1')
-        self.assertEquals(s.get('Update', 'URL'), DOWN_URL)
-        self.assertEquals(s.get('Update', 'Version'), '99.0')
+        self.assertEqual(len(lst), 1)
+        self.assertEqual(lst[0], DOWN_URL)
+        self.assertEqual(len(called), 0)
+        self.assertEqual(s.get('Update', 'Available'), '1')
+        self.assertEqual(s.get('Update', 'URL'), DOWN_URL)
+        self.assertEqual(s.get('Update', 'Version'), '99.0')
         timeb = datetime.strptime(s.get('Update', 'LastCheck'), _DATE_FMT)
-        self.assert_(timea <= timeb <= timec)
+        self.assertTrue(timea <= timeb <= timec)
         
     def test_just_updated(self):
         s = Settings('nonexistantfile')
@@ -264,6 +264,6 @@ class Test(unittest.TestCase):
         u.thread.join()
         timec = now()
         
-        self.assertEquals(len(lst), 0)
-        self.assertEquals(len(called), 0)
-        self.assertEquals(s.get('Update', 'Available'), '0')
+        self.assertEqual(len(lst), 0)
+        self.assertEqual(len(called), 0)
+        self.assertEqual(s.get('Update', 'Available'), '0')

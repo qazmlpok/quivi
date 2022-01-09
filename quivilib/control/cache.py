@@ -1,4 +1,4 @@
-from __future__ import absolute_import, with_statement
+
 
 from quivilib import meta
 from quivilib.model.canvas import Canvas
@@ -8,7 +8,7 @@ from wx.lib.pubsub import pub as Publisher
 import wx
 
 from threading import Thread, Lock, Semaphore
-from Queue import Queue
+from queue import Queue
 import logging
 import traceback
 
@@ -145,9 +145,10 @@ class ImageCache(object):
                     log.debug('thread: request processed, notifying')
                     wx.CallAfter(self.on_image_loaded, req)
                     log.debug('thread: request processed notified')
-                except Exception, e:
+                except Exception as ex:
                     tb = traceback.format_exc()
                     log.debug('thread: request raised an exception')
+                    e = ex
                     #log.debug(tb)
                 finally:
                     self.processing_request = None

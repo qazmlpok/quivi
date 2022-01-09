@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 import unittest
 import sys
@@ -7,7 +7,7 @@ from quivilib.i18n import _
 from quivilib.model.container.root import RootContainer
 from quivilib.model.container import SortOrder
 from quivilib.model.container.directory import DirectoryContainer
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 
 
 
@@ -54,12 +54,12 @@ class Test(unittest.TestCase):
         item = self.dir.items[1]
         self.dir.selected_item = item
         self.dir.refresh()
-        self.assertEquals(self.dir.selected_item, item)
+        self.assertEqual(self.dir.selected_item, item)
         
     def test_name(self):
         if self.dir is None:
             return
-        self.assertEquals(self.dir.name, _('My Computer'))
+        self.assertEqual(self.dir.name, _('My Computer'))
         
     def test_item_count(self):
         if self.dir is None:
@@ -76,24 +76,24 @@ class Test(unittest.TestCase):
         if self.dir is None:
             return
         self.dir.sort_order = SortOrder.EXTENSION
-        lst = [self.dir.get_item_name(i) for i in xrange(self.dir.item_count)]
+        lst = [self.dir.get_item_name(i) for i in range(self.dir.item_count)]
         
     def test_get_item_extension(self):
         if self.dir is None:
             return
         self.dir.sort_order = SortOrder.EXTENSION
-        lst = [self.dir.get_item_extension(i) for i in xrange(self.dir.item_count)]
+        lst = [self.dir.get_item_extension(i) for i in range(self.dir.item_count)]
         
     def test_set_selection(self):
         if self.dir is None:
             return
         self.dir.selected_item = 1
-        self.assertEquals(self.dir.items.index(self.dir.selected_item), 1)
+        self.assertEqual(self.dir.items.index(self.dir.selected_item), 1)
         self.dir.selected_item = self.dir.items[1]
-        self.assertEquals(self.dir.selected_item, self.dir.items[1])
+        self.assertEqual(self.dir.selected_item, self.dir.items[1])
         
     def test_path(self):
         if self.dir is None:
             return
-        self.assertEquals(self.dir.path, '')
+        self.assertEqual(self.dir.path, '')
     

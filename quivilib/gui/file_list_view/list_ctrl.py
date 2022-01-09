@@ -54,11 +54,11 @@ class FileList(wx.ListCtrl, FileListViewBase):
     @error_handler(_handle_error)
     def on_item_selected(self, event):
         if not self._selecting_programatically:
-            Publisher.sendMessage('file_list.selected', event.m_itemIndex)
+            Publisher.sendMessage('file_list.selected', event.GetIndex())
 
     @error_handler(_handle_error)
     def on_item_activated(self, event):
-        Publisher.sendMessage('file_list.activated', event.m_itemIndex)
+        Publisher.sendMessage('file_list.activated', event.GetIndex())
         
     def on_key_down(self, event):
         event.Skip()
@@ -89,12 +89,12 @@ class FileList(wx.ListCtrl, FileListViewBase):
             icon = None
             if ext:
                 #TODO: (1,3) Improve: check item type instead of ext?
-                icon = get_icon_for_extension(u'.' + ext)
+                icon = get_icon_for_extension('.' + ext)
             else:
                 #TODO: *(1,1) Improve: cache directory icon
                 icon = get_icon_for_directory()
             if icon:
-                icon_index = self.image_list.AddIcon(icon)
+                icon_index = self.image_list.Add(icon)
             else:
                 icon_index = None
             self.icon_cache[ext] = icon_index
@@ -170,12 +170,12 @@ class FileList(wx.ListCtrl, FileListViewBase):
         #    appears sometimes. It shouldn't.
         width = self.GetClientSizeTuple()[0]
         used_width = sum(self.GetColumnWidth(i) for i
-                         in xrange(1, self.GetColumnCount()))
+                         in range(1, self.GetColumnCount()))
         self.SetColumnWidth(0, width - used_width - 5)
         
     def save(self, settings_lst):
         widths = ','.join(str(self.GetColumnWidth(i))
-                          for i in xrange(self.GetColumnCount()))
+                          for i in range(self.GetColumnCount()))
         settings_lst.append(('Window', 'FileListColumnsWidth', widths))
     
     def load(self, settings):

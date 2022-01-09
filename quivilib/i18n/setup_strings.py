@@ -1,4 +1,4 @@
-from __future__ import absolute_import, with_statement
+
 """Setup strings.
 
 This module exists only to make the .po file include the strings
@@ -12,7 +12,7 @@ from wx.lib.pubsub import setuparg1
 
 from quivilib.i18n import _
 from quivilib.control.i18n import I18NController
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 
 
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         c.language = lang
         lang_name = lang_names[lang]
         
-        header += u'!insertmacro MUI_LANGUAGE "%s"\n' % lang_name
+        header += '!insertmacro MUI_LANGUAGE "%s"\n' % lang_name
         
         TEXT_LANG = _("en_US")
         TEXT_USER_TITLE = _("Select users")
@@ -59,11 +59,11 @@ if __name__ == '__main__':
         lcls = locals().copy()
         for var in lcls:
             if var.startswith('TEXT_'):
-                body += u'LangString %s ${LANG_%s} "%s"\n' % (var, lang_name.upper(), lcls[var])
+                body += 'LangString %s ${LANG_%s} "%s"\n' % (var, lang_name.upper(), lcls[var])
                 
         body += '\n'
     
     ENCODING = 'utf_16'
-    txt = header + u'\n\n' + body
+    txt = header + '\n\n' + body
     with open('./localization/setup_strings.nsh', 'wb') as f:
         f.write(txt.encode(ENCODING))

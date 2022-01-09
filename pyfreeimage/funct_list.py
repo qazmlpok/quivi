@@ -14,7 +14,7 @@ the specific language governing rights and limitations under the License.
 
 #Functions list that now acutally wrap. The third value are the return
 #type, if it exists, or if I'm able to translate from C code :)
-import constants as CO
+from . import constants as CO
 import ctypes as C
 
 FUNCTION_LIST = ( 

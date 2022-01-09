@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib import meta
 from quivilib.model import App
@@ -13,7 +13,7 @@ from quivilib.control.options import OptionsController
 from quivilib.control.cache import ImageCache
 from quivilib.control.check_update import UpdateChecker
 from quivilib.control.i18n import I18NController
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 from quivilib import util
 
 import wx
@@ -30,16 +30,18 @@ class MainController(object):
     #TODO: (1,3) Refactor: move 'favorites.changed' events to the model?
     
     
-    INI_FILE_NAME = u'pyquivi.ini'
-    LOG_FILE_NAME = u'quivi.log' 
-    STDIO_FILE_NAME = u'error.log' 
+    INI_FILE_NAME = 'pyquivi.ini'
+    LOG_FILE_NAME = 'quivi.log' 
+    STDIO_FILE_NAME = 'error.log' 
     
     def __init__(self, main_script, file_to_open):
         self.main_script = Path(main_script)
         wx.GetApp().SetAppName(meta.APPNAME)
         
         try:
-            Path(wx.StandardPaths.Get().GetUserDataDir()).mkdir()
+            userdatadir = Path(wx.StandardPaths.Get().GetUserDataDir())
+            if not userdatadir.is_dir():
+                userdatadir.mkdir()
         except:
             pass
         
@@ -50,7 +52,7 @@ class MainController(object):
             log.basicConfig(filename=log_file, filemode='w')
         log.getLogger().setLevel(meta.LOG_LEVEL)
         
-        wx.ArtProvider.PushProvider(QuiviArtProvider())
+        wx.ArtProvider.Push(QuiviArtProvider())
         
         if self.can_save_settings_locally():
             settings_path = self.program_path / self.INI_FILE_NAME
@@ -110,7 +112,7 @@ class MainController(object):
         #      Ask wxPython people?
         pane = self.view.aui_mgr.GetPane('file_list')
         if pane.IsShown():
-            pane.BestSize(self.view.file_list_panel.GetSizeTuple())
+            pane.BestSize(self.view.file_list_panel.GetSize())
         show = not pane.IsShown() 
         pane.Show(show)
         self.view.aui_mgr.Update()
@@ -173,20 +175,20 @@ class MainController(object):
         
     def on_request_temp_path(self, message):
         import random
-        filename = ''.join(random.choice(string.ascii_lowercase) for i in xrange(8))
+        filename = ''.join(random.choice(string.ascii_lowercase) for i in range(8))
         message.data.temp_path = self.temp_dir / filename
         message.data.temp_dir = self.temp_dir
             
     @property
     def localization_path(self):
-        return self.program_path / u'localization'
+        return self.program_path / 'localization'
     
     @property
     def program_path(self):
         if util.is_frozen():
-            return util.get_exe_path().dirname()
+            return util.get_exe_path().parent
         else:
-            return self.main_script.dirname()
+            return self.main_script.parent
     
     def can_save_settings_locally(self):
         settings_path = self.program_path / self.INI_FILE_NAME
@@ -226,7 +228,7 @@ class MainController(object):
         if start_dir_str:
             start_dir = Path(start_dir_str)
             try:
-                if not start_dir.isdir():
+                if not start_dir.is_dir():
                     start_dir = None
             except Exception:
                 log.debug(traceback.format_exc())
@@ -242,4 +244,4 @@ class MainController(object):
         try:
             return Path(temp_dir)
         except UnicodeDecodeError:
-            return Path(unicode(temp_dir, 'mbcs'))
+            return Path(str(temp_dir, 'mbcs'))

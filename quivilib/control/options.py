@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.i18n import _
 from quivilib.model.settings import Settings

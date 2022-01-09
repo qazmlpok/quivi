@@ -1,8 +1,8 @@
-from __future__ import absolute_import
+
 
 from quivilib.util import rescale_by_size_factor
 
-import Image
+from PIL import Image
 import logging
 log = logging.getLogger('pil')
 
@@ -20,11 +20,11 @@ class PilImage(object):
             if img.mode != 'RGB':
                 img = img.convert('RGB')
         
-        s = img.tostring()
+        s = img.tobytes()
         if self.delay:
             self.bmp = s
         else:
-            self.bmp = wx.BitmapFromBuffer(img.size[0], img.size[1], s)
+            self.bmp = wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
         
         self.original_width = self.width = img.size[0]
         self.original_height = self.height = img.size[1]
@@ -37,10 +37,10 @@ class PilImage(object):
         if not self.delay:
             log.debug("delayed_load was called but delay was off")
             return
-        self.bmp = wx.BitmapFromBuffer(self.img.size[0], self.img.size[1], self.bmp)
+        self.bmp = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.bmp)
         if self.zoomed_bmp:
             w, h, s = self.zoomed_bmp
-            self.zoomed_bmp = wx.BitmapFromBuffer(w, h, s)
+            self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
         self.delay = False
         
     def resize(self, width, height):
@@ -49,12 +49,12 @@ class PilImage(object):
         else:
             img = self.img.resize((width, height), Image.BICUBIC)
             w, h = img.size
-            s = img.tostring()
+            s = img.tobytes()
             del img
             if self.delay:
                 self.zoomed_bmp = (w, h, s)
             else:
-                self.zoomed_bmp = wx.BitmapFromBuffer(w, h, s)
+                self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
         self.width = width
         self.height = height
         
@@ -102,7 +102,7 @@ class PilImage(object):
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         img = self.img.resize((width, height), Image.BICUBIC)
-        bmp = wx.BitmapFromBuffer(width, height, img.tostring())
+        bmp = wx.Bitmap.FromBuffer(width, height, img.tobytes())
         return bmp
                 
     def close(self):

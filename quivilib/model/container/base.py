@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.container import Item
 from quivilib.model.container import SortOrder
@@ -10,10 +10,12 @@ import operator
 from wx.lib.pubsub import pub as Publisher
 
 #Check if Windows sort is available, by trying to calling it.
+#TODO: Replace with the python module natsort. Then finish removing cmpfunc
 try:
-    from quivilib.windows.util import logical_cmp
-    logical_cmp(u'dummy', u'dummy')
-    wincmpfn = logical_cmp
+    #from quivilib.windows.util import logical_cmp
+    #logical_cmp('dummy', 'dummy')
+    #wincmpfn = logical_cmp
+    wincmpfn = None
 except:
     wincmpfn = None
 
@@ -69,9 +71,9 @@ class BaseContainer(object):
         else:
             assert False, 'Invalid sort order specified'
         parent = None
-        if self.items[0].path == u'..':
+        if self.items[0].path == '..':
             parent = self.items.pop(0)
-        self.items.sort(key=keyfn, cmp=cmpfn)
+        self.items.sort(key=keyfn)
         if parent:
             self.items.insert(0, parent)
         self._sort_order = order
@@ -147,9 +149,9 @@ class BaseContainer(object):
     
     def set_selected_item(self, item):
         old_selected_item = self._selected_item
-        if isinstance(item, (int, long)):
+        if isinstance(item, int):
             self._selected_item = self.items[item]
-        elif isinstance(item, (unicode, str)):
+        elif isinstance(item, str):
             lst = [i for i in self.items if i.path == item]
             if lst:
                 self._selected_item = lst[0]

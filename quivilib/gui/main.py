@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from quivilib.control.options import get_fit_choices
 from quivilib.meta import PATH_SEP
 
@@ -10,7 +10,7 @@ from quivilib.i18n import _
 from quivilib import meta
 from quivilib.util import error_handler
 from quivilib.gui.file_list import FileListPanel
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 from quivilib.resources import images
 from quivilib import util
 
@@ -29,11 +29,12 @@ def _handle_error(exception, args, kwargs):
     
 
 
-class MainWindow(wx.Frame, wx.FileDropTarget):
+#class MainWindow(wx.Frame, wx.FileDropTarget):
+class MainWindow(wx.Frame):
 
     def __init__(self):
-        wx.Frame.__init__(self, None, -1, meta.APPNAME)
-        wx.FileDropTarget.__init__(self)
+        wx.Frame.__init__(self, parent=None, id=-1, title=meta.APPNAME)
+        #wx.FileDropTarget.__init__(self)
         
         self.aui_mgr = wx.aui.AuiManager()
         self.aui_mgr.SetManagedWindow(self)
@@ -47,7 +48,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
         bundle.AddIcon(images.quivi256.Icon)
         self.SetIcons(bundle)
         
-        self.SetDropTarget(self)
+        #self.SetDropTarget(self)
         
         self.menu_bar = wx.MenuBar()
         self.SetMenuBar(self.menu_bar)
@@ -113,8 +114,8 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
         Publisher.subscribe(self.on_canvas_fit_changed, 'settings.changed.Options.FitType')
         Publisher.subscribe(self.on_canvas_fit_changed, 'settings.changed.Options.FitWidthCustomSize')
         
-        self._last_size = self.GetSizeTuple() 
-        self._last_pos = self.GetPositionTuple()
+        self._last_size = self.GetSize() 
+        self._last_pos = self.GetPosition()
         self._busy = False
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
@@ -140,11 +141,11 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
             
             @property
             def width(self):
-                return self.panel.GetSizeTuple()[0]
+                return self.panel.GetSize()[0]
             
             @property
             def height(self):
-                return self.panel.GetSizeTuple()[1]
+                return self.panel.GetSize()[1]
 
         return CanvasAdapter(self.panel)
     
@@ -165,19 +166,19 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
         height = max(settings.getint('Window', 'MainWindowHeight'), 200)
         x = max(settings.getint('Window', 'MainWindowX'), 0)
         y = max(settings.getint('Window', 'MainWindowY'), 0)
-        self.SetDimensions(x, y, width, height)
+        self.SetSize(x, y, width, height)
         self.Maximize(settings.getboolean('Window', 'MainWindowMaximized'))
         if wx.Display.GetFromWindow(self) == wx.NOT_FOUND:
-            self.SetDimensions(0, 0, width, height)
+            self.SetSize(0, 0, width, height)
     
     def on_resize(self, event):
         Publisher.sendMessage('canvas.resized', None)
         if not self.IsMaximized():
-            self._last_size = self.GetSizeTuple()
+            self._last_size = self.GetSize()
             
     def on_move(self, event):
         if not self.IsMaximized():
-            self._last_pos = self.GetPositionTuple()
+            self._last_pos = self.GetPosition()
         
     @error_handler(_handle_error)
     def on_close(self, event):
@@ -214,10 +215,10 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
             pass
         painted_region = PaintedRegion()
         Publisher.sendMessage('canvas.painted', (dc, painted_region))
-        clip_region = wx.Region(0, 0, self.panel.GetSizeTuple()[0],
-                                self.panel.GetSizeTuple()[1])
-        clip_region.Subtract(painted_region.left, painted_region.top,
-                             painted_region.width, painted_region.height)
+        clip_region = wx.Region(0, 0, self.panel.GetSize()[0],
+                                self.panel.GetSize()[1])
+        clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
+                                     painted_region.width, painted_region.height))
         #Fix for bug in Linux (without this it would clear the entire image
         #when the panel is smaller than the image
         iter = wx.RegionIterator(clip_region)
@@ -265,7 +266,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
     def on_canvas_fit_changed(self, message):
         #Using the same listener for two different messages,
         #so parse it differently
-        if isinstance(message.data, (int, long)):
+        if isinstance(message.data, int):
             fit_type = message.data
         else:
             fit_type = message.data.getint('Options', 'FitType')
@@ -301,7 +302,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
                 def event_fn(event, cmd=command):
                     try:
                         cmd()
-                    except Exception, e:
+                    except Exception as e:
                         self.handle_error(e)
                 style = wx.ITEM_CHECK if command.checkable else wx.ITEM_NORMAL
                 menu.Append(command.ide, command.name_and_shortcut, command.description, style)
@@ -332,7 +333,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
             def event_fn(event, favorite=path):
                 try:
                     Publisher.sendMessage('favorite.open', favorite)
-                except Exception, e:
+                except Exception as e:
                     self.handle_error(e)
             #In path for drives (e.g. D:\), name is '' 
             if path.name == '':
@@ -370,7 +371,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
     def on_image_opened(self, message):
         item = message.data
         self.SetTitle('%s - %s' % (item.name, meta.APPNAME))
-        self.status_bar.SetStatusText(item.full_path)
+        self.status_bar.SetStatusText(str(item.full_path))
         
     def on_image_loading(self, message):
         item = message.data
@@ -382,7 +383,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
     
     def on_selection_changed(self, message):
         idx, item = message.data
-        self.status_bar.SetStatusText(item.full_path)
+        self.status_bar.SetStatusText(str(item.full_path))
     
     def on_language_changed(self, message):
         self.aui_mgr.GetPane('file_list').Caption(_('Files'))
@@ -410,7 +411,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
         req = message.data
         dialog = wx.DirDialog(self, _('Choose a directory:'),
                               style=wx.DD_DEFAULT_STYLE|wx.DD_DIR_MUST_EXIST)
-        dialog.SetPath(req.start_directory)
+        dialog.SetPath(str(req.start_directory))
         if dialog.ShowModal() == wx.ID_OK:
             req.directory = Path(dialog.GetPath())
         dialog.Destroy()
@@ -453,6 +454,7 @@ class MainWindow(wx.Frame, wx.FileDropTarget):
             tb = traceback.format_exc()
         msg, tb = util.format_exception(exception, tb)
         log.error(tb)
+        print(tb)##
         def fn():
             dlg = ErrorDialog(parent=self, error=msg, tb=tb)
             dlg.ShowModal()

@@ -19,7 +19,7 @@ import os, re
 from subprocess import Popen
 from struct import pack, unpack
 from binascii import crc32
-from cStringIO import StringIO
+from io import BytesIO
 
 # whether to speed up decompression by using tmp archive
 _use_extract_hack = 1
@@ -168,7 +168,7 @@ class RarFile:
 
     def printdir(self):
         for f in self.info_list:
-            print f.filename
+            print(f.filename)
 
     # store entry
     def _process_entry(self, item):
@@ -267,7 +267,7 @@ class RarFile:
             return h
 
         # crc failed
-        print "CRC mismatch! ofs =", h.header_offset
+        print("CRC mismatch! ofs =", h.header_offset)
         # instead panicing, send eof
         return None
 
@@ -275,8 +275,8 @@ class RarFile:
     def _parse_file_header(self, h):
         HDRLEN = 4+4+1+4+4+1+1+2+4
         fld = unpack("<LLBLLBBHL", h.data[ : HDRLEN])
-        h.compress_size = long(fld[0]) & 0xFFFFFFFFL
-        h.file_size = long(fld[1]) & 0xFFFFFFFFL
+        h.compress_size = int(fld[0]) & 0xFFFFFFFF
+        h.file_size = int(fld[1]) & 0xFFFFFFFF
         h.host_os = fld[2]
         h.CRC = fld[3]
         h.date_time = self._parse_dos_time(fld[4])
@@ -288,8 +288,8 @@ class RarFile:
 
         if h.flags & RAR_FILE_LARGE:
             h1, h2 = unpack("<LL", h.data[pos:pos+8])
-            h.compress_size |= long(h1) << 32
-            h.file_size |= long(h2) << 32
+            h.compress_size |= int(h1) << 32
+            h.file_size |= int(h2) << 32
             pos += 8
 
         name = h.data[pos : pos + h.name_size ]
@@ -438,13 +438,13 @@ class RarFile:
         fn = fn.replace("$", "\\$")
 
         cmd = _extract_cmd % (rarfile, fn)
-        if isinstance(cmd, unicode):
+        if isinstance(cmd, str):
             cmd = cmd.encode('mbcs')
         proc = Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         buf, errstr = proc.communicate()
         if proc.returncode > 0:
-            errstr = unicode(errstr, errors='ignore')
-            raise Exception(u"Error reading file: %s" % errstr)
+            errstr = str(errstr, errors='ignore')
+            raise Exception("Error reading file: %s" % errstr)
         return buf
 
 class _UnicodeFilename:
@@ -452,7 +452,7 @@ class _UnicodeFilename:
         self.std_name = name
         self.encdata = encdata
         self.pos = self.encpos = 0
-        self.buf = StringIO()
+        self.buf = BytesIO()
 
     def enc_byte(self):
         c = self.encdata[self.encpos]
@@ -498,6 +498,6 @@ try:
     import warnings
     warnings.filterwarnings(action = 'ignore', category = RuntimeWarning,
                             module = 'rarfile')
-except Exception, det:
+except Exception as det:
     pass
 

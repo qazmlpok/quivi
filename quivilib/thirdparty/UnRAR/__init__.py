@@ -1,4 +1,4 @@
-from __future__ import generators
+
 
 # Copyright (c) 2003-2005 Jimmy Retzlaff
 #
@@ -42,7 +42,7 @@ __version__ = '1.1'
 
 import fnmatch
 import os
-import Queue
+import queue
 import threading
 import time
 
@@ -83,10 +83,11 @@ UCM_PROCESSDATA = 1
 UCM_NEEDPASSWORD = 2
 
 
-if platform.architecture()[0] == '32bit':
-    unrar = ctypes.WinDLL('unrar.dll')
-else:
-    unrar = ctypes.WinDLL('UnRAR64.dll')
+with os.add_dll_directory(os.getcwd()):
+    if platform.architecture()[0] == '32bit':
+        unrar = ctypes.WinDLL('unrar.dll')
+    else:
+        unrar = ctypes.WinDLL('UnRAR64.dll')
 
 class RAROpenArchiveData(ctypes.Structure):
     def __init__(self, ArcName=None, OpenMode=RAR_OM_LIST):
@@ -104,7 +105,7 @@ class RAROpenArchiveData(ctypes.Structure):
                ]
 
 class RAROpenArchiveDataEx(ctypes.Structure):
-    def __init__(self, ArcName=None, ArcNameW=u'', OpenMode=RAR_OM_LIST):
+    def __init__(self, ArcName=None, ArcNameW='', OpenMode=RAR_OM_LIST):
         self.CmtBuf = ctypes.c_buffer(64*1024)
         ctypes.Structure.__init__(self, ArcName=ArcName, ArcNameW=ArcNameW, OpenMode=OpenMode, _CmtBuf=ctypes.addressof(self.CmtBuf), CmtBufSize=ctypes.sizeof(self.CmtBuf))
 
@@ -234,13 +235,13 @@ class _FileLikeObject:
         """Called by RARFile.open, do not call directly."""
         self.rarFile = rarFile
         self.mode = mode
-        self.dataFromCallback = Queue.Queue()
+        self.dataFromCallback = queue.Queue()
         self.readBuffer = []
         self.readBufferLength = 0
         self.position = 0
         self.doneReading = False
         self.name = self.rarFile.filename
-        self.lineQueue = Queue.Queue()
+        self.lineQueue = queue.Queue()
 
     def __iter__(self):
         while True:

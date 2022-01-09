@@ -2,13 +2,13 @@ from quivilib import util
 
 from quivilib.i18n import _
 from quivilib.model.image import get_supported_extensions
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 
-from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError
+from configparser import SafeConfigParser, NoOptionError, NoSectionError
 import logging
 log = logging
 try:
-    import _winreg as reg
+    import winreg as reg
 except ImportError:
     reg = None
 
@@ -16,7 +16,7 @@ except ImportError:
 SKIP_EXT = ('.psd', '.ico')
 
 (CURRENT_USER,
- ALL_USERS) = range(2)
+ ALL_USERS) = list(range(2))
  
 ICON_ID = 2
 
@@ -59,7 +59,7 @@ def recursive_delete_key(key, sub_key):
         while True:
             child_name = reg.EnumKey(key_to_delete, 0)
             recursive_delete_key(key_to_delete, child_name)
-    except EnvironmentError, e:
+    except EnvironmentError as e:
         pass
     reg.CloseKey(key_to_delete)
     reg.DeleteKey(key, sub_key)
@@ -279,9 +279,9 @@ class AssociationManager(object):
     
     def get_user(self):
         if util.is_frozen():
-            ini_path = util.get_exe_path().dirname() / CONFIG_INI
+            ini_path = util.get_exe_path().parent / CONFIG_INI
         else:
-            ini_path = self.main_script_path.dirname() / CONFIG_INI
+            ini_path = self.main_script_path.parent / CONFIG_INI
         ini = SafeConfigParser()
         try:
             ini.read(ini_path)

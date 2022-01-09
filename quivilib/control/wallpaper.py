@@ -1,10 +1,10 @@
-from __future__ import with_statement, absolute_import
+
 
 #TODO: (1,3) Add: option to detect best background color
 #TODO: (3,4) Add: multiple monitor support
 
 from quivilib.i18n import _
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 from quivilib.model.canvas import Canvas
 from quivilib.model.settings import Settings
 from quivilib.control.canvas import CanvasController
@@ -20,7 +20,7 @@ import logging as log
 from subprocess import Popen, PIPE, call
 
 
-WALLPAPER_FILE_NAME = u'Quivi Wallpaper.bmp'
+WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
 #This list should reflect the list in open_dialog (same order)
 positions = (Settings.FIT_SCREEN_NONE, Settings.FIT_TILED,
              Settings.FIT_SCREEN_CROP_EXCESS,
@@ -184,7 +184,7 @@ def _set_linux_wallpaper(filename, position, color):
     call('gconftool-2 -t str -s /desktop/gnome/background/picture_options'.split() + [option],
          stdout=PIPE, stderr=PIPE)
     color = [hex(color[0])[2:], hex(color[1])[2:], hex(color[2])[2:]]
-    for i in xrange(3):
+    for i in range(3):
         s = color[i]
         if len(s) == 1:
             s = '0' + s
@@ -201,15 +201,15 @@ def _get_windows_bg_color():
     return color
 
 def _set_windows_wallpaper(filename, position, color):
-    import win32gui, win32con, win32api, _winreg
+    import win32gui, win32con, win32api, winreg
     tile_wallpaper = '1' if position == Settings.FIT_TILED else '0'
     wallpaper_style = '0'
-    desktopKey = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER,
+    desktopKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
                                  'Control Panel\\Desktop', 0,
-                                 _winreg.KEY_SET_VALUE)
-    _winreg.SetValueEx(desktopKey, 'WallpaperStyle', 0, _winreg.REG_SZ,
+                                 winreg.KEY_SET_VALUE)
+    winreg.SetValueEx(desktopKey, 'WallpaperStyle', 0, winreg.REG_SZ,
                        wallpaper_style)
-    _winreg.SetValueEx(desktopKey, 'TileWallpaper', 0, _winreg.REG_SZ,
+    winreg.SetValueEx(desktopKey, 'TileWallpaper', 0, winreg.REG_SZ,
                        tile_wallpaper)
     win32api.SetSysColors((win32con.COLOR_BACKGROUND,), (win32api.RGB(*color),))
     res = win32gui.SystemParametersInfo(win32con.SPI_SETDESKWALLPAPER,

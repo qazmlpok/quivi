@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.canvas import Canvas
 from quivilib.model.settings import Settings
@@ -24,12 +24,12 @@ class Test(unittest.TestCase):
         self.v.width = self.v.height = 50
         self.b.width = self.b.height = 100
         self.c.center()
-        self.assertEquals(self.c.top, 0)
-        self.assertEquals(self.c.left, 0)
+        self.assertEqual(self.c.top, 0)
+        self.assertEqual(self.c.left, 0)
         
         self.v.width = self.v.height = 150
         self.c.center()
         
-        self.assertEquals(self.c.top, 25)
-        self.assertEquals(self.c.left, 25)
+        self.assertEqual(self.c.top, 25)
+        self.assertEqual(self.c.left, 25)
         

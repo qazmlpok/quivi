@@ -1,6 +1,6 @@
-from __future__ import with_statement
 
-from quivilib.thirdparty.path import path as Path
+
+from pathlib import Path
 
 import wx
 import re
@@ -72,7 +72,7 @@ def error_handler(callback_fn):
         def error_handler_fn(*args, **kwargs):
             try:
                 fn(*args, **kwargs)
-            except Exception, e:
+            except Exception as e:
                 callback_fn(e, args, kwargs)
         return update_wrapper(error_handler_fn, fn)
     return error_handler_with_callback
@@ -92,7 +92,7 @@ class ExceptionStr(object):
 def add_exception_info(exception, additional_info):
     str_fn = getattr(exception, "__str__", None)
     if not isinstance(str_fn, ExceptionStr):
-        str_fn = ExceptionStr(unicode(exception))
+        str_fn = ExceptionStr(str(exception))
         setattr(exception, 'get_custom_msg', str_fn)
     str_fn.add_info(additional_info)
     
@@ -108,7 +108,7 @@ def is_frozen():
     return hasattr(sys, "frozen")
 
 def get_exe_path():
-    return Path(unicode(sys.executable, sys.getfilesystemencoding())).abspath()
+    return Path(str(sys.executable, sys.getfilesystemencoding())).resolve()
 
 def get_traceback():
     return traceback.format_exc()
@@ -125,7 +125,7 @@ def synchronized_method(lock_name):
 
 def get_formatted_zoom(zoom):
     text = locale.format('%5.2f', zoom * 100)
-    for i in xrange(len(text)):
+    for i in range(len(text)):
         if text[-1] == '0':
             text = text[:-1]
         if text[-1] not in string.digits:
@@ -143,13 +143,13 @@ def format_exception(exception, tb):
     try:
         msg = exception.get_custom_msg()
     except AttributeError:
-        if sys.platform == 'win32' and isinstance(exception, WindowsError):
-            #Python bug (fixed on 3.0), the error is not unicode
-            msg = str(exception).decode('mbcs')
-        else:
-            msg = unicode(exception)
+        #if sys.platform == 'win32' and isinstance(exception, WindowsError):
+        #    #Python bug (fixed on 3.0), the error is not unicode
+        #    msg = str(exception).decode('mbcs')
+        #else:
+            msg = str(exception)
     if msg == '':
         msg = exception.__class__.__name__
     #Due to the bug above, unicode coercing tb might fail. Take a safe approach.
-    tb = tb.decode('ascii', 'ignore')
+    #tb = tb.decode('ascii', 'ignore')
     return msg, tb

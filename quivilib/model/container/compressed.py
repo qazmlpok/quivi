@@ -1,9 +1,9 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 
 from wx.lib.pubsub import pub as Publisher
 from quivilib.meta import PATH_SEP
@@ -11,7 +11,7 @@ from quivilib.meta import PATH_SEP
 import sys
 import zipfile
 from zipfile import ZipFile as PyZipFile
-import cStringIO
+import io
 from datetime import datetime
 
 if sys.platform == 'win32':
@@ -36,6 +36,7 @@ class ZipFile(object):
     def __init__(self, container, path):
         self.path = path
         self.file = PyZipFile(path, 'r')
+        #Note - mapping is no longer used atm, due to _convert_filename being dummied out.
         self.mapping = {}
         
     @staticmethod
@@ -45,26 +46,28 @@ class ZipFile(object):
     def list_files(self):
         return [(Path(self._convert_filename(f.filename)),
                  datetime(*f.date_time))
-                for f in self.file.infolist() 
+                for f in self.file.infolist()
                 if f.filename[-1] not in '\\/']
         
     def open_file(self, path):
-        try:
+        if path in self.mapping:
             encpath = self.mapping[path]
-        except KeyError:
-            encpath = path
-        return cStringIO.StringIO(self.file.read(encpath))
+        else:
+            encpath = str(path)
+        return io.BytesIO(self.file.read(encpath))
     
     def _convert_filename(self, path):
         #zipfile decodes utf-8, but not cp437
-        try:
-            decpath = path.decode('cp437')
-            self.mapping[decpath] = path
-            return decpath
-        except UnicodeDecodeError:
-            decpath = path.decode('ascii', 'ignore')
-            self.mapping[decpath] = path
-            return decpath
+        #try:
+        #    decpath = path.decode('cp437')
+        #    self.mapping[decpath] = path
+        #    return decpath
+        #except UnicodeDecodeError:
+        #    decpath = path.decode('ascii', 'ignore')
+        #    self.mapping[decpath] = path
+        #    return decpath
+        #TODO: Determine if anything still needs to be done here; python3 is a lot better with Unicode.
+        return path
 
 
 
@@ -77,7 +80,7 @@ class RarFile(object):
         return ext.lower() in ['.rar', '.cbr']
     
     def list_files(self):
-        archive = Archive(self.path)
+        archive = Archive(str(self.path))
         try:
             return [(Path(f.filename), datetime(*f.datetime[0:6]))
                  for f in archive.iterfiles()]
@@ -85,14 +88,14 @@ class RarFile(object):
             archive.close()
     
     def open_file(self, path):
-        archive = Archive(self.path)
+        archive = Archive(str(self.path))
         try:
             for f in archive.iterfiles():
                 if f.filename == path:
                     stream = f.open('rb')
                     try:
                         string = stream.read()
-                        fstr = cStringIO.StringIO(string)
+                        fstr = io.BytesIO(string)
                     finally:
                         stream.close()
                     return fstr
@@ -113,19 +116,19 @@ class RarFileExternal(RarFile):
                 if f.filename[-1] not in '\\/']
         
     def open_file(self, path):
-        return cStringIO.StringIO(self.file.read(path))
+        return io.BytesIO(self.file.read(path))
 
 
 
 
 class CompressedContainer(BaseContainer):
     def __init__(self, path, sort_order, show_hidden):
-        self._path = path.abspath()
+        self._path = path.resolve()
         RarCls = RarFile if sys.platform == 'win32' else RarFileExternal
         classes = []
-        if ZipFile.is_valid_extension(self._path.ext):
+        if ZipFile.is_valid_extension(self._path.suffix):
             classes = [ZipFile, RarCls]
-        elif RarFile.is_valid_extension(self._path.ext):
+        elif RarFile.is_valid_extension(self._path.suffix):
             classes = [RarCls, ZipFile]
         else:
             assert False, 'Invalid  compressed file extension'
@@ -140,7 +143,7 @@ class CompressedContainer(BaseContainer):
             
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', self)
-                
+
     def _list_paths(self):
         paths = []
         for path, last_modified in self.file.list_files():
@@ -148,7 +151,7 @@ class CompressedContainer(BaseContainer):
             if not self.show_hidden and _is_hidden(path):
                 continue
             paths.append((path, last_modified, data))
-        paths.insert(0, (Path(u'..'), None, None))
+        paths.insert(0, (Path('..'), None, None))
         return paths
     
     @property
@@ -198,7 +201,7 @@ class CompressedContainer(BaseContainer):
         return self.path / self.items[item_index].path
     
     def get_item_name(self, item_index):
-        return self.items[item_index].path
+        return self.items[item_index].path.name
         
     def _save_container(self, item):
         """Save a container inside this container as a temp file.
@@ -208,7 +211,7 @@ class CompressedContainer(BaseContainer):
         @return: temp file path
         @rtype: Path
         """
-        ext = item.ext
+        ext = item.suffix
         class Dummy(object): pass
         o = Dummy()
         o.temp_path = None

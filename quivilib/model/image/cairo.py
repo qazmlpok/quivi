@@ -1,11 +1,11 @@
-from __future__ import absolute_import
+
 from quivilib.util import rescale_by_size_factor
 
 import wx
 from wx.lib import wxcairo
 import pyfreeimage as fi
 from pyfreeimage import Image
-import cairo
+from . import cairo
 
 import math
 import logging

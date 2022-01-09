@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import sys
 import logging
@@ -14,9 +14,9 @@ if sys.platform == 'win32':
     from ctypes import wintypes
     gdiplus = ctypes.windll.gdiplus
     
-    WNDPROC = wintypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_int, ctypes.c_uint, ctypes.c_int, ctypes.c_int)
+    WNDPROC = ctypes.WINFUNCTYPE(ctypes.c_long, ctypes.c_int, ctypes.c_uint, ctypes.c_int, ctypes.c_int)
 
-    class GdiplusStartupInput(wintypes.Structure):
+    class GdiplusStartupInput(ctypes.Structure):
         _fields_ = [
                 ('GdiplusVersion', ctypes.c_uint),
                 ('DebugEventCallback', ctypes.c_void_p),
@@ -25,7 +25,7 @@ if sys.platform == 'win32':
         ]
 
         def __init__(self):
-            wintypes.Structure.__init__(self)
+            ctypes.Structure.__init__(self)
             self.GdiplusVersion = 1
             self.DebugEventCallback = None
             self.SuppressBackgroundThread = 0

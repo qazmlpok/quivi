@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.settings import Settings
 from quivilib.resources import images
@@ -14,10 +14,10 @@ ZOOM_FACTOR = 25
 (MOVE_LEFT,
  MOVE_RIGHT,
  MOVE_UP,
- MOVE_DOWN) = range(4)
+ MOVE_DOWN) = list(range(4))
  
 (MOVE_SMALL,
- MOVE_LARGE) = range(2)
+ MOVE_LARGE) = list(range(2))
      
 
      
@@ -42,8 +42,8 @@ class CanvasController(object):
         #Indicates that the user has moved the image significantly 
         self._moved_image = False
         self._old_mouse_pos = (-1, -1)
-        self._default_cursor = wx.CursorFromImage(images.cursor_hand.GetImage())
-        self._moving_cursor = wx.CursorFromImage(images.cursor_drag.GetImage())
+        self._default_cursor = wx.Cursor(images.cursor_hand.GetImage())
+        self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())
         Publisher.sendMessage('%s.cursor.changed' % self.name, self._default_cursor)
         
     def on_canvas_painted(self, message):

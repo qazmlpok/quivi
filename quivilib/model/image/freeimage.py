@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from quivilib.i18n import _
 from quivilib.util import add_exception_custom_msg
@@ -48,13 +48,13 @@ class FreeImage(object):
             self.img = img
             self.zoomed_bmp = None 
             self.rotation = 0
-        except Exception, e:
+        except Exception as e:
             error_msg = _('Error while loading image')
             fi_error_msg = fi.library.load().last_error
             if fi_error_msg:
                 error_msg += '\n(%s)' % fi_error_msg
-            elif unicode(e):
-                error_msg += '\n(%s)' % unicode(e)
+            elif str(e):
+                error_msg += '\n(%s)' % str(e)
             add_exception_custom_msg(e, error_msg)
             raise
         

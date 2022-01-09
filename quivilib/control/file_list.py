@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.i18n import _
 from quivilib import meta
@@ -8,7 +8,7 @@ from quivilib.model.container.directory import DirectoryContainer
 from quivilib.model.container.compressed import CompressedContainer
 from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from quivilib.control.cache import ImageCacheLoadRequest
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 
 from wx.lib.pubsub import pub as Publisher
 from quivilib.meta import PATH_SEP
@@ -106,7 +106,7 @@ class FileListController(object):
                     self._direction = 1
                 else:
                     self._direction = -1
-                for i in xrange(meta.PREFETCH_COUNT):
+                for i in range(meta.PREFETCH_COUNT):
                     idx = item_index + ((i + 1) * self._direction)
                     if idx > 0 and idx < len(container.items) and container.items[idx].typ == Item.IMAGE:
                         request = ImageCacheLoadRequest(container, container.items[idx], self.model.canvas.view)
@@ -155,15 +155,15 @@ class FileListController(object):
         if parent:
             self._set_container(parent)
             
-    def open_om(self):
-        from quivilib.model.container.onemanga import OMContainer
-        container = OMContainer(self.model.container.sort_order, self.model.container.show_hidden)
-        self._set_container(container)
-            
-    def open_mf(self):
-        from quivilib.model.container.mangafox import MFContainer
-        container = MFContainer(self.model.container.sort_order, self.model.container.show_hidden)
-        self._set_container(container)
+    #def open_om(self):
+    #    from quivilib.model.container.onemanga import OMContainer
+    #    container = OMContainer(self.model.container.sort_order, self.model.container.show_hidden)
+    #    self._set_container(container)
+    #        
+    #def open_mf(self):
+    #    from quivilib.model.container.mangafox import MFContainer
+    #    container = MFContainer(self.model.container.sort_order, self.model.container.show_hidden)
+    #    self._set_container(container)
             
     def open_directory(self):
         class Request():
@@ -253,36 +253,36 @@ class FileListController(object):
     def open_path(self, path):
         sort_order = self.model.container.sort_order
         show_hidden = self.model.container.show_hidden
-        if path.startswith('onemanga:') or path.startswith('mangafox:'):
-            paths = Path(path[9:]).splitall()
-            if path.startswith('onemanga:'):
-                from quivilib.model.container.onemanga import OMContainer
-                container = OMContainer(sort_order, show_hidden)
-            else:
-                from quivilib.model.container.mangafox import MFContainer
-                container = MFContainer(sort_order, show_hidden)
-            container = self._open_virtual_path(container, paths[1:])
-            if container.selected_item_index == -1:
-                self._set_container(container)
-            else:
-                self.model.container = container
-                self.open_item(container.selected_item_index)
-        elif path.isdir():
+        #if path.startswith('onemanga:') or path.startswith('mangafox:'):
+        #    paths = Path(path[9:]).splitall()
+        #    if path.startswith('onemanga:'):
+        #        from quivilib.model.container.onemanga import OMContainer
+        #        container = OMContainer(sort_order, show_hidden)
+        #    else:
+        #        from quivilib.model.container.mangafox import MFContainer
+        #        container = MFContainer(sort_order, show_hidden)
+        #    container = self._open_virtual_path(container, paths[1:])
+        #    if container.selected_item_index == -1:
+        #        self._set_container(container)
+        #    else:
+        #        self.model.container = container
+        #        self.open_item(container.selected_item_index)
+        if path.is_dir():
             container = DirectoryContainer(path, sort_order, show_hidden)
             self._set_container(container)
-        elif path.isfile() and path.ext.lower() in get_supported_image_extensions():
+        elif path.is_file() and path.suffix.lower() in get_supported_image_extensions():
             container = DirectoryContainer(path.parent, sort_order, show_hidden)
             self.model.container = container
             container.selected_item = path
             if container.selected_item_index != -1:
                 self.open_item(container.selected_item_index)
-        elif path.isfile() and path.ext.lower() in get_supported_container_extensions():
+        elif path.is_file() and path.suffix.lower() in get_supported_container_extensions():
             container = CompressedContainer(path, sort_order, show_hidden)
             self._set_container(container)
         else:
             paths = path.split(PATH_SEP)
             root_container_path = Path(paths[0])
-            if root_container_path.isfile():
+            if root_container_path.is_file():
                 root_container = CompressedContainer(root_container_path, sort_order, show_hidden)
                 container = self._open_virtual_path(root_container, paths[1:])
                 if container.selected_item_index == -1:

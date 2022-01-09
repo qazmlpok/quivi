@@ -1,8 +1,8 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.root import RootContainer
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 
 from wx.lib.pubsub import pub as Publisher
 
@@ -29,24 +29,24 @@ def _is_hidden(path):
 class DirectoryContainer(BaseContainer):
     
     def __init__(self, directory, sort_order, show_hidden):
-        self.path = directory.abspath()
+        self.path = directory.resolve()
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', self)
                 
     def _list_paths(self):
         paths = []
-        for path in self.path.listdir():
+        for path in self.path.iterdir():
             last_modified = None
             if not self.show_hidden and _is_hidden(path):
                 continue
             try:
                 #TODO: (2,2) Fix: on Windows, dates can be pre-1970
-                last_modified = datetime.fromtimestamp(path.mtime)
+                last_modified = datetime.fromtimestamp(path.lstat().st_mtime)
             except (ValueError, os.error):
                 pass
             data = None
             paths.append((path, last_modified, data))
-        paths.insert(0, (Path(u'..'), None, None))
+        paths.insert(0, (Path('..'), None, None))
         return paths
             
     @property

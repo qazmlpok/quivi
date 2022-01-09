@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 #TODO: (2,3) Refactor: this module and classes were poorly named.
 #    this is actually about commands, and not the menu.
@@ -41,7 +41,7 @@ class MenuController(object):
         
         @type shortcuts_dic: dict(Command -> list(Shortcut))
         """
-        for cmd, shortcuts in shortcuts_dic.iteritems():
+        for cmd, shortcuts in list(shortcuts_dic.items()):
             cmd.shortcuts = shortcuts
         self._save_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
@@ -81,7 +81,7 @@ class MenuController(object):
         else:
             def make(*params, **kwparams):
                 params = list(params)
-                for idx in xrange(len(params[4])):
+                for idx in range(len(params[4])):
                     params[4][idx] = Shortcut(*params[4][idx])
                 command = Command(*params, **kwparams)
                 commands.append(command)
@@ -249,11 +249,11 @@ class MenuController(object):
                partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True),
                []),
         )
-        misc_menu = (
-          make(18002, 'MF', 'MF',
-               control.file_list.open_mf,
-               []),
-        )
+        #misc_menu = (
+        #  make(18002, 'MF', 'MF',
+        #       control.file_list.open_mf,
+        #       []),
+        #)
         main_menu = (
          make_category(0, _('&File'), file_menu),
          make_category(1, _('F&older'), folder_menu),
@@ -262,7 +262,7 @@ class MenuController(object):
          make_category(4, _('&Help'), help_menu),
          make_category(5, _('Move'), hidden_menu),
          make_category(6, _('Fit'), fit_menu),
-         make_category(7, _('Misc'), misc_menu),
+         #make_category(7, _('Misc'), misc_menu),
         )
         return main_menu, commands
     

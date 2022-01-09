@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 #TODO: (2,2) Improve: change the command listbox into a listctrl with columns:
 #    (Category / Command / Assigned shortcuts)
@@ -274,7 +274,7 @@ class OptionsDialog(wx.Dialog):
         new_shortcut = Shortcut(event.GetAcceleratorFlags(), event.GetKeyCode())
         self.assigned_comamnd_lbl.SetLabel('')
         sel_cmd = self._get_selected_command()
-        for cmd, shortcut_lst in self.shortcuts.iteritems():
+        for cmd, shortcut_lst in list(self.shortcuts.items()):
             for shortcut in shortcut_lst:
                 if new_shortcut == shortcut and cmd is not sel_cmd:
                     text = _('Assigned for "%s"') % (cmd.name)
@@ -303,7 +303,7 @@ class OptionsDialog(wx.Dialog):
     
     @staticmethod
     def _set_selected(control, item):
-        for i in xrange(control.GetCount()):
+        for i in range(control.GetCount()):
             if control.GetClientData(i) == item:
                 control.SetSelection(i)
                 break

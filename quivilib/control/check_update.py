@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from quivilib import meta
 
@@ -54,8 +54,8 @@ class UpdateChecker(object):
             log.error(traceback.format_exc())
             
     def _get_update_info(self, url):
-        import urllib2
-        f = urllib2.urlopen(url)
+        import urllib.request, urllib.error, urllib.parse
+        f = urllib.request.urlopen(url)
         txt = f.read()
         last_update, down_url = txt.split()[0:2]
         return last_update, down_url

@@ -1,9 +1,10 @@
-from __future__ import absolute_import
+
 
 from pyfreeimage.funct_list import FUNCTION_LIST
 
 import ctypes
 import sys
+import os
 import logging
 log = logging.getLogger('pyfreeimage.library')
 
@@ -20,7 +21,8 @@ class Library(object):
     def __init__(self, file):
         if not file:
             if sys.platform == 'win32':
-                self.lib = ctypes.windll.freeimage
+                with os.add_dll_directory(os.getcwd()):
+                    self.lib = ctypes.windll.freeimage
             else:
                 self.lib = ctypes.cdll.LoadLibrary('libfreeimage.so.3')
                 
@@ -46,7 +48,7 @@ class Library(object):
         original_fn = getattr(self, name)
         unicode_fn = getattr(self, name + 'U')
         def unicode_detector_wrapper(*args):
-            if isinstance(args[pos], unicode):
+            if isinstance(args[pos], str):
                 if 'linux' in sys.platform:
                     args = list(args)
                     args[pos] = args[pos].encode('utf-8')
@@ -71,7 +73,6 @@ class Library(object):
         #else:
         #    function = getattr(self.lib, name)
         function = getattr(self.lib, name)
-        
         setattr(self, name_to_bind, function)
         
         if restype:
@@ -85,10 +86,13 @@ class Library(object):
         self.last_error = ''
         
     def get_readable_fifs(self):
-        return [i for i in xrange(self.GetFIFCount()) if self.FIFSupportsReading(i)]
+        return [i for i in range(1, self.GetFIFCount()) if self.FIFSupportsReading(i)]
     
     def get_fif_extensions(self, fif):
-        return ['.' + ext.lower() for ext in self.GetFIFExtensionList(fif).split(',')]
+        #GetFIFExtensionList returns bytes now, which needs to be turned into a string.
+        #Everything returned by this should be in latin-1...
+        resp = self.GetFIFExtensionList(fif).decode('latin-1')
+        return ['.' + ext.lower() for ext in resp.split(',')]
     
     def get_readable_extensions(self):
         lst = []

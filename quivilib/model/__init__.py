@@ -1,9 +1,8 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.model.canvas import Canvas
 from quivilib.model.favorites import Favorites
-from quivilib.thirdparty.path import path
 
 
 

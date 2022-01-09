@@ -10,7 +10,7 @@ the specific language governing rights and limitations under the License.
 """
 import traceback
 import ctypes as C
-from constants import *
+from .constants import *
 
 class IO(object):
     """Wrapped FreeImageIO structure used by the handle functions.
@@ -37,7 +37,7 @@ class IO(object):
         if not self.iserror:
             try:
                 return self.ReadProc(buffer, size, count)
-            except MemoryError, e:
+            except MemoryError as e:
                 # Special case: avoid allocating more memory
                 self._e = e
             except:
@@ -50,7 +50,7 @@ class IO(object):
         if not self.iserror:
             try:
                 return self.WriteProc(buffer, size, count)
-            except MemoryError, e:
+            except MemoryError as e:
                 # Special case: avoid allocating more memory
                 self._e = e
             except:
@@ -63,7 +63,7 @@ class IO(object):
         if not self.iserror:
             try:
                 return self.SeekProc(offset, origin)
-            except MemoryError, e:
+            except MemoryError as e:
                 # Special case: avoid allocating more memory
                 self._e = e
             except:
@@ -76,7 +76,7 @@ class IO(object):
         if not self.iserror:
             try:
                 return self.TellProc()
-            except MemoryError, e:
+            except MemoryError as e:
                 # Special case: avoid allocating more memory
                 self._e = e
             except:
@@ -114,7 +114,7 @@ class IO(object):
         # Exception check is inlined in case of a MemoryError
         if self.iserror:
             try:
-                raise self._e, None, self._traceback
+                raise self._e.with_traceback(self._traceback)
             finally:
                 # Avoid circular references through traceback
                 self._traceback = self._e = None
@@ -138,7 +138,7 @@ class IO(object):
         # Exception check is inlined in case of a MemoryError
         if self.iserror:
             try:
-                raise self._e, None, self._traceback
+                raise self._e.with_traceback(self._traceback)
             finally:
                 # Avoid circular references through traceback
                 self._traceback = self._e = None
@@ -156,16 +156,16 @@ class IO(object):
         # Exception check is inlined in case of a MemoryError
         if self.iserror:
             try:
-                raise self._e, None, self._traceback
+                raise self._e.with_traceback(self._traceback)
             finally:
                 # Avoid circular references through traceback
                 self._traceback = self._e = None
                 self.iserror = False
         return retval
 
-_PyString_FromStringAndSize = C.pythonapi.PyString_FromStringAndSize
-_PyString_FromStringAndSize.argtypes = [BYTE_P, C.c_int]
-_PyString_FromStringAndSize.restype = C.py_object
+_PyBytes_FromStringAndSize = C.pythonapi.PyBytes_FromStringAndSize
+_PyBytes_FromStringAndSize.argtypes = [BYTE_P, C.c_int]
+_PyBytes_FromStringAndSize.restype = C.py_object
 
 class FileIO(IO):
     """
@@ -186,7 +186,7 @@ class FileIO(IO):
         try:
             read = self._file.read
         except AttributeError:
-            raise IOAttributeError, "Unsupported file operation read"
+            raise IOAttributeError("Unsupported file operation read")
         line = read(size * count)
         n = len(line)
         C.memmove(buffer, line, n)
@@ -197,15 +197,15 @@ class FileIO(IO):
         try:
             write = self._file.write
         except AttributeError:
-            raise IOAttributeError, "Unsupported file operation write"
-        write(_PyString_FromStringAndSize(buffer, size * count))
+            raise IOAttributeError("Unsupported file operation write")
+        write(_PyBytes_FromStringAndSize(buffer, size * count))
         return count
 
     def SeekProc(self, offset, origin):
         try:
             seek = self._file.seek
         except AttributeError:
-            raise IOAttributeError, "Unsupported file operation seek"
+            raise IOAttributeError("Unsupported file operation seek")
         seek(offset, origin)
         return 0
 
@@ -213,7 +213,7 @@ class FileIO(IO):
         try:
             tell = self._file.tell
         except AttributeError:
-            raise IOAttributeError, "Unsupported file operation tell"
+            raise IOAttributeError("Unsupported file operation tell")
         pos = tell()
         return pos
 

@@ -1,6 +1,6 @@
-from __future__ import with_statement, absolute_import
 
-from quivilib.thirdparty.path import path as Path
+
+from pathlib import Path
 
 import wx
 from wx.lib.pubsub import pub as Publisher
@@ -17,7 +17,7 @@ class I18NController(object):
         self.settings = settings
         
         if sys.platform == 'win32':
-            wx.Locale.AddCatalogLookupPathPrefix(self.control.localization_path)
+            wx.Locale.AddCatalogLookupPathPrefix(str(self.control.localization_path))
         
         lang_code = settings.get('Language', 'ID')
         if lang_code == 'default':

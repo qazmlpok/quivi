@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from quivilib import meta
 
@@ -47,7 +47,7 @@ def open(f, path, canvas_type, delay=False):
         try:
             img = cls(canvas_type, f, path, delay=delay)
             break
-        except Exception, e:
+        except Exception as e:
             if IMG_CLASSES[-1] is cls:
                 raise
             else:

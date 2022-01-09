@@ -1,9 +1,9 @@
-from __future__ import with_statement, absolute_import
+
 
 import unittest
 import time
 
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.model.container import SortOrder
 from quivilib.model.settings import Settings
@@ -21,7 +21,7 @@ logging.getLogger().setLevel(logging.NOTSET)
 class Test(unittest.TestCase):
     def test_cache(self):
         app = wx.App(False)
-        container = DirectoryContainer(Path(u'.') / 'tests' / 'dummy', SortOrder.TYPE)
+        container = DirectoryContainer(Path('.') / 'tests' / 'dummy', SortOrder.TYPE)
         class Dummy:
             width = 800
             height = 600

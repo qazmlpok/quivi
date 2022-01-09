@@ -21,7 +21,7 @@ def get_icon_for_extension(extension, small=True):
     hicon, iicon, attr, display_name, type_name = info
 
     # Get the bitmap
-    icon = wx.EmptyIcon()
+    icon = wx.Icon()
     icon.SetHandle(hicon)
     return icon
 
@@ -41,12 +41,12 @@ def get_icon_for_directory(small=True):
     hicon, iicon, attr, display_name, type_name = info
 
     # Get the bitmap
-    icon = wx.EmptyIcon()
+    icon = wx.Icon()
     icon.SetHandle(hicon)
     return icon
 
 def logical_cmp(a, b):
-    assert isinstance(a, unicode) and isinstance(b, unicode) 
+    assert isinstance(a, str) and isinstance(b, str) 
     return ctypes.windll.shlwapi.StrCmpLogicalW(a, b)
 
 def get_unicode_argv():                                                                                               
@@ -82,7 +82,7 @@ def get_unicode_argv():
     argc = c_int(0)
     argv = CommandLineToArgvW(cmd, byref(argc))
     if argc.value > 0:
-        return [argv[i] for i in xrange(argc.value)][-len(sys.argv):]
+        return [argv[i] for i in range(argc.value)][-len(sys.argv):]
     else:
         return []
 

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import pyfreeimage.library as library
 import pyfreeimage.constants as CO
@@ -131,7 +131,7 @@ class Image(object):
     def convert_to_raw_bits(self):
         buf = ctypes.create_string_buffer(self.height * self.width_bytes)
         buf_idx = ctypes.addressof(buf)
-        for line_idx in xrange(self.height-1, -1, -1):
+        for line_idx in range(self.height-1, -1, -1):
             line_buf = self._lib.GetScanLine(self._dib, line_idx)
             ctypes.memmove(buf_idx, line_buf, self.width_bytes)
             buf_idx += self.width_bytes
@@ -162,7 +162,7 @@ class Image(object):
         arrayt = ctypes.c_char * len(data)
         buf = arrayt.from_buffer(data)
         buf_idx = ctypes.addressof(buf)
-        for line_idx in xrange(height-1, -1, -1):
+        for line_idx in range(height-1, -1, -1):
             line_buf = img._lib.GetScanLine(img._dib, line_idx)
             ctypes.memmove(buf_idx, line_buf, img.width_bytes)
             buf_idx += img.width_bytes
@@ -224,13 +224,14 @@ class Image(object):
         if not res:
             raise RuntimeError('Unable to paste image')
         
-    def fill(self, (r, g, b)):
+    def fill(self, xxx_todo_changeme):
         #TODO: (1,3) Improve: support other bpp; check masks
+        (r, g, b) = xxx_todo_changeme
         assert self.bpp == 24, 'Unsupported BPP for fill'
         buf = ctypes.create_string_buffer(self.width_bytes)
         buf[0:(3 * (len(buf) / 3))] = [chr(b), chr(g), chr(r)] * (len(buf) / 3)
         buf_idx = ctypes.addressof(buf)
-        for line_idx in xrange(self.height-1, -1, -1):
+        for line_idx in range(self.height-1, -1, -1):
             line_buf = self._lib.GetScanLine(self._dib, line_idx)
             ctypes.memmove(line_buf, buf_idx, self.width_bytes)
         return buf

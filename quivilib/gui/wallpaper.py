@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from quivilib.i18n import _
 from quivilib import util
@@ -77,7 +77,7 @@ class WallpaperDialog(wx.Dialog):
 
     def __do_layout(self):
         # begin wxGlade: WallpaperDialog.__do_layout
-        grid_sizer_3 = wx.FlexGridSizer(6, 3, 5, 5)
+        grid_sizer_3 = wx.FlexGridSizer(rows=6, cols=3, vgap=5, hgap=5)
         btnsizer = wx.StdDialogButtonSizer()
         sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_3.Add((5, 5), 0, 0, 0)
@@ -124,11 +124,11 @@ class WallpaperDialog(wx.Dialog):
             
             @property
             def width(self):
-                return self.panel.GetSizeTuple()[0]
+                return self.panel.GetSize()[0]
             
             @property
             def height(self):
-                return self.panel.GetSizeTuple()[1]
+                return self.panel.GetSize()[1]
 
         return CanvasAdapter(self.preview_panel)
     
@@ -191,10 +191,9 @@ class WallpaperDialog(wx.Dialog):
         painted_region = PaintedRegion()
         Publisher.sendMessage('wpcanvas.painted', (dc, painted_region))
         if painted_region.left != -1:
-            clip_region = wx.Region(0, 0, self.preview_panel.GetSizeTuple()[0],
-                                    self.preview_panel.GetSizeTuple()[1])
-            clip_region.Subtract(painted_region.left, painted_region.top,
-                                 painted_region.width, painted_region.height)
+            clip_region = wx.Region(0, 0, self.preview_panel.GetSize()[0],
+                                    self.preview_panel.GetSize()[1])
+            clip_region.Subtract(painted_region)
             dc.SetClippingRegionAsRegion(clip_region)
             #Fix for bug in Linux (without this it would clear the entire image
             #when the panel is smaller than the image)

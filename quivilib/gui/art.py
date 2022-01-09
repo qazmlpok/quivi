@@ -1,11 +1,11 @@
-from __future__ import absolute_import
+
 
 from quivilib.resources import images
 
 import wx
 import sys
 
-ART_THUMBNAIL_VIEW = u'quiviART_THUMBNAIL_VIEW'
+ART_THUMBNAIL_VIEW = 'quiviART_THUMBNAIL_VIEW'
 
 _IMG_MAP_16 = {
     wx.ART_FOLDER_OPEN: 'folder_yellow_open',

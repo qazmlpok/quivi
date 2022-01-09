@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from quivilib.i18n import _
 from quivilib import meta
@@ -10,13 +10,13 @@ import wx
 # end wxGlade
 
 # begin wxGlade: extracode
-import wx.lib.hyperlink as hl
+import wx.lib.agw.hyperlink as hl
 # end wxGlade
 
 class AboutDialog(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: AboutDialog.__init__
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.THICK_FRAME
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.RESIZE_BORDER
         wx.Dialog.__init__(self, *args, **kwds)
         self.icon_bmp = wx.StaticBitmap(self, -1, images.quivi.Bitmap)
         self.name_lbl = wx.StaticText(self, -1, meta.APPNAME + ' ' + meta.VERSION)

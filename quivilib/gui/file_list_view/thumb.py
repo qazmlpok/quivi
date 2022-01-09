@@ -14,6 +14,7 @@ from wx.lib.pubsub import pub as Publisher
 import threading
 import math
 import logging
+import collections
 log = logging.getLogger('thumb')
 
 
@@ -126,7 +127,7 @@ class Thumb(tc.Thumb):
             if not hasattr(self, "_threadedimage"):
                 img = tc.GetMondrianImage()
             else:
-                if callable(self._threadedimage):
+                if isinstance(self._threadedimage, collections.Callable):
                     self._threadedimage = self._threadedimage()
                 img = self._threadedimage
         else:
@@ -196,7 +197,7 @@ class ScrolledThumbnail(tc.ScrolledThumbnail):
             bmp = img.create_thumbnail(300, 240, delay=True)
             alpha = False
             def delayed_fn(bmp=bmp):
-                if callable(bmp):
+                if isinstance(bmp, collections.Callable):
                     bmp = bmp()
                 img = bmp.ConvertToImage()
                 return img
@@ -213,7 +214,7 @@ class ScrolledThumbnail(tc.ScrolledThumbnail):
             alpha = True
             ext = container.get_item_extension(index)
             def delayed_fn(bmp=bmp, ext=ext):
-                icon = util.get_icon_for_extension(u'.' + ext, small=False)
+                icon = util.get_icon_for_extension('.' + ext, small=False)
                 bmp = wx.BitmapFromIcon(icon)
                 img = bmp.ConvertToImage()
                 return img

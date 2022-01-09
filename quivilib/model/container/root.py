@@ -1,9 +1,9 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.i18n import _
 from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
-from quivilib.thirdparty.path import path as Path
+from pathlib import Path
 
 from wx.lib.pubsub import pub as Publisher
 
@@ -19,7 +19,7 @@ class RootContainer(BaseContainer):
         BaseContainer.__init__(self, sort_order, show_hidden)
                 
     def _list_paths(self):
-        return [(Path(unicode(path)), None, None) for path
+        return [(Path(str(path)), None, None) for path
                 in GetLogicalDriveStrings().split('\x00')[:-1]]
 
     @property

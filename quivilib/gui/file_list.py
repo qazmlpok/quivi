@@ -1,10 +1,10 @@
-from __future__ import absolute_import
+
 from quivilib.gui.file_list_view.list_ctrl import FileList
 from quivilib.gui.file_list_view import thumb as tc
 from quivilib.gui import art
 
 import wx
-import wx.lib.buttonpanel as bp
+import wx.lib.agw.buttonpanel as bp
 from wx.lib.pubsub import pub as Publisher
 
 
@@ -92,7 +92,7 @@ class FileListPanel(wx.Panel):
             def event_fn(event, cmd=cmd):
                 try:
                     cmd()
-                except Exception, e:
+                except Exception as e:
                     self.handle_error(e)
             self.Bind(wx.EVT_BUTTON, event_fn, id=button.GetId())
         

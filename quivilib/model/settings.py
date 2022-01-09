@@ -1,17 +1,17 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.container import SortOrder
 
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 
 from wx.lib.pubsub import pub as Publisher
-from wx.lib.pubsub.core.topicutils import TopicNameInvalid
+from wx.lib.pubsub.core.topicutils import TopicNameError
 
 
 
 class UnicodeAwareConfigParser(SafeConfigParser):
     def set(self, section, option, value):
-        value = unicode(value).encode('utf-8')
+        value = str(value).encode('utf-8')
         SafeConfigParser.set(self, section, option, value)
 
     def get(self, section, option):
@@ -23,8 +23,9 @@ class UnicodeAwareConfigParser(SafeConfigParser):
         return [(option, self.get(section, option)) for option in options]
     
     
-
-class Settings(UnicodeAwareConfigParser):
+#I don't believe UnicodeAwareConfigParser is necessary in python3.
+#(If it is, remember to add kwargs to the wrapper functions)
+class Settings(SafeConfigParser):
     (FIT_NONE,
      FIT_WIDTH_OVERSIZE,
      FIT_HEIGHT_OVERSIZE,
@@ -36,24 +37,24 @@ class Settings(UnicodeAwareConfigParser):
      FIT_TILED,
      FIT_WIDTH,
      FIT_HEIGHT,
-     FIT_BOTH) = range(12)
+     FIT_BOTH) = list(range(12))
      
     (ZOOM_DEFAULT,
      ZOOM_SYSTEM,
      ZOOM_NEIGHBOR,
      ZOOM_BILINEAR,
      ZOOM_BICUBIC,
-     ZOOM_CATMULLROM) = range(6)
+     ZOOM_CATMULLROM) = list(range(6))
      
     (MOVE_DRAG,
-     MOVE_LOCK) = range(2)
+     MOVE_LOCK) = list(range(2))
     
     (BG_SYSTEM,
      BG_BLACK,
-     BG_WHITE) = range(3)
+     BG_WHITE) = list(range(3))
     
     def __init__(self, path):
-        UnicodeAwareConfigParser.__init__(self)
+        SafeConfigParser.__init__(self)
         self.path = path
         self.read(path)
         self.__defaults = self._load_defaults()
@@ -95,11 +96,11 @@ class Settings(UnicodeAwareConfigParser):
         return defaults
     
     def set(self, section, option, value):
-        UnicodeAwareConfigParser.set(self, section, option, value)
+        SafeConfigParser.set(self, section, option, value)
         try:
             Publisher.sendMessage('settings.changed.%s.%s' % (section, option), self)
-        except TopicNameInvalid:
-            #Avoid TopicNameInvalid error (option can be a number, and
+        except TopicNameError:
+            #Avoid TopicNameError error (option can be a number, and
             #pubsub only accepts names starting with a letter)
             pass
     

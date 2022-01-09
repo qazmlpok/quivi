@@ -1,4 +1,4 @@
-from __future__ import with_statement, absolute_import
+
 
 from quivilib.model.settings import Settings
 from quivilib.model import image
@@ -155,8 +155,8 @@ class Canvas(object):
                 log.debug(traceback.format_exc())
                 self._zoom = original_zoom
              
-            self.left += old_w / 2 - self.width / 2
-            self.top += old_h / 2 - self.height / 2
+            self.left += old_w // 2 - self.width // 2
+            self.top += old_h // 2 - self.height // 2
             self._sendMessage('%s.zoom.changed' %self.name, self._zoom)
             
     def _get_zoom(self):
@@ -230,25 +230,25 @@ class Canvas(object):
             self.left = 0
         else:
             #center
-            self.left = scr_w / 2 - img_w / 2
+            self.left = scr_w // 2 - img_w // 2
         if img_h > scr_h:
             #align top
             self.top = 0
         else:
             #center
-            self.top = scr_h / 2 - img_h / 2
+            self.top = scr_h // 2 - img_h // 2
     
     @property
     def y_centered(self):
         scr_h = self.view.height
         img_h = self.height
-        return (self.top == scr_h / 2 - img_h / 2)
+        return (self.top == scr_h // 2 - img_h // 2)
         
     @property
     def x_centered(self):
         scr_w = self.view.width
         img_w = self.width
-        return (self.left == scr_w / 2 - img_w / 2)
+        return (self.left == scr_w // 2 - img_w // 2)
     
     @property
     def centered(self):
@@ -267,8 +267,8 @@ class Canvas(object):
             start_y = self.top % self.height
             if start_y > 0:
                 start_y -= self.height
-            for x in xrange(start_x, self.view.width, self.width):
-                for y in xrange(start_y, self.view.height, self.height):
+            for x in range(start_x, self.view.width, self.width):
+                for y in range(start_y, self.view.height, self.height):
                     self.img.paint(dc, x, y)
         else:
             self.img.paint(dc, self.left, self.top)

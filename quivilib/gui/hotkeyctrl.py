@@ -13,10 +13,10 @@ def _setup():
         if name.startswith('WXK_'):
             key_code = wx.__dict__[name]
             if name not in ignore:
-                _dic[key_code] = unicode(name[4:].replace('_', ' ').title())
+                _dic[key_code] = str(name[4:].replace('_', ' ').title())
 
 _setup()
-            
+
 def GetHotkeyName(key_code, modifiers):
     name = GetKeyName(key_code)
     mod_name = GetModifiersName(modifiers)
@@ -44,19 +44,19 @@ def GetKeyName(key_code):
         try:
             return chr(key_code)
         except ValueError:
-            return u'[Unknown]'
+            return '[Unknown]'
         
 def GetModifiersName(modifiers):
     lst = []
     if modifiers & wx.MOD_CMD and wx.MOD_CMD == wx.MOD_META:
-        lst.append(u'Cmd')
+        lst.append('Cmd')
     if modifiers & wx.MOD_CONTROL:
-        lst.append(u'Ctrl')
+        lst.append('Ctrl')
     if modifiers & wx.MOD_SHIFT:
-        lst.append(u'Shift')
+        lst.append('Shift')
     if modifiers & wx.MOD_ALT:
-        lst.append(u'Alt')
-    return u'+'.join(lst)
+        lst.append('Alt')
+    return '+'.join(lst)
 
 def ConvertFlagsToModifiers(flags):
     modifiers = 0
@@ -176,7 +176,7 @@ if __name__ == '__main__':
             self.Layout()
             
         def on_hotkey_changed(self, event):
-            print event.GetHotkeyName()
+            print(event.GetHotkeyName())
             
     
     app = wx.App(False)

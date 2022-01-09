@@ -39,7 +39,6 @@ the specific language governing rights and limitations under the License.
 #
 import ctypes as C
 import os, sys
-from types import IntType
 
 from sys import platform as _platform
 
@@ -395,7 +394,7 @@ if LITTLEENDIAN:
     FI_RGBA_RED_MASK	    = 0x00FF0000
     FI_RGBA_GREEN_MASK	    = 0x0000FF00
     FI_RGBA_BLUE_MASK	    = 0x000000FF
-    FI_RGBA_ALPHA_MASK	    = 0xFF000000L
+    FI_RGBA_ALPHA_MASK	    = 0xFF000000
     FI_RGBA_RED_SHIFT	    = 16
     FI_RGBA_GREEN_SHIFT	    = 8
     FI_RGBA_BLUE_SHIFT	    = 0
@@ -446,7 +445,7 @@ class FISize(object):
     def __init__(self, valW=0, valH=0):
         """ Pass me the width and height
         """
-        if type(valW) == IntType:
+        if type(valW) == int:
             self.__W, self.__H = valW, valH
         elif len(valW) == 2:
             self.__W, self.__H = valW
@@ -498,7 +497,7 @@ class FIPoint(object):
     def __init__(self, valX=0, valY=0):
         """ Pass me the x and y
         """
-        if type(valX) == IntType:
+        if type(valX) == int:
             self.__X, self.__Y = valX, valY
         elif len(valY) == 2:
             self.__X, self.__Y = valX
@@ -517,7 +516,7 @@ class FIPoint(object):
     def __eq__(self, object):
         """
         """
-        print "point", object
+        print("point", object)
     
     def __repr__(self):
         """
