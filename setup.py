@@ -44,25 +44,27 @@ except ImportError:
 
 
 #Auto find subpackages
-
-def add_package(found_packages, directory, local_names):
-    if '__init__.py' in local_names:
-        found_packages.append(
-            re.sub('.*quivilib', 'quivilib', directory)
-            .replace(os.path.sep, '.')
+def do_walk():
+    packages = []
+    files = os.walk('quivilib')
+    for (dirpath, dirnames, filenames) in files:
+        if '__init__.py' in filenames:
+            packages.append(
+                re.sub('.*quivilib', 'quivilib', dirpath)
+                .replace(os.path.sep, '.')
             )
-    else:
-        local_names = []
+    return packages
 
-packages = []
-os.path.walk('quivilib', add_package, packages)
+packages = do_walk()
 if meta.USE_FREEIMAGE:
     packages.append('pyfreeimage')
 
 if sys.platform == 'win32':
-    main_files = ['FreeImage.dll', 'LICENSE.txt',
-              'freeimage-license.txt', 'unrar.dll', 'msvcp90.dll',
+    main_files = ['LICENSE.txt',
+              'UnRAR64.dll', 'msvcp90.dll',
               'msvcr90.dll', 'Microsoft.VC90.CRT.manifest']
+    if meta.USE_FREEIMAGE:
+        main_files.append('FreeImage.dll', 'freeimage-license.txt')
     translation_files = glob('localization/*.mo') + ['localization/default.pot']
     data_files = [('', main_files),
                   ('localization', translation_files)]
