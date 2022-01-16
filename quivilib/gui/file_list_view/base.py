@@ -1,5 +1,5 @@
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 from wx import FileDataObject, DropSource
 
 
@@ -24,7 +24,7 @@ class FileListViewBase(object):
             idx = sel
             path = None
         obj = Dummy()
-        Publisher.sendMessage('file_list.begin_drag', obj)
+        Publisher.sendMessage('file_list.begin_drag', obj=obj)
         if obj.path:
             do = FileDataObject()
             do.AddFile(obj.path)

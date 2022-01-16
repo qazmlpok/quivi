@@ -5,7 +5,7 @@ from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
 from pathlib import Path
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 try:
     from win32api import GetLogicalDriveStrings
@@ -15,7 +15,7 @@ except ImportError:
 
 class RootContainer(BaseContainer):
     def __init__(self, sort_order, show_hidden):
-        Publisher.sendMessage('container.opened', self)
+        Publisher.sendMessage('container.opened', container=self)
         BaseContainer.__init__(self, sort_order, show_hidden)
                 
     def _list_paths(self):

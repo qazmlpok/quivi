@@ -4,7 +4,7 @@ from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.root import RootContainer
 from pathlib import Path
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 import os
 import sys
@@ -31,7 +31,7 @@ class DirectoryContainer(BaseContainer):
     def __init__(self, directory, sort_order, show_hidden):
         self.path = directory.resolve()
         BaseContainer.__init__(self, sort_order, show_hidden)
-        Publisher.sendMessage('container.opened', self)
+        Publisher.sendMessage('container.opened', container=self)
                 
     def _list_paths(self):
         paths = []

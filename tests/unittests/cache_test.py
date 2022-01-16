@@ -9,7 +9,7 @@ from quivilib.model.container import SortOrder
 from quivilib.model.settings import Settings
 from quivilib.control.cache import ImageCache, ImageCacheLoadRequest
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 import wx
 import time
 
@@ -29,9 +29,9 @@ class Test(unittest.TestCase):
         s = Settings('filethatdoesnotexist.ini')
         cache = ImageCache(s)
         
-        Publisher.sendMessage('cache.load_image', req)
-        #Publisher.sendMessage('cache.load_image', req)
+        Publisher.sendMessage('cache.load_image', request=req)
+        #Publisher.sendMessage('cache.load_image', request=req)
         
         #time.sleep(10)
         
-        Publisher.sendMessage('program.closed', None)
+        Publisher.sendMessage('program.closed')

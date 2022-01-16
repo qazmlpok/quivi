@@ -4,7 +4,7 @@ from quivilib import meta
 from quivilib.model.canvas import Canvas
 from quivilib.util import synchronized_method
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 import wx
 
 from threading import Thread, Lock, Semaphore
@@ -66,8 +66,7 @@ class ImageCache(object):
         self.thread.start()
         self.processing_request = None
         
-    def on_load_image(self, message):
-        request = message.data
+    def on_load_image(self, *, request):
         hit = False 
         with self.clock:
             for req in self.cache:
@@ -87,16 +86,16 @@ class ImageCache(object):
             request.img.delayed_load()
             self.notify_image_loaded(request)
             
-    def on_flush(self, message):
+    def on_flush(self):
         with self.clock:
             while self.cache:
                 self.cache.pop()
                 
     def notify_image_loaded(self, request):
-        Publisher.sendMessage('cache.image_loaded', request)
+        Publisher.sendMessage('cache.image_loaded', request=request)
         
     def notify_image_load_error(self, request, exception, tb):
-        Publisher.sendMessage('cache.image_load_error', (request, exception, tb))
+        Publisher.sendMessage('cache.image_load_error', request=request, exception=exception, tb=tb)
         
     def _put_request(self, request):
         with self.qlock:  
@@ -106,15 +105,16 @@ class ImageCache(object):
                 log.debug('main: releasing...')
                 self.semaphore.release()
             
-    def on_clear_pending(self, message):
+    def on_clear_pending(self, *, request=None):
+        #parameter is passed in but not used.
         with self.qlock:
             while self.queue:
                 self.queue.pop()
                 
-    def on_program_closed(self, message):
+    def on_program_closed(self, *, settings_lst=None):
         log.debug('main: on closed')
         #log.debug('main: clearing pending...')
-        self.on_clear_pending(None)
+        self.on_clear_pending()
         with self.qlock:
             log.debug('main: adding None request')
             self.queue.insert(-1, None)

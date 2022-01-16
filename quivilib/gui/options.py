@@ -10,7 +10,7 @@ import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 from wx.lib import langlistctrl
 
 
@@ -77,7 +77,7 @@ class OptionsDialog(wx.Dialog):
         self.Bind(hk.EVT_HOTKEY, self.on_hotkey_pressed, self.new_shortcut_key)
         # end wxGlade
         
-        self.lang_lst.SetColumnWidth(0, self.lang_lst.GetClientSizeTuple()[0])
+        self.lang_lst.SetColumnWidth(0, self.lang_lst.GetClientSize()[0])
         
         self.shortcuts = {}
         for cmd in self.commands:
@@ -152,7 +152,7 @@ class OptionsDialog(wx.Dialog):
         viewing_sizer.Add(self.start_dir_picker, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
         bg_color_sizer.Add(self.bg_color_default_rdo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         custom_bg_color_sizer.Add(self.bg_color_custom_rdo, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        custom_bg_color_sizer.Add(self.bg_color_picker, 0, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 5)
+        custom_bg_color_sizer.Add(self.bg_color_picker, 0, wx.LEFT|wx.RIGHT|wx.EXPAND, 5)
         bg_color_sizer.Add(custom_bg_color_sizer, 1, wx.ALL|wx.EXPAND, 5)
         viewing_sizer.Add(bg_color_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
         viewing_sizer.Add(self.real_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
@@ -264,7 +264,7 @@ class OptionsDialog(wx.Dialog):
         opt.open_first = self.open_first_chk.GetValue()
         opt.shortcuts = self.shortcuts
         #TODO: (2,2) Improve: handle errors here
-        Publisher.sendMessage('options.update', opt)
+        Publisher.sendMessage('options.update', opt=opt)
         event.Skip()
 
     def on_cancel(self, event): # wxGlade: OptionsDialog.<event_handler>

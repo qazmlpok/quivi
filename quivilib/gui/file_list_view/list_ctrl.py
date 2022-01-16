@@ -5,7 +5,7 @@ from quivilib.model.container import SortOrder
 from quivilib.util import get_icon_for_extension, get_icon_for_directory
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 import sys
 
@@ -54,11 +54,11 @@ class FileList(wx.ListCtrl, FileListViewBase):
     @error_handler(_handle_error)
     def on_item_selected(self, event):
         if not self._selecting_programatically:
-            Publisher.sendMessage('file_list.selected', event.GetIndex())
+            Publisher.sendMessage('file_list.selected', index=event.GetIndex())
 
     @error_handler(_handle_error)
     def on_item_activated(self, event):
-        Publisher.sendMessage('file_list.activated', event.GetIndex())
+        Publisher.sendMessage('file_list.activated', index=event.GetIndex())
         
     def on_key_down(self, event):
         event.Skip()
@@ -103,8 +103,8 @@ class FileList(wx.ListCtrl, FileListViewBase):
     def OnGetItemAttr(self, item):
         return None
     
-    def on_container_changed(self, message):
-        self.container = message.data
+    def on_container_changed(self, *, container):
+        self.container = container
         old_sel = self.GetFirstSelected()
         self.flush_icon_cache()
         if sys.platform != 'win32' and old_sel != -1:
@@ -118,8 +118,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
         self.SetItemCount(len(self.container.items))
         self.Refresh()
         if sel >= 0:
-            class Dummy(object): data = (sel, self.container.selected_item)
-            self.on_selection_changed(Dummy())
+            self.on_selection_changed(idx=sel, item=self.container.selected_item)
         
     def flush_icon_cache(self):
         self.icon_cache = {}
@@ -127,8 +126,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
         self.image_list = wx.ImageList(16, 16)
         self.SetImageList(self.image_list, wx.IMAGE_LIST_SMALL)
         
-    def on_selection_changed(self, message):
-        idx, item = message.data
+    def on_selection_changed(self, *, idx, item):
         self._selecting_programatically = True
         try:
             self.SetItemState(idx, wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED,
@@ -137,7 +135,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
         finally:
             self._selecting_programatically = False
             
-    def on_language_changed(self, message):
+    def on_language_changed(self):
         def set_col_text(col, text):
             item = wx.ListItem()
             item.Text = text
@@ -151,7 +149,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
     def on_column_click(self, event):
         col = event.GetColumn()
         sort_order = self.columns[col]
-        Publisher.sendMessage('file_list.column_clicked', sort_order)
+        Publisher.sendMessage('file_list.column_clicked', sort_order=sort_order)
             
     def on_resize(self, event):
         #TODO: (4,?) Investigate: uncommenting this line causes a bizarre bug
@@ -168,7 +166,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
     def _adjust_columns(self):
         #TODO: (1,?) Fix: When making window smaller, a horizontal scroll
         #    appears sometimes. It shouldn't.
-        width = self.GetClientSizeTuple()[0]
+        width = self.GetClientSize()[0]
         used_width = sum(self.GetColumnWidth(i) for i
                          in range(1, self.GetColumnCount()))
         self.SetColumnWidth(0, width - used_width - 5)

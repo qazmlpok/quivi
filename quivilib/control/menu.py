@@ -10,7 +10,7 @@ from quivilib.control import canvas
 from quivilib.model.settings import Settings
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 from functools import partial
 
@@ -27,11 +27,15 @@ class MenuController(object):
         self._load_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
         #These must be sent in this order
-        Publisher.sendMessage('menu.built', self.main_menu)
-        Publisher.sendMessage('toolbar.built', self._get_toolbar_commands(self.commands))
+        Publisher.sendMessage('menu.built', main_menu=self.main_menu)
+        Publisher.sendMessage('toolbar.built', commands=self._get_toolbar_commands(self.commands))
         #TODO: (2,2) Refactor: change this message name. This also notifies that
         #    shortcuts have changed.
-        Publisher.sendMessage('menu.labels.changed', (self.main_menu, self.commands, self.shortcuts))
+        Publisher.sendMessage('menu.labels.changed', 
+                                main_menu=self.main_menu, 
+                                commands=self.commands, 
+                                accel_table=self.shortcuts
+        )
         
         Publisher.subscribe(self.on_language_changed, 'language.changed')
         Publisher.subscribe(self.on_command_execute, 'command.execute')
@@ -45,15 +49,22 @@ class MenuController(object):
             cmd.shortcuts = shortcuts
         self._save_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
-        Publisher.sendMessage('menu.labels.changed', (self.main_menu, self.commands, self.shortcuts))
+        Publisher.sendMessage('menu.labels.changed', 
+                                main_menu=self.main_menu,
+                                commands=self.commands,
+                                accel_table=self.shortcuts
+        )
         
-    def on_language_changed(self, message):
+    def on_language_changed(self):
         self._make_commands(self.control, True)
-        Publisher.sendMessage('menu.labels.changed', (self.main_menu, self.commands, self.shortcuts))
-        Publisher.sendMessage('toolbar.labels.changed', self._get_toolbar_commands(self.commands))
+        Publisher.sendMessage('menu.labels.changed', 
+                                main_menu=self.main_menu,
+                                commands=self.commands,
+                                accel_table=self.shortcuts
+        )
+        Publisher.sendMessage('toolbar.labels.changed', commands=self._get_toolbar_commands(self.commands))
         
-    def on_command_execute(self, message):
-        ide = message.data
+    def on_command_execute(self, *, ide):
         [cmd() for cmd in self.commands if cmd.ide == ide]
         
     def _make_commands(self, control, update=False):

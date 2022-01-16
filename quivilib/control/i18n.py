@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 import sys
 import logging as log
@@ -54,7 +54,7 @@ class I18NController(object):
             info = wx.Locale.GetLanguageInfo(self._language)
             self.settings.set('Language', 'ID', info.CanonicalName)
         
-        Publisher.sendMessage('language.changed', None)
+        Publisher.sendMessage('language.changed')
             
     def get_laguage(self):
         return self._language

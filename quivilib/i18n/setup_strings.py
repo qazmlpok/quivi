@@ -8,7 +8,6 @@ It also writes the correct include file for the nsis setup script
 when run.
 """
 import wx
-from wx.lib.pubsub import setuparg1
 
 from quivilib.i18n import _
 from quivilib.control.i18n import I18NController

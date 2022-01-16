@@ -4,8 +4,7 @@ from quivilib.model.container import SortOrder
 
 from configparser import SafeConfigParser
 
-from wx.lib.pubsub import pub as Publisher
-from wx.lib.pubsub.core.topicutils import TopicNameError
+from pubsub import pub as Publisher
 
 
 
@@ -58,7 +57,7 @@ class Settings(SafeConfigParser):
         self.path = path
         self.read(path)
         self.__defaults = self._load_defaults()
-        Publisher.sendMessage('settings.changed', self)
+        Publisher.sendMessage('settings.changed', settings=self)
         
     def _load_defaults(self):
         defaults = (
@@ -98,8 +97,8 @@ class Settings(SafeConfigParser):
     def set(self, section, option, value):
         SafeConfigParser.set(self, section, option, value)
         try:
-            Publisher.sendMessage('settings.changed.%s.%s' % (section, option), self)
-        except TopicNameError:
+            Publisher.sendMessage('settings.changed.%s.%s' % (section, option), settings=self)
+        except Publisher.TopicNameError:
             #Avoid TopicNameError error (option can be a number, and
             #pubsub only accepts names starting with a letter)
             pass

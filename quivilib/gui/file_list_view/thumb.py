@@ -9,7 +9,7 @@ from quivilib.gui.thumbnailctrl import (
     THUMB_OUTLINE_RECT)
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 import threading
 import math
@@ -50,25 +50,23 @@ class ThumbnailCtrl(tc.ThumbnailCtrl, FileListViewBase):
     @error_handler(_handle_error)
     def on_item_selected(self, event):
         if not self._selecting_programatically:
-            Publisher.sendMessage('file_list.selected', self.GetSelection())
+            Publisher.sendMessage('file_list.selected', index=self.GetSelection())
             
     @error_handler(_handle_error)
     def on_item_activated(self, event):
-        Publisher.sendMessage('file_list.activated', self.GetSelection())
+        Publisher.sendMessage('file_list.activated', index=self.GetSelection())
         
-    def on_container_changed(self, message):
-        self.container = message.data
+    def on_container_changed(self, *, container):
+        self.container = container
         sel = self.container.selected_item_index
         self._delayed_load = not self.Parent.is_thumbnails()
         if not self._delayed_load:
             self._scrolled.ShowContainer(self.container, True)
             if sel >= 0:
-                class Dummy(object): data = (sel, self.container.selected_item)
-                self.on_selection_changed(Dummy())
+                self.on_selection_changed(idx=sel, item=self.container.selected_item)
         
-    def on_selection_changed(self, message):
+    def on_selection_changed(self, *, idx, item):
         if not self._delayed_load:
-            idx, item = message.data
             self._selecting_programatically = True
             try:
                 if idx < self.GetItemCount():
@@ -156,7 +154,7 @@ class ScrolledThumbnail(tc.ScrolledThumbnail):
         self._thread = None
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         
-    def on_program_closed(self, message):
+    def on_program_closed(self, *, settings_lst=None):
         self._isrunning = False
         if self._thread:
             self._thread.join()

@@ -5,7 +5,7 @@ from quivilib.gui import art
 
 import wx
 import wx.lib.agw.buttonpanel as bp
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 
 def _handle_error(exception, args, kwargs):
@@ -71,9 +71,7 @@ class FileListPanel(wx.Panel):
     def on_mouse_enter(self, event):
         self.current_view.SetFocus()
     
-    def on_toolbar_built(self, message):
-        commands = message.data
-        
+    def on_toolbar_built(self, *, commands):
         #TODO: (2,2) Refactor: This shouldn't be hard coded
         #This must reflect the commands tuple from the message
         bmp_ids = (wx.ART_FOLDER_OPEN, wx.ART_ADD_BOOKMARK, wx.ART_DEL_BOOKMARK,
@@ -100,19 +98,14 @@ class FileListPanel(wx.Panel):
         self.Fit()
         
         if self._delay_favorite is not None:
-            class Dummy(): pass
-            message = Dummy()
-            message.data = self._delay_favorite
-            self.on_favorite_opened(message)
+            self.on_favorite_opened(favorite=self._delay_favorite)
         
-    def on_toolbar_labels_changed(self, message):
-        commands = message.data
+    def on_toolbar_labels_changed(self, *, commands):
         for cmd, button in zip(commands, self.buttons):
             button.SetShortHelp(cmd.clean_name)
             button.SetLongHelp(cmd.description)
             
-    def on_favorite_opened(self, message):
-        favorite = message.data
+    def on_favorite_opened(self, *, favorite):
         if not self.buttons:
             #Buttons not created yet, delay notification
             self._delay_favorite = favorite

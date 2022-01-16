@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 
 
@@ -50,8 +50,7 @@ class Favorites(object):
         #TODO: (1,2) Improve: use human sort
         return sorted((key, value) for key, value in list(self._favorites.items()))
     
-    def on_container_opened(self, message):
-        container = message.data
+    def on_container_opened(self, *, container):
         favorite = self.contains(container.path)
-        Publisher.sendMessage('favorite.opened', favorite)
+        Publisher.sendMessage('favorite.opened', favorite=favorite)
     

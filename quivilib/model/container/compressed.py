@@ -5,7 +5,7 @@ from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
 from pathlib import Path
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 from quivilib.meta import PATH_SEP
 
 import sys
@@ -142,7 +142,7 @@ class CompressedContainer(BaseContainer):
             self.file.list_files()
             
         BaseContainer.__init__(self, sort_order, show_hidden)
-        Publisher.sendMessage('container.opened', self)
+        Publisher.sendMessage('container.opened', container=self)
 
     def _list_paths(self):
         paths = []

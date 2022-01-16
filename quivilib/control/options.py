@@ -4,7 +4,7 @@ from quivilib.i18n import _
 from quivilib.model.settings import Settings
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 
 
@@ -38,13 +38,15 @@ class OptionsController(object):
         categories = self.control.menu.main_menu
                         
         Publisher.sendMessage('options.open_dialog',
-                                (fit_choices, self.model.settings, categories,
-                                 self.control.i18n.available_languages,
-                                 self.control.i18n.language,
-                                 self.control.can_save_settings_locally()))
+                                fit_choices=fit_choices, 
+                                settings=self.model.settings, 
+                                categories=categories,
+                                available_languages=self.control.i18n.available_languages,
+                                active_language=self.control.i18n.language,
+                                save_locally=self.control.can_save_settings_locally()
+        )
         
-    def on_update(self, message):
-        opt = message.data
+    def on_update(self, *, opt):
         try:
             fit_width = int(opt.fit_width_str)
         except ValueError:

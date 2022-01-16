@@ -9,7 +9,7 @@ from quivilib.util import monkeypatch_method
 
 from datetime import datetime, timedelta
 
-from wx.lib.pubsub import pub as Publisher 
+from pubsub import pub as Publisher 
 
 import logging
 logging.basicConfig()
@@ -22,8 +22,8 @@ DOWN_URL = 'http://example.com/down'
 def listen(topic):
     lst = []
     
-    def fn(message):
-        lst.append(message.data)
+    def fn(**kwargs):
+        lst.append(**kwargs)
     Publisher.subscribe(fn, topic)
     return lst
         

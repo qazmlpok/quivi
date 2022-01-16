@@ -17,7 +17,7 @@ from pathlib import Path
 from quivilib import util
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 import string
 import logging as log
@@ -84,8 +84,8 @@ class MainController(object):
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         Publisher.subscribe(self.on_open_update_site, 'program.open_update_site')
         Publisher.subscribe(self.on_request_temp_path, 'request.temp_path')
-        Publisher.sendMessage('favorites.changed', self.model.favorites)
-        Publisher.sendMessage('settings.loaded', self.model.settings)
+        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+        Publisher.sendMessage('settings.loaded', settings=self.model.settings)
         
         self.pane_info = None
         
@@ -133,13 +133,13 @@ class MainController(object):
         path = self.model.container.universal_path
         if path:
             self.model.favorites.insert(path)
-            Publisher.sendMessage('favorites.changed', self.model.favorites)
-            Publisher.sendMessage('favorite.opened', True)
+            Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+            Publisher.sendMessage('favorite.opened', favorite=True)
         
     def remove_favorite(self):
         self.model.favorites.remove(self.model.container.path)
-        Publisher.sendMessage('favorites.changed', self.model.favorites)
-        Publisher.sendMessage('favorite.opened', False)
+        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+        Publisher.sendMessage('favorite.opened', favorite=False)
         
     def copy_to_clipboard(self):
         self.model.canvas.copy_to_clipboard()
@@ -148,7 +148,7 @@ class MainController(object):
         self.file_list.delete(self.view)
         
     def open_about_dialog(self):
-        Publisher.sendMessage('about.open_dialog', None)
+        Publisher.sendMessage('about.open_dialog')
         
     def open_help(self):
         import webbrowser
@@ -158,12 +158,11 @@ class MainController(object):
         import webbrowser
         webbrowser.open(meta.REPORT_URL)
         
-    def on_open_update_site(self, message):
+    def on_open_update_site(self, *, url):
         import webbrowser
-        webbrowser.open(message.data)
+        webbrowser.open(url)
         
-    def on_program_closed(self, message):
-        settings_lst = message.data
+    def on_program_closed(self, *, settings_lst=None):
         for section, option, value in settings_lst:
             self.settings.set(section, option, value)
         self.settings.set('FileList', 'SortOrder', self.model.container.sort_order)
@@ -178,7 +177,7 @@ class MainController(object):
         filename = ''.join(random.choice(string.ascii_lowercase) for i in range(8))
         message.data.temp_path = self.temp_dir / filename
         message.data.temp_dir = self.temp_dir
-            
+
     @property
     def localization_path(self):
         return self.program_path / 'localization'

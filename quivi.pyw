@@ -8,7 +8,6 @@ def run():
     #if not hasattr(sys, 'frozen'):
     #    wxversion.ensureMinimal('2.8')
     import wx
-    from wx.lib.pubsub import setuparg1
     
     import traceback
     import logging

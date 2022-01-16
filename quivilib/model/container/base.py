@@ -7,7 +7,7 @@ from quivilib.util import alphanum_key
 
 import operator
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 #Check if Windows sort is available, by trying to calling it.
 #TODO: Replace with the python module natsort. Then finish removing cmpfunc
@@ -77,7 +77,7 @@ class BaseContainer(object):
         if parent:
             self.items.insert(0, parent)
         self._sort_order = order
-        Publisher.sendMessage('container.changed', self)
+        Publisher.sendMessage('container.changed', container=self)
         
     sort_order = property(get_sort_order, set_sort_order)
     
@@ -123,12 +123,12 @@ class BaseContainer(object):
             #i.e., file has been modified (but it's probably overkill)
             self.selected_item = selected_item
             if self.selected_item.typ == Item.IMAGE:
-                Publisher.sendMessage('container.item.changed', self.items.index(self.selected_item))
+                Publisher.sendMessage('container.item.changed', index=self.items.index(self.selected_item))
         
     @property
     def item_count(self):
         return len(self.items)
-                
+
     def get_item_name(self, item_index):
         path = self.items[item_index]
         if not path.name and path.drive:
@@ -162,7 +162,7 @@ class BaseContainer(object):
                 raise RuntimeError("Invalid item set as selected")
         if self._selected_item and self._selected_item != old_selected_item:
             idx = self.items.index(self._selected_item)
-            Publisher.sendMessage('container.selection_changed', (idx, self._selected_item))
+            Publisher.sendMessage('container.selection_changed', idx=idx, item=self._selected_item)
             
     def get_selected_item(self):
         return self._selected_item

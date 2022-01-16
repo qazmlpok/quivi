@@ -12,7 +12,7 @@ import pyfreeimage as fi
 from quivilib.model.image.freeimage import FreeImage
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 import sys
 import re
@@ -44,16 +44,14 @@ class WallpaperController(object):
                        _("Stretch to &fit screen, show entire image")]
         if self.model.canvas.img:
             color = _get_bg_color()
-            Publisher.sendMessage('wallpaper.open_dialog', (choices_str, color))
+            Publisher.sendMessage('wallpaper.open_dialog', choices=choices_str, color=color)
             
-    def on_dialog_opened(self, message):
-        dialog = message.data
+    def on_dialog_opened(self, *, dialog):
         self.canvas.view = dialog.canvas_view
         self.canvas_controller = CanvasController('wpcanvas', self.canvas, dialog.canvas_view)
         self.canvas.load_img(self.model.canvas.img.copy(), False)
         
-    def on_set_wallpaper(self, message):
-        pos_idx, color = message.data
+    def on_set_wallpaper(self, *, pos_idx, color):
         position = positions[pos_idx]
         
         item_index = self.model.container.selected_item_index
@@ -73,13 +71,11 @@ class WallpaperController(object):
         img = self.move_image(img, position, color)
         _set_wallpaper(img, position, color)
         
-    def on_preview_position_changed(self, message):
-        pos_idx = message.data
+    def on_preview_position_changed(self, *, pos_idx):
         self.canvas_controller.set_zoom_by_fit_type(positions[pos_idx],
                                                     wx.Display(0).GetGeometry().width)
     
-    def on_wallpaper_zoom(self, message):
-        zoom_in = message.data
+    def on_wallpaper_zoom(self, *, zoom_in):
         if zoom_in:
             self.canvas_controller.zoom_in()
         else:

@@ -4,7 +4,7 @@ from quivilib.model.settings import Settings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 from functools import partial
 import sys
@@ -27,11 +27,11 @@ class Canvas(object):
         self._top = 0
         self.tiled = False
         self.view = None
-        self._sendMessage('%s.zoom.changed' % self.name, self._zoom)
+        self._sendMessage('%s.zoom.changed' % self.name, zoom=self._zoom)
         
-    def _sendMessage(self, topic, data):
+    def _sendMessage(self, topic, **kwargs):
         if not self.quiet:
-            Publisher.sendMessage(topic, data)
+            Publisher.sendMessage(topic, **kwargs)
         else:
             pass
         
@@ -58,14 +58,16 @@ class Canvas(object):
     def load_img(self, img, adjust=True):
         self.img = img
         self._zoom = float(img.width) / float(img.original_width)
-        self._sendMessage('%s.zoom.changed' % self.name, self._zoom)
+        self._sendMessage('%s.zoom.changed' % self.name, zoom=self._zoom)
         if adjust:
             self.adjust()
-        self._sendMessage('%s.image.loaded' % self.name,
-                                (self.img.original_width, self.img.original_height))
-        self._sendMessage('%s.changed' % self.name, None)
-        
-                          
+        self._sendMessage('%s.image.loaded' % self.name, 
+                            width=self.img.original_width, 
+                            height=self.img.original_height
+        )
+        self._sendMessage('%s.changed' % self.name)
+
+
     def adjust(self):
         fit_type = self._get_int_setting('FitType')
         self.set_zoom_by_fit_type(fit_type)
@@ -130,7 +132,7 @@ class Canvas(object):
             self.left = self.top = 0
         else:
             self.center()
-        Publisher.sendMessage('%s.fit.changed' % self.name, fit_type)
+        Publisher.sendMessage('%s.fit.changed' % self.name, FitType=fit_type)
         
     def _set_zoom(self, zoom):
         #TODO: (1,3) Refactor: maybe this should be another method;
@@ -157,7 +159,7 @@ class Canvas(object):
              
             self.left += old_w // 2 - self.width // 2
             self.top += old_h // 2 - self.height // 2
-            self._sendMessage('%s.zoom.changed' %self.name, self._zoom)
+            self._sendMessage('%s.zoom.changed' % self.name, zoom=self._zoom)
             
     def _get_zoom(self):
         return self._zoom
@@ -278,4 +280,4 @@ class Canvas(object):
             return
         self.img.rotate(clockwise)
         self.adjust()
-        self._sendMessage('%s.changed' % self.name, None)
+        self._sendMessage('%s.changed' % self.name)

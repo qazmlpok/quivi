@@ -5,7 +5,7 @@ from quivilib.resources import images
 from quivilib.control.options import get_fit_choices
 
 import wx
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 
 
@@ -44,10 +44,9 @@ class CanvasController(object):
         self._old_mouse_pos = (-1, -1)
         self._default_cursor = wx.Cursor(images.cursor_hand.GetImage())
         self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())
-        Publisher.sendMessage('%s.cursor.changed' % self.name, self._default_cursor)
+        Publisher.sendMessage('%s.cursor.changed' % self.name, cursor=self._default_cursor)
         
-    def on_canvas_painted(self, message):
-        dc, painted_region = message.data
+    def on_canvas_painted(self, *, dc, painted_region):
         self.canvas.paint(dc)
         if self.canvas.tiled:
             painted_region.top = 0
@@ -60,46 +59,42 @@ class CanvasController(object):
             painted_region.width = self.canvas.width
             painted_region.height = self.canvas.height
         
-    def on_canvas_resized(self, message):
+    def on_canvas_resized(self):
         self.canvas.center()
-        Publisher.sendMessage('%s.changed' % self.name, None)
+        Publisher.sendMessage('%s.changed' % self.name)
         
-    def on_canvas_scrolled(self, message):
-        lines = message.data
+    def on_canvas_scrolled(self, *, lines):
         scr = self.view.height
         inc = int(scr * (0.2 / 3)) * lines
         self.canvas.top += (inc)
-        Publisher.sendMessage('%s.changed' % self.name, None)
+        Publisher.sendMessage('%s.changed' % self.name)
         
-    def on_canvas_mouse_event(self, message):
-        button, event = message.data
-        
+    def on_canvas_mouse_event(self, *, button, event):
         if self.name == 'canvas':
             button_name = ('Left', 'Middle', 'Right')[button]
             cmd_ide = self.settings.getint('Mouse', '%sClickCmd' % button_name)
             #TODO: (2,2) Refactor: change to constant. This is a dummy command ID
             # for "drag image". See settings.py
             if event == 0 and button == 0:
-                Publisher.sendMessage('%s.cursor.changed' % self.name, self._moving_cursor)
+                Publisher.sendMessage('%s.cursor.changed' % self.name, cursor=self._moving_cursor)
                 self._moving_image = True
             if event == 1 and (not self._moved_image or button != 0):
-                Publisher.sendMessage('command.execute', cmd_ide)
+                Publisher.sendMessage('command.execute', ide=cmd_ide)
             if event == 1 and button == 0:
-                Publisher.sendMessage('%s.cursor.changed' % self.name, self._default_cursor)
+                Publisher.sendMessage('%s.cursor.changed' % self.name, cursor=self._default_cursor)
                 self._moving_image = False
         else:
             #Not the main canvas (e.g. wallpaper dialog canvas)
             if button == 0 and event == 0:
-                Publisher.sendMessage('%s.cursor.changed' % self.name, self._moving_cursor)
+                Publisher.sendMessage('%s.cursor.changed' % self.name, cursor=self._moving_cursor)
                 self._moving_image = True
             elif button == 0 and event == 1:
-                Publisher.sendMessage('%s.cursor.changed' % self.name, self._default_cursor)
+                Publisher.sendMessage('%s.cursor.changed' % self.name, cursor=self._default_cursor)
                 self._moving_image = False
         self._moved_image = False
-                
-        
-    def on_canvas_mouse_motion(self, message):
-        x, y = message.data
+
+
+    def on_canvas_mouse_motion(self, *, x, y):
         old_x, old_y = self._old_mouse_pos
         canvas = self.canvas
         if old_x != -1 and self._moving_image:
@@ -111,7 +106,7 @@ class CanvasController(object):
             scale_y = 1 if scale_y < 1 else scale_y
             canvas.left += int(dx * scale_x)
             canvas.top += int(dy * scale_y)
-            Publisher.sendMessage('%s.changed' % self.name, None)
+            Publisher.sendMessage('%s.changed' % self.name)
         self._old_mouse_pos = x, y
 
     def _zoom(self, zoom_in):
@@ -121,15 +116,15 @@ class CanvasController(object):
         
     def zoom_in(self):
         self._zoom(True)
-        Publisher.sendMessage('%s.changed' % self.name, None)
+        Publisher.sendMessage('%s.changed' % self.name)
         
     def zoom_out(self):
         self._zoom(False)
-        Publisher.sendMessage('%s.changed' % self.name, None)
+        Publisher.sendMessage('%s.changed' % self.name)
         
     def zoom_reset(self):
         self.canvas.zoom = 1
-        Publisher.sendMessage('%s.changed' % self.name, None)
+        Publisher.sendMessage('%s.changed' % self.name)
         
     def zoom_fit_width(self):
         self.set_zoom_by_fit_type(Settings.FIT_WIDTH)
@@ -141,7 +136,7 @@ class CanvasController(object):
         self.canvas.set_zoom_by_fit_type(fit_type, scr_w)
         if save:
             self.settings.set('Options', 'FitType', fit_type)
-        Publisher.sendMessage('%s.changed' % self.name, None)
+        Publisher.sendMessage('%s.changed' % self.name)
         
     def move_image(self, direction, typ):
         if direction in (MOVE_RIGHT, MOVE_LEFT):
@@ -157,7 +152,7 @@ class CanvasController(object):
             self.canvas.top += inc
         elif direction == MOVE_DOWN:
             self.canvas.top -= inc
-        Publisher.sendMessage('%s.changed' % self.name, None)
+        Publisher.sendMessage('%s.changed' % self.name)
         
     def rotate_image(self, clockwise):
         self.canvas.rotate(clockwise)

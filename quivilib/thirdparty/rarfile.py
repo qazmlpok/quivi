@@ -401,7 +401,7 @@ class RarFile:
         #tmpname = os.tempnam() + ".rar"
         
         #Quivi specific code
-        from wx.lib.pubsub import pub as Publisher
+        from pubsub import pub as Publisher
         class Dummy(object): pass
         o = Dummy()
         o.temp_path = None

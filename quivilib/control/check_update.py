@@ -2,7 +2,7 @@
 
 from quivilib import meta
 
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 import wx
 
 from threading import Thread
@@ -73,5 +73,5 @@ class UpdateChecker(object):
             
     def _notify_update(self, down_url):
         def fn():
-            Publisher.sendMessage('program.update_available', down_url)
+            Publisher.sendMessage('program.update_available', down_url=down_url)
         wx.CallAfter(fn)

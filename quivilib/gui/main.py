@@ -4,7 +4,7 @@ from quivilib.meta import PATH_SEP
 
 import wx
 import wx.aui
-from wx.lib.pubsub import pub as Publisher
+from pubsub import pub as Publisher
 
 from quivilib.i18n import _
 from quivilib import meta
@@ -125,7 +125,7 @@ class MainWindow(wx.Frame):
     def _bind_panel_mouse_events(self):
         def make_fn(button_idx, event_idx):
             def fn(event):
-                Publisher.sendMessage('canvas.mouse.event', (button_idx, event_idx))
+                Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx)
                 event.Skip()
             return fn
         for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT')):
@@ -172,7 +172,7 @@ class MainWindow(wx.Frame):
             self.SetSize(0, 0, width, height)
     
     def on_resize(self, event):
-        Publisher.sendMessage('canvas.resized', None)
+        Publisher.sendMessage('canvas.resized')
         if not self.IsMaximized():
             self._last_size = self.GetSize()
             
@@ -186,7 +186,7 @@ class MainWindow(wx.Frame):
         self.save(settings_lst)
         self.file_list_panel.save(settings_lst)
         try:
-            Publisher.sendMessage('program.closed', settings_lst)
+            Publisher.sendMessage('program.closed', settings_lst=settings_lst)
         except Exception:
             log.debug(traceback.format_exc())
         
@@ -195,11 +195,10 @@ class MainWindow(wx.Frame):
         self.Destroy()
         
     def on_mouse_motion(self, event):
-        Publisher.sendMessage('canvas.mouse.motion', (event.GetX(), event.GetY()))
+        Publisher.sendMessage('canvas.mouse.motion', x=event.GetX(), y=event.GetY())
         event.Skip()
         
-    def on_settings_loaded(self, message):
-        settings = message.data
+    def on_settings_loaded(self, *, settings):
         self.load(settings)
         self.file_list_panel.load(settings)
     
@@ -214,7 +213,7 @@ class MainWindow(wx.Frame):
         class PaintedRegion(object):
             pass
         painted_region = PaintedRegion()
-        Publisher.sendMessage('canvas.painted', (dc, painted_region))
+        Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
         clip_region = wx.Region(0, 0, self.panel.GetSize()[0],
                                 self.panel.GetSize()[1])
         clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
@@ -229,7 +228,7 @@ class MainWindow(wx.Frame):
     def on_mouse_wheel(self, event):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
         lines *= event.GetLinesPerAction()
-        Publisher.sendMessage('canvas.scrolled', lines)
+        Publisher.sendMessage('canvas.scrolled', lines=lines)
         
     def on_mouse_enter(self, event):
         self.panel.SetFocus()
@@ -239,8 +238,7 @@ class MainWindow(wx.Frame):
         self.PopupMenu(self.fit_menu)
         menu.Destroy()
         
-    def on_busy(self, message):
-        busy = message.data
+    def on_busy(self, *, busy):
         if self._busy == busy:
             return
         if busy:
@@ -250,41 +248,37 @@ class MainWindow(wx.Frame):
             wx.CallAfter(wx.EndBusyCursor)
         self._busy = busy
         
-    def on_freeze(self, message):
+    def on_freeze(self):
         self.Freeze()
         
-    def on_thaw(self, message):
+    def on_thaw(self):
         self.Thaw()
     
-    def on_error(self, message):
-        exception, tb = message.data
+    def on_error(self, *, exception, tb):
         self.handle_error(exception, tb)
         
-    def on_canvas_changed(self, message):
+    def on_canvas_changed(self):
         self.panel.Refresh(eraseBackground=False)
         
-    def on_canvas_fit_changed(self, message):
+    def on_canvas_fit_changed(self, *, settings=None, FitType=None):
         #Using the same listener for two different messages,
         #so parse it differently
-        if isinstance(message.data, int):
-            fit_type = message.data
+        if FitType is not None:
+            fit_type = FitType
         else:
-            fit_type = message.data.getint('Options', 'FitType')
+            fit_type = settings.getint('Options', 'FitType')
         fit_choices = get_fit_choices()
         name = [name for name, typ in fit_choices if typ == fit_type][0]
         self.status_bar.SetStatusText(name, FIT_FIELD)
         
-    def on_canvas_cursor_changed(self, message):
-        cursor = message.data
+    def on_canvas_cursor_changed(self, *, cursor):
         self.panel.SetCursor(cursor)
         
-    def on_canvas_zoom_changed(self, message):
-        zoom = message.data
+    def on_canvas_zoom_changed(self, *, zoom):
         text = util.get_formatted_zoom(zoom)
         self.status_bar.SetStatusText(text, ZOOM_FIELD)
         
-    def on_menu_built(self, message):
-        main_menu = message.data
+    def on_menu_built(self, *, main_menu):
         for category in main_menu:
             menu = self._make_menu(category.commands)
             self.menu_bar.Append(menu, category.name)
@@ -313,8 +307,7 @@ class MainWindow(wx.Frame):
                 menu.AppendSeparator()
         return menu
     
-    def on_favorites_changed(self, message):
-        favorites = message.data
+    def on_favorites_changed(self, *, favorites):
         #TODO: (1,2) Improve: '3' is the favorites menu index, maybe it should be
         #      passed in the menu.built message instead of hard-coding here?
         favorites_menu = self.menu_bar.GetMenu(3)
@@ -322,7 +315,7 @@ class MainWindow(wx.Frame):
         #      entries bigger than 3 are the favorites themselves.
         while favorites_menu.GetMenuItemCount() > 2:
             menu = favorites_menu.FindItemByPosition(2)
-            favorites_menu.DeleteItem(menu)
+            favorites_menu.Delete(menu)
         items = favorites.getitems()
         if items:
             favorites_menu.AppendSeparator()
@@ -332,7 +325,7 @@ class MainWindow(wx.Frame):
             ide = wx.NewId()
             def event_fn(event, favorite=path):
                 try:
-                    Publisher.sendMessage('favorite.open', favorite)
+                    Publisher.sendMessage('favorite.open', favorite=favorite)
                 except Exception as e:
                     self.handle_error(e)
             #In path for drives (e.g. D:\), name is '' 
@@ -351,8 +344,8 @@ class MainWindow(wx.Frame):
             self.Bind(wx.EVT_MENU, event_fn, id=ide)
             i += 1
 
-    def on_menu_labels_changed(self, message):
-        main_menu, commands, self.accel_table = message.data
+    def on_menu_labels_changed(self, *, main_menu, commands, accel_table):
+        self.accel_table = accel_table
         self.SetAcceleratorTable(self.accel_table)
         for cmd in commands:
             menu_item = self.menu_bar.FindItemById(cmd.ide)
@@ -363,29 +356,24 @@ class MainWindow(wx.Frame):
             if idx < self.menu_bar.GetMenuCount():
                 self.menu_bar.SetMenuLabel(idx, category.name)
     
-    def on_container_opened(self, message):
-        container = message.data
+    def on_container_opened(self, *, container):
         self.SetTitle('%s - %s' % (container.name, meta.APPNAME))
         self.status_bar.SetStatusText(container.name)
     
-    def on_image_opened(self, message):
-        item = message.data
+    def on_image_opened(self, *, item):
         self.SetTitle('%s - %s' % (item.name, meta.APPNAME))
         self.status_bar.SetStatusText(str(item.full_path))
         
-    def on_image_loading(self, message):
-        item = message.data
+    def on_image_loading(self, *, item):
         self.status_bar.SetStatusText(_('Loading...'))
         
-    def on_image_loaded(self, message):
-        width, height = message.data
+    def on_image_loaded(self, *, width, height):
         self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
     
-    def on_selection_changed(self, message):
-        idx, item = message.data
+    def on_selection_changed(self, *, idx, item):
         self.status_bar.SetStatusText(str(item.full_path))
     
-    def on_language_changed(self, message):
+    def on_language_changed(self):
         self.aui_mgr.GetPane('file_list').Caption(_('Files'))
         self.aui_mgr.Update()
         if self.update_menu_item:
@@ -394,21 +382,19 @@ class MainWindow(wx.Frame):
             self.menu_bar.SetMenuLabel(self.menu_bar.GetMenuCount()-1,
                                        _('&New version available!'))
     
-    def on_open_wallpaper_dialog(self, message):
-        choices, color = message.data
+    def on_open_wallpaper_dialog(self, *, choices, color):
         from quivilib.gui.wallpaper import WallpaperDialog
         dialog = WallpaperDialog(self, choices, color)
         dialog.ShowModal()
         dialog.Destroy()
         
-    def on_open_options_dialog(self, message):
+    def on_open_options_dialog(self, *, fit_choices, settings, categories, available_languages, active_language, save_locally):
         from quivilib.gui.options import OptionsDialog
-        dialog = OptionsDialog(self, *message.data)
+        dialog = OptionsDialog(self, fit_choices, settings, categories, available_languages, active_language, save_locally)
         dialog.ShowModal()
         dialog.Destroy()
         
-    def on_open_directory_dialog(self, message):
-        req = message.data
+    def on_open_directory_dialog(self, *, req):
         dialog = wx.DirDialog(self, _('Choose a directory:'),
                               style=wx.DD_DEFAULT_STYLE|wx.DD_DIR_MUST_EXIST)
         dialog.SetPath(str(req.start_directory))
@@ -416,24 +402,22 @@ class MainWindow(wx.Frame):
             req.directory = Path(dialog.GetPath())
         dialog.Destroy()
         
-    def on_open_about_dialog(self, message):
+    def on_open_about_dialog(self):
         from quivilib.gui.about import AboutDialog
         dialog = AboutDialog(self)
         dialog.ShowModal()
         dialog.Destroy()
         
-    def on_update_available(self, message):
-        down_url = message.data
+    def on_update_available(self, *, down_url):
         menu = wx.Menu()
         ide = wx.NewId()
         self.update_menu_item = menu.Append(ide, _('&Download'), _('Go to the download site'))
         self.menu_bar.Append(menu, _('&New version available!'))
         def event_fn(event):
-            Publisher.sendMessage('program.open_update_site', down_url)
+            Publisher.sendMessage('program.open_update_site', url=down_url)
         self.Bind(wx.EVT_MENU, event_fn, id=ide)
         
-    def on_bg_color_changed(self, message):
-        settings = message.data
+    def on_bg_color_changed(self, *, settings):
         if settings.get('Options', 'CustomBackground') == '1':
             color = settings.get('Options', 'CustomBackgroundColor').split(',')
             color = wx.Colour(*[int(c) for c in color])
@@ -446,7 +430,7 @@ class MainWindow(wx.Frame):
     def OnDropFiles(self, x, y, filenames):
         filename = filenames[0]
         path = Path(filename)
-        Publisher.sendMessage('file.dropped', path)
+        Publisher.sendMessage('file.dropped', path=path)
         
     def handle_error(self, exception, tb=None):
         from quivilib.gui.error import ErrorDialog

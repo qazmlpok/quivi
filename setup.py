@@ -91,8 +91,7 @@ else:
     copy('quivi.pyw', 'quivi')
     scripts = ['quivi']
 
-include_packages = ['wx.lib.pubsub.*', 'wx.lib.pubsub.core.*',
-                    'wx.lib.pubsub.core.arg1.*']
+include_packages = ['pubsub.*', 'pubsub.core.*']
 exclude_packages = ["Tkconstants", "Tkinter", "tcl", 'pydoc', '_ssl']
 if not meta.USE_PIL:
     exclude_packages.append('Image')
