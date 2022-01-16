@@ -95,7 +95,7 @@ class Settings(SafeConfigParser):
         return defaults
     
     def set(self, section, option, value):
-        SafeConfigParser.set(self, section, option, value)
+        SafeConfigParser.set(self, section, option, str(value))
         try:
             Publisher.sendMessage('settings.changed.%s.%s' % (section, option), settings=self)
         except Publisher.TopicNameError:

@@ -9,7 +9,7 @@ import sys
 import logging as log
 import traceback
 
-
+import locale
 
 class I18NController(object):
     def __init__(self, control, settings):
@@ -39,8 +39,13 @@ class I18NController(object):
         if self.locale:
             assert sys.getrefcount(self.locale) <= 2
             del self.locale
-            
+        
+        #There's a bug with wx and/or Python3 where the locale is being set to "en-US",
+        #which is invalid. Need to explicitly re-set the locale or it'll explode when it
+        #next calls strptime or anything else involving locale.
+        lang = info.GetLocaleName().replace("-", "_")
         self.locale = wx.Locale(lang_id)
+        locale.setlocale(locale.LC_ALL, lang)
         if self.locale.IsOk():
             if sys.platform == 'win32':
                 res = self.locale.AddCatalog(info.CanonicalName)
@@ -55,7 +60,7 @@ class I18NController(object):
             self.settings.set('Language', 'ID', info.CanonicalName)
         
         Publisher.sendMessage('language.changed')
-            
+
     def get_laguage(self):
         return self._language
     

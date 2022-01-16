@@ -145,17 +145,7 @@ class FileListController(object):
         parent = container.open_parent()
         if parent:
             self._set_container(parent)
-            
-    #def open_om(self):
-    #    from quivilib.model.container.onemanga import OMContainer
-    #    container = OMContainer(self.model.container.sort_order, self.model.container.show_hidden)
-    #    self._set_container(container)
-    #        
-    #def open_mf(self):
-    #    from quivilib.model.container.mangafox import MFContainer
-    #    container = MFContainer(self.model.container.sort_order, self.model.container.show_hidden)
-    #    self._set_container(container)
-            
+
     def open_directory(self):
         class Request():
             start_directory = self.model.container.path

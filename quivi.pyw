@@ -61,7 +61,7 @@ def run():
     try:
         if not parse_command_line(argv, script):
             app = MyApp(redir=False, script=script, argv=argv)
-#            wx.CallAfter(app.controller.view.Destroy)
+            #wx.CallAfter(app.controller.view.Destroy)
             app.MainLoop()
     except:
         logging.error(traceback.format_exc())

@@ -169,7 +169,10 @@ class MainController(object):
         #TODO: (3,2) Improve: make favorites save in the config automatically
         self.model.favorites.save(self.settings)
         self.settings.save()
-        self.temp_dir.rmtree(ignore_errors=True)
+        for filepath in self.temp_dir.iterdir():
+            #Assumption: nested directories will never be added to the temp folder
+            filepath.unlink()
+        self.temp_dir.rmdir()
         log.shutdown()
         
     def on_request_temp_path(self, message):

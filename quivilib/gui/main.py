@@ -188,7 +188,7 @@ class MainWindow(wx.Frame):
         try:
             Publisher.sendMessage('program.closed', settings_lst=settings_lst)
         except Exception:
-            log.debug(traceback.format_exc())
+            log.error(traceback.format_exc())
         
         self.aui_mgr.UnInit()
         del self.aui_mgr
