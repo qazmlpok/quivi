@@ -30,6 +30,7 @@ class ImageCacheLoadRequest(object):
         self.canvas.view = self.view
         item_index = self.container.items.index(self.item)
         f = self.container.open_image(item_index)
+        assert f is not None, "Failed to open image from container"
         #can't use "with" because not every file-like object used here supports it
         try:
             self.canvas.load(f, self.path, delay=True)

@@ -16,6 +16,8 @@ from quivilib.control.i18n import I18NController
 from pathlib import Path
 from quivilib import util
 
+import quivilib.tempdir as tempdir
+
 import wx
 from pubsub import pub as Publisher
 
@@ -62,7 +64,6 @@ class MainController(object):
             stdio_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.STDIO_FILE_NAME
         self.settings = Settings(settings_path)
         start_dir = self._get_start_dir(self.settings)
-        self.temp_dir = self._get_temp_dir()
         if util.is_frozen():
             sys.stdout = sys.stderr = stdio_path.open('w')
         
@@ -83,7 +84,6 @@ class MainController(object):
         
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         Publisher.subscribe(self.on_open_update_site, 'program.open_update_site')
-        Publisher.subscribe(self.on_request_temp_path, 'request.temp_path')
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
         Publisher.sendMessage('settings.loaded', settings=self.model.settings)
         
@@ -169,17 +169,8 @@ class MainController(object):
         #TODO: (3,2) Improve: make favorites save in the config automatically
         self.model.favorites.save(self.settings)
         self.settings.save()
-        for filepath in self.temp_dir.iterdir():
-            #Assumption: nested directories will never be added to the temp folder
-            filepath.unlink()
-        self.temp_dir.rmdir()
+        tempdir.delete_tempdir()
         log.shutdown()
-        
-    def on_request_temp_path(self, message):
-        import random
-        filename = ''.join(random.choice(string.ascii_lowercase) for i in range(8))
-        message.data.temp_path = self.temp_dir / filename
-        message.data.temp_dir = self.temp_dir
 
     @property
     def localization_path(self):
@@ -238,12 +229,4 @@ class MainController(object):
         if not start_dir:
             start_dir = Path(wx.StandardPaths.Get().GetDocumentsDir())
         return start_dir
-    
-    @staticmethod
-    def _get_temp_dir():
-        import tempfile
-        temp_dir = tempfile.mkdtemp(prefix='quivi_')
-        try:
-            return Path(temp_dir)
-        except UnicodeDecodeError:
-            return Path(str(temp_dir, 'mbcs'))
+

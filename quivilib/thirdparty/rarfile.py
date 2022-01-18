@@ -21,6 +21,8 @@ from struct import pack, unpack
 from binascii import crc32
 from io import BytesIO
 
+import quivilib.tempdir as tempdir
+
 # whether to speed up decompression by using tmp archive
 _use_extract_hack = 1
 
@@ -402,13 +404,14 @@ class RarFile:
         
         #Quivi specific code
         from pubsub import pub as Publisher
-        class Dummy(object): pass
-        o = Dummy()
-        o.temp_path = None
-        Publisher.sendMessage('request.temp_path', o)
-        tmpname = o.temp_path + '.rar'
+        #class Dummy(object): pass
+        #o = Dummy()
+        #o.temp_path = None
+        #Publisher.sendMessage('request.temp_path', o)
+        #tmpname = o.temp_path + '.rar'
         
-        tmpf = open(tmpname, "wb")
+        #tmpf = open(tmpname, "wb")
+        tmpf = tempdir.get_temp_file(ext='.rar')
 
         # create main header: crc, type, flags, size, res1, res2
         mh = pack("<HBHHHL", 0x90CF, 0x73, 0, 13, 0, 0)

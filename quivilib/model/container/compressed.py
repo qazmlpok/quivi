@@ -14,6 +14,8 @@ from zipfile import ZipFile as PyZipFile
 import io
 from datetime import datetime
 
+import quivilib.tempdir as tempdir
+
 if sys.platform == 'win32':
     from quivilib.thirdparty.UnRAR import Archive
 else:
@@ -89,6 +91,7 @@ class RarFile(object):
     
     def open_file(self, path):
         archive = Archive(str(self.path))
+        path = str(path)
         try:
             for f in archive.iterfiles():
                 if f.filename == path:
@@ -96,9 +99,13 @@ class RarFile(object):
                     try:
                         string = stream.read()
                         fstr = io.BytesIO(string)
+                    except:
+                        raise
                     finally:
                         stream.close()
                     return fstr
+        except:
+            raise
         finally:
             archive.close()
 
@@ -212,16 +219,12 @@ class CompressedContainer(BaseContainer):
         @rtype: Path
         """
         ext = item.suffix
-        class Dummy(object): pass
-        o = Dummy()
-        o.temp_path = None
-        Publisher.sendMessage('request.temp_path', o)
-        temp_file = o.temp_path + ext
         in_file = self.file.open_file(item.path)
         #Must change whenever passwords are supported
-        with temp_file.open('wb') as out_file:
+        with tempdir.get_temp_file(ext=ext) as out_file:
             _copy_files(in_file, out_file)
-        return temp_file
+            temp_file = out_file.name
+        return Path(temp_file)
     
     
 
@@ -252,7 +255,7 @@ class VirtualCompressedContainer(CompressedContainer):
         #: container_path contains the 'virtual' path of the container
         #: (e.g. C:/foo.zip/bar.rar/foobar.zip)
         self.container_path = self.parent_path / self._name
-        self._universal_path = Path(PATH_SEP.join([self.original_container_path] +
+        self._universal_path = Path(PATH_SEP.join([str(self.original_container_path)] +
                                        self.parent_names + [self._name]))
         CompressedContainer.__init__(self, path, sort_order, show_hidden)
         
