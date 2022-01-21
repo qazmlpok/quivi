@@ -27,7 +27,7 @@ class Canvas(object):
         self._top = 0
         self.tiled = False
         self.view = None
-        self._sendMessage('%s.zoom.changed' % self.name, zoom=self._zoom)
+        self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         
     def _sendMessage(self, topic, **kwargs):
         if not self.quiet:
@@ -58,14 +58,14 @@ class Canvas(object):
     def load_img(self, img, adjust=True):
         self.img = img
         self._zoom = float(img.width) / float(img.original_width)
-        self._sendMessage('%s.zoom.changed' % self.name, zoom=self._zoom)
+        self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         if adjust:
             self.adjust()
-        self._sendMessage('%s.image.loaded' % self.name, 
+        self._sendMessage(f'{self.name}.image.loaded', 
                             width=self.img.original_width, 
                             height=self.img.original_height
         )
-        self._sendMessage('%s.changed' % self.name)
+        self._sendMessage(f'{self.name}.changed')
 
 
     def adjust(self):
@@ -132,7 +132,7 @@ class Canvas(object):
             self.left = self.top = 0
         else:
             self.center()
-        Publisher.sendMessage('%s.fit.changed' % self.name, FitType=fit_type)
+        Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type)
         
     def _set_zoom(self, zoom):
         #TODO: (1,3) Refactor: maybe this should be another method;
@@ -159,7 +159,7 @@ class Canvas(object):
              
             self.left += old_w // 2 - self.width // 2
             self.top += old_h // 2 - self.height // 2
-            self._sendMessage('%s.zoom.changed' % self.name, zoom=self._zoom)
+            self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
             
     def _get_zoom(self):
         return self._zoom
@@ -280,4 +280,4 @@ class Canvas(object):
             return
         self.img.rotate(clockwise)
         self.adjust()
-        self._sendMessage('%s.changed' % self.name)
+        self._sendMessage(f'{self.name}.changed')

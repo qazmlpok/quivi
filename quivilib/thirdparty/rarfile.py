@@ -447,7 +447,7 @@ class RarFile:
         buf, errstr = proc.communicate()
         if proc.returncode > 0:
             errstr = str(errstr, errors='ignore')
-            raise Exception("Error reading file: %s" % errstr)
+            raise Exception(f"Error reading file: {errstr}")
         return buf
 
 class _UnicodeFilename:

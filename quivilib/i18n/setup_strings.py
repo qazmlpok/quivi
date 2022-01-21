@@ -43,7 +43,7 @@ if __name__ == '__main__':
         c.language = lang
         lang_name = lang_names[lang]
         
-        header += '!insertmacro MUI_LANGUAGE "%s"\n' % lang_name
+        header += f'!insertmacro MUI_LANGUAGE "{lang_name}\"\n'
         
         TEXT_LANG = _("en_US")
         TEXT_USER_TITLE = _("Select users")

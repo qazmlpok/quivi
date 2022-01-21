@@ -52,9 +52,9 @@ class FreeImage(object):
             error_msg = _('Error while loading image')
             fi_error_msg = fi.library.load().last_error
             if fi_error_msg:
-                error_msg += '\n(%s)' % fi_error_msg
+                error_msg += f'\n({fi_error_msg})'
             elif str(e):
-                error_msg += '\n(%s)' % str(e)
+                error_msg += f'\n({str(e)})'
             add_exception_custom_msg(e, error_msg)
             raise
         

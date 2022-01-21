@@ -130,7 +130,7 @@ class MainWindow(wx.Frame):
             return fn
         for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT')):
             for event_idx, event in enumerate(('DOWN', 'UP')):
-                eid = getattr(wx, 'EVT_%s_%s' % (button, event))
+                eid = getattr(wx, f'EVT_{button}_{event}')
                 self.panel.Bind(eid, make_fn(button_idx, event_idx))
     
     @property
@@ -357,11 +357,11 @@ class MainWindow(wx.Frame):
                 self.menu_bar.SetMenuLabel(idx, category.name)
     
     def on_container_opened(self, *, container):
-        self.SetTitle('%s - %s' % (container.name, meta.APPNAME))
+        self.SetTitle(f'{container.name} - {meta.APPNAME}')
         self.status_bar.SetStatusText(container.name)
     
     def on_image_opened(self, *, item):
-        self.SetTitle('%s - %s' % (item.name, meta.APPNAME))
+        self.SetTitle(f'{item.name} - {meta.APPNAME}')
         self.status_bar.SetStatusText(str(item.full_path))
         
     def on_image_loading(self, *, item):

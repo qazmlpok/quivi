@@ -273,9 +273,9 @@ class AssociationManager(object):
     
     def get_open_command(self):
         if util.is_frozen():
-            return '"%s" "%%1"' % util.get_exe_path()
+            return f'"{util.get_exe_path()}" "%1"'
         else:
-            return '"%s" "%s" "%%1"' % (util.get_exe_path(), self.main_script_path)
+            return f'"{util.get_exe_path()}" "{self.main_script_path}" "%1"'
     
     def get_user(self):
         if util.is_frozen():
@@ -293,5 +293,5 @@ class AssociationManager(object):
 
     @staticmethod
     def _get_ext_description(ext):
-        return '%s %s' % (ext[1:].upper(), _('Image'))
+        return f"{ext[1:].upper()} {_('Image')}"
     

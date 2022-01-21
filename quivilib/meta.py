@@ -11,7 +11,7 @@ REPORT_URL = 'http://conradoplg.wufoo.com/forms/quivi/'
 HELP_URL = 'http://quivi.sourceforge.net/documentation'
 AUTHOR = 'Conrado Porto Lopes Gouvea'
 AUTHOR_EMAIL = 'conradoplg@gmail.com'
-COPYRIGHT = "Copyright (c) 2009, %s <%s>\nAll rights reserved." % (AUTHOR, AUTHOR_EMAIL)
+COPYRIGHT = f"Copyright (c) 2009, {AUTHOR} <{AUTHOR_EMAIL}>\nAll rights reserved."
 
 CACHE_ENABLED = True
 CACHE_SIZE = 3

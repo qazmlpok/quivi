@@ -95,7 +95,7 @@ class OptionsDialog(wx.Dialog):
             for cmd in category.commands:
                 if cmd is None:
                     continue
-                text = '%s | %s' % (category.clean_name, cmd.clean_name)
+                text = f'{category.clean_name} | {cmd.clean_name}'
                 self.commands_lst.Append(text, cmd)
                 self.mouse_left_cbo.Append(text, cmd.ide)
                 self.mouse_middle_cbo.Append(text, cmd.ide)

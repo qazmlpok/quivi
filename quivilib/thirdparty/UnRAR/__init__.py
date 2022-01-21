@@ -431,7 +431,7 @@ class RARFile:
         return fileLikeObject
 
     def __str__(self):
-        return '<RARFile "%s" in "%s">' % (self.filename, self.RAR.archiveName)
+        return f'<RARFile "{self.filename}" in "{self.RAR.archiveName}">'
 
     def _skip(self):
         if not self._extracted:

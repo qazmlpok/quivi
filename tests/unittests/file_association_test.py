@@ -174,7 +174,7 @@ class Test(unittest.TestCase):
         py_path = sys.executable
         path = r'C:\Program Files\Quivi\Quivi.exe'
         am = F.AssociationManager(path)
-        self.assertEqual(am.get_open_command(), '"%s" "%s" "%%1"' % (py_path, path))
+        self.assertEqual(am.get_open_command(), f'"{py_path}" "{path}" "%1"')
 
     def test_recursive_delete_key(self):
         if not R:

@@ -97,7 +97,7 @@ class Settings(SafeConfigParser):
     def set(self, section, option, value):
         SafeConfigParser.set(self, section, option, str(value))
         try:
-            Publisher.sendMessage('settings.changed.%s.%s' % (section, option), settings=self)
+            Publisher.sendMessage(f'settings.changed.{section}.{option}', settings=self)
         except Publisher.TopicNameError:
             #Avoid TopicNameError error (option can be a number, and
             #pubsub only accepts names starting with a letter)
@@ -113,5 +113,5 @@ class Settings(SafeConfigParser):
         for isection, ioption, ivalue in self.__defaults:
             if isection == section and ioption == option:
                 return ivalue
-        raise RuntimeError('Option %s has no default value' % option)
+        raise RuntimeError(f'Option {option} has no default value')
         

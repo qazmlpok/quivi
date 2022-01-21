@@ -24,7 +24,7 @@ class ErrorDialog(wx.Dialog):
         error_msg = _('An error has occurred:') + '\n'
         error_msg += error
         error_details = tb
-        error_details += '\n%s %s' % (meta.APPNAME, meta.VERSION)
+        error_details += f'\n{meta.APPNAME} {meta.VERSION}'
         # begin wxGlade: ErrorDialog.__init__
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.RESIZE_BORDER
         wx.Dialog.__init__(self, *args, **kwds)

@@ -35,7 +35,7 @@ class Command(object):
     @property
     def name_and_shortcut(self):
         if self.shortcuts:
-            return '%s\t%s' % (self.name, self.shortcuts[0].name)
+            return f'{self.name}\t{self.shortcuts[0].name}'
         else:
             return self.name
     
