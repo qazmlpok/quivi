@@ -8,7 +8,7 @@ from pathlib import Path
 from pubsub import pub as Publisher
 from quivilib.meta import PATH_SEP
 
-import sys
+import sys, os
 import zipfile
 from zipfile import ZipFile as PyZipFile
 import io
@@ -16,10 +16,10 @@ from datetime import datetime
 
 import quivilib.tempdir as tempdir
 
-if sys.platform == 'win32':
-    from quivilib.thirdparty.UnRAR import Archive
-else:
-    from quivilib.thirdparty.rarfile import RarFile as PyRarFile
+#if sys.platform == 'win32':
+#    from quivilib.thirdparty.UnRAR import Archive
+#else:
+#    from quivilib.thirdparty.rarfile import RarFile as PyRarFile
 
 
 
@@ -114,6 +114,10 @@ class RarFile(object):
 class RarFileExternal(RarFile):
         
     def __init__(self, container, path):
+        #Import here to delay creation of the temp dir until it's needed.
+        import rarfile
+        rarfile.HACK_TMP_DIR = tempdir.get_temp_dir()
+        from rarfile import RarFile as PyRarFile
         self.path = path
         self.file = PyRarFile(path, 'r')
     
@@ -123,7 +127,13 @@ class RarFileExternal(RarFile):
                 if f.filename[-1] not in '\\/']
         
     def open_file(self, path):
-        return io.BytesIO(self.file.read(path))
+        return io.BytesIO(self.file.read(self.conv_path(path)))
+
+    def conv_path(self, path):
+        npath = str(path)
+        #rarfile doesn't like Windows backslashes
+        return npath.replace(os.sep, '/')
+        #Anything else? There's a " 0" file, for example. Might be ".."
 
 
 
@@ -131,14 +141,16 @@ class RarFileExternal(RarFile):
 class CompressedContainer(BaseContainer):
     def __init__(self, path, sort_order, show_hidden):
         self._path = path.resolve()
-        RarCls = RarFile if sys.platform == 'win32' else RarFileExternal
+        #RarCls = RarFile if sys.platform == 'win32' else RarFileExternal
+        RarCls = RarFileExternal
         classes = []
         if ZipFile.is_valid_extension(self._path.suffix):
             classes = [ZipFile, RarCls]
         elif RarFile.is_valid_extension(self._path.suffix):
             classes = [RarCls, ZipFile]
         else:
-            assert False, 'Invalid  compressed file extension'
+            assert False, 'Invalid compressed file extension'
+        #TODO: Rewrite this logic to not require exactly 2 classes.
         try:
             self.file = classes[0](self, self._path)
             #this will force an exception if it's not the right type of file
@@ -286,6 +298,7 @@ class VirtualCompressedContainer(CompressedContainer):
                                                 parent_paths, self.original_container_path,
                                                 self._sort_order, self.show_hidden)
         #TODO: (2,2) Test: test if this works
+        #Works on single-level archives, at least.
         parent.selected_item = self.path
         return parent
         

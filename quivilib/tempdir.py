@@ -27,6 +27,10 @@ def get_temp_file(*, ext=None):
         _create_tempdir()
     assert this.tempdir is not None
     return tempfile.NamedTemporaryFile(suffix=ext, dir=this.tempdir, delete=False)
+def get_temp_dir():
+    if this.tempdir is None:
+        _create_tempdir()
+    return this.tempdir
     
 def _create_tempdir():
     temp_dir = tempfile.mkdtemp(prefix='quivi_')

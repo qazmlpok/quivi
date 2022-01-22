@@ -8,6 +8,7 @@ from quivilib.util import alphanum_key
 import operator
 
 from pubsub import pub as Publisher
+from pathlib import Path
 
 #Check if Windows sort is available, by trying to calling it.
 #TODO: Replace with the python module natsort. Then finish removing cmpfunc
@@ -124,7 +125,7 @@ class BaseContainer(object):
             self.selected_item = selected_item
             if self.selected_item.typ == Item.IMAGE:
                 Publisher.sendMessage('container.item.changed', index=self.items.index(self.selected_item))
-        
+
     @property
     def item_count(self):
         return len(self.items)
@@ -151,8 +152,8 @@ class BaseContainer(object):
         old_selected_item = self._selected_item
         if isinstance(item, int):
             self._selected_item = self.items[item]
-        elif isinstance(item, str):
-            lst = [i for i in self.items if i.path == item]
+        elif isinstance(item, Path):
+            lst = [i for i in self.items if i.path.name == item.name]
             if lst:
                 self._selected_item = lst[0]
         else:
