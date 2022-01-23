@@ -279,5 +279,7 @@ class Canvas(object):
         if not self.img:
             return
         self.img.rotate(clockwise)
+        #TODO: Add a configuration option to disable this adjust if zoomed in/out.
+        #If I've zoomed in manually, I don't want this to reset the zoom.
         self.adjust()
         self._sendMessage(f'{self.name}.changed')

@@ -20,11 +20,7 @@ class PilImage(object):
             if img.mode != 'RGB':
                 img = img.convert('RGB')
         
-        s = img.tobytes()
-        if self.delay:
-            self.bmp = s
-        else:
-            self.bmp = wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
+        self.bmp = self._img_to_bmp(img)
         
         self.original_width = self.width = img.size[0]
         self.original_height = self.height = img.size[1]
@@ -42,7 +38,14 @@ class PilImage(object):
             w, h, s = self.zoomed_bmp
             self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
         self.delay = False
-        
+    
+    def _img_to_bmp(self, img):
+        s = img.tobytes()
+        if self.delay:
+            return s
+        else:
+            return wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
+    
     def resize(self, width, height):
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
@@ -52,12 +55,13 @@ class PilImage(object):
             s = img.tobytes()
             del img
             if self.delay:
+                #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
                 self.zoomed_bmp = (w, h, s)
             else:
                 self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
         self.width = width
         self.height = height
-        
+
     def resize_by_factor(self, factor):
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
@@ -66,18 +70,17 @@ class PilImage(object):
     def rotate(self, clockwise):
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
-        self.img = self.img.rotate(90 if clockwise else 270)
-        self.original_width = self.img.size[0]
-        self.original_height = self.img.size[1]
+        self.img = self.img.transpose(Image.ROTATE_90 if clockwise else Image.ROTATE_270)
+        #Update the bmp
+        self.bmp = self._img_to_bmp(self.img)
+        #Rotate the stored dimensions for any future/current zoom operations
+        self.width, self.height = (self.height, self.width)
+        self.original_width, self.original_height = (self.original_height, self.original_width)
         if self.zoomed_bmp:
-            if self.rotation in (1, 3):
-                w, h = self.height, self.width
-            else:
-                w, h = self.width, self.height
-            self.resize(w, h)
-        else:
-            self.width = self.original_width
-            self.height = self.original_height
+            #Update the zoomed bmp
+            #TODO: the calling function may call resize_by_factor as part of the adjust,
+            #which makes this unnecessary. But this would need to be predicted.
+            self.resize(self.width, self.height)
         
     def paint(self, dc, x, y):
         if self.delay:
@@ -85,7 +88,7 @@ class PilImage(object):
             return
         bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
         dc.DrawBitmap(bmp, x, y)
-            
+
     def copy(self):
         return PilImage(img=self.img)
     
@@ -104,6 +107,6 @@ class PilImage(object):
         img = self.img.resize((width, height), Image.BICUBIC)
         bmp = wx.Bitmap.FromBuffer(width, height, img.tobytes())
         return bmp
-                
+
     def close(self):
         pass
