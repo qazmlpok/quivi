@@ -20,6 +20,7 @@ log = logging.getLogger('control.file_list')
 
 
 def _need_delete_confirmation():
+    #No confirmation on win32 because it uses the recycle bin.
     return (sys.platform != 'win32')
 
 def _ask_delete_confirmation(window, path):
@@ -31,10 +32,11 @@ def _ask_delete_confirmation(window, path):
 
 def _delete_file(path, window=None):
     if sys.platform == 'win32':
+        #Use win32com.shell to send the file to the recycle bin, rather than outright deleting it.
         from quivilib.windows.util import delete_file
-        delete_file(path, window)
+        delete_file(str(path), window)
     else:
-        path.remove()
+        path.unlink()
 
 
 class FileListController(object):

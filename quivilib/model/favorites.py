@@ -8,9 +8,6 @@ from pubsub import pub as Publisher
 
 CONFIG_KEY = 'Favorites'
 
-
-#TODO: Verify it's truly safe to just use the pathlib obj directly
-#I'm assuming the thirdparty module just didn't support this, hence the .lower
 class Favorites(object):
     def __init__(self, config=None):
         self._favorites = {}
@@ -19,17 +16,12 @@ class Favorites(object):
         Publisher.subscribe(self.on_container_opened, 'container.opened')
         
     def insert(self, path):
-        #self._favorites[path.lower()] = path
         self._favorites[path] = path
         
     def remove(self, path):
-        #lpath = path.lower()
-        #if lpath in self._favorites:
-        #    del self._favorites[lpath]
         del self._favorites[path]
         
     def contains(self, path):
-        #return path.lower() in self._favorites
         return path in self._favorites
     
     def load(self, config):

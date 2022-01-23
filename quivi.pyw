@@ -51,11 +51,7 @@ def run():
         script = script.resolve()
     except NameError:
         script = None
-    
-    #if sys.platform == 'win32':
-    #    from quivilib.windows.util import get_unicode_argv
-    #    argv = get_unicode_argv()
-    #else:
+
     argv = sys.argv
     
     try:
