@@ -72,7 +72,7 @@ class BaseContainer(object):
         else:
             assert False, 'Invalid sort order specified'
         parent = None
-        if self.items[0].path == '..':
+        if self.items[0].path.name == '..':
             parent = self.items.pop(0)
         self.items.sort(key=keyfn)
         if parent:

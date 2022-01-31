@@ -25,7 +25,7 @@ class FileListPanel(wx.Panel):
         self.tool_bar = bp.ButtonPanel(self)
         
         self.file_list = FileList(self)
-        self.thumb_list = tc.ThumbnailCtrl(self, thumboutline=tc.THUMB_OUTLINE_RECT)
+        self.thumb_list = tc.QuiviThumbnailCtrl(self, thumboutline=tc.THUMB_OUTLINE_RECT)
         
         sizer.Add(self.tool_bar, 0, wx.EXPAND)
         sizer.Add(self.file_list, 1, wx.EXPAND, 0)

@@ -40,7 +40,7 @@ class Item(object):
         if not isinstance(path, Path):
             print(repr(path), type(path))
             assert False, "non-path given to " + __file__
-        if path == '..':
+        if path.name == '..':
             self.typ = Item.PARENT
             self.ext = ''
             self.namebase = '..'

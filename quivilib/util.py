@@ -14,9 +14,9 @@ import string
 
 
 def get_icon_for_extension(ext, small=True):
-    if sys.platform == 'win32':
-        from quivilib.windows.util import get_icon_for_extension as fn
-        return fn(ext, small)
+    #if sys.platform == 'win32':
+    #    from quivilib.windows.util import get_icon_for_extension as fn
+    #    return fn(ext, small)
     size = (16, 16) if small else (32, 32)
     return wx.ArtProvider.GetIcon(wx.ART_NORMAL_FILE, wx.ART_OTHER, size)
     #TODO (3,?): Investigate: this gives 'not found' message boxes
@@ -29,9 +29,9 @@ def get_icon_for_extension(ext, small=True):
 #        return icon
 
 def get_icon_for_directory(small=True):
-    if sys.platform == 'win32':
-        from quivilib.windows.util import get_icon_for_directory as fn
-        return fn(small)
+    #if sys.platform == 'win32':
+    #    from quivilib.windows.util import get_icon_for_directory as fn
+    #    return fn(small)
     size = (16, 16) if small else (32, 32)
     return wx.ArtProvider.GetIcon(wx.ART_FOLDER, wx.ART_OTHER, size)
     
