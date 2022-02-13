@@ -14,24 +14,26 @@ import string
 
 
 def get_icon_for_extension(ext, small=True):
-    #if sys.platform == 'win32':
-    #    from quivilib.windows.util import get_icon_for_extension as fn
-    #    return fn(ext, small)
+    if sys.platform == 'win32':
+        from quivilib.windows.util import get_icon_for_extension as fn
+        return fn(ext, small)
     size = (16, 16) if small else (32, 32)
-    return wx.ArtProvider.GetIcon(wx.ART_NORMAL_FILE, wx.ART_OTHER, size)
     #TODO (3,?): Investigate: this gives 'not found' message boxes
-#        icon = None
-#        file_type = wx.TheMimeTypesManager.GetFileTypeFromExtension(ext[1:])
-#        if file_type:
-#            icon = file_type.GetIcon()
-#            if not icon.Ok():
-#                icon = None
-#        return icon
+    #Updated code for wx4; seems to work ok.
+    icon = None
+    #file_type = wx.TheMimeTypesManager.GetFileTypeFromExtension(ext[1:])
+    #if file_type:
+    #    icon = file_type.GetIcon()
+    #    if not icon.IsOk():
+    #        icon = None
+    if not icon:
+        icon = wx.ArtProvider.GetIcon(wx.ART_NORMAL_FILE, wx.ART_OTHER, size)
+    return icon
 
 def get_icon_for_directory(small=True):
-    #if sys.platform == 'win32':
-    #    from quivilib.windows.util import get_icon_for_directory as fn
-    #    return fn(small)
+    if sys.platform == 'win32':
+        from quivilib.windows.util import get_icon_for_directory as fn
+        return fn(small)
     size = (16, 16) if small else (32, 32)
     return wx.ArtProvider.GetIcon(wx.ART_FOLDER, wx.ART_OTHER, size)
     
@@ -108,7 +110,7 @@ def is_frozen():
     return hasattr(sys, "frozen")
 
 def get_exe_path():
-    return Path(str(sys.executable, sys.getfilesystemencoding())).resolve()
+    return Path(sys.executable).resolve()
 
 def get_traceback():
     return traceback.format_exc()

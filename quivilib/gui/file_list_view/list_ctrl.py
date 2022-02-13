@@ -82,9 +82,9 @@ class FileList(wx.ListCtrl, FileListViewBase):
 
     def OnGetItemImage(self, item):
         ext = self.container.get_item_extension(item)
-        try:
+        if ext in self.icon_cache:
             icon_index = self.icon_cache[ext]
-        except KeyError:
+        else:
             #TODO: (3,3) Improve: on windows, get custom icon for folders, ico files, drives
             icon = None
             if ext:

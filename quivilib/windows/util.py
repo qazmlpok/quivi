@@ -22,7 +22,7 @@ def get_icon_for_extension(extension, small=True):
 
     # Get the bitmap
     icon = wx.Icon()
-    icon.SetHandle(hicon)
+    icon.CreateFromHICON(hicon)
     return icon
 
 def get_icon_for_directory(small=True):
@@ -42,7 +42,7 @@ def get_icon_for_directory(small=True):
 
     # Get the bitmap
     icon = wx.Icon()
-    icon.SetHandle(hicon)
+    icon.CreateFromHICON(hicon)
     return icon
 
 def logical_cmp(a, b):
