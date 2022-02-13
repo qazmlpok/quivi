@@ -106,6 +106,7 @@ class PilImage(object):
         height = int(self.original_height * factor)
         img = self.img.resize((width, height), Image.BICUBIC)
         bmp = wx.Bitmap.FromBuffer(width, height, img.tobytes())
+        #TODO: Implement delayed_fn. See freeimage.
         return bmp
 
     def close(self):

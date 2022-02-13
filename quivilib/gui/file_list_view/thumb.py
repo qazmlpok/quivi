@@ -80,11 +80,20 @@ class QuiviThumbnailCtrl(tc.ThumbnailCtrl, FileListViewBase):
             self._scrolled.ShowContainer(self.container, True)
             self._delayed_load = False
 
-
-
 class QuiviThumb(tc.Thumb):
     def __init__(self, *args, **kwargs):
         tc.Thumb.__init__(self, *args, **kwargs)
+        self.delay_fn = None
+    def DelayLoad(self):
+        """ Executes the delay load function and populates _image with the result.
+        This needs to be called before any references to _image in the base class.
+        """
+        if self.delay_fn:
+            self._image = self.delay_fn()
+            self._bitmap = None     #Bitmap should be re-created.
+            #I think if this is an icon (which is made to size) bmp can be re-used from the img generation.
+            #Try that later.
+            self.delay_fn = None
     def BreakCaption(self, width):
         """ Breaks the caption in several lines of text (if needed). """
         self._captionbreaks = [0, None]
@@ -116,18 +125,18 @@ class QuiviThumb(tc.Thumb):
         dc.SelectObject(wx.NullBitmap)
 
     def GetBitmap(self, width, height):
-        """ Returns the associated bitmap. """
-
-        if self._bitmap:
-            if isinstance(self._bitmap, collections.Callable):
-                self._bitmap = self._bitmap()
-            if self._bitmap.GetWidth() == width and self._bitmap.GetHeight() == height:
-                return self._bitmap
-
-        img = self.GetThumbnail(width, height)
-        bmp = img.ConvertToBitmap()
-
-        return bmp
+        self.DelayLoad()
+        return super().GetBitmap(width, height)
+    def GetImage(self):
+        self.DelayLoad()
+        return super().GetImage()
+    def GetThumbnail(self, width, height):
+        self.DelayLoad()
+        return super().GetThumbnail(width, height)
+    def Rotate(self, angle):
+        self.DelayLoad()
+        return super().Rotate(angle)
+    #SetImage? LoadImage? (clear delay fn)
 
 class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
     def __init__(self, *args, **kwargs):
@@ -135,6 +144,11 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         self._tOutlineNotSelected = False
         self._thread = None
         Publisher.subscribe(self.on_program_closed, 'program.closed')
+        self.SetDropShadow(False)
+
+    def ShowThumbs(self, thumbs):
+        #Prevent default behavior. GenerateThumbs handles the thread
+        pass
         
     def on_program_closed(self, *, settings_lst=None):
         self._isrunning = False
@@ -202,7 +216,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
                 return img
 
         self._items[index]._originalsize = originalsize
-        self._items[index]._bitmap = delayed_fn
+        self._items[index].delay_fn = delayed_fn
         self._items[index]._alpha = alpha
 
     def ShowContainer(self, container, create_thumbs):
