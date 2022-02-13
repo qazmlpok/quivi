@@ -10,13 +10,13 @@ from pathlib import Path
 
 class Test(unittest.TestCase):
     def setUp(self):
-        self.dir = DirectoryContainer(Path('./tests/dummy'), SortOrder.TYPE)
+        self.dir = DirectoryContainer(Path('./tests/dummy'), SortOrder.TYPE, False)
     
     def test_refresh(self):
         old_count = self.dir.item_count
         oldselected = self.dir.selected_item
            
-        self.dir.refresh()
+        self.dir.refresh(False)
         
         self.assertEqual(old_count, self.dir.item_count)
         if oldselected:
@@ -42,7 +42,7 @@ class Test(unittest.TestCase):
     def testselected_item(self):
         item = self.dir.items[1]
         self.dir.selected_item = item
-        self.dir.refresh()
+        self.dir.refresh(False)
         self.assertEqual(self.dir.selected_item, item)
         
     def test_name(self):

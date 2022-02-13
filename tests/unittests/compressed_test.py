@@ -10,14 +10,14 @@ from pathlib import Path
 
 class Test(unittest.TestCase):
     def setUp(self):
-        self.zip = CompressedContainer(Path('./tests/dummy.zip'), SortOrder.TYPE)
-        self.rar = CompressedContainer(Path('./tests/dummy.rar'), SortOrder.TYPE)
+        self.zip = CompressedContainer(Path('./tests/dummy.zip'), SortOrder.TYPE, False)
+        self.rar = CompressedContainer(Path('./tests/dummy.rar'), SortOrder.TYPE, False)
     
     def test_refresh_zip(self):
         old_count = self.zip.item_count
         oldselected = self.zip.selected_item
-                   
-        self.zip.refresh()
+
+        self.zip.refresh(False)
         
         self.assertEqual(old_count, self.zip.item_count)
         if oldselected:
@@ -28,8 +28,8 @@ class Test(unittest.TestCase):
     def test_refresh_rar(self):
         old_count = self.rar.item_count
         oldselected = self.rar.selected_item
-                   
-        self.rar.refresh()
+
+        self.rar.refresh(False)
         
         self.assertEqual(old_count, self.rar.item_count)
         if oldselected:
@@ -55,7 +55,7 @@ class Test(unittest.TestCase):
     def testselected_item(self):
         item = self.zip.items[1]
         self.zip.selected_item = item
-        self.zip.refresh()
+        self.zip.refresh(False)
         self.assertEqual(self.zip.selected_item, item)
         
     def test_name(self):
@@ -88,11 +88,11 @@ class Test(unittest.TestCase):
     def test_open_image_zip(self):
         self.zip.sort_order = SortOrder.TYPE
         img = self.zip.open_image(1).read()
-        img_ref = open('./tests/dummy/wteste.gif').read()
+        img_ref = open('./tests/dummy/wteste.gif', 'rb').read()
         self.assertEqual(img, img_ref)
         
     def test_open_image_rar(self):
         self.rar.sort_order = SortOrder.TYPE
         img = self.rar.open_image(1).read()
-        img_ref = open('./tests/dummy/wteste.gif').read()
+        img_ref = open('./tests/dummy/wteste.gif', 'rb').read()
         self.assertEqual(img, img_ref)

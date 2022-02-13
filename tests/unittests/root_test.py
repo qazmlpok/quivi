@@ -16,7 +16,7 @@ class Test(unittest.TestCase):
         if sys.platform != 'win32':
             self.dir = None
         else:
-            self.dir = RootContainer(SortOrder.TYPE)
+            self.dir = RootContainer(SortOrder.TYPE, False)
         
         
     def test_refresh(self):
@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
         old_count = self.dir.item_count
         oldselected = self.dir.selected_item
            
-        self.dir.refresh()
+        self.dir.refresh(False)
         
         self.assertEqual(old_count, self.dir.item_count)
         if oldselected:
@@ -53,7 +53,7 @@ class Test(unittest.TestCase):
             return
         item = self.dir.items[1]
         self.dir.selected_item = item
-        self.dir.refresh()
+        self.dir.refresh(False)
         self.assertEqual(self.dir.selected_item, item)
         
     def test_name(self):

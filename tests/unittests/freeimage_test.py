@@ -12,7 +12,7 @@ class Test(unittest.TestCase):
     
     def setUp(self):
         self.lib = fi.library.load()
-        self.app = wx.PySimpleApp()
+        self.app = wx.App()
         
     def test_get_readable_fifs(self):
         fifs = self.lib.get_readable_fifs()

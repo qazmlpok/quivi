@@ -106,7 +106,7 @@ class ErrorDialog(wx.Dialog):
 
 
 if __name__ == '__main__':
-    app = wx.PySimpleApp()
+    app = wx.App()
     dialog = ErrorDialog(parent=None, error='File not found', tb='aa\na\na\nan\n\n\n\n\n\n\n\na\n')
     dialog.ShowModal()
     dialog.Destroy()

@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 if __name__ == '__main__':
-    app = wx.PySimpleApp()
+    app = wx.App()
     class DummyControl():
         localization_path = Path('./localization/')
     class DummySettings():

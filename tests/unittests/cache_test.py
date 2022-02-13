@@ -21,7 +21,7 @@ logging.getLogger().setLevel(logging.NOTSET)
 class Test(unittest.TestCase):
     def test_cache(self):
         app = wx.App(False)
-        container = DirectoryContainer(Path('.') / 'tests' / 'dummy', SortOrder.TYPE)
+        container = DirectoryContainer(Path('.') / 'tests' / 'dummy', SortOrder.TYPE, False)
         class Dummy:
             width = 800
             height = 600
