@@ -263,7 +263,7 @@ class FileListController(object):
             container = CompressedContainer(path, sort_order, show_hidden)
             self._set_container(container)
         else:
-            paths = path.split(PATH_SEP)
+            paths = str(path).split(PATH_SEP)
             root_container_path = Path(paths[0])
             if root_container_path.is_file():
                 root_container = CompressedContainer(root_container_path, sort_order, show_hidden)

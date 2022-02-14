@@ -72,7 +72,9 @@ class Test(unittest.TestCase):
     def test_get_item_name(self):
         self.zip.sort_order = SortOrder.EXTENSION
         lst = [self.zip.get_item_name(i) for i in range(self.zip.item_count)]
-        self.assertEqual(lst, ['..', 'dummy/wteste.gif', 'dummy/teste.jpg', 'dummy/ateste.zip'])
+        filepaths = ['..', 'dummy/wteste.gif', 'dummy/teste.jpg', 'dummy/ateste.zip']
+        normalized = [str(Path(x)) for x in filepaths]
+        self.assertEqual(lst, normalized)
         
     def test_get_item_extension(self):
         self.zip.sort_order = SortOrder.EXTENSION
@@ -96,3 +98,14 @@ class Test(unittest.TestCase):
         img = self.rar.open_image(1).read()
         img_ref = open('./tests/dummy/wteste.gif', 'rb').read()
         self.assertEqual(img, img_ref)
+        
+    def test_unicode_zip(self):
+        unicode_zip = CompressedContainer(Path('./tests/Unicode.zip'), SortOrder.TYPE, False)
+        lst = [unicode_zip.get_item_name(i) for i in range(unicode_zip.item_count)]
+        lst.sort()
+        #Mix of Japanese, Korean, and Chinese - this would cause problems without full Unicode support
+        #since no other single codepage accounts for all.
+        filepaths = ['..', 'English/カタカナ.png', 'English/한글.png', 'English/汉字.png', 'English/内部/한글.png', 'English/内部/汉字.png']
+        normalized = [str(Path(x)) for x in filepaths]
+        normalized.sort()
+        self.assertEqual(lst, normalized)

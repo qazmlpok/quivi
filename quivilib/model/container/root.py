@@ -17,7 +17,7 @@ class RootContainer(BaseContainer):
     def __init__(self, sort_order, show_hidden):
         Publisher.sendMessage('container.opened', container=self)
         BaseContainer.__init__(self, sort_order, show_hidden)
-                
+
     def _list_paths(self):
         return [(Path(str(path)), None, None) for path
                 in GetLogicalDriveStrings().split('\x00')[:-1]]

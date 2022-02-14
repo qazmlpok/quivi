@@ -38,18 +38,18 @@ class ZipFile(object):
     def __init__(self, container, path):
         self.path = path
         self.file = PyZipFile(path, 'r')
-        #Note - mapping is no longer used atm, due to _convert_filename being dummied out.
         self.mapping = {}
+        for f in self.file.infolist():
+            self.mapping[Path(f.filename)] = f
         
     @staticmethod
     def is_valid_extension(ext):
         return ext.lower() in ['.zip', '.cbz']
     
     def list_files(self):
-        return [(Path(self._convert_filename(f.filename)),
-                 datetime(*f.date_time))
-                for f in self.file.infolist()
-                if f.filename[-1] not in '\\/']
+        return [(path, datetime(*info.date_time))
+                for path,info in self.mapping.items()
+                if not info.is_dir()]
         
     def open_file(self, path):
         if path in self.mapping:
@@ -57,25 +57,15 @@ class ZipFile(object):
         else:
             encpath = str(path)
         return io.BytesIO(self.file.read(encpath))
-    
-    def _convert_filename(self, path):
-        #zipfile decodes utf-8, but not cp437
-        #try:
-        #    decpath = path.decode('cp437')
-        #    self.mapping[decpath] = path
-        #    return decpath
-        #except UnicodeDecodeError:
-        #    decpath = path.decode('ascii', 'ignore')
-        #    self.mapping[decpath] = path
-        #    return decpath
-        #TODO: Determine if anything still needs to be done here; python3 is a lot better with Unicode.
-        return path
+
 
 
 
 class RarFile(object):
     def __init__(self, container, path):
         self.path = path
+        #Force an exception if the file is invalid
+        self.list_files()
     
     @staticmethod
     def is_valid_extension(ext):
@@ -120,6 +110,8 @@ class RarFileExternal(RarFile):
         from rarfile import RarFile as PyRarFile
         self.path = path
         self.file = PyRarFile(path, 'r')
+        #Force an exception if the file is invalid
+        self.list_files()
     
     def list_files(self):
         return [(Path(f.filename), datetime(*f.date_time))
@@ -154,7 +146,6 @@ class CompressedContainer(BaseContainer):
         try:
             self.file = classes[0](self, self._path)
             #this will force an exception if it's not the right type of file
-            self.file.list_files()
         except:
             self.file = classes[1](self, self._path)
             #this will force an exception if it's not the right type of file
@@ -220,7 +211,7 @@ class CompressedContainer(BaseContainer):
         return self.path / self.items[item_index].path
     
     def get_item_name(self, item_index):
-        return self.items[item_index].path.name
+        return str(self.items[item_index].path)
         
     def _save_container(self, item):
         """Save a container inside this container as a temp file.

@@ -194,6 +194,6 @@ class BaseContainer(object):
     def open_image(self, item_index):
         raise NotImplementedError()
     
-    def _list_paths(self, show_hidden):
+    def _list_paths(self):
         raise NotImplementedError()
 
