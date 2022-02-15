@@ -20,7 +20,8 @@ class Test(unittest.TestCase):
             return
         pid = F.ProgId.load('Python.File', F.ALL_USERS)
         self.assertEqual(pid.friendly_name, 'Python File')
-        self.assertEqual(pid.default_icon, r'C:\Python26\DLLs\py.ico')
+        #This is going to potentially be different on any user's machine, so don't bother verifying it.
+        #self.assertEqual(pid.default_icon, r'C:\Windows\py.exe')
         
     def test_save_prog_id(self):
         if not R:

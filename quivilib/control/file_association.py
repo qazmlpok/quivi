@@ -194,7 +194,7 @@ class FileType(object):
                 
     def add_prog_id(self, prog_id):
         key = reg.CreateKey(self.root_key, SOFTWARE_CLASSES + self.ext + r'\OpenWithProgids')
-        reg.SetValueEx(key, prog_id, 0, reg.REG_NONE, '')
+        reg.SetValueEx(key, prog_id, 0, reg.REG_NONE, b'')
         
     def remove_prog_id(self, prog_id):
         key = reg.CreateKey(self.root_key, SOFTWARE_CLASSES + self.ext + r'\OpenWithProgids')
