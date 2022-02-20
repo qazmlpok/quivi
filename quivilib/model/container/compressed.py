@@ -27,7 +27,7 @@ def _copy_files(f_read, f_write):
     f_write.write(f_read.read())
 
 def _is_hidden(path):
-    if sys.platform != 'win32' and path.startswith('.'):
+    if sys.platform != 'win32' and path.name.startswith('.'):
         return True
     return False
 
