@@ -37,7 +37,8 @@ class MainController(object):
     STDIO_FILE_NAME = 'error.log' 
     
     def __init__(self, main_script, file_to_open):
-        self.main_script = Path(main_script)
+        if main_script is not None:
+            self.main_script = Path(main_script)
         wx.GetApp().SetAppName(meta.APPNAME)
         
         try:

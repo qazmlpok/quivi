@@ -3,7 +3,7 @@ import logging
 import sys
 
 APPNAME = 'Quivi'
-VERSION = '1.2.1'
+VERSION = '2.0.0'
 DESCRIPTION = 'Manga/comic reader and image viewer'
 URL = 'http://quivi.sourceforge.net'
 UPDATE_URL = 'http://quivi.sourceforge.net/update.php'
