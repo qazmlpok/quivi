@@ -58,7 +58,7 @@ class GdiPlusImage(object):
         import pythoncom
         from win32com.server import util
         self.canvas_type = canvas_type
-        
+
         if img is None:
             #TODO: load from f
             try:
@@ -123,10 +123,11 @@ class GdiPlusImage(object):
             vwidth, vheight = height, width
         else:
             vwidth, vheight = width, height
-        zoomed_bmp = wx.EmptyBitmap(vwidth, vheight, 24)
+        zoomed_bmp = wx.Bitmap(vwidth, vheight, 24)
         dc = wx.MemoryDC(zoomed_bmp)
         assert dc.IsOk()
-        hdc = dc.GetHDC()
+        #hdc = dc.GetHDC()
+        hdc = ctypes.c_ulong(dc.GetHandle()).value
         graphics = ctypes.c_void_p()
         gdiplus.GdipCreateFromHDC(hdc, ctypes.byref(graphics))
         assert graphics
@@ -151,7 +152,8 @@ class GdiPlusImage(object):
         if self.zoomed_bmp:
             dc.DrawBitmap(self.zoomed_bmp, x, y)
         elif self.img:
-            hdc = dc.GetHDC()
+            #hdc = dc.GetHDC()
+            hdc = ctypes.c_ulong(dc.GetHandle()).value
             graphics = ctypes.c_void_p()
             gdiplus.GdipCreateFromHDC(hdc, ctypes.byref(graphics))
             assert graphics
@@ -164,10 +166,11 @@ class GdiPlusImage(object):
         return GdiPlusImage(self.canvas_type, img=self.img)
     
     def copy_to_clipboard(self):
-        bmp = wx.EmptyBitmap(self._width, self._height, 24)
+        bmp = wx.Bitmap(self._width, self._height, 24)
         dc = wx.MemoryDC(bmp)
         assert dc.IsOk()
-        hdc = dc.GetHDC()
+        #hdc = dc.GetHDC()
+        hdc = ctypes.c_ulong(dc.GetHandle()).value
         graphics = ctypes.c_void_p()
         gdiplus.GdipCreateFromHDC(hdc, ctypes.byref(graphics))
         assert graphics
@@ -185,10 +188,11 @@ class GdiPlusImage(object):
             factor = 1
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
-        bmp = wx.EmptyBitmap(width, height, 24)
+        bmp = wx.Bitmap(width, height, 24)
         dc = wx.MemoryDC(bmp)
         assert dc.IsOk()
-        hdc = dc.GetHDC()
+        #hdc = dc.GetHDC()
+        hdc = ctypes.c_ulong(dc.GetHandle()).value
         graphics = ctypes.c_void_p()
         gdiplus.GdipCreateFromHDC(hdc, ctypes.byref(graphics))
         assert graphics

@@ -60,7 +60,7 @@ WORD    = C.c_ushort
 DWORD   = C.c_ulong
 LONG    = C.c_long
 
-fi_handle = C.c_void_p
+fi_handle = C.POINTER(C.c_void_p)
 BYTE_P = C.POINTER(BYTE)
 
 """

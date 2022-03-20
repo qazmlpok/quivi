@@ -27,16 +27,16 @@ FUNCTION_LIST = (
     ('FreeImage_SetOutputMessage',      '@4'),
     
     #Bitmap management functions
-    ('FreeImage_Allocate',      '@24', CO.COL_1TO32),
-    ('FreeImage_AllocateT',     '@28'),
-    ('FreeImage_Load',          '@12'),
-    ('FreeImage_LoadU',         '@12'),
-    ('FreeImage_LoadFromHandle','@16'),
-    ('FreeImage_Save',          '@16'),
-    ('FreeImage_SaveU',         '@16'),
-    ('FreeImage_SaveToHandle',  '@20'),
-    ('FreeImage_Clone',         '@4'),
-    ('FreeImage_Unload',        '@4'),
+    ('FreeImage_Allocate',      '@24', CO.COL_1TO32, CO.fi_handle),
+    ('FreeImage_AllocateT',     '@28', None, CO.fi_handle),
+    ('FreeImage_Load',          '@12', None, CO.fi_handle),
+    ('FreeImage_LoadU',         '@12', None, CO.fi_handle),
+    ('FreeImage_LoadFromHandle','@16', None, CO.fi_handle),
+    ('FreeImage_Save',          '@16', None, CO.BOOL),
+    ('FreeImage_SaveU',         '@16', None, CO.BOOL),
+    ('FreeImage_SaveToHandle',  '@20', None, CO.BOOL),
+    ('FreeImage_Clone',         '@4', None, CO.fi_handle),
+    ('FreeImage_Unload',        '@4', None, None),
     
     #Bitmap information
     ('FreeImage_GetImageType',          '@4'),
@@ -54,7 +54,7 @@ FUNCTION_LIST = (
     ('FreeImage_SetDotsPerMeterX',      '@8'), 
     ('FreeImage_SetDotsPerMeterY',      '@8'),
     ('FreeImage_GetInfo',               '@4', CO.COL_1TO32,
-        C.c_void_p),
+        C.POINTER(C.c_void_p)),
     ('FreeImage_GetInfoHeader',         '@4', CO.COL_1TO32,
         C.POINTER(CO.PBITMAPINFOHEADER)),
     ('FreeImage_GetColorType',          '@4', CO.COL_1TO32 ),
@@ -86,13 +86,13 @@ FUNCTION_LIST = (
     ('FreeImage_SetPixelColor', '@16', CO.COL_16TO32 ),
 
     #Conversion / Trasformation
-    ('FreeImage_ConvertTo4Bits',        '@4', CO.COL_1TO32),
-    ('FreeImage_ConvertTo8Bits',        '@4', CO.COL_1TO32),
-    ('FreeImage_ConvertToGreyscale',    '@4', CO.COL_1TO32),
-    ('FreeImage_ConvertTo16Bits555',    '@4', CO.COL_1TO32),
-    ('FreeImage_ConvertTo16Bits565',    '@4', CO.COL_1TO32),
-    ('FreeImage_ConvertTo24Bits',       '@4', CO.COL_1TO48),
-    ('FreeImage_ConvertTo32Bits',       '@4', CO.COL_1TO32),
+    ('FreeImage_ConvertTo4Bits',        '@4', CO.COL_1TO32, CO.fi_handle),
+    ('FreeImage_ConvertTo8Bits',        '@4', CO.COL_1TO32, CO.fi_handle),
+    ('FreeImage_ConvertToGreyscale',    '@4', CO.COL_1TO32, CO.fi_handle),
+    ('FreeImage_ConvertTo16Bits555',    '@4', CO.COL_1TO32, CO.fi_handle),
+    ('FreeImage_ConvertTo16Bits565',    '@4', CO.COL_1TO32, CO.fi_handle),
+    ('FreeImage_ConvertTo24Bits',       '@4', CO.COL_1TO48, CO.fi_handle),
+    ('FreeImage_ConvertTo32Bits',       '@4', CO.COL_1TO32, CO.fi_handle),
     ('FreeImage_ColorQuantize',         '@8', (CO.COL_24,)),
     ('FreeImage_ColorQuantizeEx',       '@20', (CO.COL_24,)),
     ('FreeImage_Threshold',             '@8', CO.COL_1TO32),
@@ -104,9 +104,9 @@ FUNCTION_LIST = (
     ('FreeImage_ConvertToRGBF',         '@4', (CO.COL_24, CO.COL_32,)),
     
     #Copy / Paste / Composite routines
-    ('FreeImage_Copy',      '@20'),
+    ('FreeImage_Copy',      '@20', None, CO.fi_handle),
     ('FreeImage_Paste',     '@20', CO.COL_1TO32, CO.BOOL),
-    ('FreeImage_Composite',     '@16', (CO.COL_8, CO.COL_32)),
+    ('FreeImage_Composite',     '@16', (CO.COL_8, CO.COL_32), CO.fi_handle),
     
     #Plugin
     ('FreeImage_GetFIFCount',               '@0'),
@@ -129,12 +129,12 @@ FUNCTION_LIST = (
     ('FreeImage_GetFormatFromFIF',          '@4', None, C.c_char_p),
     
     #Upsampling / downsampling
-    ('FreeImage_Rescale',       '@16', CO.COL_1TO32 ),
-    ('FreeImage_MakeThumbnail', '@12', CO.COL_1TO32 ),
+    ('FreeImage_Rescale',       '@16', CO.COL_1TO32, CO.fi_handle ),
+    ('FreeImage_MakeThumbnail', '@12', CO.COL_1TO32, CO.fi_handle ),
     
     #Rotation and flipping
-    ('FreeImage_Rotate',        '@12', CO.COL_1TO32),
-    ('FreeImage_RotateEx',      '@48', (CO.COL_8, CO.COL_24, CO.COL_32), ),
+    ('FreeImage_Rotate',        '@12', CO.COL_1TO32, CO.fi_handle),
+    ('FreeImage_RotateEx',      '@48', (CO.COL_8, CO.COL_24, CO.COL_32), CO.fi_handle),
 
     
     #Color manipulation

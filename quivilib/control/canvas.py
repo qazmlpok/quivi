@@ -65,7 +65,7 @@ class CanvasController(object):
         
     def on_canvas_scrolled(self, *, lines):
         scr = self.view.height
-        inc = int(scr * (0.2 / 3)) * lines
+        inc = int(scr * (0.2 / 3) * lines)
         self.canvas.top += (inc)
         Publisher.sendMessage(f'{self.name}.changed')
         

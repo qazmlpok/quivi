@@ -112,7 +112,9 @@ class FreeImage(object):
             import win32gui, win32con
             import ctypes
             gdi32 = ctypes.windll.gdi32
-            hdc = dc.GetHDC()
+            #hdc = dc.GetHDC()
+            #https://discuss.wxpython.org/t/gethandle-example/30032/5 - GetHandle is not a drop-in replacement for GetHDC
+            hdc = ctypes.c_ulong(dc.GetHandle()).value
             img = self.zoomed_bmp if self.zoomed_bmp else self.img
             win32gui.SetStretchBltMode(hdc, win32con.COLORONCOLOR)
             gdi32.StretchDIBits(hdc, x, y, img.width, img.height,

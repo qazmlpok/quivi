@@ -21,7 +21,7 @@ LOG_LEVEL = logging.ERROR
 DOUBLE_BUFFERING = True
 
 if sys.platform == 'win32':
-    USE_FREEIMAGE = False
+    USE_FREEIMAGE = True
     USE_PIL = True
     USE_GDI_PLUS = True
     USE_CAIRO = False

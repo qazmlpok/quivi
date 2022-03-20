@@ -52,7 +52,7 @@ class Canvas(object):
         self.view = view
         
     def load(self, f, path, adjust=True, delay=False):
-        img = image.open(f, path, self.__class__, delay)
+        img = image.open(f, str(path), self.__class__, delay)
         self.load_img(img, adjust)
         
     def load_img(self, img, adjust=True):

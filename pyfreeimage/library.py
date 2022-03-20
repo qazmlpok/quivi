@@ -48,14 +48,14 @@ class Library(object):
         original_fn = getattr(self, name)
         unicode_fn = getattr(self, name + 'U')
         def unicode_detector_wrapper(*args):
-            if isinstance(args[pos], str):
+            if isinstance(args[pos], bytes):
+                return original_fn(*args)
+            else:
                 if 'linux' in sys.platform:
                     args = list(args)
                     args[pos] = args[pos].encode('utf-8')
                     return original_fn(*args)
                 return unicode_fn(*args)
-            else:
-                return original_fn(*args)
         setattr(self, name, unicode_detector_wrapper)
         setattr(self, name + 'A', unicode_fn)
         setattr(self, name + 'U', unicode_fn)
@@ -68,10 +68,6 @@ class Library(object):
         
         name_to_bind = name.split('_', 1)[1]
         
-        #if sys.platform == 'win32':
-        #    function = getattr(self.lib, '_%s%s' % (name, add)) 
-        #else:
-        #    function = getattr(self.lib, name)
         function = getattr(self.lib, name)
         setattr(self, name_to_bind, function)
         

@@ -60,9 +60,8 @@ if meta.USE_FREEIMAGE:
     packages.append('pyfreeimage')
 
 if sys.platform == 'win32':
-    main_files = ['LICENSE.txt',
-              'UnRAR64.dll', 'msvcp90.dll',
-              'msvcr90.dll', 'Microsoft.VC90.CRT.manifest']
+    #main_files = ['LICENSE.txt', 'VCOMP140.DLL', 'VCRUNTIME140.dll']
+    main_files = ['LICENSE.txt']
     if meta.USE_FREEIMAGE:
         main_files.append('FreeImage.dll', 'freeimage-license.txt')
     translation_files = glob('localization/*.mo') + ['localization/default.pot']
@@ -91,8 +90,8 @@ else:
     copy('quivi.pyw', 'quivi')
     scripts = ['quivi']
 
-include_packages = ['pubsub.*', 'pubsub.core.*']
-exclude_packages = ["Tkconstants", "Tkinter", "tcl", 'pydoc', '_ssl']
+include_packages = ['pubsub', 'pubsub.core']
+exclude_packages = ["Tkconstants", "Tkinter", "tcl", 'pydoc', '_ssl', 'numpy', 'tkinter']
 if not meta.USE_PIL:
     exclude_packages.append('Image')
 if not meta.USE_CAIRO:
@@ -111,6 +110,7 @@ setup(name=meta.APPNAME,
       options = {'py2exe': {'dist_dir': 'bin',
                             'excludes': exclude_packages,
                             'includes': include_packages,
+                            "include_msvcr": True,
                             }
                 },
       windows= [{'script': 'quivi.pyw',

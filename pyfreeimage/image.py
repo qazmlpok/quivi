@@ -113,8 +113,7 @@ class Image(object):
     
     @property
     def info(self):
-        #TODO: (1,2) Improve: wrap in a ctypes object?
-        return self._lib.GetInfo(self._dib)
+        return self._lib.GetInfoHeader(self._dib)
     
     def convert_to_32_bits(self):
         dib = self._lib.ConvertTo32Bits(self._dib)
@@ -147,7 +146,7 @@ class Image(object):
         buf = img.convert_to_raw_bits()
         if img is not self:
             del img
-        bmp = wx.EmptyBitmap(width, height, bpp)
+        bmp = wx.Bitmap(width, height, bpp)
         bmp.CopyFromBuffer(buf, wx.BitmapBufferFormat_ARGB32, pitch)
         return bmp
     

@@ -106,7 +106,7 @@ class QuiviThumb(tc.Thumb):
         pos = width/16
         beg = 0
         dc = wx.MemoryDC()
-        bmp = wx.EmptyBitmap(10,10)
+        bmp = wx.Bitmap(10,10)
         dc.SelectObject(bmp)
         dc.SetFont(self._parent.GetCaptionFont())
         
