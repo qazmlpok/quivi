@@ -57,6 +57,7 @@ class UpdateChecker(object):
         import urllib.request, urllib.error, urllib.parse
         f = urllib.request.urlopen(url)
         txt = f.read()
+        txt = txt.decode('utf-8')
         last_update, down_url = txt.split()[0:2]
         return last_update, down_url
             
