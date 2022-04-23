@@ -260,20 +260,15 @@ class MenuController(object):
                partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True),
                []),
         )
-        #misc_menu = (
-        #  make(18002, 'MF', 'MF',
-        #       control.file_list.open_mf,
-        #       []),
-        #)
         main_menu = (
+         #TODO: Remove idx. It's not reliable.
          make_category(0, _('&File'), file_menu),
          make_category(1, _('F&older'), folder_menu),
          make_category(2, _('&View'), view_menu),
          make_category(3, _('F&avorites'), favorites_menu),
          make_category(4, _('&Help'), help_menu),
-         make_category(5, _('Move'), hidden_menu),
-         make_category(6, _('Fit'), fit_menu),
-         #make_category(7, _('Misc'), misc_menu),
+         make_category(5, _('Move'), hidden_menu, True),
+         make_category(6, _('Fit'), fit_menu, True),
         )
         return main_menu, commands
     

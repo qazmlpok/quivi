@@ -3,9 +3,10 @@
 
 
 class CommandCategory(object):
-    def __init__(self, name, commands):
+    def __init__(self, name, commands, hidden=False):
         self.commands = commands
         self.name = name
+        self.hidden = hidden
         
     @property
     def clean_name(self):

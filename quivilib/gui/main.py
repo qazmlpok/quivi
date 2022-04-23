@@ -121,6 +121,8 @@ class MainWindow(wx.Frame):
         #used in the file list popup menu
         self.favorites_menu_items = []
         self.update_menu_item = None
+        #Track as a dictionary
+        self.menus = {}
         
     def _bind_panel_mouse_events(self):
         def make_fn(button_idx, event_idx):
@@ -235,7 +237,8 @@ class MainWindow(wx.Frame):
         
     def on_fit_context_menu(self, event):
         menu = wx.Menu()
-        self.PopupMenu(self.fit_menu)
+        #I can't figure out how to test this. Is this reachable?
+        self.PopupMenu(self.menus['Fit'])
         menu.Destroy()
         
     def on_busy(self, *, busy):
@@ -282,12 +285,16 @@ class MainWindow(wx.Frame):
         for category in main_menu:
             menu = self._make_menu(category.commands)
             self.menu_bar.Append(menu, category.name)
-        #The last three menus should be hidden menus.
+        #Remove the hidden menus.
         #It is removed from the menu bar but a reference to it is kept
         #in order to keep its keyboard shortcuts working
-        self.misc_menu = self.menu_bar.Remove(len(main_menu) - 1)
-        self.fit_menu = self.menu_bar.Remove(len(main_menu) - 2)
-        self.move_menu = self.menu_bar.Remove(len(main_menu) - 3)
+        for category in main_menu:
+            #https://stackoverflow.com/questions/27662721/removing-a-menu-from-a-wxpython-menubar
+            menu_pos = self.menu_bar.FindMenu(category.name)
+            if menu_pos >= 0:
+                self.menus[category.clean_name] = self.menu_bar.GetMenu(menu_pos)
+            if category.hidden and menu_pos >= 0:
+                self.menu_bar.Remove(menu_pos)
             
     def _make_menu(self, commands):
         menu = wx.Menu()
@@ -308,9 +315,8 @@ class MainWindow(wx.Frame):
         return menu
     
     def on_favorites_changed(self, *, favorites):
-        #TODO: (1,2) Improve: '3' is the favorites menu index, maybe it should be
-        #      passed in the menu.built message instead of hard-coding here?
-        favorites_menu = self.menu_bar.GetMenu(3)
+        favorites_menu = self.menus['Favorites']
+        
         #TODO: (1,2) Improve: likewise, 3 is the number of submenus in the favorites menu;
         #      entries bigger than 3 are the favorites themselves.
         while favorites_menu.GetMenuItemCount() > 2:
@@ -352,8 +358,11 @@ class MainWindow(wx.Frame):
             if menu_item is not None:
                 menu_item.SetItemLabel(cmd.name_and_shortcut)
                 menu_item.SetHelp(cmd.description)
-        for idx, category in enumerate(main_menu[:-1]): #not the hidden menu
-            if idx < self.menu_bar.GetMenuCount():
+        for idx, category in enumerate(main_menu):
+            if not category.hidden:
+                #Get the actual index of the menu, not what the array specifies.
+                #This allows putting hidden images before visible ones.
+                idx = self.menu_bar.FindMenu(category.name)
                 self.menu_bar.SetMenuLabel(idx, category.name)
     
     def on_container_opened(self, *, container):

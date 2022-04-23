@@ -16,10 +16,10 @@ import wx.lib.agw.hyperlink as hl
 class AboutDialog(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: AboutDialog.__init__
-        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.RESIZE_BORDER
+        kwds["style"] = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER
         wx.Dialog.__init__(self, *args, **kwds)
         self.icon_bmp = wx.StaticBitmap(self, -1, images.quivi.Bitmap)
-        self.name_lbl = wx.StaticText(self, -1, meta.APPNAME + ' ' + meta.VERSION)
+        self.name_lbl = wx.StaticText(self, -1, f'{meta.APPNAME} {meta.VERSION}')
         self.copyright_txt = wx.TextCtrl(self, -1, '', style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_NOHIDESEL|wx.NO_BORDER)
         self.project_link = hl.HyperLinkCtrl(self, -1, meta.URL, URL=meta.URL)
         self.ok_btn = wx.Button(self, wx.ID_OK, _("&OK"))
@@ -46,7 +46,7 @@ class AboutDialog(wx.Dialog):
             from pyfreeimage import library
             lib = library.load()
             txt += '\n'
-            txt += lib.GetCopyrightMessage()
+            txt += lib.GetCopyrightMessage().decode("utf-8")
             txt += '\nFreeImage is used under the FreeImage Public License, version 1.0'
             txt += '\n\nThis program uses source from FreeImagePy (http://freeimagepy.sourceforge.net/) under the FreeImage Public License, version 1.0' 
             
@@ -59,17 +59,18 @@ class AboutDialog(wx.Dialog):
         header_sizer = wx.BoxSizer(wx.HORIZONTAL)
         header_v_sizer = wx.BoxSizer(wx.VERTICAL)
         header_sizer.Add(self.icon_bmp, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
-        header_v_sizer.Add(self.name_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
+        header_v_sizer.Add(self.name_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
         header_v_sizer.Add(self.project_link, 1, wx.LEFT|wx.RIGHT, 10)
         header_sizer.Add(header_v_sizer, 1, wx.EXPAND, 0)
         main_sizer.Add(header_sizer, 0, wx.EXPAND, 0)
         main_sizer.Add(self.copyright_txt, 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
         stddialog_sizer.AddButton(self.ok_btn)
         stddialog_sizer.Realize()
-        main_sizer.Add(stddialog_sizer, 0, wx.EXPAND|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 10)
+        main_sizer.Add(stddialog_sizer, 0, wx.EXPAND|wx.ALL, 10)
         self.SetSizer(main_sizer)
         self.Layout()
         main_sizer.Fit(self)
+        self.Centre()
         # end wxGlade
         
     def on_ok_click(self, event):
