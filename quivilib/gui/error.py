@@ -78,6 +78,7 @@ class ErrorDialog(wx.Dialog):
         self.SetSizer(main_sizer)
         main_sizer.Fit(self)
         self.Layout()
+        self.Centre()
         # end wxGlade
         self.main_sizer = main_sizer
 
@@ -88,6 +89,7 @@ class ErrorDialog(wx.Dialog):
         self.report_link.Show(True)
         self.report_btn.Show(False)
         self.main_sizer.Fit(self)
+        self.Centre()
         self.Layout()
         event.Skip()
         

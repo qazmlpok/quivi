@@ -56,11 +56,11 @@ class OptionsDialog(wx.Dialog):
         self.reset_btn = wx.Button(self.keys_pane, -1, _("Reset all to defaults"))
         self.lang_lst = langlistctrl.LanguageListCtrl(self.language_pane, -1, style=wx.LC_LIST|wx.LC_NO_HEADER, filter=langlistctrl.LC_ONLY, only=available_languages, select=active_language)
         self.mouse_left_lbl = wx.StaticText(self.mouse_pane, -1, _("Left click"))
-        self.mouse_left_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
+        self.mouse_left_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
         self.mouse_middle_lbl = wx.StaticText(self.mouse_pane, -1, _("Middle click"))
-        self.mouse_middle_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
+        self.mouse_middle_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
         self.mouse_right_lbl = wx.StaticText(self.mouse_pane, -1, _("Right click"))
-        self.mouse_right_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
+        self.mouse_right_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
         self.ok_button = wx.Button(self, wx.ID_OK, _("&OK"))
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, _("&Cancel"))
 
@@ -87,7 +87,7 @@ class OptionsDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
         self.SetTitle(_("Options"))
-        self.SetSize((400, 400))
+        self.SetSize((400, 430))
         self.fit_cbo.SetSelection(-1)
         # end wxGlade
         
@@ -192,6 +192,7 @@ class OptionsDialog(wx.Dialog):
         main_sizer.Add(btn_sizer, 0, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(main_sizer)
         self.Layout()
+        self.Centre()
         # end wxGlade
 
     def on_fit_select(self, event): # wxGlade: OptionsDialog.<event_handler>
