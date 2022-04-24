@@ -34,8 +34,6 @@ class MainWindow(wx.Frame):
 
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=-1, title=meta.APPNAME)
-        #wx.FileDropTarget.__init__(self)
-        
         self.aui_mgr = wx.aui.AuiManager()
         self.aui_mgr.SetManagedWindow(self)
         self.aui_mgr.SetFlags(self.aui_mgr.GetFlags()
@@ -48,7 +46,8 @@ class MainWindow(wx.Frame):
         bundle.AddIcon(images.quivi256.Icon)
         self.SetIcons(bundle)
         
-        #self.SetDropTarget(self)
+        dt = self.QuiviFileDropTarget(self)
+        self.SetDropTarget(dt)
         
         self.menu_bar = wx.MenuBar()
         self.SetMenuBar(self.menu_bar)
@@ -434,13 +433,7 @@ class MainWindow(wx.Frame):
             color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE)
         self.panel.SetBackgroundColour(color)
         self.panel.Refresh()
-        
-    @error_handler(_handle_error)
-    def OnDropFiles(self, x, y, filenames):
-        filename = filenames[0]
-        path = Path(filename)
-        Publisher.sendMessage('file.dropped', path=path)
-        
+
     def handle_error(self, exception, tb=None):
         from quivilib.gui.error import ErrorDialog
         if not tb:
@@ -455,3 +448,15 @@ class MainWindow(wx.Frame):
         #TODO: (2,?) Investigate
         #This is a workaround for a bizarre bug in wx.
         wx.CallLater(400, fn)
+
+    
+    class QuiviFileDropTarget(wx.FileDropTarget):
+        def __init__(self, window):
+            wx.FileDropTarget.__init__(self)
+
+        @error_handler(_handle_error)
+        def OnDropFiles(self, x, y, filenames):
+            filename = filenames[0]
+            path = Path(filename)
+            Publisher.sendMessage('file.dropped', path=path)
+            return True

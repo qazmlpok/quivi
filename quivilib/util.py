@@ -73,7 +73,7 @@ def error_handler(callback_fn):
     def error_handler_with_callback(fn):
         def error_handler_fn(*args, **kwargs):
             try:
-                fn(*args, **kwargs)
+                return fn(*args, **kwargs)
             except Exception as e:
                 callback_fn(e, args, kwargs)
         return update_wrapper(error_handler_fn, fn)
