@@ -56,7 +56,7 @@ class WallpaperDialog(wx.Dialog):
         Publisher.sendMessage('wallpaper.preview_position_changed',
                                 pos_idx=self.position_radio.GetSelection())
         
-        self.preview_panel.SetBackgroundStyle(wx.BG_STYLE_COLOUR)
+        self.preview_panel.SetBackgroundStyle(wx.BG_STYLE_PAINT)
         self.preview_panel.SetBackgroundColour(color)
         # end wxGlade
 

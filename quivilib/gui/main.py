@@ -67,7 +67,7 @@ class MainWindow(wx.Frame):
                              DestroyOnClose(False).BestSize((300, 400)))
         
         self.panel = wx.Panel(self)
-        self.panel.SetBackgroundStyle(wx.BG_STYLE_COLOUR)
+        self.panel.SetBackgroundStyle(wx.BG_STYLE_PAINT)
         self.aui_mgr.AddPane(self.panel, wx.aui.AuiPaneInfo().Name("content").
                              CenterPane())
         
