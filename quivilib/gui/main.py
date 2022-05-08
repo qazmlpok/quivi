@@ -206,14 +206,15 @@ class MainWindow(wx.Frame):
     def on_panel_paint(self, event):
         if meta.DOUBLE_BUFFERING:
             dc = wx.BufferedPaintDC(self.panel)
+            dc.Clear()
         else:
             dc = wx.PaintDC(self.panel)
         #This is required on Linux
         dc.SetBackground(wx.Brush(self.panel.GetBackgroundColour()))
-        dc.Clear()
         class PaintedRegion(object):
             pass
         painted_region = PaintedRegion()
+        #The recipient will update the painted_region fields.
         Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
         clip_region = wx.Region(0, 0, self.panel.GetSize()[0],
                                 self.panel.GetSize()[1])
@@ -221,10 +222,15 @@ class MainWindow(wx.Frame):
                                      painted_region.width, painted_region.height))
         #Fix for bug in Linux (without this it would clear the entire image
         #when the panel is smaller than the image
-        iter = wx.RegionIterator(clip_region)
-        if iter and not meta.DOUBLE_BUFFERING:
-            dc.SetClippingRegionAsRegion(clip_region)
-            dc.Clear()
+        
+        if not meta.DOUBLE_BUFFERING:
+            iter = wx.RegionIterator(clip_region)
+            while (iter.HaveRects()):
+                rect = iter.GetRect()
+                dc.DestroyClippingRegion()
+                dc.SetClippingRegion(rect)
+                dc.Clear()
+                iter.Next()
         
     def on_mouse_wheel(self, event):
         lines = event.GetWheelRotation() / event.GetWheelDelta()

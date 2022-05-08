@@ -114,6 +114,7 @@ class WallpaperDialog(wx.Dialog):
         self.SetSizer(grid_sizer_3)
         grid_sizer_3.Fit(self)
         self.Layout()
+        self.Centre()
         # end wxGlade
         
     @property
@@ -188,18 +189,21 @@ class WallpaperDialog(wx.Dialog):
             def __init__(self):
                 self.left = self.top = self.width = self.height = -1
         painted_region = PaintedRegion()
+        #The recipient will update the painted_region fields.
         Publisher.sendMessage('wpcanvas.painted', dc=dc, painted_region=painted_region)
         if painted_region.left != -1:
             clip_region = wx.Region(0, 0, self.preview_panel.GetSize()[0],
                                     self.preview_panel.GetSize()[1])
-            clip_region.Subtract(painted_region)
-            dc.SetClippingRegionAsRegion(clip_region)
-            #Fix for bug in Linux (without this it would clear the entire image
-            #when the panel is smaller than the image)
+            clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
+                                     painted_region.width, painted_region.height))
+            region_box = clip_region.GetBox()
             iter = wx.RegionIterator(clip_region)
-            if iter:
-                dc.SetClippingRegionAsRegion(clip_region)
+            while (iter.HaveRects()):
+                rect = iter.GetRect()
+                dc.DestroyClippingRegion()
+                dc.SetClippingRegion(rect)
                 dc.Clear()
+                iter.Next()
         
     def on_preview_changed(self, *, bmp, tiled):
         self.bmp = bmp

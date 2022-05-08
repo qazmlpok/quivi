@@ -135,11 +135,11 @@ class WallpaperController(object):
 def _set_wallpaper(img, position, color):
     path = Path(wx.StandardPaths.Get().GetUserLocalDataDir())
     try:
-        path.makedirs()
-    except:
+        path.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
         pass
     filename = path / WALLPAPER_FILE_NAME
-    img.save(filename, fif=fi.constants.FIF_BMP)
+    img.save(str(filename), fif=fi.constants.FIF_BMP)
     
     if sys.platform == 'win32':
         _set_windows_wallpaper(filename, position, color)
@@ -193,7 +193,7 @@ def _set_linux_wallpaper(filename, position, color):
 def _get_windows_bg_color():
     import win32con, win32api
     color = win32api.GetSysColor(win32con.COLOR_BACKGROUND)
-    color = wx.ColourRGB(color)
+    color = wx.Colour(color)
     return color
 
 def _set_windows_wallpaper(filename, position, color):
