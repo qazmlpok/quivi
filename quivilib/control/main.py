@@ -122,6 +122,9 @@ class MainController(object):
         pane = self.view.aui_mgr.GetPane('file_list')
         event.Check(pane.IsShown())
         
+    def on_update_image_available_menu_item(self, event):
+        event.Enable(self.model.canvas.has_image())
+        
     def toggle_thumbnails(self):
         pane = self.view.file_list_panel
         pane.toggle_thumbnails()

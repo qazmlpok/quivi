@@ -223,9 +223,9 @@ class Image(object):
         if not res:
             raise RuntimeError('Unable to paste image')
         
-    def fill(self, xxx_todo_changeme):
+    def fill(self, color):
         #TODO: (1,3) Improve: support other bpp; check masks
-        (r, g, b) = xxx_todo_changeme
+        (r, g, b) = color
         assert self.bpp == 24, 'Unsupported BPP for fill'
         buf = ctypes.create_string_buffer(self.width_bytes)
         buf[0:(3 * (len(buf) / 3))] = [chr(b), chr(g), chr(r)] * (len(buf) / 3)

@@ -45,6 +45,9 @@ class ImageCacheLoadRequest(object):
         item_eq = (self.item == other.item)
         return cont_eq and item_eq
         
+    def __hash__(self):
+        return hash(self.container, self.item)
+        
     def __ne__(self, other):
         return not self == other 
 

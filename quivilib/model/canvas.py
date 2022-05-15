@@ -257,7 +257,11 @@ class Canvas(object):
         return self.x_centered and self.y_centered
     
     def copy_to_clipboard(self):
-        self.img.copy_to_clipboard()
+        if self.img is not None:
+            self.img.copy_to_clipboard()
+            
+    def has_image(self):
+        return self.img is not None
         
     def paint(self, dc):
         if not self.img:

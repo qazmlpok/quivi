@@ -18,9 +18,9 @@ ZOOM_FACTOR = 25
  
 (MOVE_SMALL,
  MOVE_LARGE) = list(range(2))
-     
 
-     
+
+
 class CanvasController(object):
     
     #TODO: (1,4) Refactor: all canvas.changed should be sent by the model, but it would
