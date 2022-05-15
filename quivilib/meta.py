@@ -30,7 +30,7 @@ else:
     USE_FREEIMAGE = True
     USE_PIL = False
     USE_GDI_PLUS = False
-    USE_CAIRO = True
+    USE_CAIRO = False
     PATH_SEP = ':'
 
 MANIFEST = """

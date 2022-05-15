@@ -5,7 +5,7 @@ import wx
 from wx.lib import wxcairo
 import pyfreeimage as fi
 from pyfreeimage import Image
-from . import cairo
+import cairo
 
 import math
 import logging
@@ -122,6 +122,8 @@ class CairoImage(object):
                 matrix.translate(-x, -y)
             imgpat.set_matrix(matrix)
             ctx.set_source(imgpat)
+        #This isn't working, and I'm not sure why. Examples suggest that this should draw directly
+        #to the DC, and the objects seem fine (no exceptions, certainly), but nothing happens.
         ctx.paint()
             
     def copy(self):
