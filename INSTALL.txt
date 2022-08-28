@@ -4,8 +4,9 @@ These instructions apply only if you're installing from source.
 
 == Required libraries ==
 
-- wxPython 2.8.9.x or more recent (http://wxpython.org/)
-  - On Windows, just intall the most recent Unicode build.
+- Python 3.6 or later
+- wxPython 4.1.1 or more recent (http://wxpython.org/)
+  - On Windows, just use pip: pip install -U wxPython
   - On Ubuntu, the official release is much older. Check
     http://wiki.wxpython.org/InstallingOnUbuntuOrDebian
     to find how to install the most recent version.
@@ -16,8 +17,9 @@ These instructions apply only if you're installing from source.
   - On Linux, the 'libfreeimage.so.3' library is loaded. The library
     available on your repository will probably do.
 - UnRAR (http://www.rarlab.com/rar_add.htm)
-  - On Windows, download UnRAR.dll and copy the dll file into the quivi folder.
-  - On Linux, you'll need the command line executable accessible in your PATH.
+  - The python library rarfile is used, which relies on the UnRar tool
+    existing in the PATH. See:
+    https://rarfile.readthedocs.io/faq.html#how-can-i-get-it-work-on-windows
 
 
 == Installing ==
@@ -39,3 +41,6 @@ Now you have two options:
 Is much easier to use the binary versions, but if you want to run from
 the source, you probably know what you're doing and just do something among
 the lines of the Linux steps.
+
+The binary package can be built using PyInstaller, using the command:
+pyinstaller quivi.spec --noconsole
