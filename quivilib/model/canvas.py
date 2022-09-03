@@ -52,8 +52,14 @@ class Canvas(object):
         self.view = view
         
     def load(self, f, path, adjust=True, delay=False):
-        img = image.open(f, str(path), self.__class__, delay)
+        if __debug__:
+            import time
+            start = time.perf_counter()
+        img = image.open(f, path, self.__class__, delay)
         self.load_img(img, adjust)
+        if __debug__:
+            stop = time.perf_counter()
+            log.debug(f'{path.name} took: {(stop - start)*1000:0.1f}ms.')
         
     def load_img(self, img, adjust=True):
         self.img = img

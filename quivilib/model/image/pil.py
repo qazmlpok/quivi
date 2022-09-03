@@ -5,6 +5,8 @@ from quivilib.util import rescale_by_size_factor
 from PIL import Image
 import logging
 log = logging.getLogger('pil')
+#PIL has its own logging that's typically not relevant.
+logging.getLogger("PIL").setLevel(logging.ERROR)
 
 import wx
 
@@ -108,6 +110,13 @@ class PilImage(object):
         bmp = wx.Bitmap.FromBuffer(width, height, img.tobytes())
         #TODO: Implement delayed_fn. See freeimage.
         return bmp
+
+    def _get_extensions():
+        return list(Image.registered_extensions().keys())
+    ext_list = _get_extensions()
+    
+    def extensions():
+        return PilImage.ext_list
 
     def close(self):
         pass

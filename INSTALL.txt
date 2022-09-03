@@ -43,4 +43,4 @@ the source, you probably know what you're doing and just do something among
 the lines of the Linux steps.
 
 The binary package can be built using PyInstaller, using the command:
-pyinstaller quivi.spec --noconsole
+set PYTHONOPTIMIZE=1 && pyinstaller quivi.spec --noconsole --noconfirm
