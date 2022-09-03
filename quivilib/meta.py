@@ -7,6 +7,7 @@ VERSION = '2.0.0'
 DESCRIPTION = 'Manga/comic reader and image viewer'
 URL = 'https://github.com/qazmlpok/quivi'
 UPDATE_URL = 'https://raw.githubusercontent.com/qazmlpok/quivi/master/VERSION.txt'
+#UPDATE_URL = 'https://raw.githubusercontent.com/qazmlpok/quivi/fake-update/VERSION.txt'
 REPORT_URL = 'https://github.com/qazmlpok/quivi/issues'
 HELP_URL = 'http://quivi.sourceforge.net/documentation'
 AUTHOR = 'Conrado Porto Lopes Gouvea'
@@ -16,8 +17,12 @@ COPYRIGHT = f"Copyright (c) 2009, {AUTHOR} <{AUTHOR_EMAIL}>\nAll rights reserved
 CACHE_ENABLED = True
 CACHE_SIZE = 3
 PREFETCH_COUNT = 1
-DEBUG = False
-LOG_LEVEL = logging.ERROR
+if __debug__:
+    DEBUG = True
+    LOG_LEVEL = logging.DEBUG
+else:
+    DEBUG = False
+    LOG_LEVEL = logging.ERROR
 DOUBLE_BUFFERING = True
 
 if sys.platform == 'win32':

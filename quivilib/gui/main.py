@@ -38,7 +38,7 @@ class MainWindow(wx.Frame):
         self.aui_mgr.SetManagedWindow(self)
         self.aui_mgr.SetFlags(self.aui_mgr.GetFlags()
                               & ~wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
-        
+
         bundle = wx.IconBundle()
         bundle.AddIcon(images.quivi16.Icon)
         bundle.AddIcon(images.quivi32.Icon)
@@ -422,7 +422,7 @@ class MainWindow(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
         
-    def on_update_available(self, *, down_url):
+    def on_update_available(self, *, down_url, check_time, version):
         menu = wx.Menu()
         ide = wx.NewId()
         self.update_menu_item = menu.Append(ide, _('&Download'), _('Go to the download site'))
@@ -430,7 +430,7 @@ class MainWindow(wx.Frame):
         def event_fn(event):
             Publisher.sendMessage('program.open_update_site', url=down_url)
         self.Bind(wx.EVT_MENU, event_fn, id=ide)
-        
+
     def on_bg_color_changed(self, *, settings):
         if settings.get('Options', 'CustomBackground') == '1':
             color = settings.get('Options', 'CustomBackgroundColor').split(',')

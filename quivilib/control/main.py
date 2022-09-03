@@ -50,6 +50,10 @@ class MainController(object):
         
         if meta.DEBUG:
             log.basicConfig()
+            log_file = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.LOG_FILE_NAME
+            fh = log.FileHandler(log_file, mode='w')
+            fh.setLevel(meta.LOG_LEVEL)
+            log.getLogger().addHandler(fh)
         else:
             log_file = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.LOG_FILE_NAME
             log.basicConfig(filename=log_file, filemode='w')
@@ -87,6 +91,10 @@ class MainController(object):
         Publisher.subscribe(self.on_open_update_site, 'program.open_update_site')
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
         Publisher.sendMessage('settings.loaded', settings=self.model.settings)
+        
+        #Receive messages for Settings from the Daemon thread
+        Publisher.subscribe(self.on_update_available, 'program.update_available')
+        Publisher.subscribe(self.on_no_update_available, 'program.no_update_available')
         
         self.pane_info = None
         
@@ -175,6 +183,18 @@ class MainController(object):
         self.settings.save()
         tempdir.delete_tempdir()
         log.shutdown()
+
+    def on_update_available(self, *, down_url, check_time, version):
+        self.settings.set('Update', 'Available', '1')
+        if check_time is not None:
+            self.settings.set('Update', 'URL', down_url)
+            self.settings.set('Update', 'LastCheck', check_time)
+            self.settings.set('Update', 'Version', version)
+
+    def on_no_update_available(self, *, check_time):
+        self.settings.set('Update', 'Available', '0')
+        if check_time is not None:
+            self.settings.set('Update', 'LastCheck', check_time)
 
     @property
     def localization_path(self):
