@@ -32,10 +32,13 @@ def get_supported_extensions():
         from pyfreeimage import library
         exts += library.load().get_readable_extensions()
     if meta.USE_PIL:
-        exts += ['.bmp', '.cur', '.dcx', '.fli', '.flc', '.fpx', '.gbr', '.gif',
-                 '.ico', '.im', '.imt', '.jpg', '.jpeg', '.pcd', '.pcx', '.png',
+        #PIL.Image.registered_extensions(). This is a curated list.
+        exts += ['.bmp', '.cur', '.dcx', '.fli', '.flc', '.fpx', '.gbr', '.gif', 
+                 '.ico', '.im', '.imt', '.jpg', '.jpeg', '.pcd', '.pcx', '.png', '.apng',
+                 #JPEG 2000. No JPEG XL support yet.
+                 '.j2c', '.j2k', '.jfif', '.jp2', '.jpc', '.jpe', '.jpf', '.jpx',
                  '.ppm', '.pbm', '.pgm', '.sgi', '.tga', '.tif', '.tiff', '.xmb',
-                 '.xpm']
+                 '.webp', '.xpm']
     return list(set(exts))
 
 supported_extensions = get_supported_extensions()
@@ -43,9 +46,13 @@ supported_extensions = get_supported_extensions()
 
 
 def open(f, path, canvas_type, delay=False):
+    ext = path.suffix
     for cls in IMG_CLASSES:
+        if not ext in cls.extensions():
+            log.debug(f"Skip {cls} - no support for {ext}")
+            continue
         try:
-            img = cls(canvas_type, f, path, delay=delay)
+            img = cls(canvas_type, f, str(path), delay=delay)
             break
         except Exception as e:
             if IMG_CLASSES[-1] is cls:

@@ -62,13 +62,16 @@ class GdiPlusImage(object):
         if img is None:
             #TODO: load from f
             try:
+                #Note - this will only work if path is a real file, and not an archive entry.
                 img = _GdiPlusInnerImage(path=path)
             except EnvironmentError:
                 if not f:
                     raise
                 fs = util.FileStream(f)
                 istream = util.wrap(fs, pythoncom.IID_IStream)
-                img = _GdiPlusInnerImage(isttream=path)
+                #"ctypes.ArgumentError: argument 1: Don't know how to convert parameter 1"
+                #If this ever worked, it's dead now.
+                img = _GdiPlusInnerImage(istream=istream)
         
         width = ctypes.c_uint()
         gdiplus.GdipGetImageWidth(img.img, ctypes.byref(width))
@@ -82,6 +85,11 @@ class GdiPlusImage(object):
         self.zoomed_bmp = None
         self.delay = delay
         self.rotation = 0
+    
+    def extensions():
+        #Taken from https://docs.microsoft.com/en-us/windows/win32/api/gdiplusheaders/nf-gdiplusheaders-image-image(constwchar_bool)
+        #Webp (and possibly others) don't work but should. They display in Paint, which I understand is basically a wrapper around GDI.
+        return ['.bmp', '.emf', '.gif', '.jpg', '.jpeg', '.png', '.tiff']
         
     @property
     def width(self):

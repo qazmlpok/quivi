@@ -10,6 +10,8 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 
 No new features have been added, but the upgrade to Python 3 offers better support for Unicode filenames, and the 64bit environment supports larger images.
 
+Upgrading the image libraries offers support for some newer formats, including Webp.
+
 # Porting progress
 - Updated to support Python 3.8.1
 - wx updated to 4.1.1
