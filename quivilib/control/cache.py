@@ -65,8 +65,7 @@ class ImageCache(object):
         self.cache = []
         self.clock = Lock()
         self.semaphore = Semaphore(0)
-        self.thread = Thread(target=self.run)
-        self.thread.setDaemon(True)
+        self.thread = Thread(target=self.run, daemon=True)
         self.thread.start()
         self.processing_request = None
         

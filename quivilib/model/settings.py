@@ -8,22 +8,6 @@ from pubsub import pub as Publisher
 
 
 
-class UnicodeAwareConfigParser(SafeConfigParser):
-    def set(self, section, option, value):
-        value = str(value).encode('utf-8')
-        SafeConfigParser.set(self, section, option, value)
-
-    def get(self, section, option):
-        value = SafeConfigParser.get(self, section, option)
-        return value.decode('utf-8')
-    
-    def items(self, section):
-        options = self.options(section)
-        return [(option, self.get(section, option)) for option in options]
-    
-    
-#I don't believe UnicodeAwareConfigParser is necessary in python3.
-#(If it is, remember to add kwargs to the wrapper functions)
 class Settings(SafeConfigParser):
     (FIT_NONE,
      FIT_WIDTH_OVERSIZE,
