@@ -13,8 +13,8 @@ No new features have been added, but the upgrade to Python 3 offers better suppo
 Upgrading the image libraries offers support for some newer formats, including Webp.
 
 # Porting progress
-- Updated to support Python 3.8.1
-- wx updated to 4.1.1
+- Updated to support Python 3.10.6
+- wx updated to 4.2.0
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
 - Image display supports GTK, Freeimage, and PIL (Pillow) works. Cairo is not supported.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
