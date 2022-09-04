@@ -111,7 +111,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
             #On Linux the selected/focused item keeps its state even after
             #resetting the item count. On Windows this causes GetItemText being
             #called with an index possibly bigger than the item count
-            self.SetItemState(old_sel, 0, wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED)
+            self.SetItemState(0, 0, wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED)
         #This is required to clear any previous selection
         sel = self.container.selected_item_index
         self.SetItemCount(0)
@@ -195,3 +195,4 @@ class FileList(wx.ListCtrl, FileListViewBase):
 
     def show(self):
         pass
+
