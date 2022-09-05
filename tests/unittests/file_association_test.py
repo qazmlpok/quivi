@@ -58,7 +58,8 @@ class Test(unittest.TestCase):
             return
         ft = F.FileType.load('.py', F.ALL_USERS)
         self.assertEqual(ft.prog_id_name, 'Python.File')
-        self.assertEqual(ft.content_type, 'text/plain')
+        #This depends on the file registry.
+        #self.assertEqual(ft.content_type, 'text/plain')
         
     def test_save_file_type(self):
         if not R:
