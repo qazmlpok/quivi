@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from pubsub import pub as Publisher 
 
 import logging
-logging.basicConfig()
+logging.basicConfig(encoding='utf8')
 logging.getLogger().setLevel(logging.DEBUG)
 
 DOWN_URL = 'http://example.com/down'

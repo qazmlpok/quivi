@@ -49,14 +49,14 @@ class MainController(object):
             pass
         
         if meta.DEBUG:
-            log.basicConfig()
+            log.basicConfig(encoding='utf8')
             log_file = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.LOG_FILE_NAME
-            fh = log.FileHandler(log_file, mode='w')
+            fh = log.FileHandler(log_file, mode='w', encoding='utf8')
             fh.setLevel(meta.LOG_LEVEL)
             log.getLogger().addHandler(fh)
         else:
             log_file = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.LOG_FILE_NAME
-            log.basicConfig(filename=log_file, filemode='w')
+            log.basicConfig(filename=log_file, filemode='w', encoding='utf8')
         log.getLogger().setLevel(meta.LOG_LEVEL)
         
         wx.ArtProvider.Push(QuiviArtProvider())
