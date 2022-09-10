@@ -163,10 +163,6 @@ class IO(object):
                 self.iserror = False
         return retval
 
-_PyBytes_FromStringAndSize = C.pythonapi.PyBytes_FromStringAndSize
-_PyBytes_FromStringAndSize.argtypes = [BYTE_P, C.c_int]
-_PyBytes_FromStringAndSize.restype = C.py_object
-
 class FileIO(IO):
     """
     Wrapped python file object for use with the handle functions.
@@ -198,7 +194,10 @@ class FileIO(IO):
             write = self._file.write
         except AttributeError:
             raise IOAttributeError("Unsupported file operation write")
-        write(_PyBytes_FromStringAndSize(buffer, size * count))
+        
+        #This was using _PyBytes_FromStringAndSize, but I don't think it's necessary.
+        #write(_PyBytes_FromStringAndSize(buffer, size * count))
+        write(buffer)
         return count
 
     def SeekProc(self, offset, origin):
