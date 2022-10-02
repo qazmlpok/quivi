@@ -67,6 +67,7 @@ class MainController(object):
         else:
             settings_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.INI_FILE_NAME
             stdio_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.STDIO_FILE_NAME
+        Publisher.subscribe(self.on_settings_corrupt, 'settings.corrupt')
         self.settings = Settings(settings_path)
         start_dir = self._get_start_dir(self.settings)
         if util.is_frozen():
@@ -195,6 +196,21 @@ class MainController(object):
         self.settings.set('Update', 'Available', '0')
         if check_time is not None:
             self.settings.set('Update', 'LastCheck', check_time)
+
+    def on_settings_corrupt(self, *, backupFilename):
+        import wx
+        from quivilib.i18n import _
+        if backupFilename is not None:
+            msg = _('The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s.') % backupFilename
+        else:
+            msg = _('The settings file is corrupt and cannot be opened. Settings will return to their default values.')
+        #Self.view won't exist when this is called.
+        def fn():
+            #This honestly looks awful, but ideally it won't ever be displayed, so I'm not concerned.
+            dlg = wx.MessageDialog(self.view, msg, _('Settings lost'), wx.OK | wx.ICON_WARNING)
+            dlg.ShowModal()
+            dlg.Destroy()
+        wx.CallLater(1, fn)
 
     @property
     def localization_path(self):

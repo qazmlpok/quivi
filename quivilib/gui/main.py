@@ -29,7 +29,6 @@ def _handle_error(exception, args, kwargs):
     
 
 
-#class MainWindow(wx.Frame, wx.FileDropTarget):
 class MainWindow(wx.Frame):
 
     def __init__(self):

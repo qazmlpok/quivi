@@ -2,7 +2,7 @@
 
 from quivilib.model.container import SortOrder
 
-from configparser import SafeConfigParser
+from configparser import SafeConfigParser, ParsingError
 
 from pubsub import pub as Publisher
 
@@ -39,7 +39,17 @@ class Settings(SafeConfigParser):
     def __init__(self, path):
         SafeConfigParser.__init__(self)
         self.path = path
-        self.read(path)
+        
+        try:
+            self.read(path)
+        except ParsingError:
+            import os
+            backupname = None
+            if os.path.isfile(path):
+                backupname = f'{path}.bad'
+                os.replace(path, backupname)
+            Publisher.sendMessage('settings.corrupt', backupFilename=backupname)
+
         self.__defaults = self._load_defaults()
         Publisher.sendMessage('settings.changed', settings=self)
         
