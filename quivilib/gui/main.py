@@ -335,7 +335,7 @@ class MainWindow(wx.Frame):
             ide = wx.NewId()
             def event_fn(event, favorite=path):
                 try:
-                    Publisher.sendMessage('favorite.open', favorite=favorite)
+                    Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
                 except Exception as e:
                     self.handle_error(e)
             #In path for drives (e.g. D:\), name is '' 

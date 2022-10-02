@@ -38,6 +38,12 @@ def _delete_file(path, window=None):
     else:
         path.unlink()
 
+def _ask_delete_favorite(window, path):
+    dlg = wx.MessageDialog(window, _('''The file or directory "%s" couldn't be found. Remove the favorite?''') % path.name,
+                           _("Favorite not found"), wx.YES_NO | wx.ICON_QUESTION)
+    res = dlg.ShowModal()
+    dlg.Destroy()
+    return res
 
 class FileListController(object):
     def __init__(self, model, start_container):
@@ -82,8 +88,17 @@ class FileListController(object):
     def on_container_item_changed(self, *, index):
         self.open_item(index)
         
-    def on_favorite_open(self, *, favorite):
-        self.open_path(favorite)
+    def on_favorite_open(self, *, favorite, window=None):
+        try:
+            self.open_path(favorite)
+        except FileNotFoundError as e:
+            #Favorite invalid; probably deleted manually. Prompt user to remove.
+            if _ask_delete_favorite(window, favorite) == wx.ID_YES:
+                #Duplicate of remove_favorite in main.
+                self.model.favorites.remove(favorite)
+                Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+                Publisher.sendMessage('favorite.opened', favorite=False)
+                
 
     def open_item(self, item_index):
         container = self.model.container
@@ -261,7 +276,7 @@ class FileListController(object):
                     self.model.container = container
                     self.open_item(container.selected_item_index)
             else:
-                raise RuntimeError(_('File or directory does not exist'))
+                raise FileNotFoundError(_('File or directory does not exist'))
             
     def toggle_show_hidden(self):
         self.show_hidden = not self.show_hidden
