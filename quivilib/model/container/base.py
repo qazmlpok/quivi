@@ -96,7 +96,10 @@ class BaseContainer(object):
             return CompressedContainer(item.path, self._sort_order, self.show_hidden)
         else:
             assert False, 'Invalid container type specified'
-            
+
+    def close_container(self):
+        pass
+
     def refresh(self, show_hidden):
         self.show_hidden = show_hidden
         paths = self._list_paths()

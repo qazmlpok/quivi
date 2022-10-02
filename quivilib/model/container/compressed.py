@@ -58,6 +58,9 @@ class ZipFile(object):
             encpath = str(path)
         return io.BytesIO(self.file.read(encpath))
 
+    def close(self):
+        self.file.close()
+        self.file = None
 
 
 
@@ -98,7 +101,9 @@ class RarFile(object):
             raise
         finally:
             archive.close()
-
+    def close(self):
+        self.file.close()
+        self.file = None
 
 
 class RarFileExternal(RarFile):
@@ -120,6 +125,10 @@ class RarFileExternal(RarFile):
         
     def open_file(self, path):
         return io.BytesIO(self.file.read(self.conv_path(path)))
+
+    def close(self):
+        self.file.close()
+        self.file = None
 
     def conv_path(self, path):
         npath = str(path)
@@ -163,6 +172,10 @@ class CompressedContainer(BaseContainer):
             paths.append((path, last_modified, data))
         paths.insert(0, (Path('..'), None, None))
         return paths
+        
+    def close_container(self):
+        if self.file is not None:
+            self.file.close()
     
     @property
     def name(self):

@@ -236,20 +236,7 @@ class FileListController(object):
     def open_path(self, path):
         sort_order = self.model.container.sort_order
         show_hidden = self.model.container.show_hidden
-        #if path.startswith('onemanga:') or path.startswith('mangafox:'):
-        #    paths = Path(path[9:]).splitall()
-        #    if path.startswith('onemanga:'):
-        #        from quivilib.model.container.onemanga import OMContainer
-        #        container = OMContainer(sort_order, show_hidden)
-        #    else:
-        #        from quivilib.model.container.mangafox import MFContainer
-        #        container = MFContainer(sort_order, show_hidden)
-        #    container = self._open_virtual_path(container, paths[1:])
-        #    if container.selected_item_index == -1:
-        #        self._set_container(container)
-        #    else:
-        #        self.model.container = container
-        #        self.open_item(container.selected_item_index)
+        
         if path.is_dir():
             container = DirectoryContainer(path, sort_order, show_hidden)
             self._set_container(container)
@@ -298,6 +285,8 @@ class FileListController(object):
                 return self._open_virtual_path(container, paths[1:])
         
     def _set_container(self, container):
+        if self.model.container is not None:
+            self.model.container.close_container()
         self.model.container = container
         self._last_opened_item = None
         for idx, item in enumerate(self.model.container.items):

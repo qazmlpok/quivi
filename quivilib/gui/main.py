@@ -458,6 +458,7 @@ class MainWindow(wx.Frame):
     
     class QuiviFileDropTarget(wx.FileDropTarget):
         def __init__(self, window):
+            self.Window = window
             wx.FileDropTarget.__init__(self)
 
         @error_handler(_handle_error)
@@ -466,3 +467,6 @@ class MainWindow(wx.Frame):
             path = Path(filename)
             Publisher.sendMessage('file.dropped', path=path)
             return True
+        
+        def handle_error(self, exception):
+            self.Window.handle_error(exception)
