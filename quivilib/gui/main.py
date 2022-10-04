@@ -1,6 +1,5 @@
 
 from quivilib.control.options import get_fit_choices
-from quivilib.meta import PATH_SEP
 
 import wx
 import wx.aui
@@ -299,7 +298,9 @@ class MainWindow(wx.Frame):
                 self.menus[category.clean_name] = self.menu_bar.GetMenu(menu_pos)
             if category.hidden and menu_pos >= 0:
                 self.menu_bar.Remove(menu_pos)
-            
+        #Track as a class variable to avoid a magic number.
+        self._favorite_menu_count = self.menus['Favorites'].GetMenuItemCount()
+
     def _make_menu(self, commands):
         menu = wx.Menu()
         for command in commands:
@@ -321,32 +322,25 @@ class MainWindow(wx.Frame):
     def on_favorites_changed(self, *, favorites):
         favorites_menu = self.menus['Favorites']
         
-        #TODO: (1,2) Improve: likewise, 3 is the number of submenus in the favorites menu;
-        #      entries bigger than 3 are the favorites themselves.
-        while favorites_menu.GetMenuItemCount() > 2:
-            menu = favorites_menu.FindItemByPosition(2)
+        #self._favorite_menu_count is the number of submenus in the favorites menu;
+        #      entries bigger than this are the favorites themselves.
+        while favorites_menu.GetMenuItemCount() > self._favorite_menu_count:
+            menu = favorites_menu.FindItemByPosition(self._favorite_menu_count)
             favorites_menu.Delete(menu)
         items = favorites.getitems()
         if items:
             favorites_menu.AppendSeparator()
         self.favorites_menu_items = []
         i = 0
-        for path_key, path in items:
+        for path_key, fav in items:
             ide = wx.NewId()
-            def event_fn(event, favorite=path):
+            def event_fn(event, favorite=fav):
                 try:
                     Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
                 except Exception as e:
                     self.handle_error(e)
-            #In path for drives (e.g. D:\), name is '' 
-            if path.name == '':
-                name = path
-            else:
-                name = path.name
-            #Handle universal path names
-            name = name.split(PATH_SEP)[-1]
-            #Prevents incorrect shortcut definition
-            name = name.replace('&', '&&')
+            
+            name = fav.displayText()
             if not name:
                 continue
             favorites_menu.Append(ide, name)

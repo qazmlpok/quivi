@@ -201,9 +201,15 @@ class MenuController(object):
          make(14001, _('Add to &favorites'), _('Add the current directory or compressed file to the favorites'),
               control.add_favorite,
               [(wx.ACCEL_CTRL, ord('D'))]),
+         make(14003, _('Add &placeholder'), _('Add the current directory or compressed file to the favorites on the current image'),
+              control.add_placeholder,
+              [(wx.ACCEL_CTRL, ord('F'))]),
          make(14002, _('R&emove from favorites'), _('Remove the current directory or compressed file from the favorites'),
               control.remove_favorite,
               [(wx.ACCEL_CTRL, ord('R'))]),
+         make(14004, _('Remove p&laceholder'), _('Remove the saved page for the current directory or compressed file from the favorites'),
+              control.remove_placeholder,
+              [(wx.ACCEL_CTRL, ord('V'))]),
         )
         help_menu = (
           make(15001, _('&Help (online)...'), _('Open the online help'),

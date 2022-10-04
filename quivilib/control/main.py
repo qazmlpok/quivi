@@ -13,6 +13,7 @@ from quivilib.control.options import OptionsController
 from quivilib.control.cache import ImageCache
 from quivilib.control.check_update import UpdateChecker
 from quivilib.control.i18n import I18NController
+from quivilib.model.favorites import Favorite
 from pathlib import Path
 from quivilib import util
 
@@ -145,15 +146,34 @@ class MainController(object):
     def add_favorite(self):
         path = self.model.container.universal_path
         if path:
-            self.model.favorites.insert(path)
+            favorite = Favorite(path, None, None)
+            self.model.favorites.insert(favorite)
             Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
             Publisher.sendMessage('favorite.opened', favorite=True)
+    def add_placeholder(self):
+        """
+        Like favorites, but 1. includes the current page
+        2. Adding a new placeholder for the same object will replace the previous placeholder
+        3. (Find some way to do this) placeholder are temporary and go away on their own, somehow.
+        """
+        path = self.model.container.universal_path
+        if path:
+            idx = self.model.container.selected_item_index
+            filename = self.model.container.items[idx].namebase
+            placeholder = Favorite(path, idx, filename)
+            self.model.favorites.insert(placeholder)
+            Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+        
         
     def remove_favorite(self):
-        self.model.favorites.remove(self.model.container.path)
+        self.model.favorites.remove(self.model.container.path, False)
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
         Publisher.sendMessage('favorite.opened', favorite=False)
-        
+    
+    def remove_placeholder(self):
+        self.model.favorites.remove(self.model.container.path, True)
+        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+    
     def copy_to_clipboard(self):
         self.model.canvas.copy_to_clipboard()
         
