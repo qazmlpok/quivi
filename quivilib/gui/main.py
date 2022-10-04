@@ -156,6 +156,7 @@ class MainWindow(wx.Frame):
         settings_lst.append(('Window', 'MainWindowWidth', self._last_size[0]))
         settings_lst.append(('Window', 'MainWindowHeight', self._last_size[1]))
         settings_lst.append(('Window', 'MainWindowMaximized', '1' if self.IsMaximized() else '0'))
+        settings_lst.append(('Window', 'MainWindowFullscreen', '1' if self.IsFullScreen() else '0'))
     
     def load(self, settings):
         perspective = settings.get('Window', 'Perspective')
@@ -169,7 +170,7 @@ class MainWindow(wx.Frame):
         self.Maximize(settings.getboolean('Window', 'MainWindowMaximized'))
         if wx.Display.GetFromWindow(self) == wx.NOT_FOUND:
             self.SetSize(0, 0, width, height)
-    
+
     def on_resize(self, event):
         Publisher.sendMessage('canvas.resized')
         if not self.IsMaximized():

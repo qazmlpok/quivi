@@ -68,6 +68,7 @@ class Settings(SafeConfigParser):
           ('Window', 'MainWindowWidth', 700),
           ('Window', 'MainWindowHeight', 500),
           ('Window', 'MainWindowMaximized', '0'),
+          ('Window', 'MainWindowFullscreen', '0'),
           ('Window', 'FileListColumnsWidth', ''),
           #TODO: (2,2) Refactor: change to constant. This is a dummy command ID
           # for "drag image"

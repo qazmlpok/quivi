@@ -34,6 +34,7 @@ def run():
                 self.controller = MainController(self.script, file_to_open)
                 self.SetTopWindow(self.controller.view)
                 self.controller.view.Show(True)
+                self.controller.MaybeMaximize()
                 return True
             except Exception as e:
                 tb = traceback.format_exc()

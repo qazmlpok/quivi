@@ -109,11 +109,22 @@ class MainController(object):
         self.view.Close()
         
     def toggle_fullscreen(self):
-        if self.settings.get('Options', 'RealFullscreen') == '1':
+        UseRealFullscreen = self.settings.get('Options', 'RealFullscreen') == '1'
+        if UseRealFullscreen:
             style = wx.FULLSCREEN_ALL
         else:
             style = (wx.FULLSCREEN_NOBORDER | wx.FULLSCREEN_NOCAPTION)
         self.view.ShowFullScreen(not self.view.IsFullScreen(), style)
+    
+    def MaybeMaximize(self):
+        """
+        Set the MainWindow to fullscreen if the app was in fullscreen when last closed
+        This has to be done after Show() or the app gets messed up badly.
+        This used to be the case for Maximized, but maybe that was fixed.
+        """
+        useFullscreen = self.settings.getboolean('Window', 'MainWindowFullscreen')
+        if useFullscreen:
+            self.toggle_fullscreen()
         
     def on_update_fullscreen_menu_item(self, event):
         event.Check(self.view.IsFullScreen())
