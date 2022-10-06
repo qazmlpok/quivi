@@ -58,6 +58,9 @@ class OptionsController(object):
         custom_bg = '1' if opt.custom_bg else '0'
         custom_bg_color = '%d,%d,%d' % (opt.custom_bg_color.Red(), opt.custom_bg_color.Green(), opt.custom_bg_color.Blue())
         real_fullscreen = '1' if opt.real_fullscreen else '0'
+        auto_fullscreen = '1' if opt.auto_fullscreen else '0'
+        placeholder_delete = '1' if opt.placeholder_delete else '0'
+        placeholder_single = '1' if opt.placeholder_single else '0'
         open_first = '1' if opt.open_first else '0'
         if opt.left_click_cmd is None:
             opt.left_click_cmd = -1
@@ -72,6 +75,9 @@ class OptionsController(object):
         self.model.settings.set('Options', 'CustomBackgroundColor', custom_bg_color)
         self.model.settings.set('Options', 'CustomBackground', custom_bg)
         self.model.settings.set('Options', 'RealFullscreen', real_fullscreen)
+        self.model.settings.set('Options', 'AutoFullscreen', auto_fullscreen)
+        self.model.settings.set('Options', 'PlaceholderDelete', placeholder_delete)
+        self.model.settings.set('Options', 'PlaceholderSingle', placeholder_single)
         self.model.settings.set('Options', 'OpenFirst', open_first)
         self.model.settings.set('Mouse', 'LeftClickCmd', opt.left_click_cmd)
         self.model.settings.set('Mouse', 'MiddleClickCmd', opt.middle_click_cmd)

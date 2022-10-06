@@ -74,6 +74,9 @@ class Favorite:
         
         return name
         
+    def is_placeholder(self):
+        return self.page is not None
+        
     def serialize(self):
         """
         Turns a favorite or placeholder into a string that can be saved to the config

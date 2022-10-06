@@ -13,6 +13,7 @@ import wx
 from pubsub import pub as Publisher
 from wx.lib import langlistctrl
 
+WINDOW_SIZE = (400, 460)
 
 class OptionsDialog(wx.Dialog):
     def __init__(self, parent, fit_choices, settings, categories,
@@ -31,6 +32,8 @@ class OptionsDialog(wx.Dialog):
         self.language_pane = wx.Panel(self.main_notebook, -1)
         self.keys_pane = wx.Panel(self.main_notebook, -1)
         self.viewing_pane = wx.Panel(self.main_notebook, -1)
+        
+        #Viewing tab
         self.bg_color_sizer_staticbox = wx.StaticBox(self.viewing_pane, -1, _("Background color"))
         self.fit_label = wx.StaticText(self.viewing_pane, -1, _("Fit"))
         self.fit_cbo = wx.ComboBox(self.viewing_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
@@ -44,6 +47,12 @@ class OptionsDialog(wx.Dialog):
         self.real_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Hide menu and status on full screen"))
         self.open_first_chk = wx.CheckBox(self.viewing_pane, -1, _("Open first image of the folder automatically"))
         self.settings_local_chk = wx.CheckBox(self.viewing_pane, -1, _("Portable mode (save settings inside the program folder)"))
+        
+        self.settings_auto_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Remember full screen on close"))
+        self.settings_placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
+        self.settings_placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
+        
+        #Commands tab
         self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
         self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
         self.shortcuts_lbl = wx.StaticText(self.keys_pane, -1, _("Shortcuts for selected command"))
@@ -55,12 +64,15 @@ class OptionsDialog(wx.Dialog):
         self.assigned_comamnd_lbl = wx.StaticText(self.keys_pane, -1, "")
         self.reset_btn = wx.Button(self.keys_pane, -1, _("Reset all to defaults"))
         self.lang_lst = langlistctrl.LanguageListCtrl(self.language_pane, -1, style=wx.LC_LIST|wx.LC_NO_HEADER, filter=langlistctrl.LC_ONLY, only=available_languages, select=active_language)
+        
+        #Mouse tab
         self.mouse_left_lbl = wx.StaticText(self.mouse_pane, -1, _("Left click"))
         self.mouse_left_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
         self.mouse_middle_lbl = wx.StaticText(self.mouse_pane, -1, _("Middle click"))
         self.mouse_middle_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
         self.mouse_right_lbl = wx.StaticText(self.mouse_pane, -1, _("Right click"))
         self.mouse_right_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
+        
         self.ok_button = wx.Button(self, wx.ID_OK, _("&OK"))
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, _("&Cancel"))
 
@@ -87,7 +99,7 @@ class OptionsDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
         self.SetTitle(_("Options"))
-        self.SetSize((400, 430))
+        self.SetSize(WINDOW_SIZE)
         self.fit_cbo.SetSelection(-1)
         # end wxGlade
         
@@ -128,6 +140,13 @@ class OptionsDialog(wx.Dialog):
         self.real_fullscreen_chk.SetValue(real_fullscreen)
         open_first = (self.settings.get('Options', 'OpenFirst') == '1')
         self.open_first_chk.SetValue(open_first)
+        auto_fullscreen = (self.settings.get('Options', 'AutoFullscreen') == '1')
+        self.settings_auto_fullscreen_chk.SetValue(auto_fullscreen)
+        placeholder_delete = (self.settings.get('Options', 'PlaceholderDelete') == '1')
+        self.settings_placeholder_autodelete_chk.SetValue(placeholder_delete)
+        placeholder_single = (self.settings.get('Options', 'PlaceholderSingle') == '1')
+        self.settings_placeholder_single_chk.SetValue(placeholder_single)
+        
         self.settings_local_chk.SetValue(self.save_locally)
         
         self.ok_button.SetDefault()
@@ -144,21 +163,38 @@ class OptionsDialog(wx.Dialog):
         viewing_sizer = wx.BoxSizer(wx.VERTICAL)
         bg_color_sizer = wx.StaticBoxSizer(self.bg_color_sizer_staticbox, wx.VERTICAL)
         custom_bg_color_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        viewing_sizer.Add(self.fit_label, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.fit_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.width_label, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.width_txt, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        
+        fit_outer = wx.BoxSizer(wx.HORIZONTAL)
+        fit_inner1 = wx.BoxSizer(wx.VERTICAL)
+        fit_inner2 = wx.BoxSizer(wx.VERTICAL)
+        fit_outer.Add(fit_inner1, 1, wx.RIGHT, 10)
+        fit_outer.Add(fit_inner2, 0, wx.RIGHT, 10)
+        viewing_sizer.Add(fit_outer, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
+        
+        #Viewing
+        fit_inner1.Add(self.fit_label, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        fit_inner1.Add(self.fit_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        fit_inner2.Add(self.width_label, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        fit_inner2.Add(self.width_txt, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        
         viewing_sizer.Add(self.start_dir_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.start_dir_picker, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        
         bg_color_sizer.Add(self.bg_color_default_rdo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         custom_bg_color_sizer.Add(self.bg_color_custom_rdo, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         custom_bg_color_sizer.Add(self.bg_color_picker, 0, wx.LEFT|wx.RIGHT|wx.EXPAND, 5)
         bg_color_sizer.Add(custom_bg_color_sizer, 1, wx.ALL|wx.EXPAND, 5)
         viewing_sizer.Add(bg_color_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        
         viewing_sizer.Add(self.real_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.open_first_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.settings_local_chk, 0, wx.ALL, 5)
+        viewing_sizer.Add(self.settings_auto_fullscreen_chk, 0, wx.ALL, 5)
+        viewing_sizer.Add(self.settings_placeholder_autodelete_chk, 0, wx.ALL, 5)
+        viewing_sizer.Add(self.settings_placeholder_single_chk, 0, wx.ALL, 5)
         self.viewing_pane.SetSizer(viewing_sizer)
+        
+        #Keys
         keys_sizer.Add(self.commands_label, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         keys_sizer.Add(self.commands_lst, 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
         keys_sizer.Add(self.shortcuts_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
@@ -263,7 +299,11 @@ class OptionsDialog(wx.Dialog):
         opt.save_locally = self.settings_local_chk.GetValue()
         opt.real_fullscreen = self.real_fullscreen_chk.GetValue()
         opt.open_first = self.open_first_chk.GetValue()
+        opt.auto_fullscreen = self.settings_auto_fullscreen_chk.GetValue()
+        opt.placeholder_delete = self.settings_placeholder_autodelete_chk.GetValue()
+        opt.placeholder_single = self.settings_placeholder_single_chk.GetValue()
         opt.shortcuts = self.shortcuts
+        
         #TODO: (2,2) Improve: handle errors here
         Publisher.sendMessage('options.update', opt=opt)
         event.Skip()

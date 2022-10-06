@@ -96,11 +96,16 @@ class FileListController(object):
                 #Bypass the default page open and manually select the saved index.
                 #Otherwise it will try to load the cover page and the selected page.
                 self.select_index(int(favorite.page))
+                autodelete = self.model.settings.get('Options', 'PlaceholderDelete') == '1'
+                if autodelete:
+                    self.model.favorites.remove(favorite.path, is_placeholder)
+                    Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+                    log.debug(f'Removing placeholder on open: {favorite.path}')
         except FileNotFoundError as e:
             #Favorite invalid; probably deleted manually. Prompt user to remove.
-            if _ask_delete_favorite(window, path) == wx.ID_YES:
+            if _ask_delete_favorite(window, favorite.path) == wx.ID_YES:
                 #Duplicate of remove_favorite in main.
-                self.model.favorites.remove(path)
+                self.model.favorites.remove(favorite.path, is_placeholder)
                 Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
                 Publisher.sendMessage('favorite.opened', favorite=False)
                 

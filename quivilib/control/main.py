@@ -123,7 +123,8 @@ class MainController(object):
         This used to be the case for Maximized, but maybe that was fixed.
         """
         useFullscreen = self.settings.getboolean('Window', 'MainWindowFullscreen')
-        if useFullscreen:
+        autoFullscreen = self.settings.getboolean('Options', 'AutoFullscreen')
+        if useFullscreen and autoFullscreen:
             self.toggle_fullscreen()
         
     def on_update_fullscreen_menu_item(self, event):
@@ -165,7 +166,8 @@ class MainController(object):
         """
         Like favorites, but 1. includes the current page
         2. Adding a new placeholder for the same object will replace the previous placeholder
-        3. (Find some way to do this) placeholder are temporary and go away on their own, somehow.
+        3. Placeholders are intended to be temporary and may be automatically deleted on load
+           or on saving a placeholder for any other item. There are settings to control this.
         """
         path = self.model.container.universal_path
         if path:
@@ -173,6 +175,14 @@ class MainController(object):
             filename = self.model.container.items[idx].namebase
             placeholder = Favorite(path, idx, filename)
             self.model.favorites.insert(placeholder)
+            autodelete = self.settings.get('Options', 'PlaceholderSingle') == '1'
+            if autodelete:
+                #Look for a placeholder for any other container and delete it/them
+                favs = self.model.favorites.getitems()
+                for (k, fav) in favs:
+                    if fav.is_placeholder() and fav.path != path:
+                        log.debug(f"Remove existing placeholder: {fav.path}")
+                        self.model.favorites.remove(fav.path, True)
             Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
         
         
