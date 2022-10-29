@@ -23,11 +23,12 @@ class MenuController(object):
         self.settings = settings
         self.control = control
         self.commands = []
-        self.main_menu, self.commands = self._make_commands(self.control)
+        self.main_menu, self.command_cats, self.commands = self._make_commands(self.control)
+        self.main_menu_dict = {x.name: x for x in self.main_menu}
         self._load_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
         #These must be sent in this order
-        Publisher.sendMessage('menu.built', main_menu=self.main_menu)
+        Publisher.sendMessage('menu.built', main_menu=self.main_menu, commands=self.commands)
         Publisher.sendMessage('toolbar.built', commands=self._get_toolbar_commands(self.commands))
         #TODO: (2,2) Refactor: change this message name. This also notifies that
         #    shortcuts have changed.
@@ -66,7 +67,7 @@ class MenuController(object):
         
     def on_command_execute(self, *, ide):
         [cmd() for cmd in self.commands if cmd.ide == ide]
-        
+
     def _make_commands(self, control, update=False):
         """Make (or update) all commands.
         
@@ -85,9 +86,10 @@ class MenuController(object):
                 return None
             
             def make_category(*params):
-                idx, name = params[0:2]
-                category = self.main_menu[idx]
-                category.name = name
+                idx, name = params[1:3]
+                if idx in self.main_menu_dict:
+                    category = self.main_menu[idx]
+                    category.name = name
                 return None
         else:
             def make(*params, **kwparams):
@@ -99,7 +101,7 @@ class MenuController(object):
                 return command
             
             def make_category(*params):
-                category = CommandCategory(*params[1:])
+                category = CommandCategory(*params)
                 return category
         
         file_menu = (
@@ -211,6 +213,11 @@ class MenuController(object):
               control.remove_placeholder,
               [(wx.ACCEL_CTRL, ord('V'))]),
         )
+        favorites_hidden_menu = (
+         make(14005, _('Open last placeholder'), _('Open the most recently created placeholder'),
+              control.open_latest_placeholder,
+              [(wx.ACCEL_CTRL, ord('L'))]),
+        )
         help_menu = (
           make(15001, _('&Help (online)...'), _('Open the online help'),
                control.open_help,
@@ -276,16 +283,24 @@ class MenuController(object):
                []),
         )
         main_menu = (
-         #TODO: Remove idx. It's not reliable.
-         make_category(0, _('&File'), file_menu),
-         make_category(1, _('F&older'), folder_menu),
-         make_category(2, _('&View'), view_menu),
-         make_category(3, _('F&avorites'), favorites_menu),
-         make_category(4, _('&Help'), help_menu),
-         make_category(5, _('Move'), hidden_menu, True),
-         make_category(6, _('Fit'), fit_menu, True),
+         make_category(0, 'file', _('&File'), file_menu),
+         make_category(1, 'fold', _('F&older'), folder_menu),
+         make_category(2, 'view', _('&View'), view_menu),
+         make_category(3, 'fav' , _('F&avorites'), favorites_menu),
+         make_category(4, 'help', _('&Help'), help_menu),
+         #make_category(5, _('Move'), hidden_menu, True),
+         make_category(6, '_fit', _('Fit'), fit_menu, True)
         )
-        return main_menu, commands
+        #The fit menu doesn't appear in the top, but can open via right click, so it needs to be created.
+        #The other menus here exist to provide commands in the options, but aren't otherwise menus
+        #Names can overlap with actual menu names (this is deliberate)
+        #Order (first parameter) controls where it will appear in the Settings dialog only
+        command_cats = main_menu + (
+            make_category(3.1, '_fav', _('Favorites'), favorites_hidden_menu, True),
+            make_category(5, '_mov', _('Move'), hidden_menu, True),
+        )
+        
+        return main_menu, command_cats, commands
     
     @staticmethod
     def _get_toolbar_commands(commands):
@@ -330,5 +345,5 @@ class MenuController(object):
     @staticmethod
     def _get_accelerator_table(commands):
         lst = [(shcut.flags, shcut.key_code, cmd.ide) for cmd in commands
-               for shcut in cmd.shortcuts] 
+               for shcut in cmd.shortcuts]
         return wx.AcceleratorTable(lst)

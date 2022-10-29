@@ -103,7 +103,7 @@ class OptionsDialog(wx.Dialog):
         self.fit_cbo.SetSelection(-1)
         # end wxGlade
         
-        for category in self.categories:
+        for category in sorted(self.categories, key=lambda x: x.order):
             for cmd in category.commands:
                 if cmd is None:
                     continue

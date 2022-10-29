@@ -3,16 +3,25 @@
 
 
 class CommandCategory(object):
-    def __init__(self, name, commands, hidden=False):
+    def __init__(self, order, idx, name, commands, hidden=False):
+        """
+            Create a new command category.
+            
+            @param order: The order within the Options menu (not used elsewhere)
+            @param idx: String key to use as a unique identifier for this menu. Needed for updates.
+            @param commands: Collection of commands (e.g. menu items) associated with this category.
+            @param name: Display name for the menu - translated to the target language
+            @param hidden: If true, the menu will be created but not added to the menu bar.
+        """
+        self.order = order
+        self.idx = idx
         self.commands = commands
         self.name = name
         self.hidden = hidden
         
     @property
     def clean_name(self):
-        s = self.name
-        s = s.replace('&', '')
-        return s
+        return self.name.replace('&', '')
     
     
 class Command(object):
@@ -33,6 +42,9 @@ class Command(object):
     def __call__(self):
         self._function()
         
+    def __repr__(self):
+        return f'{self.clean_name}: {self.description}'
+        
     @property
     def name_and_shortcut(self):
         if self.shortcuts:
@@ -42,7 +54,4 @@ class Command(object):
     
     @property
     def clean_name(self):
-        s = self.name
-        s = s.replace('&', '')
-        s = s.replace('...', '')
-        return s
+        return self.name.replace('&', '').replace('...', '')

@@ -195,6 +195,10 @@ class MainController(object):
         self.model.favorites.remove(self.model.container.path, True)
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
     
+    def open_latest_placeholder(self):
+        print("Called.")
+        raise Exception("Called.")
+    
     def copy_to_clipboard(self):
         self.model.canvas.copy_to_clipboard()
         

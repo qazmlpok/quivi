@@ -35,8 +35,8 @@ class OptionsController(object):
         
     def open_dialog(self):
         fit_choices = get_fit_choices()
-        categories = self.control.menu.main_menu
-                        
+        categories = self.control.menu.command_cats
+
         Publisher.sendMessage('options.open_dialog',
                                 fit_choices=fit_choices, 
                                 settings=self.model.settings, 

@@ -240,9 +240,9 @@ class MainWindow(wx.Frame):
         self.panel.SetFocus()
         
     def on_fit_context_menu(self, event):
+        """Appears on right-clicking the status bar"""
         menu = wx.Menu()
-        #I can't figure out how to test this. Is this reachable?
-        self.PopupMenu(self.menus['Fit'])
+        self.PopupMenu(self.menus['_fit'])
         menu.Destroy()
         
     def on_busy(self, *, busy):
@@ -285,35 +285,31 @@ class MainWindow(wx.Frame):
         text = util.get_formatted_zoom(zoom)
         self.status_bar.SetStatusText(text, ZOOM_FIELD)
         
-    def on_menu_built(self, *, main_menu):
+    def on_menu_built(self, *, main_menu, commands):
         for category in main_menu:
             menu = self._make_menu(category.commands)
-            self.menu_bar.Append(menu, category.name)
-        #Remove the hidden menus.
-        #It is removed from the menu bar but a reference to it is kept
-        #in order to keep its keyboard shortcuts working
-        for category in main_menu:
-            #https://stackoverflow.com/questions/27662721/removing-a-menu-from-a-wxpython-menubar
-            menu_pos = self.menu_bar.FindMenu(category.name)
-            if menu_pos >= 0:
-                self.menus[category.clean_name] = self.menu_bar.GetMenu(menu_pos)
-            if category.hidden and menu_pos >= 0:
-                self.menu_bar.Remove(menu_pos)
+            self.menus[category.idx] = menu
+            #Don't actually add the menu to the bar if it's hidden (it can still be opened via PopupMenu)
+            if not category.hidden:
+                self.menu_bar.Append(menu, category.name)
+
+        #Create actual bindings for the commands
+        for command in commands:
+            def event_fn(event, cmd=command):
+                try:
+                    cmd()
+                except Exception as e:
+                    self.handle_error(e)
+            self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
         #Track as a class variable to avoid a magic number.
-        self._favorite_menu_count = self.menus['Favorites'].GetMenuItemCount()
+        self._favorite_menu_count = self.menus['fav'].GetMenuItemCount()
 
     def _make_menu(self, commands):
         menu = wx.Menu()
         for command in commands:
             if command:
-                def event_fn(event, cmd=command):
-                    try:
-                        cmd()
-                    except Exception as e:
-                        self.handle_error(e)
                 style = wx.ITEM_CHECK if command.checkable else wx.ITEM_NORMAL
                 menu.Append(command.ide, command.name_and_shortcut, command.description, style)
-                self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
                 if command.update_function:
                     wx.GetApp().Bind(wx.EVT_UPDATE_UI, command.update_function, id=command.ide)
             else:
@@ -321,7 +317,7 @@ class MainWindow(wx.Frame):
         return menu
     
     def on_favorites_changed(self, *, favorites):
-        favorites_menu = self.menus['Favorites']
+        favorites_menu = self.menus['fav']
         
         #self._favorite_menu_count is the number of submenus in the favorites menu;
         #      entries bigger than this are the favorites themselves.
