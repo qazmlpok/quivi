@@ -40,16 +40,20 @@ class Settings(SafeConfigParser):
         SafeConfigParser.__init__(self)
         self.path = path
         
+        #Try reading the config twice; first as utf-8 and then as the default encoding.
+        #The write will now always be UTF-8, but existing files will be system default.
         try:
-            self.read(path)
-        except ParsingError:
-            import os
-            backupname = None
-            if os.path.isfile(path):
-                backupname = f'{path}.bad'
-                os.replace(path, backupname)
-            Publisher.sendMessage('settings.corrupt', backupFilename=backupname)
-
+            self.read(path, encoding='utf-8')
+        except UnicodeDecodeError:
+            try:
+                self.read(path)
+            except ParsingError:
+                import os
+                backupname = None
+                if os.path.isfile(path):
+                    backupname = f'{path}.bad'
+                    os.replace(path, backupname)
+                Publisher.sendMessage('settings.corrupt', backupFilename=backupname)
         self.__defaults = self._load_defaults()
         Publisher.sendMessage('settings.changed', settings=self)
         
@@ -104,7 +108,7 @@ class Settings(SafeConfigParser):
     def save(self):
         if not self.path.parent.exists():
             self.path.parent.makedirs()
-        with self.path.open('w') as f:
+        with self.path.open('w', encoding='utf-8') as f:
             self.write(f)
             
     def get_default(self, section, option):

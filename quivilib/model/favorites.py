@@ -11,15 +11,22 @@ CONFIG_KEY = 'Favorites'
 class Favorites(object):
     def __init__(self, config=None):
         self._favorites = {}
+        #Maintains the order within the configuration, which should always be by date
+        #(Or I could just add a date to everything)
+        self._ordered = []
         if config:
             self.load(config)
         Publisher.subscribe(self.on_container_opened, 'container.opened')
         
     def insert(self, fav):
         self._favorites[fav.getKey()] = fav
+        self._ordered.append(fav)
         
     def remove(self, path, is_placeholder=False):
         del self._favorites[(path, is_placeholder)]
+        for fav in self._ordered:
+            if str(fav.path) == str(path) and fav.is_placeholder() == is_placeholder:
+                self._ordered.remove(fav)
         
     def contains(self, path):
         return path in self._favorites
@@ -41,6 +48,9 @@ class Favorites(object):
     def getitems(self):
         #TODO: (1,2) Improve: use human sort
         return sorted((key, value) for key, value in list(self._favorites.items()))
+    
+    def ordered_items(self):
+        return self._ordered
     
     def on_container_opened(self, *, container):
         favorite = self.contains(container.path)
