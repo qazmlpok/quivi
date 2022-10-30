@@ -63,7 +63,7 @@ class OptionsDialog(wx.Dialog):
         self.shortcut_assign_btn = wx.Button(self.keys_pane, -1, _("Assign"))
         self.assigned_comamnd_lbl = wx.StaticText(self.keys_pane, -1, "")
         self.reset_btn = wx.Button(self.keys_pane, -1, _("Reset all to defaults"))
-        self.lang_lst = langlistctrl.LanguageListCtrl(self.language_pane, -1, style=wx.LC_LIST|wx.LC_NO_HEADER, filter=langlistctrl.LC_ONLY, only=available_languages, select=active_language)
+        self.lang_lst = langlistctrl.LanguageListCtrl(self.language_pane, -1, style=wx.LC_REPORT|wx.LC_NO_HEADER, filter=langlistctrl.LC_ONLY, only=available_languages, select=active_language)
         
         #Mouse tab
         self.mouse_left_lbl = wx.StaticText(self.mouse_pane, -1, _("Left click"))
@@ -125,7 +125,6 @@ class OptionsDialog(wx.Dialog):
                 
         self.width_txt.SetValue(self.settings.get('Options', 'FitWidthCustomSize'))
                 
-        self.start_dir_picker.SetTextCtrlProportion(1)
         self.start_dir_picker.SetPath(self.settings.get('Options', 'StartDir'))
         
         if self.settings.get('Options', 'CustomBackground') == '1':
@@ -356,3 +355,4 @@ if __name__ == '__main__':
     app = wx.App(False)
     dlg = OptionsDialog(None)
     dlg.ShowModal()
+
