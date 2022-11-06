@@ -40,6 +40,14 @@ class Settings(SafeConfigParser):
         SafeConfigParser.__init__(self)
         self.path = path
         
+        def _parseError():
+            import os
+            backupname = None
+            if os.path.isfile(path):
+                backupname = f'{path}.bad'
+                os.replace(path, backupname)
+            Publisher.sendMessage('settings.corrupt', backupFilename=backupname)
+        
         #Try reading the config twice; first as utf-8 and then as the default encoding.
         #The write will now always be UTF-8, but existing files will be system default.
         try:
@@ -47,13 +55,11 @@ class Settings(SafeConfigParser):
         except UnicodeDecodeError:
             try:
                 self.read(path)
-            except ParsingError:
-                import os
-                backupname = None
-                if os.path.isfile(path):
-                    backupname = f'{path}.bad'
-                    os.replace(path, backupname)
-                Publisher.sendMessage('settings.corrupt', backupFilename=backupname)
+            except:
+                _parseError()
+        except:
+            #Any other error should be treated as a parse error; the file is probably corrupt.
+            _parseError()
         self.__defaults = self._load_defaults()
         Publisher.sendMessage('settings.changed', settings=self)
         
