@@ -109,6 +109,8 @@ class OptionsDialog(wx.Dialog):
         
         for m in self._mouse_cbos:
             m.Append(_("None"), -1)
+        #TODO: A lot of these commands don't make sense for the mouse. Filter some of them out.
+        #Conversely, some things that could be useful for mouse viewing don't exist. Like scroll to bottom.
         for category in sorted(self.categories, key=lambda x: x.order):
             for cmd in category.commands:
                 if cmd is None:
@@ -161,23 +163,69 @@ class OptionsDialog(wx.Dialog):
         # begin wxGlade: OptionsDialog.__do_layout
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         btn_sizer = wx.StdDialogButtonSizer()
-        mouse_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        self.__do_layout_viewing()
+        self.__do_layout_keys()
+        self.__do_layout_mouse()
+        #Language
         language_sizer = wx.BoxSizer(wx.VERTICAL)
+        language_sizer.Add(self.lang_lst, 1, wx.ALL|wx.EXPAND, 5)
+        self.language_pane.SetSizer(language_sizer)
+        
+        self.main_notebook.AddPage(self.viewing_pane, _("&Viewing"))
+        self.main_notebook.AddPage(self.keys_pane, _("&Keys"))
+        self.main_notebook.AddPage(self.mouse_pane, _("&Mouse"))
+        self.main_notebook.AddPage(self.language_pane, _("&Language"))
+        main_sizer.Add(self.main_notebook, 1, wx.ALL|wx.EXPAND, 5)
+        btn_sizer.AddButton(self.ok_button)
+        btn_sizer.AddButton(self.cancel_button)
+        btn_sizer.Realize()
+        main_sizer.Add(btn_sizer, 0, wx.ALL|wx.EXPAND, 5)
+        self.SetSizer(main_sizer)
+        self.Layout()
+        self.Centre()
+        # end wxGlade
+    def __do_layout_mouse(self):
+        mouse_sizer = wx.BoxSizer(wx.VERTICAL)
+        mouse_sizer.Add(self.mouse_left_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_left_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_middle_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_middle_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_right_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_right_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux1_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux1_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux2_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux2_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        self.mouse_pane.SetSizer(mouse_sizer)
+    def __do_layout_keys(self):
         keys_sizer = wx.BoxSizer(wx.VERTICAL)
-        new_shortcut_sizer = wx.BoxSizer(wx.HORIZONTAL)
         shortcuts_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        new_shortcut_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        keys_sizer.Add(self.commands_label, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        keys_sizer.Add(self.commands_lst, 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        keys_sizer.Add(self.shortcuts_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        shortcuts_sizer.Add(self.shorcuts_cbo, 1, wx.RIGHT, 5)
+        shortcuts_sizer.Add(self.shortcut_remove_btn, 0, 0, 0)
+        keys_sizer.Add(shortcuts_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        keys_sizer.Add(self.new_shortcut_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        new_shortcut_sizer.Add(self.new_shortcut_key, 1, wx.RIGHT|wx.EXPAND, 5)
+        new_shortcut_sizer.Add(self.shortcut_assign_btn, 0, 0, 0)
+        keys_sizer.Add(new_shortcut_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        keys_sizer.Add(self.assigned_comamnd_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        keys_sizer.Add(self.reset_btn, 0, wx.ALL, 5)
+        self.keys_pane.SetSizer(keys_sizer)
+    def __do_layout_viewing(self):
         viewing_sizer = wx.BoxSizer(wx.VERTICAL)
         bg_color_sizer = wx.StaticBoxSizer(self.bg_color_sizer_staticbox, wx.VERTICAL)
         custom_bg_color_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        
         fit_outer = wx.BoxSizer(wx.HORIZONTAL)
         fit_inner1 = wx.BoxSizer(wx.VERTICAL)
         fit_inner2 = wx.BoxSizer(wx.VERTICAL)
         fit_outer.Add(fit_inner1, 1, wx.RIGHT|wx.EXPAND, 10)
         fit_outer.Add(fit_inner2, 0, wx.RIGHT|wx.EXPAND, 10)
         viewing_sizer.Add(fit_outer, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
-        
-        #Viewing
+
         fit_inner1.Add(self.fit_label, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         fit_inner1.Add(self.fit_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         fit_inner2.Add(self.width_label, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
@@ -194,55 +242,11 @@ class OptionsDialog(wx.Dialog):
         
         viewing_sizer.Add(self.real_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.open_first_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.settings_local_chk, 0, wx.ALL, 5)
-        viewing_sizer.Add(self.settings_auto_fullscreen_chk, 0, wx.ALL, 5)
-        viewing_sizer.Add(self.settings_placeholder_autodelete_chk, 0, wx.ALL, 5)
-        viewing_sizer.Add(self.settings_placeholder_single_chk, 0, wx.ALL, 5)
+        viewing_sizer.Add(self.settings_local_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.settings_auto_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.settings_placeholder_autodelete_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.settings_placeholder_single_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.viewing_pane.SetSizer(viewing_sizer)
-        
-        #Keys
-        keys_sizer.Add(self.commands_label, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        keys_sizer.Add(self.commands_lst, 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
-        keys_sizer.Add(self.shortcuts_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        shortcuts_sizer.Add(self.shorcuts_cbo, 1, wx.RIGHT, 5)
-        shortcuts_sizer.Add(self.shortcut_remove_btn, 0, 0, 0)
-        keys_sizer.Add(shortcuts_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
-        keys_sizer.Add(self.new_shortcut_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        new_shortcut_sizer.Add(self.new_shortcut_key, 1, wx.RIGHT|wx.EXPAND, 5)
-        new_shortcut_sizer.Add(self.shortcut_assign_btn, 0, 0, 0)
-        keys_sizer.Add(new_shortcut_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
-        keys_sizer.Add(self.assigned_comamnd_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
-        keys_sizer.Add(self.reset_btn, 0, wx.ALL, 5)
-        self.keys_pane.SetSizer(keys_sizer)
-        language_sizer.Add(self.lang_lst, 1, wx.ALL|wx.EXPAND, 5)
-        self.language_pane.SetSizer(language_sizer)
-        
-        #Mouse
-        mouse_sizer.Add(self.mouse_left_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_left_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_middle_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_middle_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_right_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_right_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_aux1_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_aux1_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_aux2_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_sizer.Add(self.mouse_aux2_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        self.mouse_pane.SetSizer(mouse_sizer)
-        
-        self.main_notebook.AddPage(self.viewing_pane, _("&Viewing"))
-        self.main_notebook.AddPage(self.keys_pane, _("&Keys"))
-        self.main_notebook.AddPage(self.mouse_pane, _("&Mouse"))
-        self.main_notebook.AddPage(self.language_pane, _("&Language"))
-        main_sizer.Add(self.main_notebook, 1, wx.ALL|wx.EXPAND, 5)
-        btn_sizer.AddButton(self.ok_button)
-        btn_sizer.AddButton(self.cancel_button)
-        btn_sizer.Realize()
-        main_sizer.Add(btn_sizer, 0, wx.ALL|wx.EXPAND, 5)
-        self.SetSizer(main_sizer)
-        self.Layout()
-        self.Centre()
-        # end wxGlade
 
     def on_fit_select(self, event): # wxGlade: OptionsDialog.<event_handler>
         fit_type = event.GetClientData()
