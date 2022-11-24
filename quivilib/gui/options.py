@@ -66,12 +66,16 @@ class OptionsDialog(wx.Dialog):
         self.lang_lst = langlistctrl.LanguageListCtrl(self.language_pane, -1, style=wx.LC_REPORT|wx.LC_NO_HEADER, filter=langlistctrl.LC_ONLY, only=available_languages, select=active_language)
         
         #Mouse tab
-        self.mouse_left_lbl = wx.StaticText(self.mouse_pane, -1, _("Left click"))
-        self.mouse_left_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
-        self.mouse_middle_lbl = wx.StaticText(self.mouse_pane, -1, _("Middle click"))
-        self.mouse_middle_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
-        self.mouse_right_lbl = wx.StaticText(self.mouse_pane, -1, _("Right click"))
-        self.mouse_right_cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
+        def _make_mouse_cbo(text):
+            lbl = wx.StaticText(self.mouse_pane, -1, text)
+            cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
+            return (lbl, cbo)
+        (self.mouse_left_lbl,self.mouse_left_cbo) = _make_mouse_cbo(_("Left click"))
+        (self.mouse_middle_lbl,self.mouse_middle_cbo) = _make_mouse_cbo(_("Middle click"))
+        (self.mouse_right_lbl,self.mouse_right_cbo) = _make_mouse_cbo(_("Right click"))
+        (self.mouse_aux1_lbl,self.mouse_aux1_cbo) = _make_mouse_cbo(_("Aux1 click"))
+        (self.mouse_aux2_lbl,self.mouse_aux2_cbo) = _make_mouse_cbo(_("Aux2 click"))
+        self._mouse_cbos = (self.mouse_left_cbo, self.mouse_middle_cbo, self.mouse_right_cbo, self.mouse_aux1_cbo, self.mouse_aux2_cbo)
         
         self.ok_button = wx.Button(self, wx.ID_OK, _("&OK"))
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, _("&Cancel"))
@@ -103,20 +107,23 @@ class OptionsDialog(wx.Dialog):
         self.fit_cbo.SetSelection(-1)
         # end wxGlade
         
+        for m in self._mouse_cbos:
+            m.Append(_("None"), -1)
         for category in sorted(self.categories, key=lambda x: x.order):
             for cmd in category.commands:
                 if cmd is None:
                     continue
                 text = f'{category.clean_name} | {cmd.clean_name}'
                 self.commands_lst.Append(text, cmd)
-                self.mouse_left_cbo.Append(text, cmd.ide)
-                self.mouse_middle_cbo.Append(text, cmd.ide)
-                self.mouse_right_cbo.Append(text, cmd.ide)
-        
+                for m in self._mouse_cbos:
+                    m.Append(text, cmd.ide)
+
         self._set_selected(self.mouse_left_cbo, self.settings.getint('Mouse', 'LeftClickCmd'))
         self._set_selected(self.mouse_middle_cbo, self.settings.getint('Mouse', 'MiddleClickCmd'))
         self._set_selected(self.mouse_right_cbo, self.settings.getint('Mouse', 'RightClickCmd'))
-                
+        self._set_selected(self.mouse_aux1_cbo, self.settings.getint('Mouse', 'Aux1ClickCmd'))
+        self._set_selected(self.mouse_aux2_cbo, self.settings.getint('Mouse', 'Aux2ClickCmd'))
+
         for name, fit_type in self.fit_choices:
             idx = self.fit_cbo.Append(name, fit_type)
             if fit_type == self.settings.getint('Options', 'FitType'):
@@ -166,8 +173,8 @@ class OptionsDialog(wx.Dialog):
         fit_outer = wx.BoxSizer(wx.HORIZONTAL)
         fit_inner1 = wx.BoxSizer(wx.VERTICAL)
         fit_inner2 = wx.BoxSizer(wx.VERTICAL)
-        fit_outer.Add(fit_inner1, 1, wx.RIGHT, 10)
-        fit_outer.Add(fit_inner2, 0, wx.RIGHT, 10)
+        fit_outer.Add(fit_inner1, 1, wx.RIGHT|wx.EXPAND, 10)
+        fit_outer.Add(fit_inner2, 0, wx.RIGHT|wx.EXPAND, 10)
         viewing_sizer.Add(fit_outer, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 5)
         
         #Viewing
@@ -209,13 +216,20 @@ class OptionsDialog(wx.Dialog):
         self.keys_pane.SetSizer(keys_sizer)
         language_sizer.Add(self.lang_lst, 1, wx.ALL|wx.EXPAND, 5)
         self.language_pane.SetSizer(language_sizer)
+        
+        #Mouse
         mouse_sizer.Add(self.mouse_left_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_left_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_middle_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_middle_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_right_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_right_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux1_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux1_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux2_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_aux2_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.mouse_pane.SetSizer(mouse_sizer)
+        
         self.main_notebook.AddPage(self.viewing_pane, _("&Viewing"))
         self.main_notebook.AddPage(self.keys_pane, _("&Keys"))
         self.main_notebook.AddPage(self.mouse_pane, _("&Mouse"))
@@ -289,12 +303,18 @@ class OptionsDialog(wx.Dialog):
         opt.custom_bg = self.bg_color_custom_rdo.GetValue()
         opt.custom_bg_color = self.bg_color_picker.GetColour()
         opt.language = self.lang_lst.GetLanguage()
+        
         sel = self.mouse_left_cbo.GetSelection()
         opt.left_click_cmd = self.mouse_left_cbo.GetClientData(sel)
         sel = self.mouse_middle_cbo.GetSelection()
         opt.middle_click_cmd = self.mouse_left_cbo.GetClientData(sel)
         sel = self.mouse_right_cbo.GetSelection()
         opt.right_click_cmd = self.mouse_left_cbo.GetClientData(sel)
+        sel = self.mouse_aux1_cbo.GetSelection()
+        opt.aux1_click_cmd = self.mouse_left_cbo.GetClientData(sel)
+        sel = self.mouse_aux2_cbo.GetSelection()
+        opt.aux2_click_cmd = self.mouse_left_cbo.GetClientData(sel)
+        
         opt.save_locally = self.settings_local_chk.GetValue()
         opt.real_fullscreen = self.real_fullscreen_chk.GetValue()
         opt.open_first = self.open_first_chk.GetValue()

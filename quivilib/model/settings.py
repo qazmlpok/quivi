@@ -88,6 +88,8 @@ class Settings(SafeConfigParser):
           ('Mouse', 'LeftClickCmd', -1),
           ('Mouse', 'MiddleClickCmd', 12001),
           ('Mouse', 'RightClickCmd', 13007),
+          ('Mouse', 'Aux1ClickCmd', -1),
+          ('Mouse', 'Aux2ClickCmd', -1),
           ('FileList', 'SortOrder', SortOrder.TYPE),
           ('Language', 'ID', 'default'),
           ('Update', 'LastCheck', ''),

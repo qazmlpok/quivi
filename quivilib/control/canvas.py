@@ -71,7 +71,7 @@ class CanvasController(object):
         
     def on_canvas_mouse_event(self, *, button, event):
         if self.name == 'canvas':
-            button_name = ('Left', 'Middle', 'Right')[button]
+            button_name = ('Left', 'Middle', 'Right', 'Aux1', 'Aux2')[button]
             cmd_ide = self.settings.getint('Mouse', f'{button_name}ClickCmd')
             #TODO: (2,2) Refactor: change to constant. This is a dummy command ID
             # for "drag image". See settings.py

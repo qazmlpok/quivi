@@ -127,7 +127,7 @@ class MainWindow(wx.Frame):
                 Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx)
                 event.Skip()
             return fn
-        for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT')):
+        for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT', 'MOUSE_AUX1', 'MOUSE_AUX2')):
             for event_idx, event in enumerate(('DOWN', 'UP')):
                 eid = getattr(wx, f'EVT_{button}_{event}')
                 self.panel.Bind(eid, make_fn(button_idx, event_idx))

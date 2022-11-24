@@ -62,12 +62,6 @@ class OptionsController(object):
         placeholder_delete = '1' if opt.placeholder_delete else '0'
         placeholder_single = '1' if opt.placeholder_single else '0'
         open_first = '1' if opt.open_first else '0'
-        if opt.left_click_cmd is None:
-            opt.left_click_cmd = -1
-        if opt.middle_click_cmd is None:
-            opt.middle_click_cmd = -1
-        if opt.right_click_cmd is None:
-            opt.right_click_cmd = -1
         
         self.model.settings.set('Options', 'FitType', opt.fit_type)
         self.model.settings.set('Options', 'FitWidthCustomSize', fit_width)
@@ -82,6 +76,8 @@ class OptionsController(object):
         self.model.settings.set('Mouse', 'LeftClickCmd', opt.left_click_cmd)
         self.model.settings.set('Mouse', 'MiddleClickCmd', opt.middle_click_cmd)
         self.model.settings.set('Mouse', 'RightClickCmd', opt.right_click_cmd)
+        self.model.settings.set('Mouse', 'Aux1ClickCmd', opt.aux1_click_cmd)
+        self.model.settings.set('Mouse', 'Aux2ClickCmd', opt.aux2_click_cmd)
         self.control.i18n.language = opt.language
         self.control.menu.set_shortcuts(opt.shortcuts)
         self.control.set_settings_location(opt.save_locally)
