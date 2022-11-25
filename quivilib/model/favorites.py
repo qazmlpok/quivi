@@ -28,8 +28,12 @@ class Favorites(object):
             if str(fav.path) == str(path) and fav.is_placeholder() == is_placeholder:
                 self._ordered.remove(fav)
         
-    def contains(self, path):
-        return path in self._favorites
+    def contains(self, path, is_placeholder=False):
+        return (path, is_placeholder) in self._favorites
+    def getFavorite(self, path, is_placeholder=False):
+        if not self.contains(path, is_placeholder):
+            return None
+        return self._favorites[(path, is_placeholder)]
     
     def load(self, config):
         if config.has_section(CONFIG_KEY):

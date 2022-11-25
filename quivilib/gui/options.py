@@ -84,6 +84,7 @@ class OptionsDialog(wx.Dialog):
         self.settings_auto_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Remember full screen on close"))
         self.settings_placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
         self.settings_placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
+        self.settings_placeholder_autoopen_chk = wx.CheckBox(self.viewing_pane, -1, _("Automatically jump to placeholder page on open"))
     def _init_commands(self):
         self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
         self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
@@ -160,6 +161,8 @@ class OptionsDialog(wx.Dialog):
         self.settings_placeholder_autodelete_chk.SetValue(placeholder_delete)
         placeholder_single = (self.settings.get('Options', 'PlaceholderSingle') == '1')
         self.settings_placeholder_single_chk.SetValue(placeholder_single)
+        placeholder_autoopen = (self.settings.get('Options', 'PlaceholderAutoOpen') == '1')
+        self.settings_placeholder_autoopen_chk.SetValue(placeholder_autoopen)
         
         self.settings_local_chk.SetValue(self.save_locally)
         
@@ -251,6 +254,7 @@ class OptionsDialog(wx.Dialog):
         viewing_sizer.Add(self.settings_auto_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.settings_placeholder_autodelete_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.settings_placeholder_single_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.settings_placeholder_autoopen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.viewing_pane.SetSizer(viewing_sizer)
 
     def on_fit_select(self, event): # wxGlade: OptionsDialog.<event_handler>
@@ -330,6 +334,7 @@ class OptionsDialog(wx.Dialog):
         opt.auto_fullscreen = self.settings_auto_fullscreen_chk.GetValue()
         opt.placeholder_delete = self.settings_placeholder_autodelete_chk.GetValue()
         opt.placeholder_single = self.settings_placeholder_single_chk.GetValue()
+        opt.placeholder_autoopen = self.settings_placeholder_autoopen_chk.GetValue()
         opt.shortcuts = self.shortcuts
         
         #TODO: (2,2) Improve: handle errors here

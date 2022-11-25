@@ -74,6 +74,7 @@ class Settings(SafeConfigParser):
           ('Options', 'AutoFullscreen', 1),
           ('Options', 'PlaceholderDelete', 1),
           ('Options', 'PlaceholderSingle', 0),
+          ('Options', 'PlaceholderAutoOpen', 1),
           ('Options', 'OpenFirst', 0),
           ('Window', 'Perspective', ''),
           ('Window', 'MainWindowX', 50),

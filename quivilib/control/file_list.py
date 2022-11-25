@@ -91,10 +91,11 @@ class FileListController(object):
     def on_favorite_open(self, *, favorite, window=None):
         try:
             is_placeholder = favorite.page is not None
-            self.open_path(favorite.path, is_placeholder)
+            self._open_path(favorite.path, is_placeholder)
             if is_placeholder:
                 #Bypass the default page open and manually select the saved index.
                 #Otherwise it will try to load the cover page and the selected page.
+                #TODO: Would calling open_path on the direct image work better?
                 self.select_index(int(favorite.page))
                 autodelete = self.model.settings.get('Options', 'PlaceholderDelete') == '1'
                 if autodelete:
@@ -263,6 +264,18 @@ class FileListController(object):
         return can_delete
         
     def open_path(self, path, skip_open=False):
+        #Check if this path is saved as a placeholder. If it is, load it instead
+        autoload = self.model.settings.get('Options', 'PlaceholderAutoOpen') == '1'
+        if (autoload and self.model.favorites.contains(path, True)):
+            favorite = self.model.favorites.getFavorite(path, True)
+            self.on_favorite_open(favorite=favorite)
+        else:
+            self._open_path(path, skip_open)
+    def _open_path(self, path, skip_open=False):
+        """Open the given path for viewing. This may be a directory (show images), a single image,
+        or a archive (e.g. zip) containing images.
+        Opening a single image will open the containing directory and jump directly to that image.
+        """
         sort_order = self.model.container.sort_order
         show_hidden = self.model.container.show_hidden
         

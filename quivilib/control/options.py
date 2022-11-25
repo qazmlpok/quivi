@@ -61,6 +61,7 @@ class OptionsController(object):
         auto_fullscreen = '1' if opt.auto_fullscreen else '0'
         placeholder_delete = '1' if opt.placeholder_delete else '0'
         placeholder_single = '1' if opt.placeholder_single else '0'
+        placeholder_autoopen = '1' if opt.placeholder_autoopen else '0'
         open_first = '1' if opt.open_first else '0'
         
         self.model.settings.set('Options', 'FitType', opt.fit_type)
@@ -72,6 +73,7 @@ class OptionsController(object):
         self.model.settings.set('Options', 'AutoFullscreen', auto_fullscreen)
         self.model.settings.set('Options', 'PlaceholderDelete', placeholder_delete)
         self.model.settings.set('Options', 'PlaceholderSingle', placeholder_single)
+        self.model.settings.set('Options', 'PlaceholderAutoOpen', placeholder_autoopen)
         self.model.settings.set('Options', 'OpenFirst', open_first)
         self.model.settings.set('Mouse', 'LeftClickCmd', opt.left_click_cmd)
         self.model.settings.set('Mouse', 'MiddleClickCmd', opt.middle_click_cmd)
