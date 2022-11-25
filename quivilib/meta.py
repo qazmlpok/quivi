@@ -3,16 +3,18 @@ import logging
 import sys
 
 APPNAME = 'Quivi'
-VERSION = '2.0.1'
+VERSION = '2.0.2'
 DESCRIPTION = 'Manga/comic reader and image viewer'
 URL = 'https://github.com/qazmlpok/quivi'
 UPDATE_URL = 'https://raw.githubusercontent.com/qazmlpok/quivi/master/VERSION.txt'
 #UPDATE_URL = 'https://raw.githubusercontent.com/qazmlpok/quivi/fake-update/VERSION.txt'
 REPORT_URL = 'https://github.com/qazmlpok/quivi/issues'
 HELP_URL = 'http://quivi.sourceforge.net/documentation'
-AUTHOR = 'Conrado Porto Lopes Gouvea'
-AUTHOR_EMAIL = 'conradoplg@gmail.com'
-COPYRIGHT = f"Copyright (c) 2009, {AUTHOR} <{AUTHOR_EMAIL}>\nAll rights reserved."
+AUTHOR = 'qazmlpok'
+AUTHOR_EMAIL = 'qazmlpok@gmail.com'
+ORIG_AUTHOR = 'Conrado Porto Lopes Gouvea'
+ORIG_AUTHOR_EMAIL = 'conradoplg@gmail.com'
+COPYRIGHT = f"Copyright (c) 2009, {ORIG_AUTHOR} <{ORIG_AUTHOR_EMAIL}>\nCopyright (c) 2022, {AUTHOR} <{AUTHOR_EMAIL}>\nAll rights reserved."
 
 CACHE_ENABLED = True
 CACHE_SIZE = 3
