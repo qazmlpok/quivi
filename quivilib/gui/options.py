@@ -27,61 +27,28 @@ class OptionsDialog(wx.Dialog):
             self.commands += category.commands
         # begin wxGlade: OptionsDialog.__init__
         wx.Dialog.__init__(self, parent=parent, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        self.main_notebook = wx.Notebook(self, -1, style=0)
+        self.main_notebook = wx.Notebook(self, -1, style=wx.NB_TOP)
         self.mouse_pane = wx.Panel(self.main_notebook, -1)
         self.language_pane = wx.Panel(self.main_notebook, -1)
         self.keys_pane = wx.Panel(self.main_notebook, -1)
         self.viewing_pane = wx.Panel(self.main_notebook, -1)
         
-        #Viewing tab
-        self.bg_color_sizer_staticbox = wx.StaticBox(self.viewing_pane, -1, _("Background color"))
-        self.fit_label = wx.StaticText(self.viewing_pane, -1, _("Fit"))
-        self.fit_cbo = wx.ComboBox(self.viewing_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
-        self.width_label = wx.StaticText(self.viewing_pane, -1, _("Width"))
-        self.width_txt = wx.TextCtrl(self.viewing_pane, -1, "800")
-        self.start_dir_lbl = wx.StaticText(self.viewing_pane, -1, _("Start directory"))
-        self.start_dir_picker = wx.DirPickerCtrl(self.viewing_pane, -1)
-        self.bg_color_default_rdo = wx.RadioButton(self.viewing_pane, -1, _("Default system color"), style=wx.RB_GROUP)
-        self.bg_color_custom_rdo = wx.RadioButton(self.viewing_pane, -1, _("Custom color:"))
-        self.bg_color_picker = wx.ColourPickerCtrl(self.viewing_pane, -1)
-        self.real_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Hide menu and status on full screen"))
-        self.open_first_chk = wx.CheckBox(self.viewing_pane, -1, _("Open first image of the folder automatically"))
-        self.settings_local_chk = wx.CheckBox(self.viewing_pane, -1, _("Portable mode (save settings inside the program folder)"))
+        self._init_viewing()
+        self._init_commands()
+        self._init_mouse()
         
-        self.settings_auto_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Remember full screen on close"))
-        self.settings_placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
-        self.settings_placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
-        
-        #Commands tab
-        self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
-        self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
-        self.shortcuts_lbl = wx.StaticText(self.keys_pane, -1, _("Shortcuts for selected command"))
-        self.shorcuts_cbo = wx.ComboBox(self.keys_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
-        self.shortcut_remove_btn = wx.Button(self.keys_pane, -1, _("Remove"))
-        self.new_shortcut_lbl = wx.StaticText(self.keys_pane, -1, _("New shortcut"))
-        self.new_shortcut_key = hk.HotkeyCtrl(self.keys_pane, -1, _("Press key"))
-        self.shortcut_assign_btn = wx.Button(self.keys_pane, -1, _("Assign"))
-        self.assigned_comamnd_lbl = wx.StaticText(self.keys_pane, -1, "")
-        self.reset_btn = wx.Button(self.keys_pane, -1, _("Reset all to defaults"))
         self.lang_lst = langlistctrl.LanguageListCtrl(self.language_pane, -1, style=wx.LC_REPORT|wx.LC_NO_HEADER, filter=langlistctrl.LC_ONLY, only=available_languages, select=active_language)
-        
-        #Mouse tab
-        def _make_mouse_cbo(text):
-            lbl = wx.StaticText(self.mouse_pane, -1, text)
-            cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
-            return (lbl, cbo)
-        (self.mouse_left_lbl,self.mouse_left_cbo) = _make_mouse_cbo(_("Left click"))
-        (self.mouse_middle_lbl,self.mouse_middle_cbo) = _make_mouse_cbo(_("Middle click"))
-        (self.mouse_right_lbl,self.mouse_right_cbo) = _make_mouse_cbo(_("Right click"))
-        (self.mouse_aux1_lbl,self.mouse_aux1_cbo) = _make_mouse_cbo(_("Aux1 click"))
-        (self.mouse_aux2_lbl,self.mouse_aux2_cbo) = _make_mouse_cbo(_("Aux2 click"))
-        self._mouse_cbos = (self.mouse_left_cbo, self.mouse_middle_cbo, self.mouse_right_cbo, self.mouse_aux1_cbo, self.mouse_aux2_cbo)
-        
+
         self.ok_button = wx.Button(self, wx.ID_OK, _("&OK"))
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, _("&Cancel"))
 
         self.__set_properties()
         self.__do_layout()
+        
+        #Do this after do_layout for GetBestSize() to work.
+        bestsize = self.GetBestSize()
+        self.SetSize(max(bestsize[0], WINDOW_SIZE[0]), max(bestsize[1], WINDOW_SIZE[1]))
+        self.Centre()
 
         self.Bind(wx.EVT_COMBOBOX, self.on_fit_select, self.fit_cbo)
         self.Bind(wx.EVT_LISTBOX, self.on_command_select, self.commands_lst)
@@ -100,10 +67,49 @@ class OptionsDialog(wx.Dialog):
             if cmd is not None:
                 self.shortcuts[cmd] = cmd.shortcuts[:]
 
+    def _init_viewing(self):
+        self.bg_color_sizer_staticbox = wx.StaticBox(self.viewing_pane, -1, _("Background color"))
+        self.fit_label = wx.StaticText(self.viewing_pane, -1, _("Fit"))
+        self.fit_cbo = wx.ComboBox(self.viewing_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.width_label = wx.StaticText(self.viewing_pane, -1, _("Width"))
+        self.width_txt = wx.TextCtrl(self.viewing_pane, -1, "800")
+        self.start_dir_lbl = wx.StaticText(self.viewing_pane, -1, _("Start directory"))
+        self.start_dir_picker = wx.DirPickerCtrl(self.viewing_pane, -1)
+        self.bg_color_default_rdo = wx.RadioButton(self.viewing_pane, -1, _("Default system color"), style=wx.RB_GROUP)
+        self.bg_color_custom_rdo = wx.RadioButton(self.viewing_pane, -1, _("Custom color:"))
+        self.bg_color_picker = wx.ColourPickerCtrl(self.viewing_pane, -1)
+        self.real_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Hide menu and status on full screen"))
+        self.open_first_chk = wx.CheckBox(self.viewing_pane, -1, _("Open first image of the folder automatically"))
+        self.settings_local_chk = wx.CheckBox(self.viewing_pane, -1, _("Portable mode (save settings inside the program folder)"))
+        self.settings_auto_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Remember full screen on close"))
+        self.settings_placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
+        self.settings_placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
+    def _init_commands(self):
+        self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
+        self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
+        self.shortcuts_lbl = wx.StaticText(self.keys_pane, -1, _("Shortcuts for selected command"))
+        self.shorcuts_cbo = wx.ComboBox(self.keys_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY|wx.CB_SORT)
+        self.shortcut_remove_btn = wx.Button(self.keys_pane, -1, _("Remove"))
+        self.new_shortcut_lbl = wx.StaticText(self.keys_pane, -1, _("New shortcut"))
+        self.new_shortcut_key = hk.HotkeyCtrl(self.keys_pane, -1, _("Press key"))
+        self.shortcut_assign_btn = wx.Button(self.keys_pane, -1, _("Assign"))
+        self.assigned_comamnd_lbl = wx.StaticText(self.keys_pane, -1, "")
+        self.reset_btn = wx.Button(self.keys_pane, -1, _("Reset all to defaults"))
+    def _init_mouse(self):
+        def _make_mouse_cbo(text):
+            lbl = wx.StaticText(self.mouse_pane, -1, text)
+            cbo = wx.ComboBox(self.mouse_pane, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
+            return (lbl, cbo)
+        (self.mouse_left_lbl,self.mouse_left_cbo) = _make_mouse_cbo(_("Left click"))
+        (self.mouse_middle_lbl,self.mouse_middle_cbo) = _make_mouse_cbo(_("Middle click"))
+        (self.mouse_right_lbl,self.mouse_right_cbo) = _make_mouse_cbo(_("Right click"))
+        (self.mouse_aux1_lbl,self.mouse_aux1_cbo) = _make_mouse_cbo(_("Aux1 click"))
+        (self.mouse_aux2_lbl,self.mouse_aux2_cbo) = _make_mouse_cbo(_("Aux2 click"))
+        self._mouse_cbos = (self.mouse_left_cbo, self.mouse_middle_cbo, self.mouse_right_cbo, self.mouse_aux1_cbo, self.mouse_aux2_cbo)
+
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
         self.SetTitle(_("Options"))
-        self.SetSize(WINDOW_SIZE)
         self.fit_cbo.SetSelection(-1)
         # end wxGlade
         
@@ -183,7 +189,6 @@ class OptionsDialog(wx.Dialog):
         main_sizer.Add(btn_sizer, 0, wx.ALL|wx.EXPAND, 5)
         self.SetSizer(main_sizer)
         self.Layout()
-        self.Centre()
         # end wxGlade
     def __do_layout_mouse(self):
         mouse_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -379,4 +384,3 @@ if __name__ == '__main__':
     app = wx.App(False)
     dlg = OptionsDialog(None)
     dlg.ShowModal()
-
