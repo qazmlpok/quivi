@@ -61,5 +61,6 @@ The following text strings are new and have not been added to any of the transla
 - Favorite not found
 - The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s.
 - The settings file is corrupt and cannot be opened. Settings will return to their default values.
-
+- &Copy path
+- Copy the path of the current container to the clipboard
 

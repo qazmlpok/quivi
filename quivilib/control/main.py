@@ -203,6 +203,10 @@ class MainController(object):
     
     def copy_to_clipboard(self):
         self.model.canvas.copy_to_clipboard()
+    def copy_path_to_clipboard(self):
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(str(self.model.container.path)))
+            wx.TheClipboard.Close()
         
     def delete(self):
         self.file_list.delete(self.view)
