@@ -234,7 +234,11 @@ class MainWindow(wx.Frame):
     def on_mouse_wheel(self, event):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
         lines *= event.GetLinesPerAction()
-        Publisher.sendMessage('canvas.scrolled', lines=lines)
+        if event.controlDown:
+            #Zoom instead of scrolling
+            Publisher.sendMessage('canvas.zoom_at', lines=lines, x=event.X, y=event.Y)
+        else:
+            Publisher.sendMessage('canvas.scrolled', lines=lines, horizontal=event.shiftDown)
         
     def on_mouse_enter(self, event):
         self.panel.SetFocus()

@@ -15,12 +15,14 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - Internal change to how the Config file (pyquivi.ini) is written to should reduce the chances of it becoming corrupted
 - If the config file does become corrupt, it will re-create a new file from scratch instead of making the application inoperable.
 - The config file is now stored as UTF-8 instead of the system default. It will attempt to open the file both as UTF-8 and the system default, but always write as UTF-8.
-- New features: Placeholders. These act like Favorites, but with some changes. The behavior can be tweaked in Settings.
+- New feature: Placeholders. These act like Favorites, but with some changes. The behavior can be tweaked in Settings.
     - Placeholders save a path and a specific page. They are intended to quickly resume reading something you're in the middle of.
     - Only one placeholder can exist for an item; saving a new placeholder will replace the existing one
     - (Optionally) Only a single place holder can be used for anything. Saving any new placeholder will replace the existing one.
     - (Optionally) Placeholders will be deleted upon opening
     - (Optionally) Opening a folder/archive that has a placeholder will automatically load the placeholder
+- Holding down shift while using the scrollwheel will scroll horizontally.
+- Holding down ctrl while using the scrollwheel zoom in/out on the mouse cursor's location (instead of the center of the image)
 
 # Removed features
 For the most part, existing functionality is being kept intact. A few things were dropped either due to difficulty porting the code from Python2 to Python3, or because they aren't needed any more.

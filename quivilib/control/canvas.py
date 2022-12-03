@@ -35,6 +35,7 @@ class CanvasController(object):
         Publisher.subscribe(self.on_canvas_painted, f'{self.name}.painted')
         Publisher.subscribe(self.on_canvas_resized, f'{self.name}.resized')
         Publisher.subscribe(self.on_canvas_scrolled, f'{self.name}.scrolled')
+        Publisher.subscribe(self.on_canvas_zoom_point, f'{self.name}.zoom_at')
         Publisher.subscribe(self.on_canvas_mouse_event, f'{self.name}.mouse.event')
         Publisher.subscribe(self.on_canvas_mouse_motion, f'{self.name}.mouse.motion')
         #Indicates that the user is moving the image
@@ -63,12 +64,27 @@ class CanvasController(object):
         self.canvas.center()
         Publisher.sendMessage(f'{self.name}.changed')
         
-    def on_canvas_scrolled(self, *, lines):
-        scr = self.view.height
-        inc = int(scr * (0.2 / 3) * lines)
-        self.canvas.top += (inc)
+    def on_canvas_scrolled(self, *, lines, horizontal=False):
+        if horizontal:
+            scr = self.view.width
+            inc = int(scr * (0.15 / 3) * lines)
+            self.canvas.left += (inc)
+        else:
+            scr = self.view.height
+            inc = int(scr * (0.2 / 3) * lines)
+            self.canvas.top += (inc)
         Publisher.sendMessage(f'{self.name}.changed')
-        
+    
+    def on_canvas_zoom_point(self, *, lines, x, y):
+        """ Zoom in or out. Unlike the keyboard command, this will shift the canvas as well
+        in order to zoom in/out specifically at the mouse's position.
+        """
+        old_top, old_left =  self.canvas.top, self.canvas.left
+        old_w, old_h = self.canvas.width, self.canvas.height
+        scale = ZOOM_FACTOR * (abs(lines) / 3)
+        self._zoom_to_point(lines > 0, x, y, zoom_scale=scale)
+        Publisher.sendMessage(f'{self.name}.changed')
+    
     def on_canvas_mouse_event(self, *, button, event):
         if self.name == 'canvas':
             button_name = ('Left', 'Middle', 'Right', 'Aux1', 'Aux2')[button]
@@ -93,7 +109,6 @@ class CanvasController(object):
                 self._moving_image = False
         self._moved_image = False
 
-
     def on_canvas_mouse_motion(self, *, x, y):
         old_x, old_y = self._old_mouse_pos
         canvas = self.canvas
@@ -109,11 +124,16 @@ class CanvasController(object):
             Publisher.sendMessage(f'{self.name}.changed')
         self._old_mouse_pos = x, y
 
-    def _zoom(self, zoom_in):
-        zoom = 1 + ZOOM_FACTOR / 100.0
+    def _zoom(self, zoom_in, zoom_scale=ZOOM_FACTOR):
+        zoom = 1 + zoom_scale / 100.0
         zoom = zoom if zoom_in else 1.0 / zoom
+        #(Calls the setter _set_zoom)
         self.canvas.zoom *= zoom
-        
+    def _zoom_to_point(self, zoom_in, x, y, zoom_scale=ZOOM_FACTOR):
+        zoom = 1 + zoom_scale / 100.0
+        zoom = zoom if zoom_in else 1.0 / zoom
+        self.canvas.zoom_to_point(self.canvas.zoom * zoom, x, y)
+
     def zoom_in(self):
         self._zoom(True)
         Publisher.sendMessage(f'{self.name}.changed')

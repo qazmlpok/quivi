@@ -139,30 +139,45 @@ class Canvas(object):
         else:
             self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type)
-        
-    def _set_zoom(self, zoom):
-        #TODO: (1,3) Refactor: maybe this should be another method;
-        #    like this, there are several places in this file where
-        #    self._zoom is set and an message must be sent.
-        #    So _set_zoom isn't always called when the zoom is set, so
-        #    it should be renamed (probably to 'resize')
+    def _zoom_image(self, zoom):
+        """ Shared logic between zoom_to_center (default behavior) and zoom_to_point (new behavior)
+        This is still kinda confused because zoom_to_center is used as a setter.
+        Returns True if the zoom level changed. Caller needs to handle the left/top adjustment.
+        """
         if zoom >= 0.01 and zoom <= 16 and abs(zoom - self._zoom) >= 0.01:
-            old_w = self.width
-            old_h = self.height
             original_zoom = self._zoom
             if abs(zoom - 1) < 0.01:
                 zoom = 1
                 self._zoom = zoom
             else:
                 self._zoom = zoom
-            
             try:
                 self.img.resize_by_factor(self._zoom)
             except Exception:
                 #Revert without zooming
                 log.debug(traceback.format_exc())
                 self._zoom = original_zoom
-             
+                return False
+            return True
+        return False
+    def zoom_to_point(self, zoom, x, y):
+        old_w = self.width
+        old_h = self.height
+        if self._zoom_image(zoom):
+            #This isn't perfect, as left and top are properties, and modify the value at times
+            #but for the most part it works.
+            self.left += int((old_w - self.width) * ((x-self.left) / old_w))
+            self.top  += int((old_h - self.height) * ((y-self.top) / old_h))
+            self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
+    def _set_zoom(self, zoom):
+        #TODO: (1,3) Refactor: maybe this should be another method;
+        #    like this, there are several places in this file where
+        #    self._zoom is set and a message must be sent.
+        #    So _set_zoom isn't always called when the zoom is set, so
+        #    it should be renamed (probably to 'resize')
+        old_w = self.width
+        old_h = self.height
+        if self._zoom_image(zoom):
             self.left += old_w // 2 - self.width // 2
             self.top += old_h // 2 - self.height // 2
             self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
