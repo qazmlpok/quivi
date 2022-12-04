@@ -84,13 +84,12 @@ class Settings(SafeConfigParser):
           ('Window', 'MainWindowMaximized', '0'),
           ('Window', 'MainWindowFullscreen', '0'),
           ('Window', 'FileListColumnsWidth', ''),
-          #TODO: (2,2) Refactor: change to constant. This is a dummy command ID
-          # for "drag image"
-          ('Mouse', 'LeftClickCmd', -1),
+          ('Mouse', 'LeftClickCmd', 16100),
           ('Mouse', 'MiddleClickCmd', 12001),
           ('Mouse', 'RightClickCmd', 13007),
           ('Mouse', 'Aux1ClickCmd', -1),
           ('Mouse', 'Aux2ClickCmd', -1),
+          ('Mouse', 'AlwaysLeftMouseDrag', 1),
           ('FileList', 'SortOrder', SortOrder.TYPE),
           ('Language', 'ID', 'default'),
           ('Update', 'LastCheck', ''),

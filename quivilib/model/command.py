@@ -25,11 +25,17 @@ class CommandCategory(object):
     
     
 class Command(object):
-    def __init__(self, ide, name, description, function, default_shortcuts, checkable=False, update_function=None):
+    (CMD_KB,
+    CMD_MOUSE,
+    CMD_NOMENU) = (1 << x for x in range(3))
+    CMD_KBM = CMD_KB|CMD_MOUSE
+
+    def __init__(self, ide, name, description, function, default_shortcuts, down_function=None, checkable=False, update_function=None):
         self.ide = ide
         self.name = name
         self.description = description
         self._function = function
+        self._down_function = down_function
         self.default_shortcuts = default_shortcuts
         self.shortcuts = []
         self.checkable = checkable
@@ -41,6 +47,10 @@ class Command(object):
         
     def __call__(self):
         self._function()
+        
+    def on_down(self):
+        if self._down_function is not None:
+            self._down_function()
         
     def __repr__(self):
         return f'{self.clean_name}: {self.description}'

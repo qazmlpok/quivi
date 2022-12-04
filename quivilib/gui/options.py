@@ -107,6 +107,9 @@ class OptionsDialog(wx.Dialog):
         (self.mouse_aux1_lbl,self.mouse_aux1_cbo) = _make_mouse_cbo(_("Aux1 click"))
         (self.mouse_aux2_lbl,self.mouse_aux2_cbo) = _make_mouse_cbo(_("Aux2 click"))
         self._mouse_cbos = (self.mouse_left_cbo, self.mouse_middle_cbo, self.mouse_right_cbo, self.mouse_aux1_cbo, self.mouse_aux2_cbo)
+        #This looks worse than I hoped, but I think it's still better than nothing.
+        self.mouse_separator = wx.StaticLine(self.mouse_pane, size=(100, 1), style=wx.LI_HORIZONTAL)
+        self.always_drag_chk = wx.CheckBox(self.mouse_pane, -1, _("Always use left mouse to drag image"))
 
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
@@ -132,6 +135,8 @@ class OptionsDialog(wx.Dialog):
         self._set_selected(self.mouse_right_cbo, self.settings.getint('Mouse', 'RightClickCmd'))
         self._set_selected(self.mouse_aux1_cbo, self.settings.getint('Mouse', 'Aux1ClickCmd'))
         self._set_selected(self.mouse_aux2_cbo, self.settings.getint('Mouse', 'Aux2ClickCmd'))
+        always_drag = (self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1')
+        self.always_drag_chk.SetValue(always_drag)
 
         for name, fit_type in self.fit_choices:
             idx = self.fit_cbo.Append(name, fit_type)
@@ -205,6 +210,8 @@ class OptionsDialog(wx.Dialog):
         mouse_sizer.Add(self.mouse_aux1_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_aux2_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_aux2_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(self.mouse_separator, 0, wx.TOP|wx.EXPAND, 10)
+        mouse_sizer.Add(self.always_drag_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.mouse_pane.SetSizer(mouse_sizer)
     def __do_layout_keys(self):
         keys_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -336,6 +343,7 @@ class OptionsDialog(wx.Dialog):
         opt.placeholder_single = self.settings_placeholder_single_chk.GetValue()
         opt.placeholder_autoopen = self.settings_placeholder_autoopen_chk.GetValue()
         opt.shortcuts = self.shortcuts
+        opt.always_drag = self.always_drag_chk.GetValue()
         
         #TODO: (2,2) Improve: handle errors here
         Publisher.sendMessage('options.update', opt=opt)

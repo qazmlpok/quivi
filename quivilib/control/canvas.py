@@ -89,16 +89,23 @@ class CanvasController(object):
         if self.name == 'canvas':
             button_name = ('Left', 'Middle', 'Right', 'Aux1', 'Aux2')[button]
             cmd_ide = self.settings.getint('Mouse', f'{button_name}ClickCmd')
-            #TODO: (2,2) Refactor: change to constant. This is a dummy command ID
-            # for "drag image". See settings.py
-            if event == 0 and button == 0:
-                Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
-                self._moving_image = True
-            if event == 1 and (not self._moved_image or button != 0):
+            always_drag = self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1'
+            #Reproduce the old drag behavior (left mouse always drags; run command iff mouse didn't move)
+            #if configured. Otherwise, the drag behavior will be a regular command.
+            if always_drag and button == 0:
+                if event == 0:
+                    Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
+                    self._moving_image = True
+                elif event == 1:
+                    if not self._moved_image:
+                        #TODO: Possibly change to "if mouse moved less than x pixels
+                        Publisher.sendMessage('command.execute', ide=cmd_ide)
+                    Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
+                    self._moving_image = False
+            elif event == 0:
+                Publisher.sendMessage('command.down_execute', ide=cmd_ide)
+            elif event == 1:
                 Publisher.sendMessage('command.execute', ide=cmd_ide)
-            if event == 1 and button == 0:
-                Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
-                self._moving_image = False
         else:
             #Not the main canvas (e.g. wallpaper dialog canvas)
             if button == 0 and event == 0:
@@ -108,6 +115,13 @@ class CanvasController(object):
                 Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
                 self._moving_image = False
         self._moved_image = False
+
+    def image_drag_start(self):
+        Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
+        self._moving_image = True
+    def image_drag_end(self):
+        Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
+        self._moving_image = False
 
     def on_canvas_mouse_motion(self, *, x, y):
         old_x, old_y = self._old_mouse_pos

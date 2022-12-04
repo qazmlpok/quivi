@@ -40,6 +40,9 @@ class MenuController(object):
         
         Publisher.subscribe(self.on_language_changed, 'language.changed')
         Publisher.subscribe(self.on_command_execute, 'command.execute')
+        #TODO: Better name; for function and message.
+        #This is for a (mouse) command with two events; key down and key release.
+        Publisher.subscribe(self.on_command_down_execute, 'command.down_execute')
         
     def set_shortcuts(self, shortcuts_dic):
         """Set new shortcuts.
@@ -67,6 +70,8 @@ class MenuController(object):
         
     def on_command_execute(self, *, ide):
         [cmd() for cmd in self.commands if cmd.ide == ide]
+    def on_command_down_execute(self, *, ide):
+        [cmd.on_down() for cmd in self.commands if cmd.ide == ide]
 
     def _make_commands(self, control, update=False):
         """Make (or update) all commands.
@@ -258,6 +263,9 @@ class MenuController(object):
           make(16008, _('Large move right'), _('Large move right'),
                partial(control.canvas.move_image, canvas.MOVE_RIGHT, canvas.MOVE_LARGE),
                []),
+          make(16100, _('Drag image'), _('Drag image'),
+               control.canvas.image_drag_end,
+               [], down_function=control.canvas.image_drag_start),
         )
         fit_menu = (
           make(17001, _('None'), _('None'),

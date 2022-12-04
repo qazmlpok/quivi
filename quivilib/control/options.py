@@ -62,6 +62,7 @@ class OptionsController(object):
         placeholder_delete = '1' if opt.placeholder_delete else '0'
         placeholder_single = '1' if opt.placeholder_single else '0'
         placeholder_autoopen = '1' if opt.placeholder_autoopen else '0'
+        always_drag = '1' if opt.always_drag else '0'
         open_first = '1' if opt.open_first else '0'
         
         self.model.settings.set('Options', 'FitType', opt.fit_type)
@@ -80,6 +81,7 @@ class OptionsController(object):
         self.model.settings.set('Mouse', 'RightClickCmd', opt.right_click_cmd)
         self.model.settings.set('Mouse', 'Aux1ClickCmd', opt.aux1_click_cmd)
         self.model.settings.set('Mouse', 'Aux2ClickCmd', opt.aux2_click_cmd)
+        self.model.settings.set('Mouse', 'AlwaysLeftMouseDrag', always_drag)
         self.control.i18n.language = opt.language
         self.control.menu.set_shortcuts(opt.shortcuts)
         self.control.set_settings_location(opt.save_locally)
