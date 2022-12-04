@@ -5,6 +5,7 @@
 
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
+from quivilib.model.command import Command
 from quivilib.model.settings import Settings
 import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
@@ -126,9 +127,11 @@ class OptionsDialog(wx.Dialog):
                 if cmd is None:
                     continue
                 text = f'{category.clean_name} | {cmd.clean_name}'
-                self.commands_lst.Append(text, cmd)
-                for m in self._mouse_cbos:
-                    m.Append(text, cmd.ide)
+                if cmd.flags & Command.KB:
+                    self.commands_lst.Append(text, cmd)
+                if cmd.flags & Command.MOUSE:
+                    for m in self._mouse_cbos:
+                        m.Append(text, cmd.ide)
 
         self._set_selected(self.mouse_left_cbo, self.settings.getint('Mouse', 'LeftClickCmd'))
         self._set_selected(self.mouse_middle_cbo, self.settings.getint('Mouse', 'MiddleClickCmd'))

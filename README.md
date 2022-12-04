@@ -23,6 +23,9 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
     - (Optionally) Opening a folder/archive that has a placeholder will automatically load the placeholder
 - Holding down shift while using the scrollwheel will scroll horizontally.
 - Holding down ctrl while using the scrollwheel zoom in/out on the mouse cursor's location (instead of the center of the image)
+- Added "Drag image" as an explicit command, instead of the default behavior of always dragging with left click. This means left click can be reassigned to a different action, such as Next image, and it will never attempt to move the image. The old behavior can be restored via an option in the Mouse tab.
+- Changed how the list of commands for keyboard/mouse are populated. Some commands are now marked as keyboard or mouse only. This technically removes functionality, but it makes the menu slightly easier to work with.
+
 
 # Removed features
 For the most part, existing functionality is being kept intact. A few things were dropped either due to difficulty porting the code from Python2 to Python3, or because they aren't needed any more.
@@ -63,4 +66,4 @@ The following text strings are new and have not been added to any of the transla
 - The settings file is corrupt and cannot be opened. Settings will return to their default values.
 - &Copy path
 - Copy the path of the current container to the clipboard
-- Drag Image
+- Drag image

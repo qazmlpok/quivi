@@ -133,7 +133,7 @@ class MenuController(object):
          None,
          make(wx.ID_EXIT, _('&Quit'), _('Close the application'),
               control.quit,
-              [])
+              [], flags=Command.KB)
         )
         folder_menu = (
          make(12001, _('Select/Open &next'), _('Select the next item; if it is an image, show it'),
@@ -170,6 +170,8 @@ class MenuController(object):
               control.canvas.zoom_out,
               [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_SUBTRACT)],
               update_function=control.on_update_image_available_menu_item),
+         #TODO: Add mouse-specific version that zooms in on mouse position. Also give it NOMENU.
+         #When NOMENU is implemented, also remove the hidden menus.
          make(13003, _('&Zoom 100%'), _('Show the image in its real size'),
               control.canvas.zoom_reset,
               [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_MULTIPLY)],
@@ -230,42 +232,42 @@ class MenuController(object):
         help_menu = (
           make(15001, _('&Help (online)...'), _('Open the online help'),
                control.open_help,
-               [(wx.ACCEL_NORMAL, wx.WXK_F1)]),
+               [(wx.ACCEL_NORMAL, wx.WXK_F1)], flags=Command.KB),
           make(15002, _('&Feedback / Support (online)...'), _('Open the feedback / support online form'),
                control.open_feedback,
-               []),
+               [], flags=Command.KB),
           make(wx.ID_ABOUT, _('&About...'), _('Show information about the application'),
                control.open_about_dialog,
-               [])
+               [], flags=Command.KB)
         )
         hidden_menu = (
           make(16001, _('Small move up'), _('Small move up'),
                partial(control.canvas.move_image, canvas.MOVE_UP, canvas.MOVE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_UP)]),
+               [(wx.ACCEL_NORMAL, wx.WXK_UP)], flags=Command.KB),
           make(16002, _('Small move down'), _('Small move down'),
                partial(control.canvas.move_image, canvas.MOVE_DOWN, canvas.MOVE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_DOWN)]),
+               [(wx.ACCEL_NORMAL, wx.WXK_DOWN)], flags=Command.KB),
           make(16003, _('Small move left'), _('Small move left'),
                partial(control.canvas.move_image, canvas.MOVE_LEFT, canvas.MOVE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_LEFT)]),
+               [(wx.ACCEL_NORMAL, wx.WXK_LEFT)], flags=Command.KB),
           make(16004, _('Small move right'), _('Small move right'),
                partial(control.canvas.move_image, canvas.MOVE_RIGHT, canvas.MOVE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_RIGHT)]),
+               [(wx.ACCEL_NORMAL, wx.WXK_RIGHT)], flags=Command.KB),
           make(16005, _('Large move up'), _('Large move up'),
                partial(control.canvas.move_image, canvas.MOVE_UP, canvas.MOVE_LARGE),
-               [(wx.ACCEL_NORMAL, wx.WXK_PAGEUP)]),
+               [(wx.ACCEL_NORMAL, wx.WXK_PAGEUP)], flags=Command.KB),
           make(16006, _('Large move down'), _('Large move down'),
                partial(control.canvas.move_image, canvas.MOVE_DOWN, canvas.MOVE_LARGE),
-               [(wx.ACCEL_NORMAL, wx.WXK_PAGEDOWN)]),
+               [(wx.ACCEL_NORMAL, wx.WXK_PAGEDOWN)], flags=Command.KB),
           make(16007, _('Large move left'), _('Large move left'),
                partial(control.canvas.move_image, canvas.MOVE_LEFT, canvas.MOVE_LARGE),
-               []),
+               [], flags=Command.KB),
           make(16008, _('Large move right'), _('Large move right'),
                partial(control.canvas.move_image, canvas.MOVE_RIGHT, canvas.MOVE_LARGE),
-               []),
+               [], flags=Command.KB),
           make(16100, _('Drag image'), _('Drag image'),
                control.canvas.image_drag_end,
-               [], down_function=control.canvas.image_drag_start),
+               [], down_function=control.canvas.image_drag_start, flags=Command.MOUSE),
         )
         fit_menu = (
           make(17001, _('None'), _('None'),

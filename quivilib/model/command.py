@@ -25,12 +25,15 @@ class CommandCategory(object):
     
     
 class Command(object):
-    (CMD_KB,
-    CMD_MOUSE,
-    CMD_NOMENU) = (1 << x for x in range(3))
-    CMD_KBM = CMD_KB|CMD_MOUSE
+    (
+        KB,         #Command can be assigned to a keyboard shortcut
+        MOUSE,      #Command can be assigned to a mouse button
+        NOMENU,     #Command does not appear in the application menu
+    ) = (1 << x for x in range(3))
+    KBM = KB|MOUSE
 
-    def __init__(self, ide, name, description, function, default_shortcuts, down_function=None, checkable=False, update_function=None):
+    def __init__(self, ide, name, description, function, default_shortcuts, 
+            flags=None, down_function=None, checkable=False, update_function=None):
         self.ide = ide
         self.name = name
         self.description = description
@@ -40,6 +43,9 @@ class Command(object):
         self.shortcuts = []
         self.checkable = checkable
         self.update_function = update_function
+        self.flags = flags
+        if self.flags is None:
+            self.flags = Command.KBM
         
     def load_default_shortcut(self):
         if self.default_shortcuts:
