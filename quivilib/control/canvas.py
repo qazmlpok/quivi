@@ -17,7 +17,8 @@ ZOOM_FACTOR = 25
  MOVE_DOWN) = list(range(4))
  
 (MOVE_SMALL,
- MOVE_LARGE) = list(range(2))
+ MOVE_LARGE,
+ MOVE_FULL) = list(range(3))
 
 
 
@@ -177,7 +178,14 @@ class CanvasController(object):
             scr = self.view.width
         else:
             scr = self.view.height
-        inc = int(scr * (0.8 if typ == MOVE_LARGE else 0.2))
+        if typ == MOVE_LARGE:
+            inc = int(scr * 0.8)
+        elif typ == MOVE_SMALL:
+            inc = int(scr * 0.2)
+        else:
+            #Adding all these together will guarantee the scroll is always complete
+            #Any arbitrary number could theoretically be surpassed if I ever implement infinite scroll.
+            inc = self.canvas.width + self.canvas.view.width + self.canvas.height + self.canvas.view.height
         if direction == MOVE_LEFT:
             self.canvas.left += inc
         elif direction == MOVE_RIGHT:

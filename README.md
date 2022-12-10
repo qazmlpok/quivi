@@ -67,3 +67,7 @@ The following text strings are new and have not been added to any of the transla
 - &Copy path
 - Copy the path of the current container to the clipboard
 - Drag image
+- Full move up
+- Full move down
+- Full move left
+- Full move right
