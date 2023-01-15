@@ -48,8 +48,8 @@ class CanvasController(object):
         self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())
         Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
         
-    def on_canvas_painted(self, *, dc, painted_region):
-        self.canvas.paint(dc)
+    def on_canvas_painted(self, *, gc, painted_region):
+        self.canvas.paint_gc(gc)
         if self.canvas.tiled:
             painted_region.top = 0
             painted_region.left = 0

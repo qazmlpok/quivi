@@ -52,15 +52,16 @@ class PilImage(object):
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:
-            img = self.img.resize((width, height), Image.BICUBIC)
-            w, h = img.size
-            s = img.tobytes()
-            del img
-            if self.delay:
-                #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
-                self.zoomed_bmp = (w, h, s)
-            else:
-                self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
+            #img = self.img.resize((width, height), Image.BICUBIC)
+            #w, h = img.size
+            #s = img.tobytes()
+            #del img
+            #if self.delay:
+            #    #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
+            #    self.zoomed_bmp = (w, h, s)
+            #else:
+            #    self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
+            pass
         self.width = width
         self.height = height
 
@@ -90,6 +91,11 @@ class PilImage(object):
             return
         bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
         dc.DrawBitmap(bmp, x, y)
+    def paint_gc(self, gc, x, y):
+        if self.delay:
+            log.error("paint called but image was not loaded")
+            return
+        gc.DrawBitmap(self.bmp, x, y, self.width, self.height)
 
     def copy(self):
         return PilImage(img=self.img)

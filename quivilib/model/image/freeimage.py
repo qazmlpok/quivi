@@ -72,14 +72,15 @@ class FreeImage(object):
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:
-            img = self.img.rescale(width, height, fi.FILTER_BICUBIC)
-            if sys.platform != 'win32':
-                if self.delay:
-                    self.zoomed_bmp = img
-                else:
-                    self.zoomed_bmp = img.convert_to_wx_bitmap(wx)
-            else:
-                self.zoomed_bmp = img
+            #img = self.img.rescale(width, height, fi.FILTER_BICUBIC)
+            #if sys.platform != 'win32':
+            #    if self.delay:
+            #        self.zoomed_bmp = img
+            #    else:
+            #        self.zoomed_bmp = img.convert_to_wx_bitmap(wx)
+            #else:
+            #    self.zoomed_bmp = img
+            pass
         self.width = width
         self.height = height
         
@@ -123,6 +124,25 @@ class FreeImage(object):
         else:
             bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
             dc.DrawBitmap(bmp, x, y)
+    def paint_gc(self, gc, x, y):
+        if self.delay:
+            log.error("paint called but image was not loaded")
+            return
+        #if sys.platform == 'win32':
+        #    import win32gui, win32con
+        #    import ctypes
+        #    gdi32 = ctypes.windll.gdi32
+        #    #hdc = dc.GetHDC()
+        #    #https://discuss.wxpython.org/t/gethandle-example/30032/5 - GetHandle is not a drop-in replacement for GetHDC
+        #    hdc = ctypes.c_ulong(dc.GetHandle()).value
+        #    img = self.zoomed_bmp if self.zoomed_bmp else self.img
+        #    win32gui.SetStretchBltMode(hdc, win32con.COLORONCOLOR)
+        #    gdi32.StretchDIBits(hdc, x, y, img.width, img.height,
+        #                        0, 0, img.width, img.height, img.bits, img.info,
+        #                        win32con.DIB_RGB_COLORS, win32con.SRCCOPY)
+        #else:
+        #self.bmp doesn't exist on win32.
+        gc.DrawBitmap(self.bmp, x, y, self.width, self.height)
             
     def copy(self):
         return FreeImage(self.canvas_type, img=self.img)

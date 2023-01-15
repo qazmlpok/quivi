@@ -25,14 +25,14 @@ if __debug__:
 else:
     DEBUG = False
     LOG_LEVEL = logging.ERROR
-DOUBLE_BUFFERING = True
+DOUBLE_BUFFERING = False
 
 #GDI is used to speed up image processing on Windows. Roughly 10% faster from my tests.
 #However, it only supports basic image types and does not support files within zip archives.
 #Cairo would be used for the same on Linux, but I haven't been able to get it to work.
 if sys.platform == 'win32':
-    USE_FREEIMAGE = True
-    USE_PIL = False
+    USE_FREEIMAGE = False
+    USE_PIL = True
     USE_GDI_PLUS = False
     USE_CAIRO = False
     PATH_SEP = ';'

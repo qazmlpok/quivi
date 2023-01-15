@@ -299,6 +299,21 @@ class Canvas(object):
                     self.img.paint(dc, x, y)
         else:
             self.img.paint(dc, self.left, self.top)
+    def paint_gc(self, gc):
+        if not self.img:
+            return
+        if self.tiled:
+            start_x = self.left % self.width
+            if start_x > 0:
+                start_x -= self.width
+            start_y = self.top % self.height
+            if start_y > 0:
+                start_y -= self.height
+            for x in range(start_x, self.view.width, self.width):
+                for y in range(start_y, self.view.height, self.height):
+                    self.img.paint(gc, x, y)
+        else:
+            self.img.paint_gc(gc, self.left, self.top)
     
     def rotate(self, clockwise):
         if not self.img:

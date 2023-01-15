@@ -208,13 +208,14 @@ class MainWindow(wx.Frame):
             dc.Clear()
         else:
             dc = wx.PaintDC(self.panel)
+            gc = wx.GraphicsContext.Create(dc)
         #This is required on Linux
         dc.SetBackground(wx.Brush(self.panel.GetBackgroundColour()))
         class PaintedRegion(object):
             pass
         painted_region = PaintedRegion()
         #The recipient will update the painted_region fields.
-        Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
+        Publisher.sendMessage('canvas.painted', gc=gc, painted_region=painted_region)
         clip_region = wx.Region(0, 0, self.panel.GetSize()[0],
                                 self.panel.GetSize()[1])
         clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
@@ -226,9 +227,11 @@ class MainWindow(wx.Frame):
             iter = wx.RegionIterator(clip_region)
             while (iter.HaveRects()):
                 rect = iter.GetRect()
-                dc.DestroyClippingRegion()
-                dc.SetClippingRegion(rect)
-                dc.Clear()
+                #dc.DestroyClippingRegion()
+                gc.ResetClip()
+                #dc.SetClippingRegion(rect)
+                gc.Clip(wx.Region(rect))
+                dc.Clear()      #I wonder if I can just leave this...
                 iter.Next()
         
     def on_mouse_wheel(self, event):
