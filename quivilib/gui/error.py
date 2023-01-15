@@ -97,6 +97,7 @@ class ErrorDialog(wx.Dialog):
         data.SetText(self.traceback_txt.GetValue())
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(data)
+            wx.TheClipboard.Flush()
             wx.TheClipboard.Close()
 
     def on_ok_click(self, event): # wxGlade: ErrorDialog.<event_handler>
