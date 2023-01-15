@@ -51,6 +51,10 @@ class OptionsController(object):
             fit_width = int(opt.fit_width_str)
         except ValueError:
             fit_width = None
+        try:
+            drag_threshold = int(opt.drag_threshold)
+        except ValueError:
+            drag_threshold = 0
         if fit_width is None or fit_width <= 0:
             #I guess there's no need to bother the user with this, so just use default
             fit_width = self.model.settings.get_default('Options', 'FitWidthCustomSize')
@@ -82,6 +86,7 @@ class OptionsController(object):
         self.model.settings.set('Mouse', 'Aux1ClickCmd', opt.aux1_click_cmd)
         self.model.settings.set('Mouse', 'Aux2ClickCmd', opt.aux2_click_cmd)
         self.model.settings.set('Mouse', 'AlwaysLeftMouseDrag', always_drag)
+        self.model.settings.set('Mouse', 'DragThreshold', drag_threshold)
         self.control.i18n.language = opt.language
         self.control.menu.set_shortcuts(opt.shortcuts)
         self.control.set_settings_location(opt.save_locally)

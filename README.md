@@ -66,6 +66,7 @@ The following text strings are new and have not been added to any of the transla
 - The settings file is corrupt and cannot be opened. Settings will return to their default values.
 - &Copy path
 - Copy the path of the current container to the clipboard
+- Always drag image with left mouse
 - Drag image
 - Full move up
 - Full move down

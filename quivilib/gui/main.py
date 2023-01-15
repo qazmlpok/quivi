@@ -124,7 +124,7 @@ class MainWindow(wx.Frame):
     def _bind_panel_mouse_events(self):
         def make_fn(button_idx, event_idx):
             def fn(event):
-                Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx)
+                Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx, x=event.x, y=event.y)
                 event.Skip()
             return fn
         for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT', 'MOUSE_AUX1', 'MOUSE_AUX2')):
