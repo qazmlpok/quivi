@@ -13,7 +13,6 @@ from quivilib.model.options import Options
 import wx
 from pubsub import pub as Publisher
 from wx.lib import langlistctrl
-import wx.lib.masked.numctrl
 
 WINDOW_SIZE = (400, 460)
 
@@ -116,14 +115,11 @@ class OptionsDialog(wx.Dialog):
         self.always_drag_chk = wx.CheckBox(self.mouse_pane, -1, _("Always drag image with left mouse"))
         self.threshold_lbl = wx.StaticText(self.mouse_pane, -1, _("Threshold:"))    #TODO: Better text.
         self.pixels_lbl = wx.StaticText(self.mouse_pane, -1, _("px"))
-        self.threshold_txt = wx.lib.masked.numctrl.NumCtrl(self.mouse_pane, -1)
+        self.threshold_txt = wx.TextCtrl(self.mouse_pane, -1)
+        #This doesn't return the size of the "padding" - and it changes on different platformss/themes.
         sz = self.threshold_txt.GetTextExtent('99')
-        self.threshold_txt.SetInitialSize(wx.Size(sz.x+10, -1))
+        self.threshold_txt.SetInitialSize(wx.Size(sz.x+30, -1))
         
-        self.threshold_txt.SetAllowNone(False)
-        self.threshold_txt.SetMin(0)
-        self.threshold_txt.SetMax(99)
-
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
         self.SetTitle(_("Options"))
@@ -152,7 +148,7 @@ class OptionsDialog(wx.Dialog):
         self._set_selected(self.mouse_aux2_cbo, self.settings.getint('Mouse', 'Aux2ClickCmd'))
         always_drag = (self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1')
         self.always_drag_chk.SetValue(always_drag)
-        self.threshold_txt.SetValue(self.settings.getint('Mouse', 'DragThreshold'))
+        self.threshold_txt.SetValue(self.settings.get('Mouse', 'DragThreshold'))
 
         for name, fit_type in self.fit_choices:
             idx = self.fit_cbo.Append(name, fit_type)
@@ -230,9 +226,9 @@ class OptionsDialog(wx.Dialog):
         mouse_drag_sizer = wx.BoxSizer(wx.VERTICAL)
         mouse_drag_sizer_nested = wx.BoxSizer(wx.HORIZONTAL)
         mouse_drag_sizer.Add(self.always_drag_chk, 0, wx.LEFT|wx.TOP, 5)
-        mouse_drag_sizer_nested.Add(self.threshold_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_drag_sizer_nested.Add(self.threshold_txt, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        mouse_drag_sizer_nested.Add(self.pixels_lbl, 0, wx.TOP, 5)
+        mouse_drag_sizer_nested.Add(self.threshold_lbl, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_drag_sizer_nested.Add(self.threshold_txt, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_drag_sizer_nested.Add(self.pixels_lbl, 0, wx.ALIGN_CENTER_VERTICAL, 5)
         mouse_drag_sizer.Add(mouse_drag_sizer_nested, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(mouse_drag_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         
