@@ -44,6 +44,7 @@ class CanvasController(object):
         #Indicates that the user has moved the image significantly 
         self._moved_image = False
         self._old_mouse_pos = (-1, -1)
+        self._orig_mouse_pos = (-1, -1)
         self._default_cursor = wx.Cursor(images.cursor_hand.GetImage())
         self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())
         Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
@@ -86,20 +87,24 @@ class CanvasController(object):
         self._zoom_to_point(lines > 0, x, y, zoom_scale=scale)
         Publisher.sendMessage(f'{self.name}.changed')
     
-    def on_canvas_mouse_event(self, *, button, event):
+    def on_canvas_mouse_event(self, *, button, event, x, y):
         if self.name == 'canvas':
             button_name = ('Left', 'Middle', 'Right', 'Aux1', 'Aux2')[button]
             cmd_ide = self.settings.getint('Mouse', f'{button_name}ClickCmd')
             always_drag = self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1'
+            drag_threshold = self.settings.getint('Mouse', 'DragThreshold')
             #Reproduce the old drag behavior (left mouse always drags; run command iff mouse didn't move)
             #if configured. Otherwise, the drag behavior will be a regular command.
             if always_drag and button == 0:
                 if event == 0:
                     Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
                     self._moving_image = True
+                    self._orig_mouse_pos = (x, y)
                 elif event == 1:
-                    if not self._moved_image:
-                        #TODO: Possibly change to "if mouse moved less than x pixels
+                    #If always dragging but the mouse hasn't moved (within the configured delta), execute the click event anyway
+                    xdiff = self._orig_mouse_pos[0] - x
+                    ydiff = self._orig_mouse_pos[1] - y
+                    if not self._moved_image or (xdiff**2 + ydiff**2 < drag_threshold**2):
                         Publisher.sendMessage('command.execute', ide=cmd_ide)
                     Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
                     self._moving_image = False

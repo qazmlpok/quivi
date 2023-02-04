@@ -143,11 +143,11 @@ class WallpaperDialog(wx.Dialog):
             Publisher.sendMessage('wpcanvas.scrolled', lines=lines, horizontal=event.shiftDown)
         
     def on_mouse_left_down(self, event):
-        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=0)
+        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=0, x=event.x, y=event.y)
         event.Skip()
         
     def on_mouse_left_up(self, event):
-        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=1)
+        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=1, x=event.x, y=event.y)
         event.Skip()
         
     def on_mouse_motion(self, event):

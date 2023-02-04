@@ -206,6 +206,8 @@ class MainController(object):
     def copy_path_to_clipboard(self):
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(str(self.model.container.path)))
+            #Keep data available even after application close.
+            wx.TheClipboard.Flush()
             wx.TheClipboard.Close()
         
     def delete(self):

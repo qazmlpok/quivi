@@ -36,18 +36,6 @@ def get_icon_for_directory(small=True):
         return fn(small)
     size = (16, 16) if small else (32, 32)
     return wx.ArtProvider.GetIcon(wx.ART_FOLDER, wx.ART_OTHER, size)
-    
-def tryint(s):
-    try:
-        return int(s)
-    except ValueError:
-        return s.lower()
-    
-def alphanum_key(s):
-    """ Turn a string into a list of string and number chunks.
-        "z23a" -> ["z", 23, "a"]
-    """
-    return [tryint(c) for c in re.split('([0-9]+)', s)]
 
 def rescale_by_size_factor(width, height, max_width, max_height):
     assert width >= 0 and height >= 0 and max_height >= 0 and max_height >= 0

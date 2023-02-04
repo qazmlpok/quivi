@@ -108,10 +108,18 @@ class OptionsDialog(wx.Dialog):
         (self.mouse_aux1_lbl,self.mouse_aux1_cbo) = _make_mouse_cbo(_("Aux1 click"))
         (self.mouse_aux2_lbl,self.mouse_aux2_cbo) = _make_mouse_cbo(_("Aux2 click"))
         self._mouse_cbos = (self.mouse_left_cbo, self.mouse_middle_cbo, self.mouse_right_cbo, self.mouse_aux1_cbo, self.mouse_aux2_cbo)
+        
         #This looks worse than I hoped, but I think it's still better than nothing.
         self.mouse_separator = wx.StaticLine(self.mouse_pane, size=(100, 1), style=wx.LI_HORIZONTAL)
-        self.always_drag_chk = wx.CheckBox(self.mouse_pane, -1, _("Always use left mouse to drag image"))
-
+        
+        self.always_drag_chk = wx.CheckBox(self.mouse_pane, -1, _("Always drag image with left mouse"))
+        self.threshold_lbl = wx.StaticText(self.mouse_pane, -1, _("Threshold:"))    #TODO: Better text.
+        self.pixels_lbl = wx.StaticText(self.mouse_pane, -1, _("px"))
+        self.threshold_txt = wx.TextCtrl(self.mouse_pane, -1)
+        #This doesn't return the size of the "padding" - and it changes on different platformss/themes.
+        sz = self.threshold_txt.GetTextExtent('99')
+        self.threshold_txt.SetInitialSize(wx.Size(sz.x+30, -1))
+        
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
         self.SetTitle(_("Options"))
@@ -140,6 +148,7 @@ class OptionsDialog(wx.Dialog):
         self._set_selected(self.mouse_aux2_cbo, self.settings.getint('Mouse', 'Aux2ClickCmd'))
         always_drag = (self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1')
         self.always_drag_chk.SetValue(always_drag)
+        self.threshold_txt.SetValue(self.settings.get('Mouse', 'DragThreshold'))
 
         for name, fit_type in self.fit_choices:
             idx = self.fit_cbo.Append(name, fit_type)
@@ -148,7 +157,7 @@ class OptionsDialog(wx.Dialog):
                 self._update_custom_fit_display(fit_type)
                 
         self.width_txt.SetValue(self.settings.get('Options', 'FitWidthCustomSize'))
-                
+
         self.start_dir_picker.SetPath(self.settings.get('Options', 'StartDir'))
         
         if self.settings.get('Options', 'CustomBackground') == '1':
@@ -214,7 +223,15 @@ class OptionsDialog(wx.Dialog):
         mouse_sizer.Add(self.mouse_aux2_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_aux2_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_separator, 0, wx.TOP|wx.EXPAND, 10)
-        mouse_sizer.Add(self.always_drag_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_drag_sizer = wx.BoxSizer(wx.VERTICAL)
+        mouse_drag_sizer_nested = wx.BoxSizer(wx.HORIZONTAL)
+        mouse_drag_sizer.Add(self.always_drag_chk, 0, wx.LEFT|wx.TOP, 5)
+        mouse_drag_sizer_nested.Add(self.threshold_lbl, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_drag_sizer_nested.Add(self.threshold_txt, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_drag_sizer_nested.Add(self.pixels_lbl, 0, wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_drag_sizer.Add(mouse_drag_sizer_nested, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        mouse_sizer.Add(mouse_drag_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        
         self.mouse_pane.SetSizer(mouse_sizer)
     def __do_layout_keys(self):
         keys_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -347,6 +364,7 @@ class OptionsDialog(wx.Dialog):
         opt.placeholder_autoopen = self.settings_placeholder_autoopen_chk.GetValue()
         opt.shortcuts = self.shortcuts
         opt.always_drag = self.always_drag_chk.GetValue()
+        opt.drag_threshold = self.threshold_txt.GetValue()
         
         #TODO: (2,2) Improve: handle errors here
         Publisher.sendMessage('options.update', opt=opt)
