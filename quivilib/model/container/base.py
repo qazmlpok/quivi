@@ -3,23 +3,12 @@
 from quivilib.model.container import Item
 from quivilib.model.container import SortOrder
 from quivilib.model.container import UnsupportedPathError
-from quivilib.util import alphanum_key
 
 import operator
 
 from pubsub import pub as Publisher
 from pathlib import Path
-
-#Check if Windows sort is available, by trying to calling it.
-#TODO: Replace with the python module natsort. Then finish removing cmpfunc
-try:
-    #from quivilib.windows.util import logical_cmp
-    #logical_cmp('dummy', 'dummy')
-    #wincmpfn = logical_cmp
-    wincmpfn = None
-except:
-    wincmpfn = None
-
+from natsort import natsort_keygen, ns
 
 class BaseContainer(object):
     def __init__(self, sort_order, show_hidden):
@@ -34,47 +23,23 @@ class BaseContainer(object):
     
     def set_sort_order(self, order):
         if order == SortOrder.NAME:
-            #TODO: (3,2) Improve: should show directories first?
-            if wincmpfn:
-                keyfn = operator.attrgetter('path', 'ext')
-                def cmpfn(a, b):
-                    return cmp((wincmpfn(a[0], b[0]), wincmpfn(a[1], b[1])),
-                               (0, 0))
-            else:
-                def keyfn(elem):
-                    return alphanum_key(elem.namebase), alphanum_key(elem.ext)
-                cmpfn = None
+            def keyfn(elem):
+                return str(elem.path)
         elif order == SortOrder.TYPE:
-            if wincmpfn:
-                keyfn = operator.attrgetter('typ', 'path', 'ext')
-                def cmpfn(a, b):
-                    return cmp((cmp(a[0], b[0]),
-                                wincmpfn(a[1], b[1]),
-                                wincmpfn(a[2], b[2])),
-                               (0, 0, 0))
-            else:
-                def keyfn(elem):
-                    return elem.typ, alphanum_key(elem.namebase), alphanum_key(elem.ext)
-                cmpfn = None
+            def keyfn(elem):
+                return elem.typ, str(elem.path)
         elif order == SortOrder.EXTENSION:
-            if wincmpfn:
-                keyfn = operator.attrgetter('ext', 'path')
-                def cmpfn(a, b):
-                    return cmp((wincmpfn(a[0], b[0]), wincmpfn(a[1], b[1])),
-                               (0, 0))
-            else:
-                def keyfn(elem):
-                    return alphanum_key(elem.ext), alphanum_key(elem.namebase)
-                cmpfn = None
+            def keyfn(elem):
+                return elem.ext, elem.namebase
         elif order == SortOrder.LAST_MODIFIED:
             keyfn = operator.attrgetter('typ', 'last_modified')
-            cmpfn = None
         else:
             assert False, 'Invalid sort order specified'
         parent = None
         if self.items[0].path.name == '..':
             parent = self.items.pop(0)
-        self.items.sort(key=keyfn)
+        natsort_key = natsort_keygen(key=keyfn, alg=ns.PATH)
+        self.items.sort(key=natsort_key)
         if parent:
             self.items.insert(0, parent)
         self._sort_order = order

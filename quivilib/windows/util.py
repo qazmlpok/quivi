@@ -45,10 +45,6 @@ def get_icon_for_directory(small=True):
     icon.CreateFromHICON(hicon)
     return icon
 
-def logical_cmp(a, b):
-    assert isinstance(a, str) and isinstance(b, str) 
-    return ctypes.windll.shlwapi.StrCmpLogicalW(a, b)
-
 def delete_file(path, window):
     from win32com.shell import shell, shellcon
     
