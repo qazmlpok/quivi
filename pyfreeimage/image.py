@@ -156,15 +156,9 @@ class Image(object):
         else:
             img = self.convert_to_32_bits()
         width, height = img.width, img.height
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-        data = surface.get_data()
-        arrayt = ctypes.c_char * len(data)
-        buf = arrayt.from_buffer(data)
-        buf_idx = ctypes.addressof(buf)
-        for line_idx in range(height-1, -1, -1):
-            line_buf = img._lib.GetScanLine(img._dib, line_idx)
-            ctypes.memmove(buf_idx, line_buf, img.width_bytes)
-            buf_idx += img.width_bytes
+        bytes = img.convert_to_raw_bits()
+        surface = cairo.ImageSurface.create_for_data(bytes, cairo.FORMAT_ARGB32, width, height)
+        
         if img is not self:
             del img
         return surface

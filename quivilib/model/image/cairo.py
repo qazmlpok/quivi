@@ -125,7 +125,7 @@ class CairoImage(object):
         #This isn't working, and I'm not sure why. Examples suggest that this should draw directly
         #to the DC, and the objects seem fine (no exceptions, certainly), but nothing happens.
         ctx.paint()
-            
+
     def copy(self):
         return CairoImage(self.canvas_type, img=self.img)
     
@@ -162,6 +162,13 @@ class CairoImage(object):
             return delayed_load
         else:
             return delayed_load()
-                
+
+    #FreeImage is used to load the actual file.
+    def _get_extensions():
+        return fi.library.load().get_readable_extensions()
+    ext_list = _get_extensions()
+    def extensions():
+        return CairoImage.ext_list
+
     def close(self):
         pass
