@@ -35,7 +35,6 @@ class CairoImage(object):
         self._original_height = self._height = height
         
         self.img = img
-        self.zoomed_bmp = None
         self.delay = delay
         self.rotation = 0
         
@@ -73,13 +72,7 @@ class CairoImage(object):
         self.delay = False
         
     def resize(self, width, height):
-        if self._original_width == width and self._original_height == height:
-            self.zoomed_bmp = None
-        else:
-#            if self.delay:
-#                self.zoomed_bmp = (_width, _height)
-#            else:
-            self.zoomed_bmp = self._resize_img(width, height)
+        #The actual resizing will be done on-demand by a matrix transformation.
         self._width = width
         self._height = height
         
@@ -105,25 +98,25 @@ class CairoImage(object):
         self.rotation %= 4
         
     def paint(self, dc, x, y):
-        img = self.zoomed_bmp if self.zoomed_bmp else self.img
+        img = self.img
         ctx = wxcairo.ContextFromDC(dc)
-        if self.rotation == 0:
-            ctx.set_source_surface(img, x, y)
-        else:
-            imgpat = cairo.SurfacePattern(img)
-            matrix = cairo.Matrix()
+        imgpat = cairo.SurfacePattern(img)
+        matrix = cairo.Matrix()
+        matrix.scale(self._original_width / float(self._width), self._original_height / float(self._height))
+
+        if self.rotation != 0:
             matrix.translate(self._width / 2, self._height / 2)
             matrix.rotate((0, 3.0 * math.pi / 2.0, math.pi, math.pi / 2.0)[self.rotation])
             if self.rotation in (0, 2):
                 matrix.translate(-self._width / 2, -self._height / 2)
-                matrix.translate(-x, -y)
             else:
                 matrix.translate(-self._height / 2, -self._width / 2)
-                matrix.translate(-x, -y)
-            imgpat.set_matrix(matrix)
-            ctx.set_source(imgpat)
-        #This isn't working, and I'm not sure why. Examples suggest that this should draw directly
-        #to the DC, and the objects seem fine (no exceptions, certainly), but nothing happens.
+
+        matrix.translate(-x, -y)
+        
+        imgpat.set_filter(cairo.FILTER_BEST)
+        imgpat.set_matrix(matrix)
+        ctx.set_source(imgpat)
         ctx.paint()
 
     def copy(self):
@@ -148,6 +141,7 @@ class CairoImage(object):
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         
+        #This should actually still resize the image.
         thumb_canvas = self._resize_img(width, height)
         
         def delayed_load(thumb_canvas=thumb_canvas, width=width, height=height, wx=wx):

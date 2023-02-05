@@ -31,8 +31,8 @@ DOUBLE_BUFFERING = True
 #However, it only supports basic image types and does not support files within zip archives.
 #Cairo would be used for the same on Linux, but I haven't been able to get it to work.
 if sys.platform == 'win32':
-    USE_FREEIMAGE = True
-    USE_PIL = False
+    USE_FREEIMAGE = False
+    USE_PIL = True
     USE_GDI_PLUS = False
     USE_CAIRO = False
     PATH_SEP = ';'
@@ -40,7 +40,7 @@ else:
     USE_FREEIMAGE = True
     USE_PIL = True
     USE_GDI_PLUS = False
-    USE_CAIRO = False
+    USE_CAIRO = True
     PATH_SEP = ':'
 
 #This isn't being used. But I don't know what should go into a manifest, so I'm leaving it alone.
