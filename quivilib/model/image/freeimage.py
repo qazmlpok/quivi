@@ -20,6 +20,7 @@ class FreeImage(object):
     def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
         self.canvas_type = canvas_type
         self.delay = delay
+        print("Freeimage init.")
         
         try:
             if img is None:
@@ -69,6 +70,7 @@ class FreeImage(object):
         self.delay = False
         
     def resize(self, width, height):
+        print("Freeimage resize.")
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:

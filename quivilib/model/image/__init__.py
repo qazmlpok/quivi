@@ -9,6 +9,7 @@ import sys
 
 
 IMG_CLASSES = []
+IMG_LOAD_CLASSES = []
 if 'win' in sys.platform and meta.USE_GDI_PLUS:
     from quivilib.model.image.gdiplus import GdiPlusImage
     IMG_CLASSES.append(GdiPlusImage)
@@ -17,10 +18,10 @@ if meta.USE_CAIRO:
     IMG_CLASSES.append(CairoImage)
 if meta.USE_PIL:
     from quivilib.model.image.pil import PilImage
-    IMG_CLASSES.append(PilImage)
+    IMG_LOAD_CLASSES.append(PilImage)
 if meta.USE_FREEIMAGE:
     from quivilib.model.image.freeimage import FreeImage
-    IMG_CLASSES.append(FreeImage)
+    IMG_LOAD_CLASSES.append(FreeImage)
 
 
 
@@ -47,7 +48,7 @@ supported_extensions = get_supported_extensions()
 
 def open(f, path, canvas_type, delay=False):
     ext = path.suffix
-    for cls in IMG_CLASSES:
+    for cls in IMG_LOAD_CLASSES:
         if not ext in cls.extensions():
             log.debug(f"Skip {cls} - no support for {ext}")
             continue
@@ -55,8 +56,15 @@ def open(f, path, canvas_type, delay=False):
             img = cls(canvas_type, f, str(path), delay=delay)
             break
         except Exception as e:
-            if IMG_CLASSES[-1] is cls:
+            if IMG_LOAD_CLASSES[-1] is cls:
                 raise
             else:
                 log.debug(traceback.format_exc())
+    for cls in IMG_CLASSES:
+        try:
+            img2 = cls(canvas_type, src=img, delay=delay)
+            img = img2
+            break
+        except Exception as e:
+            log.debug(traceback.format_exc())
     return img

@@ -3,8 +3,6 @@ from quivilib.util import rescale_by_size_factor
 
 import wx
 from wx.lib import wxcairo
-import pyfreeimage as fi
-from pyfreeimage import Image
 import cairo
 
 import math
@@ -14,20 +12,15 @@ log = logging.getLogger('cairo')
 
 
 class CairoImage(object):
-    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
+    def __init__(self, canvas_type, src=None, img=None, delay=False):
         self.canvas_type = canvas_type
+        print("Cairo init.")
         
-        if img is None:
-            fi.library.load().reset_last_error()
-            img = Image.load_from_file(f, path)
-            try:
-                if img.transparent:
-                    img = img.composite(True)
-            except RuntimeError:
-                pass
-            img = img.convert_to_32_bits()
-            img = img.convert_to_cairo_surface(cairo)
-            
+        if src is not None:
+            #if img.transparent:
+            #    img = img.composite(True)
+            #img = img.convert_to_32_bits()
+            img = src.img.convert_to_cairo_surface(cairo)
         width = img.get_width()
         height = img.get_height()
         
@@ -73,6 +66,7 @@ class CairoImage(object):
         self.delay = False
         
     def resize(self, width, height):
+        print("Cairo resize.")
         if self._original_width == width and self._original_height == height:
             self.zoomed_bmp = None
         else:
@@ -162,13 +156,6 @@ class CairoImage(object):
             return delayed_load
         else:
             return delayed_load()
-
-    #FreeImage is used to load the actual file.
-    def _get_extensions():
-        return fi.library.load().get_readable_extensions()
-    ext_list = _get_extensions()
-    def extensions():
-        return CairoImage.ext_list
 
     def close(self):
         pass
