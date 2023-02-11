@@ -98,11 +98,15 @@ class CairoImage(object):
         self.rotation %= 4
         
     def paint(self, dc, x, y):
+        #TODO: Restore zoom_bmp.
         img = self.img
         ctx = wxcairo.ContextFromDC(dc)
         imgpat = cairo.SurfacePattern(img)
+        
         matrix = cairo.Matrix()
-        matrix.scale(self._original_width / float(self._width), self._original_height / float(self._height))
+        wscale = self._width / self._original_width
+        hscale = self._height / self._original_height
+        matrix.scale(wscale, hscale)
 
         if self.rotation != 0:
             matrix.translate(self._width / 2, self._height / 2)
@@ -112,10 +116,22 @@ class CairoImage(object):
             else:
                 matrix.translate(-self._height / 2, -self._width / 2)
 
-        matrix.translate(-x, -y)
+        matrix.translate(x / wscale, y / hscale)
         
-        imgpat.set_filter(cairo.FILTER_BEST)
-        imgpat.set_matrix(matrix)
+        #BEST is too slow; this still looks fine.
+        imgpat.set_filter(cairo.Filter.GOOD)
+        ctx.set_matrix(matrix)
+
+        #Clip image - doesn't seem to help. It's faster for zoomed-in images, so I suspect it's completely redundant.
+        #Cairo is probably smart enough to not render past the DC edge.
+        #if (self._width > self._original_width):
+        #Clip if zoomed in. My assumption is this won't be as useful if zooming out (more of original image needed)
+        #start = (x / wscale, y / hscale)
+        #Can I get the dc dimensions?
+        #end = (1920 / wscale, 1080 / hscale)
+        #ctx.rectangle(-start[0], -start[1], end[0], end[1])
+        #ctx.clip()
+        
         ctx.set_source(imgpat)
         ctx.paint()
 
