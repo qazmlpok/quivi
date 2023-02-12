@@ -26,16 +26,17 @@ class FreeImage(object):
             if img is None:
                 fi.library.load().reset_last_error()
                 img = Image.load_from_file(f, path)
+
                 try:
                     if img.transparent:
                         img = img.composite(True)
                 except RuntimeError:
                     pass
-                if sys.platform == 'win32':
-                    if img.bpp != 24:
-                        img = img.convert_to_24_bits()
-                else:
-                    img = img.convert_to_32_bits()
+                #if sys.platform == 'win32':
+                #    if img.bpp != 24:
+                #        img = img.convert_to_24_bits()
+                #else:
+                #    img = img.convert_to_32_bits()
             
             if sys.platform != 'win32':
                 if self.delay:
