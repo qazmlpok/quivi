@@ -15,7 +15,6 @@ from pubsub import pub as Publisher
 import threading
 import math
 import logging
-import collections
 log = logging.getLogger('thumb')
 
 OldScrolledThumbnail = None
@@ -191,7 +190,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
             bmp = img.create_thumbnail(300, 240, delay=True)
             alpha = False
             def delayed_fn(bmp=bmp):
-                if isinstance(bmp, collections.Callable):
+                if callable(bmp):
                     bmp = bmp()
                 img = bmp.ConvertToImage()
                 return img

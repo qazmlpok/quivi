@@ -25,7 +25,7 @@ class CairoImage(object):
                     img = img.composite(True)
             except RuntimeError:
                 pass
-            img = img.convert_to_32_bits()
+            #img = img.convert_to_32_bits()
             img = img.convert_to_cairo_surface(cairo)
             
         width = img.get_width()
@@ -139,12 +139,7 @@ class CairoImage(object):
         return CairoImage(self.canvas_type, img=self.img)
     
     def copy_to_clipboard(self):
-        bmp = wx.Bitmap(self._width, self._height, 24)
-        dc = wx.MemoryDC(bmp)
-        assert dc.IsOk()
-        ctx = wxcairo.ContextFromDC(dc)
-        ctx.set_source_surface(self.img)
-        ctx.paint()
+        bmp = wxcairo.BitmapFromImageSurface(self.img)
         data = wx.BitmapDataObject(bmp)
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(data)
@@ -161,12 +156,7 @@ class CairoImage(object):
         thumb_canvas = self._resize_img(width, height)
         
         def delayed_load(thumb_canvas=thumb_canvas, width=width, height=height, wx=wx):
-            bmp = wx.Bitmap(width, height, 24)
-            dc = wx.MemoryDC(bmp)
-            ctx = wxcairo.ContextFromDC(dc)
-            ctx.set_source_surface(thumb_canvas)
-            ctx.paint()
-            return bmp
+            return wxcairo.BitmapFromImageSurface(thumb_canvas)
         
         if delay:
             return delayed_load

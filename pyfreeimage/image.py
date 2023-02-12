@@ -127,37 +127,52 @@ class Image(object):
             raise RuntimeError('Unable to convert image to 24 bits')
         return self.__class__(dib)
     
-    def convert_to_raw_bits(self):
-        buf = ctypes.create_string_buffer(self.height * self.width_bytes)
+    def convert_to_raw_bits(self, width_bytes=None):
+        if width_bytes is None:
+            width_bytes = self.width_bytes
+        else:
+            #freeimage and cairo may use different stride values.
+            width_bytes = max(width_bytes, self.width_bytes)
+        buf = ctypes.create_string_buffer(self.height * width_bytes)
         buf_idx = ctypes.addressof(buf)
         for line_idx in range(self.height-1, -1, -1):
             line_buf = self._lib.GetScanLine(self._dib, line_idx)
-            ctypes.memmove(buf_idx, line_buf, self.width_bytes)
-            buf_idx += self.width_bytes
+            ctypes.memmove(buf_idx, line_buf, width_bytes)
+            buf_idx += width_bytes
         return buf
         
     def convert_to_wx_bitmap(self, wx):
         #TODO: (1,4) Improve: handle another types of bitmaps
         if self.bpp == 32:
             img = self
+            format = wx.BitmapBufferFormat_ARGB32
+        elif self.bpp == 24:
+            img = self
+            format = wx.BitmapBufferFormat_RGB
         else:
             img = self.convert_to_32_bits()
+            format = wx.BitmapBufferFormat_ARGB32
         width, height, bpp, pitch = img.width, img.height, img.bpp, img.pitch
         buf = img.convert_to_raw_bits()
         if img is not self:
             del img
         bmp = wx.Bitmap(width, height, bpp)
-        bmp.CopyFromBuffer(buf, wx.BitmapBufferFormat_ARGB32, pitch)
+        bmp.CopyFromBuffer(buf, format, pitch)
         return bmp
     
     def convert_to_cairo_surface(self, cairo):
-        if self.bpp == 32:
-            img = self
-        else:
+        img = self
+        format = cairo.Format.ARGB32
+        if self.bpp == 8:
+            #In theory this can be done to avoid a conversion... but it's not working. It inverts the colors.
+            #format = cairo.Format.A8
             img = self.convert_to_32_bits()
+        elif self.bpp != 32:
+            img = self.convert_to_32_bits()
+        stride = format.stride_for_width(img.width)
         width, height = img.width, img.height
-        bytes = img.convert_to_raw_bits()
-        surface = cairo.ImageSurface.create_for_data(bytes, cairo.FORMAT_ARGB32, width, height)
+        bytes = img.convert_to_raw_bits(width_bytes=stride)
+        surface = cairo.ImageSurface.create_for_data(bytes, format, width, height)
         
         if img is not self:
             del img
