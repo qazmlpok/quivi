@@ -31,11 +31,11 @@ class FreeImage(object):
                         img = img.composite(True)
                 except RuntimeError:
                     pass
-                #if sys.platform == 'win32':
-                #    if img.bpp != 24:
-                #        img = img.convert_to_24_bits()
-                #else:
-                #    img = img.convert_to_32_bits()
+                if sys.platform == 'win32':
+                    if img.bpp != 24:
+                        img = img.convert_to_24_bits()
+                else:
+                    img = img.convert_to_32_bits()
             
             if sys.platform != 'win32':
                 if self.delay:
