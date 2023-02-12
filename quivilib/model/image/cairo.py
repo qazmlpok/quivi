@@ -25,7 +25,7 @@ class CairoImage(object):
                     img = img.composite(True)
             except RuntimeError:
                 pass
-            img = img.convert_to_32_bits()
+            #img = img.convert_to_32_bits()
             img = img.convert_to_cairo_surface(cairo)
             
         width = img.get_width()
