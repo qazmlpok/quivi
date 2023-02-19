@@ -35,6 +35,7 @@ class CairoImage(object):
         self._original_height = self._height = height
         
         self.img = img
+        self.zoomed_bmp = None
         self.delay = delay
         self.rotation = 0
         
@@ -96,17 +97,27 @@ class CairoImage(object):
     def rotate(self, clockwise):
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
-        
+
     def paint(self, dc, x, y):
-        #TODO: Restore zoom_bmp.
-        img = self.img
+        img = self.zoomed_bmp if self.zoomed_bmp else self.img
         ctx = wxcairo.ContextFromDC(dc)
         imgpat = cairo.SurfacePattern(img)
         
+        #Set quality for the scale. There are a few tricks that can be done with this.
+        #Panning needs to be fast, but scaling doesn't.
+        #Zooming in on a large image is faster than zooming out
+        quality = cairo.Filter.FAST
+        #FAST - A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST.
+        #GOOD - A reasonable-performance filter, with quality similar to Cairo::BILINEAR.
+        #BEST - The highest-quality available, performance may not be suitable for interactive use.
+
         matrix = cairo.Matrix()
-        wscale = self._width / self._original_width
-        hscale = self._height / self._original_height
-        matrix.scale(wscale, hscale)
+        if img == self.img:
+            wscale = self._original_width  / self._width 
+            hscale = self._original_height / self._height
+            matrix.scale(wscale, hscale)
+            #I believe this has no effect if the scale isn't done. Rotation is always 90 degrees, which I assume is optimized.
+            imgpat.set_filter(quality)
 
         if self.rotation != 0:
             matrix.translate(self._width / 2, self._height / 2)
@@ -116,21 +127,10 @@ class CairoImage(object):
             else:
                 matrix.translate(-self._height / 2, -self._width / 2)
 
-        matrix.translate(x / wscale, y / hscale)
-        
-        #BEST is too slow; this still looks fine.
-        imgpat.set_filter(cairo.Filter.GOOD)
-        ctx.set_matrix(matrix)
-
-        #Clip image - doesn't seem to help. It's faster for zoomed-in images, so I suspect it's completely redundant.
-        #Cairo is probably smart enough to not render past the DC edge.
-        #if (self._width > self._original_width):
-        #Clip if zoomed in. My assumption is this won't be as useful if zooming out (more of original image needed)
-        #start = (x / wscale, y / hscale)
-        #Can I get the dc dimensions?
-        #end = (1920 / wscale, 1080 / hscale)
-        #ctx.rectangle(-start[0], -start[1], end[0], end[1])
-        #ctx.clip()
+        imgpat.set_matrix(matrix)
+        ctx_matrix = cairo.Matrix()
+        ctx_matrix.translate(x, y)
+        ctx.set_matrix(ctx_matrix)
         
         ctx.set_source(imgpat)
         ctx.paint()
