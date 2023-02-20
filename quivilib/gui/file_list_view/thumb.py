@@ -19,6 +19,8 @@ log = logging.getLogger('thumb')
 
 OldScrolledThumbnail = None
 
+if __debug__:
+    import time
 
 def _handle_error(exception, args, kwargs):
     self = args[0]
@@ -158,14 +160,18 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         """ Threaded method to load images. Used internally. """
         
         for count, item in enumerate(container.items):
-            log.debug('Loading thumb #%d' % count)
+            if __debug__:
+                start = time.perf_counter()
+                log.debug('Loading thumb #%d' % count)
             if not self._isrunning:
                 return
             try:
                 self.LoadImageContainer(container, item, count)
             except:
                 log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=1)
-            log.debug('Loaded thumb #%d' % count)
+            if __debug__:
+                stop = time.perf_counter()
+                log.debug(f'Loaded thumb #{count}. Took: {(stop - start)*1000:0.1f}ms.')
             if count < 4:
                 wx.CallAfter(self.Refresh)
             elif count%4 == 0:

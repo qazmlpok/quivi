@@ -146,9 +146,10 @@ class Image(object):
         if self.bpp == 32:
             img = self
             format = wx.BitmapBufferFormat_ARGB32
-        elif self.bpp == 24:
-            img = self
-            format = wx.BitmapBufferFormat_RGB
+        #elif self.bpp == 24:
+        #Sigh. Still not working correctly.
+        #    img = self
+        #    format = wx.BitmapBufferFormat_RGB
         else:
             img = self.convert_to_32_bits()
             format = wx.BitmapBufferFormat_ARGB32

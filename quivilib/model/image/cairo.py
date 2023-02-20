@@ -177,7 +177,7 @@ class CairoImage(object):
         ctx.paint()
 
     def copy(self):
-        return CairoImage(self.canvas_type, img=self.img)
+        return CairoImage(self.canvas_type, img=self.img, src=self.src)
     
     def copy_to_clipboard(self):
         bmp = wxcairo.BitmapFromImageSurface(self.img)
@@ -187,22 +187,7 @@ class CairoImage(object):
             wx.TheClipboard.Close()
 
     def create_thumbnail(self, width, height, delay=False):
-        factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
-        if factor > 1:
-            factor = 1
-        width = int(self.original_width * factor)
-        height = int(self.original_height * factor)
-        
-        #This should actually still resize the image.
-        thumb_canvas = self._resize_img(width, height)
-        
-        def delayed_load(thumb_canvas=thumb_canvas, width=width, height=height, wx=wx):
-            return wxcairo.BitmapFromImageSurface(thumb_canvas)
-        
-        if delay:
-            return delayed_load
-        else:
-            return delayed_load()
+        return self.src.create_thumbnail(width, height, delay)
 
     def close(self):
         pass

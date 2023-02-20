@@ -68,12 +68,12 @@ class FreeImage(object):
             if self.zoomed_bmp:
                 self.zoomed_bmp = self.zoomed_bmp.convert_to_wx_bitmap(wx)
         self.delay = False
-    
+
     def rescale(self, width, height):
         #TODO: Make sure this isn't called multiple times with the same dimensions.
         #I don't want to actually store this in zoomed_bmp, but something similar is fine.
         return self.img.rescale(width, height, fi.FILTER_BICUBIC)
-    
+
     def resize(self, width, height):
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
@@ -147,7 +147,7 @@ class FreeImage(object):
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(data)
                 wx.TheClipboard.Close()
-                
+
     def create_thumbnail(self, width, height, delay=False):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
         if factor > 1:
