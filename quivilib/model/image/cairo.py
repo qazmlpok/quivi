@@ -6,6 +6,7 @@ from wx.lib import wxcairo
 import pyfreeimage as fi
 from pyfreeimage import Image
 import cairo
+import threading
 
 import math
 import logging
@@ -35,10 +36,18 @@ class CairoImage(object):
         self._original_height = self._height = height
         
         self.img = img
+        #Set by the thread
         self.zoomed_bmp = None
+        self.zoomed_width = None
         self.delay = delay
         self.rotation = 0
         
+        self.timer = None
+        #Used to determine if the current paint action is a pan or a zoom.
+        #Pans need to be significantly faster, and thus require a lower quality filter.
+        self.last_zoom = 0
+        self.last_rot = 0
+
     @property
     def width(self):
         if self.rotation in (0, 2):
@@ -71,18 +80,56 @@ class CairoImage(object):
 #            canvas = self.zoomed_bmp
 #            self.zoomed_bmp = self._resize_img(w, h)
         self.delay = False
-        
+
+    #TODO: This should trigger a paint event (i.e. canvas.changed), but there's no existing way to do this here
+    #and I don't think it's worth it to try and work around this.
+    def delayed_resize(self, width, height):
+        if self.zoomed_width == width or self._original_width == width:
+            return
+        zoomed = self._resize_img(width, height)
+        if self._width == width and self._height == height:
+            #Make sure this isn't an out of order execution.
+            self.zoomed_bmp = zoomed
+            self.zoomed_width = width
+    def maybe_scale_image(self):
+        #Always clear out the timer and previous scaled image, if set.
+        #if self.timer is not None:
+        self.zoomed_bmp = None      #if?
+        self.zoomed_width = None
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
+        #TODO: Maybe add other checks. There are various situations where there's no point in making a resized image
+        if (self._width == self._original_width or self._height == self._original_height):
+            return
+        if (self._width > self._original_width):
+            #Don't resize if zooming in. Need to figure out an appropriate cutoff
+            #In practice this is probably dependent on screen size.
+            return
+        self.timer = threading.Timer(0.2, self.delayed_resize, args=[self._width, self._height])
+        self.timer.start()
+
     def resize(self, width, height):
         #The actual resizing will be done on-demand by a matrix transformation.
         self._width = width
         self._height = height
+        #0.2 seconds after this is called, create a real resized image.
+        #Scaling via matrix is super quick. Panning a scaled image is not, unless low quality filter is used.
+        #This is intended as a compromise - do the initial scale quickly, in a background thread, create a higher-quality scaled image
+        #This should avoid both the stuttering from rapid resizing and from panning a scaled image.
+        if self.delay:
+            #This is still in the cache - immediately create the resized image in the current (cache) thread.
+            self.delayed_resize(self._width, self._height)
+        else:
+            self.maybe_scale_image()
         
+    #TODO: Replace with freeimage. Pretty sure it's faster at doing a simple resize.
     def _resize_img(self, width, height):
         imgpat = cairo.SurfacePattern(self.img)
         scaler = cairo.Matrix()
         scaler.scale(self._original_width / float(width), self._original_height / float(height))
         imgpat.set_matrix(scaler)
-        imgpat.set_filter(cairo.FILTER_BEST)
+        imgpat.set_filter(cairo.Filter.BEST)
         canvas = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context(canvas)
         ctx.set_source(imgpat)
@@ -103,18 +150,27 @@ class CairoImage(object):
         ctx = wxcairo.ContextFromDC(dc)
         imgpat = cairo.SurfacePattern(img)
         
+        wscale = self._original_width  / self._width 
+        hscale = self._original_height / self._height
+
         #Set quality for the scale. There are a few tricks that can be done with this.
-        #Panning needs to be fast, but scaling doesn't.
-        #Zooming in on a large image is faster than zooming out
-        quality = cairo.Filter.FAST
+        if (self.last_zoom != wscale or self.last_rot != self.rotation):
+            #This is a zoom change - panning needs to be fast, but scaling doesn't.
+            quality = cairo.Filter.GOOD
+        elif self._width > self._original_width:
+            #Zooming in on a large image is faster than zooming out
+            #This is kinda annoying, because the artifacts are a lot worse when zooming out.
+            quality = cairo.Filter.GOOD
+        else:
+            quality = cairo.Filter.FAST
+        self.last_zoom = wscale    #No real need to track both.
+        self.last_rot = self.rotation
         #FAST - A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST.
         #GOOD - A reasonable-performance filter, with quality similar to Cairo::BILINEAR.
         #BEST - The highest-quality available, performance may not be suitable for interactive use.
 
         matrix = cairo.Matrix()
         if img == self.img:
-            wscale = self._original_width  / self._width 
-            hscale = self._original_height / self._height
             matrix.scale(wscale, hscale)
             #I believe this has no effect if the scale isn't done. Rotation is always 90 degrees, which I assume is optimized.
             imgpat.set_filter(quality)

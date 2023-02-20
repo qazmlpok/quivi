@@ -25,13 +25,14 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - Holding down ctrl while using the scrollwheel zoom in/out on the mouse cursor's location (instead of the center of the image)
 - Added "Drag image" as an explicit command, instead of the default behavior of always dragging with left click. This means left click can be reassigned to a different action, such as Next image, and it will never attempt to move the image. The old behavior can be restored via an option in the Mouse tab.
 - Changed how the list of commands for keyboard/mouse are populated. Some commands are now marked as keyboard or mouse only. This technically removes functionality, but it makes the menu slightly easier to work with.
+- Reworked how Cairo resizes image. If Cairo is enabled, images will be rescaled via a matrix operation instead of creating a new image. This is massively faster for the initial zoom, but slower for panning. The current approach is to use a high-quality resample while zooming, but a fast resample while panning. In the background, a high-quality resized image is created and used for panning when it is available. This is (roughly) the same approach taken by Eye of Gnome. It should be possible to always smoothing scale/pan at high quality, as GIMP does this, but I haven't figured it out.
 
 
 # Removed features
 For the most part, existing functionality is being kept intact. A few things were dropped either due to difficulty porting the code from Python2 to Python3, or because they aren't needed any more.
 - Support for mangafox and onemanga was removed. Neither site is still active. The relevant code could be repurposed for other website(s) with a public API, but I would rather focus on being an offline reader.
 - *Embedded* RAR support was removed. RAR files can still be opened as long as winrar is installed. 
-- Internally, GDI and Cairo are no longer supported. These were only used to speed up image display. I was not able to get Cairo to work at all; GDI works except for webp. The speed difference between using GDI and not was negligible, so it has been disabled.
+- Internally, GDI is longer supported. I have not been able to get it to work with embedded files.
 
 # Porting progress
 Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that need to be cleaned up. It's also likely there's some real division that needs to be corrected. Some of the Unicode hacks were removed, but others may remain. Python3 should give much better Unicode support overall.
@@ -39,7 +40,7 @@ Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that
 - Updated to support Python 3.10.6
 - wx updated to 4.2.0
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
-- Image display supports GDI, Freeimage, and PIL (Pillow) works. Cairo is not supported.
+- Image display supports Freeimage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
 - Removed third party path utlity; pathlib (core Python module) is used instead.
 - Only minimal testing has been done in Linux. The console logs numerous warnings about key accelerators, but for the most part the app works (tested in Ubuntu)

@@ -31,10 +31,10 @@ DOUBLE_BUFFERING = True
 #However, it only supports basic image types and does not support files within zip archives.
 #Cairo would be used for the same on Linux, but I haven't been able to get it to work.
 if sys.platform == 'win32':
-    USE_FREEIMAGE = False
-    USE_PIL = True
+    USE_FREEIMAGE = True
+    USE_PIL = False
     USE_GDI_PLUS = False
-    USE_CAIRO = False
+    USE_CAIRO = True
     PATH_SEP = ';'
 else:
     USE_FREEIMAGE = True
