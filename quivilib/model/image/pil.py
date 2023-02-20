@@ -16,6 +16,7 @@ class PilImage(object):
     def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
         self.canvas_type = canvas_type
         self.delay = delay
+        print("PIL init.")
         
         if img is None:
             img = Image.open(f)
@@ -49,6 +50,7 @@ class PilImage(object):
             return wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
     
     def resize(self, width, height):
+        print("PIL resize.")
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:

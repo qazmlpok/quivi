@@ -68,7 +68,12 @@ class FreeImage(object):
             if self.zoomed_bmp:
                 self.zoomed_bmp = self.zoomed_bmp.convert_to_wx_bitmap(wx)
         self.delay = False
-        
+    
+    def rescale(self, width, height):
+        #TODO: Make sure this isn't called multiple times with the same dimensions.
+        #I don't want to actually store this in zoomed_bmp, but something similar is fine.
+        return self.img.rescale(width, height, fi.FILTER_BICUBIC)
+    
     def resize(self, width, height):
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None

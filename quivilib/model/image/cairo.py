@@ -3,8 +3,6 @@ from quivilib.util import rescale_by_size_factor
 
 import wx
 from wx.lib import wxcairo
-import pyfreeimage as fi
-from pyfreeimage import Image
 import cairo
 import threading
 
@@ -15,20 +13,16 @@ log = logging.getLogger('cairo')
 
 
 class CairoImage(object):
-    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
+    def __init__(self, canvas_type, src=None, img=None, delay=False):
         self.canvas_type = canvas_type
         
-        if img is None:
-            fi.library.load().reset_last_error()
-            img = Image.load_from_file(f, path)
-            try:
-                if img.transparent:
-                    img = img.composite(True)
-            except RuntimeError:
-                pass
+        if src is None:
+            raise Exception("Cairo must have a separate image loader.")
+            #if img.transparent:
+            #    img = img.composite(True)
             #img = img.convert_to_32_bits()
-            img = img.convert_to_cairo_surface(cairo)
-            
+        self.src = src
+        img = src.img.convert_to_cairo_surface(cairo)
         width = img.get_width()
         height = img.get_height()
         
@@ -122,19 +116,10 @@ class CairoImage(object):
             self.delayed_resize(self._width, self._height)
         else:
             self.maybe_scale_image()
-        
-    #TODO: Replace with freeimage. Pretty sure it's faster at doing a simple resize.
+
     def _resize_img(self, width, height):
-        imgpat = cairo.SurfacePattern(self.img)
-        scaler = cairo.Matrix()
-        scaler.scale(self._original_width / float(width), self._original_height / float(height))
-        imgpat.set_matrix(scaler)
-        imgpat.set_filter(cairo.Filter.BEST)
-        canvas = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-        ctx = cairo.Context(canvas)
-        ctx.set_source(imgpat)
-        ctx.paint()
-        return canvas
+        resized = self.src.rescale(width, height)
+        return resized.convert_to_cairo_surface(cairo)
         
     def resize_by_factor(self, factor):
         width = int(self._original_width * factor)
@@ -218,13 +203,6 @@ class CairoImage(object):
             return delayed_load
         else:
             return delayed_load()
-
-    #FreeImage is used to load the actual file.
-    def _get_extensions():
-        return fi.library.load().get_readable_extensions()
-    ext_list = _get_extensions()
-    def extensions():
-        return CairoImage.ext_list
 
     def close(self):
         pass
