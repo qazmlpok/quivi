@@ -24,6 +24,7 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - Holding down shift while using the scrollwheel will scroll horizontally.
 - Holding down ctrl while using the scrollwheel zoom in/out on the mouse cursor's location (instead of the center of the image)
 - Added "Drag image" as an explicit command, instead of the default behavior of always dragging with left click. This means left click can be reassigned to a different action, such as Next image, and it will never attempt to move the image. The old behavior can be restored via an option in the Mouse tab.
+    - Changed the default always drag behavior to have a threshold. If the mouse is moved more than x pixels, it is treated as a drag command. Otherwise it is a left button click (the other behavior was effectively a threshold of 0 pixels)
 - Changed how the list of commands for keyboard/mouse are populated. Some commands are now marked as keyboard or mouse only. This technically removes functionality, but it makes the menu slightly easier to work with.
 - Reworked how Cairo resizes image. If Cairo is enabled, images will be rescaled via a matrix operation instead of creating a new image. This is massively faster for the initial zoom, but slower for panning. The current approach is to use a high-quality resample while zooming, but a fast resample while panning. In the background, a high-quality resized image is created and used for panning when it is available. This is (roughly) the same approach taken by Eye of Gnome. It should be possible to always smoothing scale/pan at high quality, as GIMP does this, but I haven't figured it out.
 
@@ -37,7 +38,7 @@ For the most part, existing functionality is being kept intact. A few things wer
 # Porting progress
 Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that need to be cleaned up. It's also likely there's some real division that needs to be corrected. Some of the Unicode hacks were removed, but others may remain. Python3 should give much better Unicode support overall.
 
-- Updated to support Python 3.10.6
+- Updated to support Python 3.10.6. Minimum required version is Python 3.6 due to the use of fstrings.
 - wx updated to 4.2.0
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
 - Image display supports Freeimage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
