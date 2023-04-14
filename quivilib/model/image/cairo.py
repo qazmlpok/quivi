@@ -22,7 +22,7 @@ class CairoImage(object):
             #    img = img.composite(True)
             #img = img.convert_to_32_bits()
         self.src = src
-        img = src.img.convert_to_cairo_surface(cairo)
+        img = self.convert_to_cairo_surface(src.img)
         width = img.get_width()
         height = img.get_height()
         
@@ -65,7 +65,28 @@ class CairoImage(object):
         if self.rotation in (0, 2):
             return self._original_height
         return self._original_width
+    
+    def convert_to_cairo_surface(self, img):
+        """ Requests img data as bytes from the loaded image
+        Loads that data in as a cairo surface. Should work with either image loader.
+        """
+        srcImage = img
+        format = cairo.Format.ARGB32
+        width, height = img.width, img.height
+        stride = format.stride_for_width(width)
+        #Make sure PIL and FreeImage both have this.
+        #TODO: I can't get other cairo formats to work. But if I could, this would need to report
+        #the format, e.g. to allow changing to RGB24. See https://afrantzis.com/pixel-format-guide/cairo.html
+        #or https://github.com/afrantzis/pixel-format-guide/blob/master/pfg/cairo.py
+        img = img.maybeConvert32bit()
+        #Make sure PIL and FreeImage both have this.
+        bytes = img.convert_to_raw_bits(width_bytes=stride)
+        surface = cairo.ImageSurface.create_for_data(bytes, format, width, height)
         
+        if img is not srcImage:
+            del img
+        return surface
+    
     def delayed_load(self):
 #        if not self.delay:
 #            log.debug("delayed_load was called but delay was off")
@@ -119,7 +140,9 @@ class CairoImage(object):
 
     def _resize_img(self, width, height):
         resized = self.src.rescale(width, height)
-        return resized.convert_to_cairo_surface(cairo)
+        ret = self.convert_to_cairo_surface(resized)
+        #del resized
+        return ret
         
     def resize_by_factor(self, factor):
         width = int(self._original_width * factor)

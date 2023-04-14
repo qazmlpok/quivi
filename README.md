@@ -47,6 +47,9 @@ Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that
 - Only minimal testing has been done in Linux. The console logs numerous warnings about key accelerators, but for the most part the app works (tested in Ubuntu)
 - Tests haven't been modified, except for the automated conversion
 
+# Known Issues
+- 16-bit precision images do not work.
+
 # Missing translations
 The following text strings are new and have not been added to any of the translation files.
 

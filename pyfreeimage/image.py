@@ -73,6 +73,9 @@ class Image(object):
     @property
     def bpp(self):
         return self._lib.GetBPP(self._dib)
+        
+    def colortype(self):
+        return self._lib.GetColorType(self._dib)()
     
     @property
     def pitch(self):
@@ -133,6 +136,8 @@ class Image(object):
         else:
             #freeimage and cairo may use different stride values.
             width_bytes = max(width_bytes, self.width_bytes)
+        #Note - Stride: the number of bytes between the start of rows in the buffer as allocated.
+        #In other words, the length in bytes of a row in the image, _padded for alignment_
         buf = ctypes.create_string_buffer(self.height * width_bytes)
         buf_idx = ctypes.addressof(buf)
         for line_idx in range(self.height-1, -1, -1):
@@ -178,6 +183,19 @@ class Image(object):
         if img is not self:
             del img
         return surface
+    
+    def maybeConvert32bit(self):
+        """ Convert this image to 32 bit if it isn't already. This is needed because many operations
+        require 32 bit ARGB images.
+        TODO: Ideally conversions are only done if necessary, i.e. if the requestor can handle 8-bit
+        grayscale, add that as a parameter and don't convert it.
+        Possibly relevant (for cairo): https://stackoverflow.com/a/12384135 ?
+        TODO: Consider returning a wrapper class that supports with so the img can be auto-disposed
+        iff it was a clone.
+        """
+        if self.bpp != 32:
+            return self.convert_to_32_bits()
+        return self
     
     def rescale(self, width, height, resampling_filter):
         dib = self._lib.Rescale(self._dib, width, height, resampling_filter)

@@ -12,11 +12,49 @@ import wx
 
 
 
+class PilWrapper():
+    """ Wrapper class; used to store image data.
+    Adds a few functions to be consistent with FreeImage.
+    TODO: Add With support. Add an IsTemp to allow automatic disposal.
+    some methods may create a temporary object, which can just be removed automatically.
+    """
+    def __init__(self, img):
+        self.img = img
+        self.width = img.width
+        self.height = img.height
+    
+    def __getattr__(self, name):
+        return getattr(self.img, name)
+        
+    def getData(self):
+        bytes = self.img.tobytes()
+        return (self.width, self.height, bytes)
+    def maybeConvert32bit(self):
+        if self.img.mode != 'RGB':
+            return PilWrapper(self.img.convert('RGB'))
+        return self
+    def convert_to_raw_bits(self, width_bytes=None):
+        #width_bytes is ignored. Should it be?
+        im = self.img
+        if 'A' not in im.getbands():
+            im = im.copy()
+            im.putalpha(256)
+        arr = bytearray(im.tobytes('raw', 'BGRa'))
+        if im is not self.img:
+            del im
+        return arr
+    def rescale(self, width, height):
+        #I think this needs to return self if the width/height are the same.
+        img = self.img.resize((width, height), Image.BICUBIC)
+        return PilWrapper(img)
+    def __del__(self):
+        if self.img:
+            del self.img
+
 class PilImage(object):
     def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
         self.canvas_type = canvas_type
         self.delay = delay
-        print("PIL init.")
         
         if img is None:
             img = Image.open(f)
@@ -28,7 +66,7 @@ class PilImage(object):
         self.original_width = self.width = img.size[0]
         self.original_height = self.height = img.size[1]
         
-        self.img = img
+        self.img = PilWrapper(img)
         self.zoomed_bmp = None
         self.rotation = 0
         
@@ -49,15 +87,15 @@ class PilImage(object):
         else:
             return wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
     
+    def rescale(self, width, height):
+        #Wrapper (needed for Cairo)
+        return self.img.rescale(width, height)
     def resize(self, width, height):
-        print("PIL resize.")
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:
-            img = self.img.resize((width, height), Image.BICUBIC)
-            w, h = img.size
-            s = img.tobytes()
-            del img
+            wrapper = self.img.rescale(width, height)
+            (w, h, s) = wrapper.getData()
             if self.delay:
                 #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
                 self.zoomed_bmp = (w, h, s)
