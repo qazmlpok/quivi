@@ -1,4 +1,5 @@
 Pillow>=8.3.1
+attrdict3>=2.0.2
 wxPython>=4.1.0
 PyPubSub>=4.0.0
 pywin32>=304;platform_system == "Windows"

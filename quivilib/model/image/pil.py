@@ -18,6 +18,7 @@ class PilWrapper():
     TODO: Add With support. Add an IsTemp to allow automatic disposal.
     some methods may create a temporary object, which can just be removed automatically.
     """
+
     def __init__(self, img):
         self.img = img
         self.width = img.width
@@ -55,10 +56,20 @@ class PilImage(object):
     def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
         self.canvas_type = canvas_type
         self.delay = delay
-        
+
+        #Used to convert 16-bit int precision images to 8-bit.
+        #PIL's behavior is to truncate, which is not useful.
+        #Remove this if that ever changes. It's been reported, and it sounds like they
+        #stopped truncating, but it's still doing it.
+        def lookup(x):
+            return x / 256
+
         if img is None:
             img = Image.open(f)
-            if img.mode != 'RGB':
+            if img.mode == 'I':    #16-bit precision
+                #return img.point(PilImage.PixelLookup, 'RGB')
+                img = img.point(lookup, 'RGB')
+            elif img.mode != 'RGB':
                 img = img.convert('RGB')
         
         self.bmp = self._img_to_bmp(img)
