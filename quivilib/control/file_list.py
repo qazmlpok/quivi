@@ -1,4 +1,9 @@
+import sys
+from pathlib import Path
+import logging
 
+from pubsub import pub as Publisher
+import wx
 
 from quivilib.i18n import _
 from quivilib import meta
@@ -8,14 +13,8 @@ from quivilib.model.container.directory import DirectoryContainer
 from quivilib.model.container.compressed import CompressedContainer
 from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from quivilib.control.cache import ImageCacheLoadRequest
-from pathlib import Path
-
-from pubsub import pub as Publisher
 from quivilib.meta import PATH_SEP
-import wx
 
-import sys
-import logging
 log = logging.getLogger('control.file_list')
 
 

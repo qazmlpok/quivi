@@ -1,18 +1,15 @@
-
-
-from quivilib.i18n import _
-from quivilib import util
-
 import wx
 import wx.lib.colourselect as csel
 from pubsub import pub as Publisher
+
+from quivilib.i18n import _
+from quivilib import util
 
 #TODO: (1,3) Refactor: the whole preview_panel and the main window's panel can be
 #      refactored into a single class
 
 
 class WallpaperDialog(wx.Dialog):
-    
     def __init__(self, parent, choices, background_color):
         # begin wxGlade: WallpaperDialog.__init__
         wx.Dialog.__init__(self, parent=parent)

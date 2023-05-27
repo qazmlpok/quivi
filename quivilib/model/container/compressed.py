@@ -1,26 +1,22 @@
+import sys, os
+import io
+import zipfile
+from pathlib import Path
+from zipfile import ZipFile as PyZipFile
+from datetime import datetime
 
-
+from pubsub import pub as Publisher
 from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
-from pathlib import Path
-
-from pubsub import pub as Publisher
 from quivilib.meta import PATH_SEP
-
-import sys, os
-import zipfile
-from zipfile import ZipFile as PyZipFile
-import io
-from datetime import datetime
-
 import quivilib.tempdir as tempdir
+
 
 #if sys.platform == 'win32':
 #    from quivilib.thirdparty.UnRAR import Archive
 #else:
 #    from quivilib.thirdparty.rarfile import RarFile as PyRarFile
-
 
 
 def _copy_files(f_read, f_write):

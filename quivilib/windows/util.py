@@ -1,7 +1,6 @@
-import wx
 import sys
 import ctypes
-
+import wx
 
 
 def get_icon_for_extension(extension, small=True):

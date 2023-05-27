@@ -1,7 +1,9 @@
-
-
 #TODO: (2,2) Improve: change the command listbox into a listctrl with columns:
 #    (Category / Command / Assigned shortcuts)
+
+import wx
+from pubsub import pub as Publisher
+from wx.lib import langlistctrl
 
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
@@ -9,10 +11,6 @@ from quivilib.model.command import Command
 from quivilib.model.settings import Settings
 import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
-
-import wx
-from pubsub import pub as Publisher
-from wx.lib import langlistctrl
 
 WINDOW_SIZE = (400, 460)
 

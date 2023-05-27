@@ -1,7 +1,9 @@
-
-
 #TODO: (2,3) Refactor: this module and classes were poorly named.
 #    this is actually about commands, and not the menu.
+from functools import partial
+
+import wx
+from pubsub import pub as Publisher
 
 from quivilib.i18n import _
 from quivilib.model.command import Command, CommandCategory
@@ -9,13 +11,7 @@ from quivilib.model.shortcut import Shortcut
 from quivilib.control import canvas
 from quivilib.model.settings import Settings
 
-import wx
-from pubsub import pub as Publisher
-
-from functools import partial
-
 SHORTCUTS_KEY = 'Shortcuts'
-
 
 
 class MenuController(object):

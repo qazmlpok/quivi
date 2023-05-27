@@ -1,17 +1,11 @@
+import traceback
+import logging as log
+from functools import partial
 
-
+from pubsub import pub as Publisher
 from quivilib.model.settings import Settings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
-
-from pubsub import pub as Publisher
-
-from functools import partial
-import sys
-import traceback
-import logging as log
-    
-
 
 
 class Canvas(object):

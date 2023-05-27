@@ -1,4 +1,10 @@
+import sys
+from pathlib import Path
+import logging as log
+import traceback
 
+import wx
+from pubsub import pub as Publisher
 
 from quivilib import meta
 from quivilib.model import App
@@ -14,19 +20,8 @@ from quivilib.control.cache import ImageCache
 from quivilib.control.check_update import UpdateChecker
 from quivilib.control.i18n import I18NController
 from quivilib.model.favorites import Favorite
-from pathlib import Path
 from quivilib import util
-
 import quivilib.tempdir as tempdir
-
-import wx
-from pubsub import pub as Publisher
-
-import string
-import logging as log
-import traceback
-import sys
-
 
 
 class MainController(object):
@@ -251,7 +246,6 @@ class MainController(object):
             self.settings.set('Update', 'LastCheck', check_time)
 
     def on_settings_corrupt(self, *, backupFilename):
-        import wx
         from quivilib.i18n import _
         if backupFilename is not None:
             msg = _('The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s.') % backupFilename
@@ -322,4 +316,3 @@ class MainController(object):
         if not start_dir:
             start_dir = Path(wx.StandardPaths.Get().GetDocumentsDir())
         return start_dir
-

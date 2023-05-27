@@ -1,15 +1,11 @@
-
-
+import logging
+import wx
+from PIL import Image
 from quivilib.util import rescale_by_size_factor
 
-from PIL import Image
-import logging
 log = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
 logging.getLogger("PIL").setLevel(logging.ERROR)
-
-import wx
-
 
 
 class PilWrapper():
@@ -162,10 +158,12 @@ class PilImage(object):
         #TODO: Implement delayed_fn. See freeimage.
         return bmp
 
+    @staticmethod
     def _get_extensions():
         return list(Image.registered_extensions().keys())
     ext_list = _get_extensions()
     
+    @staticmethod
     def extensions():
         return PilImage.ext_list
 

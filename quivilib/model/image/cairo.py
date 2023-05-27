@@ -1,13 +1,11 @@
-
-from quivilib.util import rescale_by_size_factor
-
-import wx
-from wx.lib import wxcairo
-import cairo
 import threading
-
 import math
 import logging
+
+import cairo
+import wx
+from wx.lib import wxcairo
+from quivilib.util import rescale_by_size_factor
 
 log = logging.getLogger('cairo')
 

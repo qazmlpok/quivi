@@ -1,13 +1,9 @@
-
+import wx
+from pubsub import pub as Publisher
 
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.control.options import get_fit_choices
-
-import wx
-from pubsub import pub as Publisher
-
-
 
 ZOOM_FACTOR = 25
 

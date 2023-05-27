@@ -1,16 +1,11 @@
-
-
-from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from pathlib import Path
+from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 
 
 supported_extensions = []
-
 def get_supported_extensions():
     return ['.rar', '.zip', '.cbr', '.cbz']
-    
 supported_extensions = get_supported_extensions()
-
 
 
 class UnsupportedPathError(Exception):
@@ -75,8 +70,6 @@ class Item(object):
     def __str__(self):
         return str(self.path)
     __repr__ = __str__
-
-
 
 
 class SortOrder(object):

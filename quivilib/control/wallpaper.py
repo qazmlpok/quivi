@@ -1,31 +1,27 @@
-
-
 #TODO: (1,3) Add: option to detect best background color
 #TODO: (3,4) Add: multiple monitor support
 
-from quivilib.i18n import _
+import sys
+import re
 from pathlib import Path
+import logging as log
+from subprocess import Popen, PIPE, call
+
+import wx
+from pubsub import pub as Publisher
+
+from quivilib.i18n import _
 from quivilib.model.canvas import Canvas
 from quivilib.model.settings import Settings
 from quivilib.control.canvas import CanvasController
 import pyfreeimage as fi
 from quivilib.model.image.freeimage import FreeImage
 
-import wx
-from pubsub import pub as Publisher
-
-import sys
-import re
-import logging as log
-from subprocess import Popen, PIPE, call
-
-
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
 #This list should reflect the list in open_dialog (same order)
 positions = (Settings.FIT_SCREEN_NONE, Settings.FIT_TILED,
              Settings.FIT_SCREEN_CROP_EXCESS,
              Settings.FIT_SCREEN_SHOW_ALL)
-
 
 
 class WallpaperController(object):

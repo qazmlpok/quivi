@@ -1,20 +1,20 @@
-from quivilib.model import image
-from quivilib.model.container import Item
-from quivilib import util
-from quivilib.util import error_handler
-from quivilib.gui.file_list_view.base import FileListViewBase
+import logging
+import threading
+
+from pubsub import pub as Publisher
+import wx
 from wx.lib.agw import thumbnailctrl as tc
 import wx.lib.agw.scrolledthumbnail as st
 from wx.lib.agw.thumbnailctrl import (
     THUMB_OUTLINE_FULL, THUMB_OUTLINE_IMAGE, THUMB_OUTLINE_NONE,
     THUMB_OUTLINE_RECT)
 
-import wx
-from pubsub import pub as Publisher
+from quivilib.model import image
+from quivilib.model.container import Item
+from quivilib import util
+from quivilib.util import error_handler
+from quivilib.gui.file_list_view.base import FileListViewBase
 
-import threading
-import math
-import logging
 log = logging.getLogger('thumb')
 
 OldScrolledThumbnail = None

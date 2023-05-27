@@ -1,12 +1,7 @@
-
+from pubsub import pub as Publisher
 
 from quivilib.i18n import _
 from quivilib.model.settings import Settings
-
-import wx
-from pubsub import pub as Publisher
-
-
 
 #TODO: (1,2) Improve: when setting start dir, check if it is a special folder
 #    and if it is, save a reference (e.g. %DocumentsDir%) to it instead of the
@@ -24,7 +19,6 @@ def get_fit_choices():
                        (_("Custom width"), Settings.FIT_CUSTOM_WIDTH),
                        ]
     return fit_choices
-
 
 
 class OptionsController(object):

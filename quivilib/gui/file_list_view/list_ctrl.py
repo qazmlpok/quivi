@@ -1,19 +1,17 @@
+import sys
+import wx
+from pubsub import pub as Publisher
+
 from quivilib.gui.file_list_view.base import FileListViewBase
 from quivilib.i18n import _
 from quivilib.util import error_handler
 from quivilib.model.container import SortOrder
 from quivilib.util import get_icon_for_extension, get_icon_for_directory
 
-import wx
-from pubsub import pub as Publisher
-
-import sys
-
-
 def _handle_error(exception, args, kwargs):
     self = args[0]
     self.handle_error(exception)
-    
+
 
 class FileList(wx.ListCtrl, FileListViewBase):
     def __init__(self, parent):
@@ -195,4 +193,3 @@ class FileList(wx.ListCtrl, FileListViewBase):
 
     def show(self):
         pass
-

@@ -1,14 +1,13 @@
+from pathlib import Path
+import operator
 
+from pubsub import pub as Publisher
+from natsort import natsort_keygen, ns
 
 from quivilib.model.container import Item
 from quivilib.model.container import SortOrder
 from quivilib.model.container import UnsupportedPathError
 
-import operator
-
-from pubsub import pub as Publisher
-from pathlib import Path
-from natsort import natsort_keygen, ns
 
 class BaseContainer(object):
     def __init__(self, sort_order, show_hidden):
@@ -164,4 +163,3 @@ class BaseContainer(object):
     
     def _list_paths(self):
         raise NotImplementedError()
-

@@ -1,12 +1,9 @@
-
-
 import sys
 import logging
 import wx
 from quivilib.util import rescale_by_size_factor
 
 log = logging.getLogger('gdiplus')
-
 
 
 if sys.platform == 'win32':
@@ -34,7 +31,6 @@ if sys.platform == 'win32':
     StartupInput = GdiplusStartupInput()
     token = ctypes.c_ulong()
     gdiplus.GdiplusStartup(ctypes.pointer(token), ctypes.pointer(StartupInput), None)
-
 
 
 class _GdiPlusInnerImage(object):
@@ -211,7 +207,7 @@ class GdiPlusImage(object):
     
     def close(self):
         self.img = None
-            
+
     def _get_rotated_coords(self, x, y, w, h):
         if self.rotation == 0:
             return x, y, x + w, y, x, y + h
@@ -223,4 +219,3 @@ class GdiPlusImage(object):
             return x, y + w, x, y, x + h, y + w 
         else:
             assert False, "invalid rotation"
-

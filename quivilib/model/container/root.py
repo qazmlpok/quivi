@@ -1,11 +1,10 @@
-
+from pathlib import Path
+from pubsub import pub as Publisher
 
 from quivilib.i18n import _
 from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
-from pathlib import Path
 
-from pubsub import pub as Publisher
 
 try:
     from win32api import GetLogicalDriveStrings
@@ -40,4 +39,3 @@ class RootContainer(BaseContainer):
     @property
     def universal_path(self):
         return None
-

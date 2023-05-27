@@ -1,12 +1,13 @@
+import logging
+from configparser import SafeConfigParser, NoOptionError, NoSectionError
+from pathlib import Path
 from quivilib import util
 
 from quivilib.i18n import _
 from quivilib.model.image import get_supported_extensions
-from pathlib import Path
 
-from configparser import SafeConfigParser, NoOptionError, NoSectionError
-import logging
 log = logging
+
 try:
     import winreg as reg
 except ImportError:
@@ -24,7 +25,6 @@ PROG_ID_NAME = 'Quivi'
 CONFIG_INI = 'config.ini'
 
 SOFTWARE_CLASSES = 'Software\\Classes\\'
-
 
 
 def parse_command_line(argv, main_script):

@@ -1,15 +1,12 @@
-
-
+import sys
+import logging as log
+import locale
+import traceback
 from pathlib import Path
 
 import wx
 from pubsub import pub as Publisher
 
-import sys
-import logging as log
-import traceback
-
-import locale
 
 class I18NController(object):
     def __init__(self, control, settings):
@@ -65,7 +62,7 @@ class I18NController(object):
         return self._language
     
     language = property(get_laguage, set_language)
-                
+
     @property
     def available_languages(self):
         langs = []
@@ -87,6 +84,3 @@ class I18NController(object):
         if wx.LANGUAGE_ENGLISH_US not in langs:
             langs.append(wx.LANGUAGE_ENGLISH_US)
         return langs
- 
-
-

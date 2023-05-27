@@ -1,17 +1,10 @@
-
-
-from pathlib import Path
-
-import wx
-import re
 import sys
+from pathlib import Path
 from functools import update_wrapper
 import traceback
 import locale
 import string
-
-
-
+import wx
 
 def get_icon_for_extension(ext, small=True):
     if sys.platform == 'win32':

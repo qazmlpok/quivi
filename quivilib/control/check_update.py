@@ -1,19 +1,16 @@
-
-
-from quivilib import meta
-
-from pubsub import pub as Publisher
-import wx
-
 from threading import Thread
 from datetime import datetime
 import traceback
 import logging
+
+from pubsub import pub as Publisher
+import wx
+
+from quivilib import meta
+
 log = logging.getLogger('check_update')
 
-
 _DATE_FMT = '%Y-%m-%d %H:%M'
-
 
 
 def _is_version_newer(last, current):
@@ -21,9 +18,7 @@ def _is_version_newer(last, current):
     current = [int(n) for n in current.split('.')]
     return last > current 
 
-
 class UpdateChecker(object):
-    
     def __init__(self, settings):
         self.settings = settings
         self.thread = Thread(target=self.run, daemon=True)
@@ -54,11 +49,11 @@ class UpdateChecker(object):
             
     def _get_update_info(self, url):
         import urllib.request, urllib.error, urllib.parse
-        f = urllib.request.urlopen(url)
-        txt = f.read()
-        txt = txt.decode('utf-8')
-        last_update, down_url = txt.split()[0:2]
-        return last_update, down_url
+        with urllib.request.urlopen(url) as f:
+            txt = f.read()
+            txt = txt.decode('utf-8')
+            last_update, down_url = txt.split()[0:2]
+            return last_update, down_url
 
     def _check_update(self, last_update, down_url):
         notify = _is_version_newer(last_update, meta.VERSION)

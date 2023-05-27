@@ -1,12 +1,10 @@
-
-from quivilib.gui.file_list_view.list_ctrl import FileList
-from quivilib.gui.file_list_view import thumb as tc
-from quivilib.gui import art
-
 import wx
 import wx.lib.agw.buttonpanel as bp
 from pubsub import pub as Publisher
 
+from quivilib.gui.file_list_view.list_ctrl import FileList
+from quivilib.gui.file_list_view import thumb as tc
+from quivilib.gui import art
 
 def _handle_error(exception, args, kwargs):
     self = args[0]

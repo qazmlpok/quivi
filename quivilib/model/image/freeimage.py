@@ -1,19 +1,15 @@
+import sys
+import logging
 
+import wx
+import pyfreeimage as fi
 
+from pyfreeimage import Image
 from quivilib.i18n import _
 from quivilib.util import add_exception_custom_msg
 from quivilib.util import rescale_by_size_factor
 
-import pyfreeimage as fi
-from pyfreeimage import Image
-
-import wx
-
-import sys
-import logging
-
 log = logging.getLogger('freeimage')
-
 
 
 class FreeImage(object):

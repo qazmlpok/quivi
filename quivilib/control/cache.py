@@ -1,20 +1,15 @@
-
-
+import logging
+import traceback
+from threading import Thread, Lock, Semaphore
+from queue import Queue
+from pubsub import pub as Publisher
+import wx
 from quivilib import meta
 from quivilib.model.canvas import Canvas
 from quivilib.util import synchronized_method
 
-from pubsub import pub as Publisher
-import wx
-
-from threading import Thread, Lock, Semaphore
-from queue import Queue
-import logging
-import traceback
-
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)
-
 
 
 class ImageCacheLoadRequest(object):

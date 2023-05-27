@@ -1,11 +1,6 @@
-
-
-from quivilib.model.container import SortOrder
-
 from configparser import SafeConfigParser, ParsingError
-
 from pubsub import pub as Publisher
-
+from quivilib.model.container import SortOrder
 
 
 class Settings(SafeConfigParser):

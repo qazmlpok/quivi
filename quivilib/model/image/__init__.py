@@ -1,11 +1,8 @@
-
-
-from quivilib import meta
-
 import logging as log
 import traceback
 import sys
 
+from quivilib import meta
 
 
 IMG_CLASSES = []
@@ -22,7 +19,6 @@ if meta.USE_PIL:
 if meta.USE_FREEIMAGE:
     from quivilib.model.image.freeimage import FreeImage
     IMG_LOAD_CLASSES.append(FreeImage)
-
 
 
 supported_extensions = []

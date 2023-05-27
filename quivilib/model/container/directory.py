@@ -1,16 +1,13 @@
-
-
-from quivilib.model.container.base import BaseContainer
-from quivilib.model.container.root import RootContainer
-from pathlib import Path
-
-from pubsub import pub as Publisher
-
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
+from pubsub import pub as Publisher
 
-    
+from quivilib.model.container.base import BaseContainer
+from quivilib.model.container.root import RootContainer
+
+
 def _is_hidden(path):
     if sys.platform == 'win32':
         import win32api

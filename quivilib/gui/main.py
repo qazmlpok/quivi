@@ -1,35 +1,29 @@
-
-from quivilib.control.options import get_fit_choices
+import traceback
+import logging as log
+from pathlib import Path
 
 import wx
 import wx.aui
 from pubsub import pub as Publisher
 
+from quivilib.control.options import get_fit_choices
 from quivilib.i18n import _
 from quivilib import meta
 from quivilib.util import error_handler
 from quivilib.gui.file_list import FileListPanel
-from pathlib import Path
 from quivilib.resources import images
 from quivilib import util
-
-import traceback
-import logging as log
 
 ZOOM_FIELD = 2
 SIZE_FIELD = 1
 FIT_FIELD = 3
 
-
-
 def _handle_error(exception, args, kwargs):
     self = args[0]
     self.handle_error(exception)
-    
 
 
 class MainWindow(wx.Frame):
-
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=-1, title=meta.APPNAME)
         self.aui_mgr = wx.aui.AuiManager()

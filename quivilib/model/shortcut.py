@@ -1,7 +1,4 @@
-
-
 from quivilib.gui.hotkeyctrl import GetAcceleratorName
-
 
 
 class Shortcut(object):
