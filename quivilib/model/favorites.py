@@ -17,17 +17,19 @@ class Favorites(object):
         if config:
             self.load(config)
         Publisher.subscribe(self.on_container_opened, 'container.opened')
-        
+
     def insert(self, fav):
         self._favorites[fav.getKey()] = fav
         self._ordered.append(fav)
-        
+
     def remove(self, path, is_placeholder=False):
-        del self._favorites[(path, is_placeholder)]
-        for fav in self._ordered:
-            if str(fav.path) == str(path) and fav.is_placeholder() == is_placeholder:
-                self._ordered.remove(fav)
-        
+        key = (path, is_placeholder,)
+        if key in self._favorites:
+            del self._favorites[key]
+            for fav in self._ordered:
+                if str(fav.path) == str(path) and fav.is_placeholder() == is_placeholder:
+                    self._ordered.remove(fav)
+
     def contains(self, path, is_placeholder=False):
         return (path, is_placeholder) in self._favorites
     def getFavorite(self, path, is_placeholder=False):

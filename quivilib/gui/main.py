@@ -318,32 +318,36 @@ class MainWindow(wx.Frame):
     
     def on_favorites_changed(self, *, favorites):
         favorites_menu = self.menus['fav']
-        
-        #self._favorite_menu_count is the number of submenus in the favorites menu;
-        #      entries bigger than this are the favorites themselves.
-        while favorites_menu.GetMenuItemCount() > self._favorite_menu_count:
-            menu = favorites_menu.FindItemByPosition(self._favorite_menu_count)
-            favorites_menu.Delete(menu)
-        items = favorites.getitems()
-        if items:
-            favorites_menu.AppendSeparator()
-        self.favorites_menu_items = []
-        i = 0
-        for path_key, fav in items:
-            ide = wx.NewId()
-            def event_fn(event, favorite=fav):
-                try:
-                    Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
-                except Exception as e:
-                    self.handle_error(e)
-            
-            name = fav.displayText()
-            if not name:
-                continue
-            favorites_menu.Append(ide, name)
-            self.favorites_menu_items.append((ide, name))
-            self.Bind(wx.EVT_MENU, event_fn, id=ide)
-            i += 1
+        self.menu_bar.Freeze()
+        try:
+            #self._favorite_menu_count is the number of submenus in the favorites menu;
+            #      entries bigger than this are the favorites themselves.
+            while favorites_menu.GetMenuItemCount() > self._favorite_menu_count:
+                menu = favorites_menu.FindItemByPosition(self._favorite_menu_count)
+                favorites_menu.Delete(menu)
+            items = favorites.getitems()
+            if items:
+                favorites_menu.AppendSeparator()
+            self.favorites_menu_items = []
+            i = 0
+            for path_key, fav in items:
+                ide = wx.NewId()
+                def event_fn(event, favorite=fav):
+                    try:
+                        Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
+                    except Exception as e:
+                        self.handle_error(e)
+                
+                name = fav.displayText()
+                if not name:
+                    continue
+                favorites_menu.Append(ide, name)
+                self.favorites_menu_items.append((ide, name))
+                self.Bind(wx.EVT_MENU, event_fn, id=ide)
+                i += 1
+        finally:
+            self.menu_bar.Thaw()
+            pass
 
     def on_menu_labels_changed(self, *, main_menu, commands, accel_table):
         self.accel_table = accel_table
