@@ -107,7 +107,7 @@ def synchronized_method(lock_name):
     return decorator
 
 def get_formatted_zoom(zoom):
-    text = locale.format('%5.2f', zoom * 100)
+    text = locale.format_string('%5.2f', zoom * 100)
     for i in range(len(text)):
         if text[-1] == '0':
             text = text[:-1]

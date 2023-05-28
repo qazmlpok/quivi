@@ -1,12 +1,9 @@
-
-
-import pyfreeimage.library as library
-import pyfreeimage.constants as CO
-from pyfreeimage.buffer import FileIO
-
 import ctypes
 import logging as log
 
+from pyfreeimage import library
+import pyfreeimage.constants as CO
+from pyfreeimage.buffer import FileIO
 
 
 class Image(object):
@@ -150,35 +147,35 @@ class Image(object):
         #TODO: (1,4) Improve: handle another types of bitmaps
         if self.bpp == 32:
             img = self
-            format = wx.BitmapBufferFormat_ARGB32
+            img_format = wx.BitmapBufferFormat_ARGB32
         #elif self.bpp == 24:
         #Sigh. Still not working correctly.
         #    img = self
-        #    format = wx.BitmapBufferFormat_RGB
+        #    img_format = wx.BitmapBufferFormat_RGB
         else:
             img = self.convert_to_32_bits()
-            format = wx.BitmapBufferFormat_ARGB32
+            img_format = wx.BitmapBufferFormat_ARGB32
         width, height, bpp, pitch = img.width, img.height, img.bpp, img.pitch
         buf = img.convert_to_raw_bits()
         if img is not self:
             del img
         bmp = wx.Bitmap(width, height, bpp)
-        bmp.CopyFromBuffer(buf, format, pitch)
+        bmp.CopyFromBuffer(buf, img_format, pitch)
         return bmp
     
     def convert_to_cairo_surface(self, cairo):
         img = self
-        format = cairo.Format.ARGB32
+        img_format = cairo.Format.ARGB32
         if self.bpp == 8:
             #In theory this can be done to avoid a conversion... but it's not working. It inverts the colors.
-            #format = cairo.Format.A8
+            #img_format = cairo.Format.A8
             img = self.convert_to_32_bits()
         elif self.bpp != 32:
             img = self.convert_to_32_bits()
-        stride = format.stride_for_width(img.width)
+        stride = img_format.stride_for_width(img.width)
         width, height = img.width, img.height
-        bytes = img.convert_to_raw_bits(width_bytes=stride)
-        surface = cairo.ImageSurface.create_for_data(bytes, format, width, height)
+        b = img.convert_to_raw_bits(width_bytes=stride)
+        surface = cairo.ImageSurface.create_for_data(b, img_format, width, height)
         
         if img is not self:
             del img
@@ -279,4 +276,3 @@ class Image(object):
         if self._dib:
             self._lib.Unload(self._dib)
             del self._dib
-

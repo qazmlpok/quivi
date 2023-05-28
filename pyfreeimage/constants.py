@@ -183,33 +183,33 @@ string: type, args and extension
 
 """
 
-extToType = dict(
-             tiff       = (FIF_TIFF, TIFF_DEFAULT,          '.tif'),
-             tiffg3     = (FIF_TIFF, TIFF_CCITTFAX3,        '.tif'),
-             tiffg4     = (FIF_TIFF, TIFF_CCITTFAX4,        '.tif'),
-             tiffno     = (FIF_TIFF, TIFF_NONE,             '.tif'),
+extToType = {
+             "tiff"   : (FIF_TIFF, TIFF_DEFAULT,          '.tif'),
+             "tiffg3" : (FIF_TIFF, TIFF_CCITTFAX3,        '.tif'),
+             "tiffg4" : (FIF_TIFF, TIFF_CCITTFAX4,        '.tif'),
+             "tiffno" : (FIF_TIFF, TIFF_NONE,             '.tif'),
              
-             jpeg       = (FIF_JPEG, JPEG_DEFAULT,          '.jpg'),
-             jpegfa     = (FIF_JPEG, JPEG_FAST,             '.jpg'),
-             jpegac     = (FIF_JPEG, JPEG_ACCURATE,         '.jpg'),
-             jpegsu     = (FIF_JPEG, JPEG_QUALITYSUPERB,    '.jpg'),
-             jpeggo     = (FIF_JPEG, JPEG_QUALITYGOOD,      '.jpg'),
-             jpegav     = (FIF_JPEG, JPEG_QUALITYAVERAGE,   '.jpg'),
-             jpegba     = (FIF_JPEG, JPEG_QUALITYBAD,       '.jpg'),
+             "jpeg"   : (FIF_JPEG, JPEG_DEFAULT,          '.jpg'),
+             "jpegfa" : (FIF_JPEG, JPEG_FAST,             '.jpg'),
+             "jpegac" : (FIF_JPEG, JPEG_ACCURATE,         '.jpg'),
+             "jpegsu" : (FIF_JPEG, JPEG_QUALITYSUPERB,    '.jpg'),
+             "jpeggo" : (FIF_JPEG, JPEG_QUALITYGOOD,      '.jpg'),
+             "jpegav" : (FIF_JPEG, JPEG_QUALITYAVERAGE,   '.jpg'),
+             "jpegba" : (FIF_JPEG, JPEG_QUALITYBAD,       '.jpg'),
              
-             png        = (FIF_PNG,  PNG_DEFAULT,           '.png'),
+             "png"    : (FIF_PNG,  PNG_DEFAULT,           '.png'),
 
-             bmp        = (FIF_BMP,  BMP_DEFAULT,           '.bmp'),
+             "bmp"    : (FIF_BMP,  BMP_DEFAULT,           '.bmp'),
 
-             ico        = (FIF_ICO,  ICO_DEFAULT,           '.ico'),
+             "ico"    : (FIF_ICO,  ICO_DEFAULT,           '.ico'),
 
-             gif        = (FIF_GIF,  GIF_DEFAULT,           '.gif'),
+             "gif"    : (FIF_GIF,  GIF_DEFAULT,           '.gif'),
 
-             pbm        = (FIF_PBM,  PNM_DEFAULT,           '.pbm'),
-             pgm        = (FIF_PGM,  PNM_DEFAULT,           '.pgm'),
-             pnm        = (FIF_PPM,  PNM_DEFAULT,           '.pnm'),
-             ppm        = (FIF_PPM,  PNM_DEFAULT,           '.ppm'),
-        )
+             "pbm"    : (FIF_PBM,  PNM_DEFAULT,           '.pbm'),
+             "pgm"    : (FIF_PGM,  PNM_DEFAULT,           '.pgm'),
+             "pnm"    : (FIF_PPM,  PNM_DEFAULT,           '.pnm'),
+             "ppm"    : (FIF_PPM,  PNM_DEFAULT,           '.ppm'),
+        }
 
 
 #Internal C structures
@@ -464,7 +464,7 @@ class FISize(object):
     def __repr__(self):
         """
         """
-        return "FISize (%i, %i)" % (self.getWidth(), self.getHeight())
+        return f"FISize ({self.getWidth()}, {self.getHeight()})"
 
     def __len__(self):
         """
@@ -477,14 +477,17 @@ class FISize(object):
         yield self.__W
         yield self.__H
     
-    def __eq__(self, object):
+    def __eq__(self, other):
         """
         """
-        if not isinstance(object, FISize):
+        if not isinstance(other, FISize):
             return False
         else:
-            #print object.w == self.getWidth(), object.h == self.getHeight()
-            return object.w == self.getWidth() and object.h == self.getHeight()
+            #print other.w == self.getWidth(), other.h == self.getHeight()
+            return other.w == self.getWidth() and other.h == self.getHeight()
+    
+    def __hash__(self):
+        return hash(self.__W, self.__H)
     
     w = property(getWidth)
     h = property(getHeight)
@@ -513,10 +516,13 @@ class FIPoint(object):
     def getPoint(self):
         return (self.__X, self.__Y)
     
-    def __eq__(self, object):
+    def __eq__(self, other):
         """
         """
-        print("point", object)
+        print("point", other)
+        
+    def __hash__(self):
+        return hash(self.__X, self.__Y)
     
     def __repr__(self):
         """

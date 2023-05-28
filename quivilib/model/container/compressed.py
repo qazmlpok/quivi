@@ -10,8 +10,7 @@ from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.meta import PATH_SEP
-import quivilib.tempdir as tempdir
-
+from quivilib import tempdir
 
 #if sys.platform == 'win32':
 #    from quivilib.thirdparty.UnRAR import Archive

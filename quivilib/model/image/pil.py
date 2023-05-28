@@ -24,8 +24,8 @@ class PilWrapper():
         return getattr(self.img, name)
         
     def getData(self):
-        bytes = self.img.tobytes()
-        return (self.width, self.height, bytes)
+        b = self.img.tobytes()
+        return (self.width, self.height, b)
     def maybeConvert32bit(self):
         if self.img.mode != 'RGB':
             return PilWrapper(self.img.convert('RGB'))
@@ -149,8 +149,7 @@ class PilImage(object):
 
     def create_thumbnail(self, width, height, delay):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
-        if factor > 1:
-            factor = 1
+        factor = min(factor, 1)
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         img = self.img.resize((width, height), Image.BICUBIC)

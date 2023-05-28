@@ -181,8 +181,8 @@ class FileIO(IO):
     def ReadProc(self, buffer, size, count):
         try:
             read = self._file.read
-        except AttributeError:
-            raise IOAttributeError("Unsupported file operation read")
+        except AttributeError as e:
+            raise IOAttributeError("Unsupported file operation read") from e
         line = read(size * count)
         n = len(line)
         C.memmove(buffer, line, n)
@@ -192,8 +192,8 @@ class FileIO(IO):
     def WriteProc(self, buffer, size, count):
         try:
             write = self._file.write
-        except AttributeError:
-            raise IOAttributeError("Unsupported file operation write")
+        except AttributeError as e:
+            raise IOAttributeError("Unsupported file operation write") from e
         
         #This was using _PyBytes_FromStringAndSize, but I don't think it's necessary.
         #write(_PyBytes_FromStringAndSize(buffer, size * count))
@@ -203,17 +203,15 @@ class FileIO(IO):
     def SeekProc(self, offset, origin):
         try:
             seek = self._file.seek
-        except AttributeError:
-            raise IOAttributeError("Unsupported file operation seek")
+        except AttributeError as e:
+            raise IOAttributeError("Unsupported file operation seek") from e
         seek(offset, origin)
         return 0
 
     def TellProc(self):
         try:
             tell = self._file.tell
-        except AttributeError:
-            raise IOAttributeError("Unsupported file operation tell")
+        except AttributeError as e:
+            raise IOAttributeError("Unsupported file operation tell") from e
         pos = tell()
         return pos
-
-

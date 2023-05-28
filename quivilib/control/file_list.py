@@ -79,7 +79,7 @@ class FileListController(object):
         self.model.container.sort_order = sort_order
         
     def on_file_list_begin_drag(self, *, obj):
-        if self.model.container.virtual_files == False:
+        if not self.model.container.virtual_files:
             obj.path = self.model.container.get_item_path(obj.idx)
         else:
             obj.path = None
@@ -225,10 +225,8 @@ class FileListController(object):
         container = self.model.container
         self.refresh()
         nindex = deleted_index if self._direction == 1 else deleted_index - 1
-        if nindex < 0:
-            nindex = 0
-        if nindex >= len(container.items):
-            nindex = len(container.items) - 1
+        nindex = max(nindex, 0)
+        nindex = min(nindex, len(container.items) - 1)
         container.selected_item = nindex 
         if container.items[nindex].typ == Item.IMAGE:
             self.open_item(nindex)

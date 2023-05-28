@@ -21,7 +21,7 @@ from quivilib.control.check_update import UpdateChecker
 from quivilib.control.i18n import I18NController
 from quivilib.model.favorites import Favorite
 from quivilib import util
-import quivilib.tempdir as tempdir
+from quivilib import tempdir
 
 
 class MainController(object):

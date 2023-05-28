@@ -3,16 +3,11 @@
 
 def run():
     import sys
-    #import wxversion
-    #I'd like to require 2.8.9.0 but on Ubuntu it just records the first two numbers...
-    #if not hasattr(sys, 'frozen'):
-    #    wxversion.ensureMinimal('2.8')
-    import wx
     
     import traceback
     import logging
     logging.getLogger().setLevel(logging.DEBUG)
-    
+    import wx
     from quivilib.control.main import MainController
     from quivilib.control.file_association import parse_command_line
     from quivilib.gui.error import ErrorDialog

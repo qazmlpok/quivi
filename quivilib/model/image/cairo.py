@@ -69,17 +69,17 @@ class CairoImage(object):
         Loads that data in as a cairo surface. Should work with either image loader.
         """
         srcImage = img
-        format = cairo.Format.ARGB32
+        img_format = cairo.Format.ARGB32
         width, height = img.width, img.height
-        stride = format.stride_for_width(width)
+        stride = img_format.stride_for_width(width)
         #Make sure PIL and FreeImage both have this.
         #TODO: I can't get other cairo formats to work. But if I could, this would need to report
         #the format, e.g. to allow changing to RGB24. See https://afrantzis.com/pixel-format-guide/cairo.html
         #or https://github.com/afrantzis/pixel-format-guide/blob/master/pfg/cairo.py
         img = img.maybeConvert32bit()
         #Make sure PIL and FreeImage both have this.
-        bytes = img.convert_to_raw_bits(width_bytes=stride)
-        surface = cairo.ImageSurface.create_for_data(bytes, format, width, height)
+        b = img.convert_to_raw_bits(width_bytes=stride)
+        surface = cairo.ImageSurface.create_for_data(b, img_format, width, height)
         
         if img is not srcImage:
             del img

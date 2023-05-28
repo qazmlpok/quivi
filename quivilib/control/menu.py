@@ -355,7 +355,7 @@ class MenuController(object):
         settings.add_section(SHORTCUTS_KEY)
         for cmd in commands:
             cmd_id_str = str(cmd.ide)
-            shcut_lst_str = ' '.join('%d,%d' % (shcut.key_code, shcut.flags)
+            shcut_lst_str = ' '.join(f'{shcut.key_code},{shcut.flags}'
                                      for shcut in cmd.shortcuts)
             settings.set(SHORTCUTS_KEY, cmd_id_str, shcut_lst_str)
     

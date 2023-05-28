@@ -146,8 +146,7 @@ class FreeImage(object):
 
     def create_thumbnail(self, width, height, delay=False):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
-        if factor > 1:
-            factor = 1
+        factor = min(factor, 1)
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         img = self.img.rescale(width, height, fi.FILTER_BILINEAR)
