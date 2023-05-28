@@ -143,6 +143,8 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
     def __init__(self, *args, **kwargs):
         OldScrolledThumbnail.__init__(self, *args, **kwargs)
         self._tOutlineNotSelected = False
+        self.thumbs_generated = False
+        self._isrunning = False
         self._thread = None
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         self.SetDropShadow(False)

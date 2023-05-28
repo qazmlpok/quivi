@@ -21,17 +21,17 @@ class ImageCacheLoadRequest(object):
         self.img = None
         
     def __call__(self, settings):
-        self.canvas = Canvas('tempcanvas', settings, True)
-        self.canvas.view = self.view
+        canvas = Canvas('tempcanvas', settings, True)
+        canvas.view = self.view
         item_index = self.container.items.index(self.item)
         f = self.container.open_image(item_index)
         assert f is not None, "Failed to open image from container"
         #can't use "with" because not every file-like object used here supports it
         try:
-            self.canvas.load(f, self.path, delay=True)
+            canvas.load(f, self.path, delay=True)
         finally:
             f.close()
-        self.img = self.canvas.img
+        self.img = canvas.img
         
     def __eq__(self, other):
         if not other:
@@ -45,7 +45,6 @@ class ImageCacheLoadRequest(object):
         
     def __ne__(self, other):
         return not self == other 
-
 
 
 class ImageCache(object):
@@ -152,4 +151,3 @@ class ImageCache(object):
                     self.processing_request = None
                 if tb:
                     wx.CallAfter(self.notify_image_load_error, req, e, tb)
-                

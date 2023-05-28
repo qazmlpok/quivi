@@ -237,12 +237,12 @@ class FileListController(object):
             return
         index = self.model.container.selected_item_index
         path = self.model.container.items[index].path
-        type = self.model.container.items[index].typ
+        filetype = self.model.container.items[index].typ
         if _need_delete_confirmation():
             if _ask_delete_confirmation(window, path) == wx.ID_NO:
                 return
         #Release any handle on the file...
-        if type == Item.IMAGE and img:
+        if filetype == Item.IMAGE and img:
             img.close()
         _delete_file(path, window)
         self._refresh_after_delete(index)

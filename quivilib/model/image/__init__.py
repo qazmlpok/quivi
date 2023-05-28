@@ -22,7 +22,6 @@ if meta.USE_FREEIMAGE:
 
 
 supported_extensions = []
-
 def get_supported_extensions():
     exts = []
     if meta.USE_FREEIMAGE:
@@ -39,7 +38,6 @@ def get_supported_extensions():
     return list(set(exts))
 
 supported_extensions = get_supported_extensions()
-
 
 
 def open(f, path, canvas_type, delay=False):

@@ -58,7 +58,6 @@ class ZipFile(object):
         self.file = None
 
 
-
 class RarFile(object):
     def __init__(self, container, path):
         self.path = path
@@ -97,12 +96,10 @@ class RarFile(object):
         finally:
             archive.close()
     def close(self):
-        self.file.close()
-        self.file = None
+        pass
 
 
 class RarFileExternal(RarFile):
-        
     def __init__(self, container, path):
         #Import here to delay creation of the temp dir until it's needed.
         import rarfile
@@ -130,8 +127,6 @@ class RarFileExternal(RarFile):
         #rarfile doesn't like Windows backslashes
         return npath.replace(os.sep, '/')
         #Anything else? There's a " 0" file, for example. Might be ".."
-
-
 
 
 class CompressedContainer(BaseContainer):
@@ -236,8 +231,7 @@ class CompressedContainer(BaseContainer):
             _copy_files(in_file, out_file)
             temp_file = out_file.name
         return Path(temp_file)
-    
-    
+
 
 class VirtualCompressedContainer(CompressedContainer):
     def __init__(self, path, name, parent_names, parent_paths, original_container_path, sort_order, show_hidden):

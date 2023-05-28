@@ -111,7 +111,9 @@ class MainWindow(wx.Frame):
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
         self.favorites_menu_items = []
+        self._favorite_menu_count = 0
         self.update_menu_item = None
+        self.accel_table = None
         #Track as a dictionary
         self.menus = {}
         

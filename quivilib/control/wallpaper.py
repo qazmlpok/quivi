@@ -28,6 +28,7 @@ class WallpaperController(object):
     def __init__(self, model):
         self.model = model
         self.canvas = Canvas('wpcanvas', None)
+        self.canvas_controller = None
         Publisher.subscribe(self.on_dialog_opened, 'wallpaper.dialog_opened')
         Publisher.subscribe(self.on_set_wallpaper, 'wallpaper.set')
         Publisher.subscribe(self.on_wallpaper_zoom, 'wallpaper.zoom')
