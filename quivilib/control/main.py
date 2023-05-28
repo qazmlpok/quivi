@@ -26,8 +26,7 @@ from quivilib import tempdir
 
 class MainController(object):
     #TODO: (1,3) Refactor: move 'favorites.changed' events to the model?
-    
-    
+
     INI_FILE_NAME = 'pyquivi.ini'
     LOG_FILE_NAME = 'quivi.log' 
     STDIO_FILE_NAME = 'error.log' 
@@ -65,7 +64,10 @@ class MainController(object):
             stdio_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.STDIO_FILE_NAME
         Publisher.subscribe(self.on_settings_corrupt, 'settings.corrupt')
         self.settings = Settings(settings_path)
-        start_dir = self._get_start_dir(self.settings)
+        if file_to_open:
+            start_dir = file_to_open
+        else:
+            start_dir = self._get_start_dir(self.settings)
         if util.is_frozen():
             sys.stdout = sys.stderr = stdio_path.open('w')
         
@@ -95,9 +97,6 @@ class MainController(object):
         
         self.pane_info = None
         
-        if file_to_open:
-            self.file_list.open_path(file_to_open)
-            
         self.update_checker = UpdateChecker(self.settings)
         
     def quit(self):
