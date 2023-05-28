@@ -1,9 +1,10 @@
-from configparser import SafeConfigParser, ParsingError
+import os
+from configparser import ConfigParser, ParsingError
 from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
 
 
-class Settings(SafeConfigParser):
+class Settings(ConfigParser):
     (FIT_NONE,
      FIT_WIDTH_OVERSIZE,
      FIT_HEIGHT_OVERSIZE,
@@ -32,11 +33,10 @@ class Settings(SafeConfigParser):
      BG_WHITE) = list(range(3))
     
     def __init__(self, path):
-        SafeConfigParser.__init__(self)
+        ConfigParser.__init__(self)
         self.path = path
         
         def _parseError():
-            import os
             backupname = None
             if os.path.isfile(path):
                 backupname = f'{path}.bad'
@@ -101,7 +101,7 @@ class Settings(SafeConfigParser):
         return defaults
     
     def set(self, section, option, value):
-        SafeConfigParser.set(self, section, option, str(value))
+        ConfigParser.set(self, section, option, str(value))
         try:
             Publisher.sendMessage(f'settings.changed.{section}.{option}', settings=self)
         except Publisher.TopicNameError:
@@ -120,4 +120,3 @@ class Settings(SafeConfigParser):
             if isection == section and ioption == option:
                 return ivalue
         raise RuntimeError(f'Option {option} has no default value')
-        
