@@ -158,9 +158,12 @@ class FreeImage(object):
             bmp = img.convert_to_wx_bitmap(wx)
             return bmp
 
+    @staticmethod
     def _get_extensions():
         return fi.library.load().get_readable_extensions()
     ext_list = _get_extensions()
+    
+    @staticmethod
     def extensions():
         return FreeImage.ext_list
 

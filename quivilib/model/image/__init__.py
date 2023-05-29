@@ -41,7 +41,27 @@ supported_extensions = get_supported_extensions()
 
 
 def open(f, path, canvas_type, delay=False):
+    """ Open the provided filehandle/path as an image.
+    Wraps the image in a Cairo object if USE_CAIRO is True
+    (This would also use GDI on Windows, if GDI was still supported)
+    """
     ext = path.suffix
+    img = open_direct(f, path, canvas_type, delay)
+    for cls in IMG_CLASSES:
+        try:
+            img2 = cls(canvas_type, src=img, delay=delay)
+            img = img2
+            break
+        except Exception as e:
+            log.debug(traceback.format_exc())
+    return img
+
+def open_direct(f, path, canvas_type, delay=False):
+    """ Open the provided filehandle/path as an image.
+    PIL/Freeimage is used to open the image, depending on configuration.
+    """
+    ext = path.suffix
+    img = None
     for cls in IMG_LOAD_CLASSES:
         if not ext in cls.extensions():
             log.debug(f"Skip {cls} - no support for {ext}")
@@ -54,11 +74,4 @@ def open(f, path, canvas_type, delay=False):
                 raise
             else:
                 log.debug(traceback.format_exc())
-    for cls in IMG_CLASSES:
-        try:
-            img2 = cls(canvas_type, src=img, delay=delay)
-            img = img2
-            break
-        except Exception as e:
-            log.debug(traceback.format_exc())
     return img

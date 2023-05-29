@@ -14,8 +14,7 @@ from quivilib.i18n import _
 from quivilib.model.canvas import Canvas
 from quivilib.model.settings import Settings
 from quivilib.control.canvas import CanvasController
-import pyfreeimage as fi
-from quivilib.model.image.freeimage import FreeImage
+from quivilib.model import image
 
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
 #This list should reflect the list in open_dialog (same order)
@@ -57,7 +56,7 @@ class WallpaperController(object):
         #can't use "with" because not every file-like object used here supports it
         img = None
         try:
-            img = FreeImage(None, f=f, path=path).img
+            img = image.open_direct(f, path, None)
         finally:
             f.close()
         if not img:
@@ -84,10 +83,9 @@ class WallpaperController(object):
         if zoom != 1:
             width = int(img.width * zoom)
             height = int(img.height * zoom)
-            width = 1 if width < 1 else width
-            height = 1 if height < 1 else height
-            img = img.rescale(width, height,
-                              fi.FILTER_BICUBIC)
+            width = max(width, 1)
+            height = max(height, 1)
+            img = img.rescale(width, height)
         return img
     
     def move_image(self, img, position, color):
@@ -126,7 +124,6 @@ class WallpaperController(object):
     @property
     def preview_scale(self):
         return wx.Display(0).GetGeometry().width / float(self.canvas.view.width)
-
 
 
 def _set_wallpaper(img, position, color):
