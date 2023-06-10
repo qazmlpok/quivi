@@ -1,36 +1,24 @@
 import os
+from enum import IntEnum
 from configparser import ConfigParser, ParsingError
 from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
 
 
 class Settings(ConfigParser):
-    (FIT_NONE,
-     FIT_WIDTH_OVERSIZE,
-     FIT_HEIGHT_OVERSIZE,
-     FIT_BOTH_OVERSIZE,
-     FIT_CUSTOM_WIDTH,
-     FIT_SCREEN_CROP_EXCESS,
-     FIT_SCREEN_SHOW_ALL,
-     FIT_SCREEN_NONE,
-     FIT_TILED,
-     FIT_WIDTH,
-     FIT_HEIGHT,
-     FIT_BOTH) = list(range(12))
-     
-    (ZOOM_DEFAULT,
-     ZOOM_SYSTEM,
-     ZOOM_NEIGHBOR,
-     ZOOM_BILINEAR,
-     ZOOM_BICUBIC,
-     ZOOM_CATMULLROM) = list(range(6))
-     
-    (MOVE_DRAG,
-     MOVE_LOCK) = list(range(2))
-    
-    (BG_SYSTEM,
-     BG_BLACK,
-     BG_WHITE) = list(range(3))
+    FitType = IntEnum('FitType', 
+        ('NONE',
+         'WIDTH_OVERSIZE',
+         'HEIGHT_OVERSIZE',
+         'BOTH_OVERSIZE',
+         'CUSTOM_WIDTH',
+         'SCREEN_CROP_EXCESS',
+         'SCREEN_SHOW_ALL',
+         'SCREEN_NONE',
+         'TILED',
+         'WIDTH',
+         'HEIGHT',
+         'BOTH'))
     
     def __init__(self, path):
         ConfigParser.__init__(self)
@@ -60,7 +48,7 @@ class Settings(ConfigParser):
         
     def _load_defaults(self):
         defaults = (
-          ('Options', 'FitType', self.FIT_WIDTH_OVERSIZE),
+          ('Options', 'FitType', self.FitType.WIDTH_OVERSIZE),
           ('Options', 'FitWidthCustomSize', 800),
           ('Options', 'StartDir', ''),
           ('Options', 'CustomBackground', 0),

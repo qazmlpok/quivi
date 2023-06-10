@@ -18,9 +18,9 @@ from quivilib.model import image
 
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
 #This list should reflect the list in open_dialog (same order)
-positions = (Settings.FIT_SCREEN_NONE, Settings.FIT_TILED,
-             Settings.FIT_SCREEN_CROP_EXCESS,
-             Settings.FIT_SCREEN_SHOW_ALL)
+positions = (Settings.FitType.SCREEN_NONE, Settings.FitType.TILED,
+             Settings.FitType.SCREEN_CROP_EXCESS,
+             Settings.FitType.SCREEN_SHOW_ALL)
 
 
 class WallpaperController(object):
@@ -91,7 +91,7 @@ class WallpaperController(object):
     def move_image(self, img, position, color):
         left = int(self.canvas.left * self.preview_scale)
         top = int(self.canvas.top * self.preview_scale)
-        if position == Settings.FIT_TILED:
+        if position == Settings.FitType.TILED:
             if left == 0 and top == 0:
                 return img
             nleft = left % img.width
@@ -170,7 +170,7 @@ def _get_linux_bg_color():
 def _set_linux_wallpaper(filename, position, color):
     call('gconftool-2 -t str -s /desktop/gnome/background/picture_filename'.split() + [filename],
           stdout=PIPE, stderr=PIPE)
-    option = 'wallpaper' if position == Settings.FIT_TILED else 'centered'
+    option = 'wallpaper' if position == Settings.FitType.TILED else 'centered'
     call('gconftool-2 -t str -s /desktop/gnome/background/picture_options'.split() + [option],
          stdout=PIPE, stderr=PIPE)
     color = [hex(color[0])[2:], hex(color[1])[2:], hex(color[2])[2:]]
@@ -192,7 +192,7 @@ def _get_windows_bg_color():
 
 def _set_windows_wallpaper(filename, position, color):
     import win32gui, win32con, win32api, winreg
-    tile_wallpaper = '1' if position == Settings.FIT_TILED else '0'
+    tile_wallpaper = '1' if position == Settings.FitType.TILED else '0'
     wallpaper_style = '0'
     desktopKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
                                  'Control Panel\\Desktop', 0,

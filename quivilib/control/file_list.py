@@ -7,7 +7,7 @@ import wx
 
 from quivilib.i18n import _
 from quivilib import meta
-from quivilib.model.container import Item
+from quivilib.model.container import Item, ItemType
 from quivilib.model.container import get_supported_extensions as get_supported_container_extensions
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.model.container.compressed import CompressedContainer
@@ -64,7 +64,7 @@ class FileListController(object):
         
     def on_file_list_activated(self, *, index):
         container = self.model.container
-        if container.items[index].typ != Item.IMAGE:
+        if container.items[index].typ != ItemType.IMAGE:
             opened = container.open_container(index)
             if opened:
                 self._set_container(opened)
@@ -72,7 +72,7 @@ class FileListController(object):
     def on_file_list_selected(self, *, index):
         container = self.model.container
         container.selected_item = index
-        if container.items[index].typ == Item.IMAGE:
+        if container.items[index].typ == ItemType.IMAGE:
             self.open_item(index)
             
     def on_file_list_column_clicked(self, *, sort_order):
@@ -113,7 +113,7 @@ class FileListController(object):
     def open_item(self, item_index):
         container = self.model.container
         item = container.items[item_index]
-        if item.typ == Item.IMAGE:
+        if item.typ == ItemType.IMAGE:
             Publisher.sendMessage('busy', busy=True)
             if meta.CACHE_ENABLED:
                 request = ImageCacheLoadRequest(container, item, self.model.canvas.view)
@@ -129,7 +129,7 @@ class FileListController(object):
                     self._direction = -1
                 for i in range(meta.PREFETCH_COUNT):
                     idx = item_index + ((i + 1) * self._direction)
-                    if idx > 0 and idx < len(container.items) and container.items[idx].typ == Item.IMAGE:
+                    if idx > 0 and idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
                         request = ImageCacheLoadRequest(container, container.items[idx], self.model.canvas.view)
                         log.debug(f"fl: requesting prefetch of {idx}")
                         Publisher.sendMessage('cache.load_image', request=request)
@@ -187,7 +187,7 @@ class FileListController(object):
         #Notice that it works even if no item is selected (item = -1)
         if 0 <= nindex < container.item_count:
             container.selected_item = nindex
-            if container.items[nindex].typ == Item.IMAGE:
+            if container.items[nindex].typ == ItemType.IMAGE:
                 self.open_item(nindex)
     
     def select_next(self, skip):
@@ -198,7 +198,7 @@ class FileListController(object):
     def open_selected_container(self):
         container = self.model.container
         index = container.selected_item_index
-        if container.items[index].typ != Item.IMAGE:
+        if container.items[index].typ != ItemType.IMAGE:
             container = container.open_container(index)
             self._set_container(container)
             
@@ -212,7 +212,7 @@ class FileListController(object):
                 nindex = parent.selected_item_index + skip
                 if 0 <= nindex < parent.item_count:
                     self.open_item(nindex)
-                    if parent.items[nindex].typ == Item.IMAGE:
+                    if parent.items[nindex].typ == ItemType.IMAGE:
                         parent.selected_item = nindex
         finally:
             Publisher.sendMessage('gui.thaw') 
@@ -228,7 +228,7 @@ class FileListController(object):
         nindex = max(nindex, 0)
         nindex = min(nindex, len(container.items) - 1)
         container.selected_item = nindex 
-        if container.items[nindex].typ == Item.IMAGE:
+        if container.items[nindex].typ == ItemType.IMAGE:
             self.open_item(nindex)
         
     def delete(self, window=None):
@@ -242,7 +242,7 @@ class FileListController(object):
             if _ask_delete_confirmation(window, path) == wx.ID_NO:
                 return
         #Release any handle on the file...
-        if filetype == Item.IMAGE and img:
+        if filetype == ItemType.IMAGE and img:
             img.close()
         _delete_file(path, window)
         self._refresh_after_delete(index)
@@ -256,7 +256,7 @@ class FileListController(object):
         if container.can_delete():
             index = container.selected_item_index
             if index != -1:
-                if container.items[index].typ in (Item.IMAGE, Item.COMPRESSED):
+                if container.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
                     can_delete = True
         return can_delete
         
@@ -317,7 +317,7 @@ class FileListController(object):
         if container.selected_item_index == -1:
             return container
         else:
-            if container.selected_item.typ == Item.IMAGE:
+            if container.selected_item.typ == ItemType.IMAGE:
                 return container
             else:
                 container = container.open_container(container.selected_item_index)
@@ -330,7 +330,7 @@ class FileListController(object):
         self._last_opened_item = None
         if not skip_open:
             for idx, item in enumerate(self.model.container.items):
-                if item.typ == Item.IMAGE:
+                if item.typ == ItemType.IMAGE:
                     if self.model.settings.getint('Options', 'OpenFirst') and self.model.container.selected_item_index == -1:
                         self.model.container.selected_item = idx
                         self.open_item(idx)
@@ -343,7 +343,7 @@ class FileListController(object):
             idx = -1
             if len(self.model.container.items) > 0:
                 idx = 0
-                if self.model.container.items[0].typ == Item.PARENT:
+                if self.model.container.items[0].typ == ItemType.PARENT:
                     if len(self.model.container.items) > 1:
                         idx = 1
             if idx != -1:

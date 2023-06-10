@@ -10,7 +10,7 @@ from wx.lib.agw.thumbnailctrl import (
     THUMB_OUTLINE_RECT)
 
 from quivilib.model import image
-from quivilib.model.container import Item
+from quivilib.model.container import Item, ItemType
 from quivilib import util
 from quivilib.util import error_handler
 from quivilib.gui.file_list_view.base import FileListViewBase
@@ -188,7 +188,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         """ Threaded method to load images. Used internally. """
         #TODO: (2,2) Refactor: this should be moved inside the Item class
         bmp = None
-        if item.typ == Item.IMAGE:
+        if item.typ == ItemType.IMAGE:
             f = container.open_image(index)
             try:
                 img = image.open(f, item.path, None)
@@ -202,7 +202,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
                     bmp = bmp()
                 img = bmp.ConvertToImage()
                 return img
-        elif item.typ in (Item.DIRECTORY, Item.PARENT):
+        elif item.typ in (Item.DIRECTORY, ItemType.PARENT):
             originalsize = 32, 32
             alpha = True
             def delayed_fn(bmp=bmp):
@@ -211,7 +211,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
                 bmp.CopyFromIcon(icon)
                 img = bmp.ConvertToImage()
                 return img
-        elif item.typ == Item.COMPRESSED:
+        elif item.typ == ItemType.COMPRESSED:
             originalsize = 32, 32
             alpha = True
             ext = container.get_item_extension(index)
