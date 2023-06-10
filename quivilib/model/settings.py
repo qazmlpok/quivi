@@ -67,6 +67,7 @@ class Settings(ConfigParser):
           ('Options', 'CustomBackgroundColor', '0,0,0'),
           ('Options', 'RealFullscreen', 0),
           ('Options', 'AutoFullscreen', 1),
+          ('Options', 'UseRightToLeft', 0),
           ('Options', 'PlaceholderDelete', 1),
           ('Options', 'PlaceholderSingle', 0),
           ('Options', 'PlaceholderAutoOpen', 1),

@@ -28,6 +28,7 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - Changed how the list of commands for keyboard/mouse are populated. Some commands are now marked as keyboard or mouse only. This technically removes functionality, but it makes the menu slightly easier to work with.
 - Reworked how Cairo resizes image. If Cairo is enabled, images will be rescaled via a matrix operation instead of creating a new image. This is massively faster for the initial zoom, but slower for panning. The current approach is to use a high-quality resample while zooming, but a fast resample while panning. In the background, a high-quality resized image is created and used for panning when it is available. This is (roughly) the same approach taken by Eye of Gnome. It should be possible to always smoothing scale/pan at high quality, as GIMP does this, but I haven't figured it out.
 - 16-bit precision images *should* work with PIL.
+- Added option to view images right to left. Specifically, when opening an image that is larger than the screen, show the top-right corner of the image instead of the top-left corner. This has no effect if the Fit settings shrink the image to the size of the screen.
 
 
 # Removed features
@@ -78,3 +79,4 @@ The following text strings are new and have not been added to any of the transla
 - Full move down
 - Full move left
 - Full move right
+- View images right-to-left

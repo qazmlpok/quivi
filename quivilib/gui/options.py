@@ -12,7 +12,7 @@ from quivilib.model.settings import Settings
 import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
 
-WINDOW_SIZE = (400, 460)
+WINDOW_SIZE = (400, 480)
 
 class OptionsDialog(wx.Dialog):
     def __init__(self, parent, fit_choices, settings, categories,
@@ -80,10 +80,11 @@ class OptionsDialog(wx.Dialog):
         self.real_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Hide menu and status on full screen"))
         self.open_first_chk = wx.CheckBox(self.viewing_pane, -1, _("Open first image of the folder automatically"))
         self.settings_local_chk = wx.CheckBox(self.viewing_pane, -1, _("Portable mode (save settings inside the program folder)"))
-        self.settings_auto_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Remember full screen on close"))
-        self.settings_placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
-        self.settings_placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
-        self.settings_placeholder_autoopen_chk = wx.CheckBox(self.viewing_pane, -1, _("Automatically jump to placeholder page on open"))
+        self.auto_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Remember full screen on close"))
+        self.right_to_left_chk = wx.CheckBox(self.viewing_pane, -1, _("View images right-to-left"))
+        self.placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
+        self.placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
+        self.placeholder_autoopen_chk = wx.CheckBox(self.viewing_pane, -1, _("Automatically jump to placeholder page on open"))
     def _init_commands(self):
         self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
         self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
@@ -171,13 +172,15 @@ class OptionsDialog(wx.Dialog):
         open_first = (self.settings.get('Options', 'OpenFirst') == '1')
         self.open_first_chk.SetValue(open_first)
         auto_fullscreen = (self.settings.get('Options', 'AutoFullscreen') == '1')
-        self.settings_auto_fullscreen_chk.SetValue(auto_fullscreen)
+        self.auto_fullscreen_chk.SetValue(auto_fullscreen)
+        use_right_to_left = (self.settings.get('Options', 'UseRightToLeft') == '1')
+        self.right_to_left_chk.SetValue(use_right_to_left)
         placeholder_delete = (self.settings.get('Options', 'PlaceholderDelete') == '1')
-        self.settings_placeholder_autodelete_chk.SetValue(placeholder_delete)
+        self.placeholder_autodelete_chk.SetValue(placeholder_delete)
         placeholder_single = (self.settings.get('Options', 'PlaceholderSingle') == '1')
-        self.settings_placeholder_single_chk.SetValue(placeholder_single)
+        self.placeholder_single_chk.SetValue(placeholder_single)
         placeholder_autoopen = (self.settings.get('Options', 'PlaceholderAutoOpen') == '1')
-        self.settings_placeholder_autoopen_chk.SetValue(placeholder_autoopen)
+        self.placeholder_autoopen_chk.SetValue(placeholder_autoopen)
         
         self.settings_local_chk.SetValue(self.save_locally)
         
@@ -276,10 +279,11 @@ class OptionsDialog(wx.Dialog):
         viewing_sizer.Add(self.real_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.open_first_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.settings_local_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.settings_auto_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.settings_placeholder_autodelete_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.settings_placeholder_single_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
-        viewing_sizer.Add(self.settings_placeholder_autoopen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.auto_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.right_to_left_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.placeholder_autodelete_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.placeholder_single_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.placeholder_autoopen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.viewing_pane.SetSizer(viewing_sizer)
 
     def on_fit_select(self, event): # wxGlade: OptionsDialog.<event_handler>
@@ -356,10 +360,11 @@ class OptionsDialog(wx.Dialog):
         opt.save_locally = self.settings_local_chk.GetValue()
         opt.real_fullscreen = self.real_fullscreen_chk.GetValue()
         opt.open_first = self.open_first_chk.GetValue()
-        opt.auto_fullscreen = self.settings_auto_fullscreen_chk.GetValue()
-        opt.placeholder_delete = self.settings_placeholder_autodelete_chk.GetValue()
-        opt.placeholder_single = self.settings_placeholder_single_chk.GetValue()
-        opt.placeholder_autoopen = self.settings_placeholder_autoopen_chk.GetValue()
+        opt.auto_fullscreen = self.auto_fullscreen_chk.GetValue()
+        opt.use_right_to_left = self.right_to_left_chk.GetValue()
+        opt.placeholder_delete = self.placeholder_autodelete_chk.GetValue()
+        opt.placeholder_single = self.placeholder_single_chk.GetValue()
+        opt.placeholder_autoopen = self.placeholder_autoopen_chk.GetValue()
         opt.shortcuts = self.shortcuts
         opt.always_drag = self.always_drag_chk.GetValue()
         opt.drag_threshold = self.threshold_txt.GetValue()

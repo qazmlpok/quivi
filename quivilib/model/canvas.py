@@ -9,7 +9,6 @@ from quivilib.util import rescale_by_size_factor
 
 
 class Canvas(object):
-     
     def __init__(self, name, settings, quiet=False):
         self.name = name
         self.quiet = quiet
@@ -238,13 +237,19 @@ class Canvas(object):
     top = property(_get_top, _set_top)
         
     def center(self):
+        #TODO: Should rename. This only centers if the img is smaller than the viewport
         scr_w = self.view.width
         scr_h = self.view.height
         img_w = self.width
         img_h = self.height
         if img_w > scr_w:
+            rtl = self._get_int_setting('UseRightToLeft')
             #align left (TODO: (1,4) Improve: customizable?
-            self.left = 0
+            if rtl:
+                #Scroll all the way to the right
+                self.left = scr_w - img_w
+            else:
+                self.left = 0
         else:
             #center
             self.left = scr_w // 2 - img_w // 2
