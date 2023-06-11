@@ -82,13 +82,8 @@ class Canvas(object):
         img_w = self.img.original_width
         img_h = self.img.original_height
         if spread and img_w > img_h:
-            #Normal page layout is taller than it is long. If this is not true:
-            #1. This is a digital image that isn't trying to follow print conventions
-            #2. This is a rotated page
-            #3. This is two pages combined
-            #Assume 3; I don't know a good way to filter out 1/2; a hotkey can be used to disable the feature
-            #For 3, display may be improved by calculating the width based on the "half" pages, which
-            #should be more consistent with the rest of the book.
+            #Normal page layout is taller than it is long. If this is not true,
+            #assume it's two pages combined. display may be improved by calculating the width based on the "half" pages
             img_w = (img_w+1) // 2
         self.tiled = False
 
