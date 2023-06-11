@@ -69,7 +69,6 @@ class Canvas(object):
         )
         self._sendMessage(f'{self.name}.changed')
 
-
     def adjust(self):
         fit_type = self._get_int_setting('FitType')
         self.set_zoom_by_fit_type(fit_type)
@@ -92,6 +91,7 @@ class Canvas(object):
             #should be more consistent with the rest of the book.
             img_w = (img_w+1) // 2
         self.tiled = False
+
         if fit_type == Settings.FIT_WIDTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
             self.zoom = factor

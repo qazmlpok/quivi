@@ -19,7 +19,6 @@ ZOOM_FACTOR = 25
 
 
 class CanvasController(object):
-    
     #TODO: (1,4) Refactor: all canvas.changed should be sent by the model, but it would
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
@@ -172,6 +171,11 @@ class CanvasController(object):
         self.canvas.set_zoom_by_fit_type(fit_type, scr_w)
         if save:
             self.settings.set('Options', 'FitType', fit_type)
+        Publisher.sendMessage(f'{self.name}.changed')
+    
+    def set_zoom_by_current_fit(self):
+        fit_type = self.settings.getint('Options', 'FitType')
+        self.set_zoom_by_fit_type(fit_type)
         Publisher.sendMessage(f'{self.name}.changed')
         
     def move_image(self, direction, typ):
