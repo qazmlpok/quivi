@@ -17,21 +17,7 @@ class Settings(ConfigParser):
      FIT_WIDTH,
      FIT_HEIGHT,
      FIT_BOTH) = list(range(12))
-     
-    (ZOOM_DEFAULT,
-     ZOOM_SYSTEM,
-     ZOOM_NEIGHBOR,
-     ZOOM_BILINEAR,
-     ZOOM_BICUBIC,
-     ZOOM_CATMULLROM) = list(range(6))
-     
-    (MOVE_DRAG,
-     MOVE_LOCK) = list(range(2))
-    
-    (BG_SYSTEM,
-     BG_BLACK,
-     BG_WHITE) = list(range(3))
-    
+
     def __init__(self, path):
         ConfigParser.__init__(self)
         self.path = path
