@@ -76,8 +76,12 @@ class Canvas(object):
             return
         view_w = self.view.width
         view_h = self.view.height
+        spread = True
         img_w = self.img.original_width
         img_h = self.img.original_height
+        if spread and img_w > img_h:
+            #img_w = int(img_w * 0.55)
+            img_w //= 2
         self.tiled = False
         if fit_type == Settings.FIT_WIDTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)

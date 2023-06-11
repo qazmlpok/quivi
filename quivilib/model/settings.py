@@ -68,6 +68,8 @@ class Settings(ConfigParser):
           ('Options', 'RealFullscreen', 0),
           ('Options', 'AutoFullscreen', 1),
           ('Options', 'UseRightToLeft', 0),
+          ('Options', 'DetectSpreads', 0),
+          ('Options', 'HorizontalScrollAtBottom', 0),
           ('Options', 'PlaceholderDelete', 1),
           ('Options', 'PlaceholderSingle', 0),
           ('Options', 'PlaceholderAutoOpen', 1),
