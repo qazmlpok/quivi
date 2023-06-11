@@ -6,7 +6,7 @@ from zipfile import ZipFile as PyZipFile
 from datetime import datetime
 
 from pubsub import pub as Publisher
-from quivilib.model.container import Item
+from quivilib.model.container import Item, ItemType
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.meta import PATH_SEP
@@ -178,7 +178,7 @@ class CompressedContainer(BaseContainer):
     
     def open_container(self, item_index):
         item = self.items[item_index]
-        if item.typ == Item.COMPRESSED:
+        if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
             return VirtualCompressedContainer(temp_file, item.name, [], [], self._path, self._sort_order, self.show_hidden)
         else:
@@ -266,7 +266,7 @@ class VirtualCompressedContainer(CompressedContainer):
         
     def open_container(self, item_index):
         item = self.items[item_index]
-        if item.typ == Item.COMPRESSED:
+        if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
             parent_names = self.parent_names[:]
             parent_names.append(self.name)

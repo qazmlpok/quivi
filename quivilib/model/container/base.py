@@ -4,8 +4,7 @@ import operator
 from pubsub import pub as Publisher
 from natsort import natsort_keygen, ns
 
-from quivilib.model.container import Item
-from quivilib.model.container import SortOrder
+from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container import UnsupportedPathError
 
 
@@ -51,12 +50,12 @@ class BaseContainer(object):
         from quivilib.model.container.directory import DirectoryContainer
         from quivilib.model.container.compressed import CompressedContainer
         item = self.items[item_index]
-        assert item.typ != Item.IMAGE
-        if item.typ == Item.PARENT:
+        assert item.typ != ItemType.IMAGE
+        if item.typ == ItemType.PARENT:
             return self.open_parent()
-        elif item.typ == Item.DIRECTORY:
+        elif item.typ == ItemType.DIRECTORY:
             return DirectoryContainer(item.path, self._sort_order, self.show_hidden)
-        elif item.typ == Item.COMPRESSED:
+        elif item.typ == ItemType.COMPRESSED:
             return CompressedContainer(item.path, self._sort_order, self.show_hidden)
         else:
             assert False, 'Invalid container type specified'
@@ -90,7 +89,7 @@ class BaseContainer(object):
             #TODO: (1,4) Improve: check if item has really changed before sending message?
             #i.e., file has been modified (but it's probably overkill)
             self.selected_item = selected_item
-            if self.selected_item.typ == Item.IMAGE:
+            if self.selected_item.typ == ItemType.IMAGE:
                 Publisher.sendMessage('container.item.changed', index=self.items.index(self.selected_item))
 
     @property

@@ -13,12 +13,6 @@ class UnsupportedPathError(Exception):
 
 
 class Item(object):
-    (PARENT,
-     DIRECTORY,
-     IMAGE,
-     COMPRESSED,
-     ) = list(range(4))
-     
     def __init__(self, path, last_modified=None, chktyp = True, data=None):
         """Create a Item.
         
@@ -36,23 +30,23 @@ class Item(object):
             print(repr(path), type(path))
             assert False, "non-path given to " + __file__
         if path.name == '..':
-            self.typ = Item.PARENT
+            self.typ = ItemType.PARENT
             self.ext = ''
             self.namebase = '..'
         elif (chktyp and path.is_file()) or (not chktyp and path.name not in '/\\'):
             self.ext = path.suffix.lower()
             self.namebase = self.path.stem.lower()
             if self.ext.lower() in get_supported_extensions():
-                self.typ = Item.COMPRESSED
+                self.typ = ItemType.COMPRESSED
             elif self.ext.lower() in get_supported_image_extensions():
-                self.typ = Item.IMAGE
+                self.typ = ItemType.IMAGE
             else:
                 raise UnsupportedPathError()
         else:
             if not chktyp and path.name in '/\\':
                 self.path = Path(self.path[:-1]) 
             #TODO: (2,2) Test: check if it's really correct to default to directory
-            self.typ = Item.DIRECTORY
+            self.typ = ItemType.DIRECTORY
             self.ext = ''
             self.namebase = self.path.name
 
@@ -77,3 +71,10 @@ class SortOrder(object):
      EXTENSION,
      TYPE,
      LAST_MODIFIED) = list(range(4))
+
+class ItemType():
+    (PARENT,
+     DIRECTORY,
+     IMAGE,
+     COMPRESSED,
+     ) = list(range(4))
