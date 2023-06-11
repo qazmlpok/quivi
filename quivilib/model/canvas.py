@@ -1,8 +1,8 @@
 import traceback
 import logging as log
 from functools import partial
-
 from pubsub import pub as Publisher
+
 from quivilib.model.settings import Settings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
@@ -14,6 +14,9 @@ class Canvas(object):
         self.quiet = quiet
         if settings:
             self._get_int_setting = partial(settings.getint, 'Options')
+        else:
+            #Wallpaper canvas won't include settings. Probably not the best solution, but it works.
+            self._get_int_setting = lambda x: 0
         self.img = None
         self._zoom = 1
         self._left = 0
@@ -76,12 +79,18 @@ class Canvas(object):
             return
         view_w = self.view.width
         view_h = self.view.height
-        spread = True
+        spread = self._get_int_setting('DetectSpreads')
         img_w = self.img.original_width
         img_h = self.img.original_height
         if spread and img_w > img_h:
-            #img_w = int(img_w * 0.55)
-            img_w //= 2
+            #Normal page layout is taller than it is long. If this is not true:
+            #1. This is a digital image that isn't trying to follow print conventions
+            #2. This is a rotated page
+            #3. This is two pages combined
+            #Assume 3; I don't know a good way to filter out 1/2; a hotkey can be used to disable the feature
+            #For 3, display may be improved by calculating the width based on the "half" pages, which
+            #should be more consistent with the rest of the book.
+            img_w = (img_w+1) // 2
         self.tiled = False
         if fit_type == Settings.FIT_WIDTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
@@ -131,11 +140,13 @@ class Canvas(object):
             self.zoom = 1
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
+        
         if self.tiled:
             self.left = self.top = 0
         else:
             self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type)
+
     def _zoom_image(self, zoom):
         """ Shared logic between zoom_to_center (default behavior) and zoom_to_point (new behavior)
         This is still kinda confused because zoom_to_center is used as a setter.
