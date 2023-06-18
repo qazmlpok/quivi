@@ -87,10 +87,13 @@ class Canvas(object):
         spread = self._get_bool_setting('DetectSpreads')
         img_w = self.img.original_width
         img_h = self.img.original_height
+        is_spread = False
         if spread and img_w > (img_h * 1.3):
             #Normal page layout is taller than it is long. If this is not true,
             #assume it's two pages combined. display may be improved by calculating the width based on the "half" pages
             img_w = (img_w+1) // 2
+            #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
+            is_spread = True
         self.tiled = False
 
         if fit_type == Settings.FIT_WIDTH:
@@ -146,7 +149,7 @@ class Canvas(object):
             self.left = self.top = 0
         else:
             self.center()
-        Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type)
+        Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=is_spread)
 
     def _zoom_image(self, zoom):
         """ Shared logic between zoom_to_center (default behavior) and zoom_to_point (new behavior)

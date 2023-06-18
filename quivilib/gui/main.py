@@ -101,9 +101,9 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_bg_color_changed, 'settings.loaded')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackground')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
-        Publisher.subscribe(self.on_canvas_fit_changed, 'settings.loaded')
-        Publisher.subscribe(self.on_canvas_fit_changed, 'settings.changed.Options.FitType')
-        Publisher.subscribe(self.on_canvas_fit_changed, 'settings.changed.Options.FitWidthCustomSize')
+        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.loaded')
+        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitType')
+        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitWidthCustomSize')
         
         self._last_size = self.GetSize() 
         self._last_pos = self.GetPosition()
@@ -266,18 +266,19 @@ class MainWindow(wx.Frame):
         
     def on_canvas_changed(self):
         self.panel.Refresh(eraseBackground=False)
-        
-    def on_canvas_fit_changed(self, *, settings=None, FitType=None):
-        #Using the same listener for two different messages,
-        #so parse it differently
-        if FitType is not None:
-            fit_type = FitType
-        else:
-            fit_type = settings.getint('Options', 'FitType')
+    
+    def on_canvas_fit_setting_changed(self, *, settings):
+        fit_type = settings.getint('Options', 'FitType')
+        self.on_canvas_fit_changed(FitType = fit_type)
+    
+    def on_canvas_fit_changed(self, *, FitType, IsSpread=False):
         fit_choices = get_fit_choices()
-        name = [name for name, typ in fit_choices if typ == fit_type][0]
-        self.status_bar.SetStatusText(name, FIT_FIELD)
-        
+        name = [name for name, typ in fit_choices if typ == FitType][0]
+        txt = name
+        if IsSpread:
+            txt += ' ' + _('(Spread)')
+        self.status_bar.SetStatusText(txt, FIT_FIELD)
+
     def on_canvas_cursor_changed(self, *, cursor):
         self.panel.SetCursor(cursor)
         
