@@ -30,6 +30,12 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - 16-bit precision images *should* work with PIL.
 - Added option to view images right to left. Specifically, when opening an image that is larger than the screen, show the top-right corner of the image instead of the top-left corner. This has no effect if the Fit settings shrink the image to the size of the screen.
 - New feature: Right-to-left viewing. When opening an image that is longer than the screen, start at the top-right corner instead of the top-left. This is for images that use a right-to-left reading order (i.e. Japanese manga). It will have no effect if the image is resized to the width of the viewer.
+    - This will also invert the direction of horizontal mouse wheel scrolling. Mouse wheel up will always move to the "start" of the image.
+    - This can be toggled in the options. To the best of my knowledge, there is no way to detect the intended reading direction.
+- New feature: Vertical scrolling past the bottom of the image will scroll to the right (or left - RTL flips this).
+    - This can be toggled in the options. There's no effect if the image is resized to fit the screen.
+    - This is intended mostly for mousewheel scrolling, but it will work for other scrolling as well. It will not do anything for dragging an image.
+    - To prevent accidental horizontal scrolling, there's a small "buffer" that needs to be overcome; scroll while at the bottom 3+ times and it should start.
 - New feature: Spread page viewing. If enabled and the current image is taller than it is long (height > width), fit-to-width will be calculating using half of the image width instead of the full width.
     - The intent is for when viewing standard page images that includes image files that are two physical pages joined together, i.e. full-page spreads. This _should_ keep the zoom level roughly consistent with the rest of the book.
     - This will lead to false positive if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
