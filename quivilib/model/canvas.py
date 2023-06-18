@@ -87,7 +87,7 @@ class Canvas(object):
         spread = self._get_bool_setting('DetectSpreads')
         img_w = self.img.original_width
         img_h = self.img.original_height
-        if spread and img_w > img_h:
+        if spread and img_w > (img_h * 1.3):
             #Normal page layout is taller than it is long. If this is not true,
             #assume it's two pages combined. display may be improved by calculating the width based on the "half" pages
             img_w = (img_w+1) // 2
