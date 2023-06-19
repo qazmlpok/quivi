@@ -110,6 +110,13 @@ class MainController(object):
         else:
             style = (wx.FULLSCREEN_NOBORDER | wx.FULLSCREEN_NOCAPTION)
         self.view.ShowFullScreen(not self.view.IsFullScreen(), style)
+        
+    def toggle_spread(self):
+        using_feature = self.settings.get('Options', 'DetectSpreads') == '1'
+        #invert
+        self.settings.set('Options', 'DetectSpreads', '0' if using_feature else '1')
+        #This will reset zoom even if it isn't a spread - worth checking?
+        self.canvas.set_zoom_by_current_fit()
     
     def MaybeMaximize(self):
         """
@@ -138,6 +145,10 @@ class MainController(object):
     def on_update_file_list_menu_item(self, event):
         pane = self.view.aui_mgr.GetPane('file_list')
         event.Check(pane.IsShown())
+        
+    def on_update_spread_toggle_menu_item(self, event):
+        using_feature = self.settings.get('Options', 'DetectSpreads') == '1'
+        event.Check(using_feature)
         
     def on_update_image_available_menu_item(self, event):
         event.Enable(self.model.canvas.has_image())
@@ -179,8 +190,7 @@ class MainController(object):
                         log.debug(f"Remove existing placeholder: {fav.path}")
                         self.model.favorites.remove(fav.path, True)
             Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
-        
-        
+
     def remove_favorite(self):
         self.model.favorites.remove(self.model.container.path, False)
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)

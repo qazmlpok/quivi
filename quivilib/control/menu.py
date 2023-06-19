@@ -180,6 +180,11 @@ class MenuController(object):
               control.canvas.zoom_fit_height,
               [(wx.ACCEL_CTRL, ord('H'))],
               update_function=control.on_update_image_available_menu_item),
+         #TODO: All the messaging around this feature is awful but I don't know how to better word it.
+         make(13040, _('Show &spread'), _('Attempt to show combined pages at regular zoom'),
+              control.toggle_spread,
+              [(wx.ACCEL_CTRL, ord('E'))],
+              checkable=True, update_function=control.on_update_spread_toggle_menu_item),
          make(13008, _('Rotate &clockwise'), _('Rotate the image clockwise'),
               partial(control.canvas.rotate_image, 1),
               [(wx.ACCEL_CTRL, ord('L'))],
