@@ -202,7 +202,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
                     bmp = bmp()
                 img = bmp.ConvertToImage()
                 return img
-        elif item.typ in (Item.DIRECTORY, ItemType.PARENT):
+        elif item.typ in (ItemType.DIRECTORY, ItemType.PARENT):
             originalsize = 32, 32
             alpha = True
             def delayed_fn(bmp=bmp):

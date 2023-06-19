@@ -57,6 +57,8 @@ class OptionsController(object):
         custom_bg_color = '%d,%d,%d' % (opt.custom_bg_color.Red(), opt.custom_bg_color.Green(), opt.custom_bg_color.Blue())
         real_fullscreen = '1' if opt.real_fullscreen else '0'
         auto_fullscreen = '1' if opt.auto_fullscreen else '0'
+        use_right_to_left = '1' if opt.use_right_to_left else '0'
+        scroll_at_bottom = '1' if opt.scroll_at_bottom else '0'
         placeholder_delete = '1' if opt.placeholder_delete else '0'
         placeholder_single = '1' if opt.placeholder_single else '0'
         placeholder_autoopen = '1' if opt.placeholder_autoopen else '0'
@@ -70,6 +72,8 @@ class OptionsController(object):
         self.model.settings.set('Options', 'CustomBackground', custom_bg)
         self.model.settings.set('Options', 'RealFullscreen', real_fullscreen)
         self.model.settings.set('Options', 'AutoFullscreen', auto_fullscreen)
+        self.model.settings.set('Options', 'UseRightToLeft', use_right_to_left)
+        self.model.settings.set('Options', 'HorizontalScrollAtBottom', scroll_at_bottom)
         self.model.settings.set('Options', 'PlaceholderDelete', placeholder_delete)
         self.model.settings.set('Options', 'PlaceholderSingle', placeholder_single)
         self.model.settings.set('Options', 'PlaceholderAutoOpen', placeholder_autoopen)

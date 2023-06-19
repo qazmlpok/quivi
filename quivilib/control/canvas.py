@@ -19,7 +19,6 @@ ZOOM_FACTOR = 25
 
 
 class CanvasController(object):
-    
     #TODO: (1,4) Refactor: all canvas.changed should be sent by the model, but it would
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
@@ -64,13 +63,15 @@ class CanvasController(object):
         
     def on_canvas_scrolled(self, *, lines, horizontal=False):
         if horizontal:
+            rtl = self.settings.getboolean('Options', 'UseRightToLeft')
             scr = self.view.width
             inc = int(scr * (0.15 / 3) * lines)
-            self.canvas.left += (inc)
+            #Invert direction if in right-to-left mode. Mousewheel down should always be to the "end" of the image.
+            self.canvas.scroll_hori(inc, rtl)
         else:
             scr = self.view.height
             inc = int(scr * (0.2 / 3) * lines)
-            self.canvas.top += (inc)
+            self.canvas.scroll_vert(inc)
         Publisher.sendMessage(f'{self.name}.changed')
     
     def on_canvas_zoom_point(self, *, lines, x, y):
@@ -173,12 +174,20 @@ class CanvasController(object):
         if save:
             self.settings.set('Options', 'FitType', fit_type)
         Publisher.sendMessage(f'{self.name}.changed')
+    
+    def set_zoom_by_current_fit(self):
+        fit_type = self.settings.getint('Options', 'FitType')
+        self.set_zoom_by_fit_type(fit_type)
+        Publisher.sendMessage(f'{self.name}.changed')
         
     def move_image(self, direction, typ):
         if direction in (MOVE_RIGHT, MOVE_LEFT):
             scr = self.view.width
+            scr_fn = self.canvas.scroll_hori
         else:
             scr = self.view.height
+            scr_fn = self.canvas.scroll_vert
+        scr_rev = direction in (MOVE_RIGHT, MOVE_DOWN)
         if typ == MOVE_LARGE:
             inc = int(scr * 0.8)
         elif typ == MOVE_SMALL:
@@ -187,14 +196,10 @@ class CanvasController(object):
             #Adding all these together will guarantee the scroll is always complete
             #Any arbitrary number could theoretically be surpassed if I ever implement infinite scroll.
             inc = self.canvas.width + self.canvas.view.width + self.canvas.height + self.canvas.view.height
-        if direction == MOVE_LEFT:
-            self.canvas.left += inc
-        elif direction == MOVE_RIGHT:
-            self.canvas.left -= inc
-        elif direction == MOVE_UP:
-            self.canvas.top += inc
-        elif direction == MOVE_DOWN:
-            self.canvas.top -= inc
+        
+        #Call the appropriate canvas scroll_x function
+        #Note - scroll up/down will scroll left/right if at the image border. I don't know if this is appropriate behavior for this source of scrolling.
+        scr_fn(inc, scr_rev)
         Publisher.sendMessage(f'{self.name}.changed')
         
     def rotate_image(self, clockwise):

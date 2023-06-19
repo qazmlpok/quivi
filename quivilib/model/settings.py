@@ -19,7 +19,6 @@ class Settings(ConfigParser):
          'WIDTH',
          'HEIGHT',
          'BOTH'))
-    
     def __init__(self, path):
         ConfigParser.__init__(self)
         self.path = path
@@ -55,6 +54,9 @@ class Settings(ConfigParser):
           ('Options', 'CustomBackgroundColor', '0,0,0'),
           ('Options', 'RealFullscreen', 0),
           ('Options', 'AutoFullscreen', 1),
+          ('Options', 'UseRightToLeft', 0),
+          ('Options', 'DetectSpreads', 0),
+          ('Options', 'HorizontalScrollAtBottom', 0),
           ('Options', 'PlaceholderDelete', 1),
           ('Options', 'PlaceholderSingle', 0),
           ('Options', 'PlaceholderAutoOpen', 1),

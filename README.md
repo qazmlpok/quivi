@@ -28,6 +28,17 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - Changed how the list of commands for keyboard/mouse are populated. Some commands are now marked as keyboard or mouse only. This technically removes functionality, but it makes the menu slightly easier to work with.
 - Reworked how Cairo resizes image. If Cairo is enabled, images will be rescaled via a matrix operation instead of creating a new image. This is massively faster for the initial zoom, but slower for panning. The current approach is to use a high-quality resample while zooming, but a fast resample while panning. In the background, a high-quality resized image is created and used for panning when it is available. This is (roughly) the same approach taken by Eye of Gnome. It should be possible to always smoothing scale/pan at high quality, as GIMP does this, but I haven't figured it out.
 - 16-bit precision images *should* work with PIL.
+- New feature: Right-to-left viewing. When opening an image that is longer than the screen, start at the top-right corner instead of the top-left. This is for images that use a right-to-left reading order (i.e. Japanese manga). It will have no effect if the image is resized to the width of the viewer.
+    - This will also invert the direction of horizontal mouse wheel scrolling. Mouse wheel up will always move to the "start" of the image.
+    - This can be toggled in the options. To the best of my knowledge, there is no way to detect the intended reading direction.
+- New feature: Vertical scrolling past the bottom of the image will scroll to the right (or left - RTL flips this).
+    - This can be toggled in the options. There's no effect if the image is resized to fit the screen.
+    - This is intended mostly for mousewheel scrolling, but it will work for other scrolling as well. It will not do anything for dragging an image.
+    - To prevent accidental horizontal scrolling, there's a small "buffer" that needs to be overcome; scroll while at the bottom 3+ times and it should start.
+- New feature: Spread page viewing. If enabled and the current image is taller than it is long (height > width), fit-to-width will be calculating using half of the image width instead of the full width.
+    - The intent is for when viewing standard page images that includes image files that are two physical pages joined together, i.e. full-page spreads. This _should_ keep the zoom level roughly consistent with the rest of the book.
+    - This will lead to false positive if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
+    - There's no indication that this is being done while in fullscreen, so if two pages are joined together but don't have shared art and contain ample margins, it will be easy to accidentally skip pages.
 
 
 # Removed features
@@ -50,6 +61,7 @@ Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that
 
 # Known Issues
 - 16-bit precision images do not work with freeimage. PIL support is hackish.
+- The wallpaper dialog broke due to other changes to the canvas and I haven't bothered to fix it.
 
 # Missing translations
 The following text strings are new and have not been added to any of the translation files.
@@ -78,3 +90,7 @@ The following text strings are new and have not been added to any of the transla
 - Full move down
 - Full move left
 - Full move right
+- View images right-to-left
+- Show &spread
+- Attempt to show combined pages at regular zoom
+- (Spread)
