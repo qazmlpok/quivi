@@ -24,6 +24,8 @@ datas=[('LICENSE.txt', '.')]
 excludes = []
 if meta.USE_FREEIMAGE:
     datas.append(('freeimage-license.txt', '.'))
+if meta.USE_CAIRO:
+    datas.append(('cairo.dll', '.'))
 translation_files = glob('localization/*.mo') + ['localization/default.pot']
 for mo in translation_files:
     datas.append((mo, 'localization'))
