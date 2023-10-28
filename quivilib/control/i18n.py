@@ -44,10 +44,7 @@ class I18NController(object):
         self.locale = wx.Locale(lang_id)
         locale.setlocale(locale.LC_ALL, lang)
         if self.locale.IsOk():
-            if sys.platform == 'win32':
-                res = self.locale.AddCatalog(info.CanonicalName)
-            else:
-                res = self.locale.AddCatalog('quivi')
+            res = self.locale.AddCatalog('quivi')
             self._language = lang_id
             self.settings.set('Language', 'ID', info.CanonicalName)
         else:
@@ -73,7 +70,7 @@ class I18NController(object):
                 if lang_info is not None and lang_id != wx.LANGUAGE_DEFAULT:
                     lang_code = lang_info.CanonicalName
                     if sys.platform == 'win32':
-                        path = self.control.localization_path / (lang_code + '.mo')
+                        path = self.control.localization_path / lang_code / 'LC_MESSAGES' / 'quivi.mo' 
                     else:
                         path = Path('/usr') / 'share' / 'locale' / lang_code / 'LC_MESSAGES' / 'quivi.mo' 
                     try:
