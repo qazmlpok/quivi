@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Quivi\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-07-05 22:57-0300\n"
+"POT-Creation-Date: 2023-10-28 15:48-0400\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Conrado Porto Lopes Gouvêa <conradoplg@gmail.com>\n"
 "Language-Team: \n"
@@ -13,627 +13,744 @@ msgstr ""
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Poedit-SearchPath-0: quivilib\n"
 
-#: quivilib/control/file_association.py:296
+#: .\quivilib\control\file_association.py:290
 msgid "Image"
 msgstr "Imagen"
 
-#: quivilib/control/file_list.py:27
-#, python-format
+#: .\quivilib\control\file_list.py:26
 msgid "Are you sure you want to delete \"%s\"?"
 msgstr ""
 
-#: quivilib/control/file_list.py:28
+#: .\quivilib\control\file_list.py:27
 msgid "Confirm file deletion"
 msgstr ""
 
-#: quivilib/control/file_list.py:286
+#: .\quivilib\control\file_list.py:41
+msgid "The file or directory \"%s\" couldn't be found. Remove the favorite?"
+msgstr ""
+
+#: .\quivilib\control\file_list.py:42
+msgid "Favorite not found"
+msgstr ""
+
+#: .\quivilib\control\file_list.py:303
 msgid "File or directory does not exist"
 msgstr ""
 
-#: quivilib/control/menu.py:95
+#: .\quivilib\control\main.py:261
+msgid "The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s."
+msgstr ""
+
+#: .\quivilib\control\main.py:263
+msgid "The settings file is corrupt and cannot be opened. Settings will return to their default values."
+msgstr ""
+
+#: .\quivilib\control\main.py:267
+msgid "Settings lost"
+msgstr ""
+
+#: .\quivilib\control\menu.py:109
 msgid "Set as &wallpaper..."
 msgstr "Establecer como fondo de pantalla"
 
-#: quivilib/control/menu.py:95
+#: .\quivilib\control\menu.py:109
 msgid "Set the opened image as wallpaper"
 msgstr "Establecer imagen abierta como fondo de pantallla"
 
-#: quivilib/control/menu.py:98
+#: .\quivilib\control\menu.py:113
 msgid "&Copy"
 msgstr "&Copiar"
 
-#: quivilib/control/menu.py:98
+#: .\quivilib\control\menu.py:113
 msgid "Copy the opened image to the clipboard"
 msgstr "copiar imagen abierta al portapapeles"
 
-#: quivilib/control/menu.py:101
+#: .\quivilib\control\menu.py:117
+msgid "&Copy path"
+msgstr ""
+
+#: .\quivilib\control\menu.py:117
+msgid "Copy the path of the current container to the clipboard"
+msgstr ""
+
+#: .\quivilib\control\menu.py:121
 msgid "&Delete"
 msgstr ""
 
-#: quivilib/control/menu.py:101
+#: .\quivilib\control\menu.py:121
 msgid "Delete the opened image"
 msgstr ""
 
-#: quivilib/control/menu.py:106
+#: .\quivilib\control\menu.py:126
 msgid "&Options..."
 msgstr "&Opciones..."
 
-#: quivilib/control/menu.py:106
+#: .\quivilib\control\menu.py:126
 msgid "Open the options dialog"
 msgstr "Abrir dialogo de opciones"
 
-#: quivilib/control/menu.py:110
+#: .\quivilib\control\menu.py:130
 msgid "&Quit"
 msgstr "Salir"
 
-#: quivilib/control/menu.py:110
+#: .\quivilib\control\menu.py:130
 msgid "Close the application"
 msgstr "Cerrar la aplicacion"
 
-#: quivilib/control/menu.py:115
-msgid "Select/Open &next"
-msgstr "Seleccionar/Abrir siguie&nte"
-
-#: quivilib/control/menu.py:115
+#: .\quivilib\control\menu.py:135
 msgid "Select the next item; if it is an image, show it"
 msgstr "Seleccionar siguiente objeto, si es una imagen, abrirla"
 
-#: quivilib/control/menu.py:118
-msgid "Select/Open &previous"
-msgstr "Seleccionar/Abrir anterior"
+#: .\quivilib\control\menu.py:135
+msgid "Select/Open &next"
+msgstr "Seleccionar/Abrir siguie&nte"
 
-#: quivilib/control/menu.py:118
+#: .\quivilib\control\menu.py:138
 msgid "Select the previous item; if it is an image, show it"
 msgstr "Seleccionar objeto anterior, si es una imagen, abrirla"
 
-#: quivilib/control/menu.py:121
-msgid "Open selected &directory"
-msgstr "Abrir Carpeta selecionada"
+#: .\quivilib\control\menu.py:138
+msgid "Select/Open &previous"
+msgstr "Seleccionar/Abrir anterior"
 
-#: quivilib/control/menu.py:121
+#: .\quivilib\control\menu.py:141
 msgid "If a directory or a compressed file is selected, open it"
 msgstr "Si la Carpeta o el archivo esta comprimido, Abrirlo"
 
-#: quivilib/control/menu.py:124
+#: .\quivilib\control\menu.py:141
+msgid "Open selected &directory"
+msgstr "Abrir Carpeta selecionada"
+
+#: .\quivilib\control\menu.py:144
 msgid "Open p&arent"
 msgstr "Abrir Carpeta superior"
 
-#: quivilib/control/menu.py:124
+#: .\quivilib\control\menu.py:144
 msgid "Open the parent directory or compressed file"
 msgstr "Abrir Carpeta superior o archivo Compreso"
 
-#: quivilib/control/menu.py:127
+#: .\quivilib\control\menu.py:147
 msgid "Open ne&xt sibling"
 msgstr "Abrir Carpeta Siguiente"
 
-#: quivilib/control/menu.py:127
+#: .\quivilib\control\menu.py:147
 msgid "Open the next directory or compressed file inside the parent"
 msgstr "Abrir la siguiente carpeta u archivo compreso del mismo directorio"
 
-#: quivilib/control/menu.py:130
+#: .\quivilib\control\menu.py:150
 msgid "Open previou&s sibling"
 msgstr "Abrir Carpeta Anterior"
 
-#: quivilib/control/menu.py:130
+#: .\quivilib\control\menu.py:150
 msgid "Open the previous directory or compressed file inside the parent"
 msgstr "Abrir Carpeta u archivo compreso en el directorio superior"
 
-#: quivilib/control/menu.py:133
+#: .\quivilib\control\menu.py:153
 msgid "&Refresh"
 msgstr "Actualiza&r"
 
-#: quivilib/control/menu.py:133
+#: .\quivilib\control\menu.py:153
 msgid "Refresh the current directory or compressed file; reload the image shown if any"
 msgstr "Actualizar Carpeta o archivo compreso actual, actualiza y muestra cualquiera"
 
-#: quivilib/control/menu.py:136
-msgid "Open direc&tory..."
-msgstr "Abrir Carpeta"
-
-#: quivilib/control/menu.py:136
+#: .\quivilib\control\menu.py:156
 msgid "Browse for a directory to open"
 msgstr "Explorar para abrir una carpeta"
 
-#: quivilib/control/menu.py:141
+#: .\quivilib\control\menu.py:156
+msgid "Open direc&tory..."
+msgstr "Abrir Carpeta"
+
+#: .\quivilib\control\menu.py:161
 msgid "Zoom &in"
 msgstr "Acercar"
 
-#: quivilib/control/menu.py:141
+#: .\quivilib\control\menu.py:161
 msgid "Zoom in"
 msgstr "Acercar"
 
-#: quivilib/control/menu.py:144
+#: .\quivilib\control\menu.py:165
 msgid "Zoom &out"
 msgstr "Alejar"
 
-#: quivilib/control/menu.py:144
+#: .\quivilib\control\menu.py:165
 msgid "Zoom out"
 msgstr "Alejar"
 
-#: quivilib/control/menu.py:147
+#: .\quivilib\control\menu.py:171
 msgid "&Zoom 100%"
 msgstr "Ajustar al 100%"
 
-#: quivilib/control/menu.py:147
+#: .\quivilib\control\menu.py:171
 msgid "Show the image in its real size"
 msgstr "Mostrar en tamaño real"
 
-#: quivilib/control/menu.py:150
+#: .\quivilib\control\menu.py:175
 msgid "Fit &width"
 msgstr "Ajustar al ancho"
 
-#: quivilib/control/menu.py:150
+#: .\quivilib\control\menu.py:175
 msgid "Zooms the image in order to make its width fit the window"
 msgstr "Ajustar con el ancho de la ventana"
 
-#: quivilib/control/menu.py:153
+#: .\quivilib\control\menu.py:179
 msgid "Fit &height"
 msgstr "Ajustar a la Altura"
 
-#: quivilib/control/menu.py:153
+#: .\quivilib\control\menu.py:179
 msgid "Zooms the image in order to make its height fit the window"
 msgstr "Ajustar con el alto de la ventana"
 
-#: quivilib/control/menu.py:156
+#: .\quivilib\control\menu.py:184
+msgid "Attempt to show combined pages at regular zoom"
+msgstr ""
+
+#: .\quivilib\control\menu.py:184
+msgid "Show &spread"
+msgstr ""
+
+#: .\quivilib\control\menu.py:188
 msgid "Rotate &clockwise"
 msgstr ""
 
-#: quivilib/control/menu.py:156
+#: .\quivilib\control\menu.py:188
 msgid "Rotate the image clockwise"
 msgstr ""
 
-#: quivilib/control/menu.py:159
+#: .\quivilib\control\menu.py:192
 msgid "Rotate coun&ter clockwise"
 msgstr ""
 
-#: quivilib/control/menu.py:159
+#: .\quivilib\control\menu.py:192
 msgid "Rotate the image counter clockwise"
 msgstr ""
 
-#: quivilib/control/menu.py:163
+#: .\quivilib\control\menu.py:197
 msgid "&Full screen"
 msgstr "Pantalla completa"
 
-#: quivilib/control/menu.py:163
+#: .\quivilib\control\menu.py:197
 msgid "Go to/leave full screen mode"
 msgstr "Salir del modo pantalla completa"
 
-#: quivilib/control/menu.py:167
+#: .\quivilib\control\menu.py:201
 msgid "File &list"
 msgstr "Ver lista de archivos"
 
-#: quivilib/control/menu.py:167
+#: .\quivilib\control\menu.py:201
 msgid "Show/hide the file list"
 msgstr "Mostar/Ocultar lista de archivos"
 
-#: quivilib/control/menu.py:171
-msgid "Thumb&nails"
-msgstr ""
-
-#: quivilib/control/menu.py:171
+#: .\quivilib\control\menu.py:205
 msgid "Show/hide the thumbnails"
 msgstr ""
 
-#: quivilib/control/menu.py:175
+#: .\quivilib\control\menu.py:205
+msgid "Thumb&nails"
+msgstr ""
+
+#: .\quivilib\control\menu.py:209
 msgid "Hi&dden files"
 msgstr ""
 
-#: quivilib/control/menu.py:175
+#: .\quivilib\control\menu.py:209
 msgid "Show/hide hidden files in the file list"
 msgstr ""
 
-#: quivilib/control/menu.py:181
-msgid "Add to &favorites"
-msgstr "Añadir a &Favoritos"
-
-#: quivilib/control/menu.py:181
+#: .\quivilib\control\menu.py:215
 msgid "Add the current directory or compressed file to the favorites"
 msgstr "Añadir carpeta o archivo compreso actual a favoritos"
 
-#: quivilib/control/menu.py:184
+#: .\quivilib\control\menu.py:215
+msgid "Add to &favorites"
+msgstr "Añadir a &Favoritos"
+
+#: .\quivilib\control\menu.py:218
+msgid "Add &placeholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:218
+msgid "Add the current directory or compressed file to the favorites on the current image"
+msgstr ""
+
+#: .\quivilib\control\menu.py:221
 msgid "R&emove from favorites"
 msgstr "&Eliminar de favoritos"
 
-#: quivilib/control/menu.py:184
+#: .\quivilib\control\menu.py:221
 msgid "Remove the current directory or compressed file from the favorites"
 msgstr "Eliminar carpeta o archivo compreso actual de favoritos"
 
-#: quivilib/control/menu.py:189
+#: .\quivilib\control\menu.py:224
+msgid "Remove p&laceholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:224
+msgid "Remove the saved page for the current directory or compressed file from the favorites"
+msgstr ""
+
+#: .\quivilib\control\menu.py:229
+msgid "Open last placeholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:229
+msgid "Open the most recently created placeholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:234
 msgid "&Help (online)..."
 msgstr "Ayuda (Online)..."
 
-#: quivilib/control/menu.py:189
+#: .\quivilib\control\menu.py:234
 msgid "Open the online help"
 msgstr "Abrir ayuda online"
 
-#: quivilib/control/menu.py:192
+#: .\quivilib\control\menu.py:237
 msgid "&Feedback / Support (online)..."
 msgstr "Reporte de bugs / soporte (online)"
 
-#: quivilib/control/menu.py:192
+#: .\quivilib\control\menu.py:237
 msgid "Open the feedback / support online form"
 msgstr "Enviar una nota a soporte"
 
-#: quivilib/control/menu.py:195
+#: .\quivilib\control\menu.py:240
 msgid "&About..."
 msgstr "&Acerca de Quivi"
 
-#: quivilib/control/menu.py:195
+#: .\quivilib\control\menu.py:240
 msgid "Show information about the application"
 msgstr "Mostrar informacion de la aplicacion"
 
-#: quivilib/control/menu.py:200
+#: .\quivilib\control\menu.py:245
 msgid "Small move up"
 msgstr "Mover un poco hacia Arriba"
 
-#: quivilib/control/menu.py:203
+#: .\quivilib\control\menu.py:248
 msgid "Small move down"
 msgstr "Mover un poco hacia Abajo"
 
-#: quivilib/control/menu.py:206
+#: .\quivilib\control\menu.py:251
 msgid "Small move left"
 msgstr "Mover un poco hacia la Izquierda"
 
-#: quivilib/control/menu.py:209
+#: .\quivilib\control\menu.py:254
 msgid "Small move right"
 msgstr "Mover un poco hacia la Derecha"
 
-#: quivilib/control/menu.py:212
+#: .\quivilib\control\menu.py:257
 msgid "Large move up"
 msgstr "Mover bastante hacia Arriba"
 
-#: quivilib/control/menu.py:215
+#: .\quivilib\control\menu.py:260
 msgid "Large move down"
 msgstr "Mover bastante hacia Abajo"
 
-#: quivilib/control/menu.py:218
+#: .\quivilib\control\menu.py:263
 msgid "Large move left"
 msgstr "Mover bastante hacia la Izquierda"
 
-#: quivilib/control/menu.py:221
+#: .\quivilib\control\menu.py:266
 msgid "Large move right"
 msgstr "Mover bastante hacia la Derecha"
 
-#: quivilib/control/menu.py:226
-#: quivilib/control/options.py:17
-msgid "None"
-msgstr "No ajustar"
-
-#: quivilib/control/menu.py:229
-#: quivilib/control/options.py:18
-msgid "Width"
-msgstr "Ancho"
-
-#: quivilib/control/menu.py:232
-#: quivilib/control/options.py:19
-msgid "Height"
+#: .\quivilib\control\menu.py:269
+msgid "Full move up"
 msgstr ""
 
-#: quivilib/control/menu.py:235
-#: quivilib/control/options.py:20
-msgid "Window"
+#: .\quivilib\control\menu.py:272
+msgid "Full move down"
 msgstr ""
 
-#: quivilib/control/menu.py:238
-#: quivilib/control/options.py:21
-msgid "Width if larger"
+#: .\quivilib\control\menu.py:275
+msgid "Full move left"
 msgstr ""
 
-#: quivilib/control/menu.py:241
-#: quivilib/control/options.py:22
-msgid "Height if larger"
+#: .\quivilib\control\menu.py:278
+msgid "Full move right"
 msgstr ""
 
-#: quivilib/control/menu.py:244
-#: quivilib/control/options.py:23
-msgid "Window if larger"
-msgstr ""
-
-#: quivilib/control/menu.py:248
-#: quivilib/control/options.py:24
-msgid "Custom width"
-msgstr ""
-
-#: quivilib/control/menu.py:258
-msgid "&File"
-msgstr "Archivo"
-
-#: quivilib/control/menu.py:259
-msgid "F&older"
-msgstr "Carpeta"
-
-#: quivilib/control/menu.py:260
-msgid "&View"
-msgstr "&Ver"
-
-#: quivilib/control/menu.py:261
-msgid "F&avorites"
-msgstr "&Favoritos"
-
-#: quivilib/control/menu.py:262
-msgid "&Help"
-msgstr "Ayuda"
-
-#: quivilib/control/menu.py:263
-msgid "Move"
-msgstr "Mover"
-
-#: quivilib/control/menu.py:264
-msgid "Fit"
-msgstr "Ajustar"
-
-#: quivilib/control/menu.py:265
-msgid "Misc"
-msgstr ""
-
-#: quivilib/control/wallpaper.py:46
-msgid "&Actual size"
-msgstr "T&amaño actual"
-
-#: quivilib/control/wallpaper.py:47
-msgid "&Tiled"
-msgstr "Mosaico"
-
-#: quivilib/control/wallpaper.py:48
-msgid "Stretch to fit screen, c&rop excess"
-msgstr "Estirar para ajustar a la pantalla, cortar exedentes"
-
-#: quivilib/control/wallpaper.py:49
-msgid "Stretch to &fit screen, show entire image"
-msgstr "Estirar para ajustar a la pantalla,mostrar imagen completa"
-
-#: quivilib/control/wallpaper.py:223
-msgid "Unable to set wallpaper"
-msgstr "No se puede estableser como fondo de pantalla"
-
-#: quivilib/gui/about.py:25
-msgid "&OK"
-msgstr "&OK"
-
-#: quivilib/gui/about.py:35
-msgid "About"
-msgstr "Acerca"
-
-#: quivilib/gui/error.py:19
-msgid "If you think this may be a bug, please report it. Thank you."
-msgstr "Si piensas que esto es un bug, favor de reportarlo, Gracias"
-
-#: quivilib/gui/error.py:20
-msgid "Please copy the error information below and click the link in order to report this error."
-msgstr "por favor copia la informacion del error y haz click en reportar este error."
-
-#: quivilib/gui/error.py:22
-msgid "An error has occurred:"
-msgstr ""
-
-#: quivilib/gui/error.py:33
-msgid "&Copy error information"
-msgstr "&Copiar informacion del Error"
-
-#: quivilib/gui/error.py:34
-msgid "Report error"
-msgstr "Reportar Error"
-
-#: quivilib/gui/error.py:35
-msgid "&Report error"
-msgstr "&Reportar Error"
-
-#: quivilib/gui/error.py:48
-msgid "Error"
-msgstr "Error"
-
-#: quivilib/gui/main.py:69
-#: quivilib/gui/main.py:388
-msgid "Files"
-msgstr "Lista de Archivos"
-
-#: quivilib/gui/main.py:377
-msgid "Loading..."
-msgstr "Cargando..."
-
-#: quivilib/gui/main.py:391
-#: quivilib/gui/main.py:425
-msgid "&Download"
-msgstr "&Descargar"
-
-#: quivilib/gui/main.py:392
-#: quivilib/gui/main.py:425
-msgid "Go to the download site"
-msgstr "Ir al sitio de descarga"
-
-#: quivilib/gui/main.py:394
-#: quivilib/gui/main.py:426
-msgid "&New version available!"
-msgstr "&Nueva version disponible"
-
-#: quivilib/gui/main.py:409
-msgid "Choose a directory:"
-msgstr "Selecionar una carpeta"
-
-#: quivilib/gui/options.py:34
-msgid "Background color"
-msgstr ""
-
-#: quivilib/gui/options.py:39
-msgid "Start directory"
-msgstr "Directorio inicial"
-
-#: quivilib/gui/options.py:41
-msgid "Default system color"
-msgstr ""
-
-#: quivilib/gui/options.py:42
-msgid "Custom color:"
-msgstr ""
-
-#: quivilib/gui/options.py:44
-msgid "Hide menu and status on full screen"
-msgstr ""
-
-#: quivilib/gui/options.py:45
-msgid "Portable mode (save settings inside the program folder)"
-msgstr ""
-
-#: quivilib/gui/options.py:46
-msgid "Commands"
-msgstr "Comandos"
-
-#: quivilib/gui/options.py:48
-msgid "Shortcuts for selected command"
-msgstr ""
-
-#: quivilib/gui/options.py:50
-msgid "Remove"
-msgstr "Borrar"
-
-#: quivilib/gui/options.py:51
-msgid "New shortcut"
-msgstr "Nuevo Atajo"
-
-#: quivilib/gui/options.py:52
-msgid "Press key"
-msgstr "Presione una tecla"
-
-#: quivilib/gui/options.py:53
-msgid "Assign"
-msgstr "Asignar"
-
-#: quivilib/gui/options.py:55
-msgid "Reset all to defaults"
-msgstr "Establecer todo por defecto"
-
-#: quivilib/gui/options.py:57
-msgid "Left click"
-msgstr "Click Derecho"
-
-#: quivilib/gui/options.py:59
-msgid "Middle click"
-msgstr "Click Central"
-
-#: quivilib/gui/options.py:61
-msgid "Right click"
-msgstr "Click Izquierdo"
-
-#: quivilib/gui/options.py:64
-#: quivilib/gui/wallpaper.py:27
-msgid "&Cancel"
-msgstr "&Cancelar"
-
-#: quivilib/gui/options.py:88
-msgid "Options"
-msgstr "Opciones"
-
-#: quivilib/gui/options.py:94
-#: quivilib/gui/options.py:95
-#: quivilib/gui/options.py:96
+#: .\quivilib\control\menu.py:281
 msgid "Drag image"
 msgstr "Mover imagen"
 
-#: quivilib/gui/options.py:183
-msgid "&Viewing"
-msgstr "Apariencia"
+#: .\quivilib\control\menu.py:286 .\quivilib\control\options.py:12
+#: .\quivilib\gui\options.py:130
+msgid "None"
+msgstr "No ajustar"
 
-#: quivilib/gui/options.py:184
-msgid "&Keys"
-msgstr "Teclas"
+#: .\quivilib\control\menu.py:289 .\quivilib\control\options.py:13
+#: .\quivilib\gui\options.py:73
+msgid "Width"
+msgstr "Ancho"
 
-#: quivilib/gui/options.py:185
-msgid "&Mouse"
-msgstr "&Mouse"
-
-#: quivilib/gui/options.py:186
-msgid "&Language"
-msgstr "&Lenguaje"
-
-#: quivilib/gui/options.py:278
-#, python-format
-msgid "Assigned for \"%s\""
-msgstr "Asignado para \"%s\""
-
-#: quivilib/gui/wallpaper.py:25
-msgid "&Position"
-msgstr "&Posicion"
-
-#: quivilib/gui/wallpaper.py:26
-msgid "&Set wallpaper"
-msgstr "E&stablecer fondo de pantalla"
-
-#: quivilib/gui/wallpaper.py:28
-msgid "Zoom:"
-msgstr "Zoom:"
-
-#: quivilib/gui/wallpaper.py:32
-msgid "&Color:"
+#: .\quivilib\control\menu.py:292 .\quivilib\control\options.py:14
+msgid "Height"
 msgstr ""
 
-#: quivilib/gui/wallpaper.py:65
-msgid "Set as wallpaper"
-msgstr "Establecer fondo de pantalla"
+#: .\quivilib\control\menu.py:295 .\quivilib\control\options.py:15
+msgid "Window"
+msgstr ""
 
-#: quivilib/gui/file_list_view/list_ctrl.py:146
+#: .\quivilib\control\menu.py:298 .\quivilib\control\options.py:16
+msgid "Width if larger"
+msgstr ""
+
+#: .\quivilib\control\menu.py:301 .\quivilib\control\options.py:17
+msgid "Height if larger"
+msgstr ""
+
+#: .\quivilib\control\menu.py:304 .\quivilib\control\options.py:18
+msgid "Window if larger"
+msgstr ""
+
+#: .\quivilib\control\menu.py:308 .\quivilib\control\options.py:19
+msgid "Custom width"
+msgstr ""
+
+#: .\quivilib\control\menu.py:313
+msgid "&File"
+msgstr "Archivo"
+
+#: .\quivilib\control\menu.py:314
+msgid "F&older"
+msgstr "Carpeta"
+
+#: .\quivilib\control\menu.py:315
+msgid "&View"
+msgstr "&Ver"
+
+#: .\quivilib\control\menu.py:316
+msgid "F&avorites"
+msgstr "&Favoritos"
+
+#: .\quivilib\control\menu.py:317
+msgid "&Help"
+msgstr "Ayuda"
+
+#: .\quivilib\control\menu.py:319 .\quivilib\gui\options.py:71
+msgid "Fit"
+msgstr "Ajustar"
+
+#: .\quivilib\control\menu.py:326
+msgid "Favorites"
+msgstr ""
+
+#: .\quivilib\control\menu.py:327
+msgid "Move"
+msgstr "Mover"
+
+#: .\quivilib\control\wallpaper.py:37
+msgid "&Actual size"
+msgstr "T&amaño actual"
+
+#: .\quivilib\control\wallpaper.py:38
+msgid "&Tiled"
+msgstr "Mosaico"
+
+#: .\quivilib\control\wallpaper.py:39
+msgid "Stretch to fit screen, c&rop excess"
+msgstr "Estirar para ajustar a la pantalla, cortar exedentes"
+
+#: .\quivilib\control\wallpaper.py:40
+msgid "Stretch to &fit screen, show entire image"
+msgstr "Estirar para ajustar a la pantalla,mostrar imagen completa"
+
+#: .\quivilib\control\wallpaper.py:210
+msgid "Unable to set wallpaper"
+msgstr "No se puede estableser como fondo de pantalla"
+
+#: .\quivilib\gui\about.py:23 .\quivilib\gui\error.py:37
+#: .\quivilib\gui\options.py:41
+msgid "&OK"
+msgstr "&OK"
+
+#: .\quivilib\gui\about.py:33
+msgid "About"
+msgstr "Acerca"
+
+#: .\quivilib\gui\error.py:20
+msgid "If you think this may be a bug, please report it. Thank you."
+msgstr "Si piensas que esto es un bug, favor de reportarlo, Gracias"
+
+#: .\quivilib\gui\error.py:21
+msgid "Please copy the error information below and click the link in order to report this error."
+msgstr "por favor copia la informacion del error y haz click en reportar este error."
+
+#: .\quivilib\gui\error.py:23
+msgid "An error has occurred:"
+msgstr ""
+
+#: .\quivilib\gui\error.py:34
+msgid "&Copy error information"
+msgstr "&Copiar informacion del Error"
+
+#: .\quivilib\gui\error.py:35
+msgid "Report error"
+msgstr "Reportar Error"
+
+#: .\quivilib\gui\error.py:36
+msgid "&Report error"
+msgstr "&Reportar Error"
+
+#: .\quivilib\gui\error.py:49
+msgid "Error"
+msgstr "Error"
+
+#: .\quivilib\gui\file_list_view\list_ctrl.py:143
 msgid "File"
 msgstr "Archivo"
 
-#: quivilib/gui/file_list_view/list_ctrl.py:147
+#: .\quivilib\gui\file_list_view\list_ctrl.py:144
 msgid "Extension"
 msgstr "Tipo de archivo"
 
-#: quivilib/gui/file_list_view/list_ctrl.py:148
+#: .\quivilib\gui\file_list_view\list_ctrl.py:145
 msgid "Last modified"
 msgstr "Ultima modificacion"
 
-#: quivilib/i18n/setup_strings.py:48
+#: .\quivilib\gui\main.py:57 .\quivilib\gui\main.py:386
+msgid "Files"
+msgstr "Lista de Archivos"
+
+#: .\quivilib\gui\main.py:279
+msgid "(Spread)"
+msgstr ""
+
+#: .\quivilib\gui\main.py:377
+msgid "Loading..."
+msgstr "Cargando..."
+
+#: .\quivilib\gui\main.py:389 .\quivilib\gui\main.py:423
+msgid "&Download"
+msgstr "&Descargar"
+
+#: .\quivilib\gui\main.py:390 .\quivilib\gui\main.py:423
+msgid "Go to the download site"
+msgstr "Ir al sitio de descarga"
+
+#: .\quivilib\gui\main.py:392 .\quivilib\gui\main.py:424
+msgid "&New version available!"
+msgstr "&Nueva version disponible"
+
+#: .\quivilib\gui\main.py:407
+msgid "Choose a directory:"
+msgstr "Selecionar una carpeta"
+
+#: .\quivilib\gui\options.py:42 .\quivilib\gui\wallpaper.py:24
+msgid "&Cancel"
+msgstr "&Cancelar"
+
+#: .\quivilib\gui\options.py:70
+msgid "Background color"
+msgstr ""
+
+#: .\quivilib\gui\options.py:75
+msgid "Start directory"
+msgstr "Directorio inicial"
+
+#: .\quivilib\gui\options.py:77
+msgid "Default system color"
+msgstr ""
+
+#: .\quivilib\gui\options.py:78
+msgid "Custom color:"
+msgstr ""
+
+#: .\quivilib\gui\options.py:80
+msgid "Hide menu and status on full screen"
+msgstr ""
+
+#: .\quivilib\gui\options.py:81
+msgid "Open first image of the folder automatically"
+msgstr ""
+
+#: .\quivilib\gui\options.py:82
+msgid "Portable mode (save settings inside the program folder)"
+msgstr ""
+
+#: .\quivilib\gui\options.py:83
+msgid "Remember full screen on close"
+msgstr ""
+
+#: .\quivilib\gui\options.py:84
+msgid "View images right-to-left"
+msgstr ""
+
+#: .\quivilib\gui\options.py:85
+msgid "Scroll horizontally when scrolling past end of image"
+msgstr ""
+
+#: .\quivilib\gui\options.py:86
+msgid "Delete placeholders when opening"
+msgstr ""
+
+#: .\quivilib\gui\options.py:87
+msgid "Only allow a single placeholder"
+msgstr ""
+
+#: .\quivilib\gui\options.py:88
+msgid "Automatically jump to placeholder page on open"
+msgstr ""
+
+#: .\quivilib\gui\options.py:90
+msgid "Commands"
+msgstr "Comandos"
+
+#: .\quivilib\gui\options.py:92
+msgid "Shortcuts for selected command"
+msgstr ""
+
+#: .\quivilib\gui\options.py:94
+msgid "Remove"
+msgstr "Borrar"
+
+#: .\quivilib\gui\options.py:95
+msgid "New shortcut"
+msgstr "Nuevo Atajo"
+
+#: .\quivilib\gui\options.py:96
+msgid "Press key"
+msgstr "Presione una tecla"
+
+#: .\quivilib\gui\options.py:97
+msgid "Assign"
+msgstr "Asignar"
+
+#: .\quivilib\gui\options.py:99
+msgid "Reset all to defaults"
+msgstr "Establecer todo por defecto"
+
+#: .\quivilib\gui\options.py:105
+msgid "Left click"
+msgstr "Click Derecho"
+
+#: .\quivilib\gui\options.py:106
+msgid "Middle click"
+msgstr "Click Central"
+
+#: .\quivilib\gui\options.py:107
+msgid "Right click"
+msgstr "Click Izquierdo"
+
+#: .\quivilib\gui\options.py:108
+msgid "Aux1 click"
+msgstr ""
+
+#: .\quivilib\gui\options.py:109
+msgid "Aux2 click"
+msgstr ""
+
+#: .\quivilib\gui\options.py:115
+msgid "Always drag image with left mouse"
+msgstr ""
+
+#: .\quivilib\gui\options.py:116
+msgid "Threshold:"
+msgstr ""
+
+#: .\quivilib\gui\options.py:117
+msgid "px"
+msgstr ""
+
+#: .\quivilib\gui\options.py:125
+msgid "Options"
+msgstr "Opciones"
+
+#: .\quivilib\gui\options.py:205
+msgid "&Viewing"
+msgstr "Apariencia"
+
+#: .\quivilib\gui\options.py:206
+msgid "&Keys"
+msgstr "Teclas"
+
+#: .\quivilib\gui\options.py:207
+msgid "&Mouse"
+msgstr "&Mouse"
+
+#: .\quivilib\gui\options.py:208
+msgid "&Language"
+msgstr "&Lenguaje"
+
+#: .\quivilib\gui\options.py:391
+msgid "Assigned for \"%s\""
+msgstr "Asignado para \"%s\""
+
+#: .\quivilib\gui\wallpaper.py:22
+msgid "&Position"
+msgstr "&Posicion"
+
+#: .\quivilib\gui\wallpaper.py:23
+msgid "&Set wallpaper"
+msgstr "E&stablecer fondo de pantalla"
+
+#: .\quivilib\gui\wallpaper.py:25
+msgid "Zoom:"
+msgstr "Zoom:"
+
+#: .\quivilib\gui\wallpaper.py:29
+msgid "&Color:"
+msgstr ""
+
+#: .\quivilib\gui\wallpaper.py:62
+msgid "Set as wallpaper"
+msgstr "Establecer fondo de pantalla"
+
+#: .\quivilib\i18n\setup_strings.py:46
 msgid "en_US"
 msgstr "es_CL"
 
-#: quivilib/i18n/setup_strings.py:49
+#: .\quivilib\i18n\setup_strings.py:47
 msgid "Select users"
 msgstr "Seleccionar Usuarios"
 
-#: quivilib/i18n/setup_strings.py:50
+#: .\quivilib\i18n\setup_strings.py:48
 msgid "Select for which users you want to install $(^Name)"
 msgstr "Seleccionar usuarios a quien instalar $(^Name)"
 
-#: quivilib/i18n/setup_strings.py:51
+#: .\quivilib\i18n\setup_strings.py:49
 msgid "All users"
 msgstr "Todos los Uuarios"
 
-#: quivilib/i18n/setup_strings.py:52
+#: .\quivilib\i18n\setup_strings.py:50
 msgid "Current user"
 msgstr "Usuario Actual"
 
-#: quivilib/i18n/setup_strings.py:53
+#: .\quivilib\i18n\setup_strings.py:51
 msgid "$(^Name) (required)"
 msgstr "$(^Name) (requerido)"
 
-#: quivilib/i18n/setup_strings.py:54
+#: .\quivilib\i18n\setup_strings.py:52
 msgid "Start Menu Group"
 msgstr "Grupo de programa de inicio"
 
-#: quivilib/i18n/setup_strings.py:55
+#: .\quivilib\i18n\setup_strings.py:53
 msgid "Desktop Shortcut"
 msgstr "Acceso directo en el Escritorio"
 
-#: quivilib/i18n/setup_strings.py:56
+#: .\quivilib\i18n\setup_strings.py:54
 msgid "Associate extensions"
 msgstr "Asociar Extenciones"
 
-#: quivilib/model/container/root.py:28
+#: .\quivilib\model\container\root.py:27 .\tests\unittests\root_test.py:62
 msgid "My Computer"
 msgstr "Mi PC"
 
-#: quivilib/model/image/freeimage.py:59
+#: .\quivilib\model\image\freeimage.py:49
 msgid "Error while loading image"
 msgstr "Error al cargar la imagen"
 
 #~ msgid "Sorry, not yet implemented"
 #~ msgstr "Aun no esta implementado"
+
 #~ msgid "Fit width"
 #~ msgstr "Ajustar al ancho"
+
 #~ msgid "Fit width if oversize"
 #~ msgstr "Ajustar al Ancho si exede la ventana"
+
 #~ msgid "Fit height if oversize"
 #~ msgstr "Ajustar al Alto si exede la ventana"
+
 #~ msgid "Fit window if oversize"
 #~ msgstr "Ajustar a la Ventana si es exedida"
-

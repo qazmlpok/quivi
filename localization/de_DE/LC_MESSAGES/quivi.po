@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Quivi\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-08-11 12:53-0300\n"
+"POT-Creation-Date: 2023-10-28 15:48-0400\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Conrado Porto Lopes Gouvêa <conradoplg@gmail.com>\n"
 "Language-Team: oxsidian <oxsidian@gmx.de>\n"
@@ -15,628 +15,744 @@ msgstr ""
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SearchPath-0: D:\\Conrado\\workspace\\quivi\n"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/file_association.py:296
+#: .\quivilib\control\file_association.py:290
 msgid "Image"
 msgstr "Bild"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/file_list.py:27
-#, python-format
+#: .\quivilib\control\file_list.py:26
 msgid "Are you sure you want to delete \"%s\"?"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/file_list.py:28
+#: .\quivilib\control\file_list.py:27
 msgid "Confirm file deletion"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/file_list.py:286
+#: .\quivilib\control\file_list.py:41
+msgid "The file or directory \"%s\" couldn't be found. Remove the favorite?"
+msgstr ""
+
+#: .\quivilib\control\file_list.py:42
+msgid "Favorite not found"
+msgstr ""
+
+#: .\quivilib\control\file_list.py:303
 msgid "File or directory does not exist"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:95
+#: .\quivilib\control\main.py:261
+msgid "The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s."
+msgstr ""
+
+#: .\quivilib\control\main.py:263
+msgid "The settings file is corrupt and cannot be opened. Settings will return to their default values."
+msgstr ""
+
+#: .\quivilib\control\main.py:267
+msgid "Settings lost"
+msgstr ""
+
+#: .\quivilib\control\menu.py:109
 msgid "Set as &wallpaper..."
 msgstr "Als Hintergrundbild verwenden..."
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:95
+#: .\quivilib\control\menu.py:109
 msgid "Set the opened image as wallpaper"
 msgstr "Geöffnetes Bild als Hintergrundbild verwenden"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:98
+#: .\quivilib\control\menu.py:113
 msgid "&Copy"
 msgstr "&Kopieren"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:98
+#: .\quivilib\control\menu.py:113
 msgid "Copy the opened image to the clipboard"
 msgstr "Geöffnetes Bild in die Zwischenablage kopieren"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:101
+#: .\quivilib\control\menu.py:117
+msgid "&Copy path"
+msgstr ""
+
+#: .\quivilib\control\menu.py:117
+msgid "Copy the path of the current container to the clipboard"
+msgstr ""
+
+#: .\quivilib\control\menu.py:121
 msgid "&Delete"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:101
+#: .\quivilib\control\menu.py:121
 msgid "Delete the opened image"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:106
+#: .\quivilib\control\menu.py:126
 msgid "&Options..."
 msgstr "&Optionen..."
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:106
+#: .\quivilib\control\menu.py:126
 msgid "Open the options dialog"
 msgstr "Öffnet die Optionen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:110
+#: .\quivilib\control\menu.py:130
 msgid "&Quit"
 msgstr "B&eenden"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:110
+#: .\quivilib\control\menu.py:130
 msgid "Close the application"
 msgstr "Anwendung schließen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:115
-msgid "Select/Open &next"
-msgstr "Öffne n&ächste Datei"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:115
+#: .\quivilib\control\menu.py:135
 msgid "Select the next item; if it is an image, show it"
 msgstr "Öffne nächste Datei, falls es ein Bild ist, wird es angezeigt"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:118
-msgid "Select/Open &previous"
-msgstr "Öffne vorherige Datei"
+#: .\quivilib\control\menu.py:135
+msgid "Select/Open &next"
+msgstr "Öffne n&ächste Datei"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:118
+#: .\quivilib\control\menu.py:138
 msgid "Select the previous item; if it is an image, show it"
 msgstr "Öfnne vorherige Datei, falls es ein Bild ist, wird es angezeigt"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:121
-msgid "Open selected &directory"
-msgstr "Öffne gewähltes Verzeichnis"
+#: .\quivilib\control\menu.py:138
+msgid "Select/Open &previous"
+msgstr "Öffne vorherige Datei"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:121
+#: .\quivilib\control\menu.py:141
 msgid "If a directory or a compressed file is selected, open it"
 msgstr "Öffne ausgewähltes Verzeichnis oder komprimierte Datei"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:124
+#: .\quivilib\control\menu.py:141
+msgid "Open selected &directory"
+msgstr "Öffne gewähltes Verzeichnis"
+
+#: .\quivilib\control\menu.py:144
 msgid "Open p&arent"
 msgstr "Öffne übergeordnetes Verzeichnis"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:124
+#: .\quivilib\control\menu.py:144
 msgid "Open the parent directory or compressed file"
 msgstr "Öffne übergeordnetes Verzeichnis oder komprimierte Datei"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:127
+#: .\quivilib\control\menu.py:147
 msgid "Open ne&xt sibling"
 msgstr "Öffne Nächst&es "
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:127
+#: .\quivilib\control\menu.py:147
 msgid "Open the next directory or compressed file inside the parent"
 msgstr "Nächtes Verzeichnis oder komprimierte Datei innerhalb des gewählten Verzeichnis öffnen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:130
+#: .\quivilib\control\menu.py:150
 msgid "Open previou&s sibling"
 msgstr "Öffne Vorherig&es "
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:130
+#: .\quivilib\control\menu.py:150
 msgid "Open the previous directory or compressed file inside the parent"
 msgstr "Öffne vorheriges Verzeichnis oder komprimierte Datei innerhalb des gewählten Verzeichnisses"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:133
+#: .\quivilib\control\menu.py:153
 msgid "&Refresh"
 msgstr "&Neuladen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:133
+#: .\quivilib\control\menu.py:153
 msgid "Refresh the current directory or compressed file; reload the image shown if any"
 msgstr "Lädt geöffnetes Verzeichnis oder komprimierte Datei neu; Lädt angezeigtes Bild neu"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:136
-msgid "Open direc&tory..."
-msgstr "Verzeichnis ö&ffnen..."
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:136
+#: .\quivilib\control\menu.py:156
 msgid "Browse for a directory to open"
 msgstr "Durchsuche Verzeichnisse"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:141
+#: .\quivilib\control\menu.py:156
+msgid "Open direc&tory..."
+msgstr "Verzeichnis ö&ffnen..."
+
+#: .\quivilib\control\menu.py:161
 msgid "Zoom &in"
 msgstr "Einzoomen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:141
+#: .\quivilib\control\menu.py:161
 msgid "Zoom in"
 msgstr "Einzoomen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:144
+#: .\quivilib\control\menu.py:165
 msgid "Zoom &out"
 msgstr "Auszoomen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:144
+#: .\quivilib\control\menu.py:165
 msgid "Zoom out"
 msgstr "Auszoomen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:147
+#: .\quivilib\control\menu.py:171
 msgid "&Zoom 100%"
 msgstr "&Zoom 100%"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:147
+#: .\quivilib\control\menu.py:171
 msgid "Show the image in its real size"
 msgstr "Zeigt Originalgröße"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:150
+#: .\quivilib\control\menu.py:175
 msgid "Fit &width"
 msgstr "Auf Breite skalieren"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:150
+#: .\quivilib\control\menu.py:175
 msgid "Zooms the image in order to make its width fit the window"
 msgstr "Bild zoomen um es der Breite des Fensters anzupassen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:153
+#: .\quivilib\control\menu.py:179
 msgid "Fit &height"
 msgstr "Auf &Höhe skalieren"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:153
+#: .\quivilib\control\menu.py:179
 msgid "Zooms the image in order to make its height fit the window"
 msgstr "Bild zoomen um es der Höhe des Fensters anzupassen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:156
+#: .\quivilib\control\menu.py:184
+msgid "Attempt to show combined pages at regular zoom"
+msgstr ""
+
+#: .\quivilib\control\menu.py:184
+msgid "Show &spread"
+msgstr ""
+
+#: .\quivilib\control\menu.py:188
 msgid "Rotate &clockwise"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:156
+#: .\quivilib\control\menu.py:188
 msgid "Rotate the image clockwise"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:159
+#: .\quivilib\control\menu.py:192
 msgid "Rotate coun&ter clockwise"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:159
+#: .\quivilib\control\menu.py:192
 msgid "Rotate the image counter clockwise"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:163
+#: .\quivilib\control\menu.py:197
 msgid "&Full screen"
 msgstr "&Ganzer Bildschirm"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:163
+#: .\quivilib\control\menu.py:197
 msgid "Go to/leave full screen mode"
 msgstr "Ganzer Bildschirm Modus starten/verlassen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:167
+#: .\quivilib\control\menu.py:201
 msgid "File &list"
 msgstr "&Verzeichnisbaum"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:167
+#: .\quivilib\control\menu.py:201
 msgid "Show/hide the file list"
 msgstr "Zeige/Verberge Verzeichnisbaum"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:171
-msgid "Thumb&nails"
-msgstr ""
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:171
+#: .\quivilib\control\menu.py:205
 msgid "Show/hide the thumbnails"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:175
+#: .\quivilib\control\menu.py:205
+msgid "Thumb&nails"
+msgstr ""
+
+#: .\quivilib\control\menu.py:209
 msgid "Hi&dden files"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:175
+#: .\quivilib\control\menu.py:209
 msgid "Show/hide hidden files in the file list"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:181
-msgid "Add to &favorites"
-msgstr "Zu &Favoriten hinzufügen"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:181
+#: .\quivilib\control\menu.py:215
 msgid "Add the current directory or compressed file to the favorites"
 msgstr "Fügt aktuelles Verzeichnis oder komprimierte Datei den Favoriten hinzu"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:184
+#: .\quivilib\control\menu.py:215
+msgid "Add to &favorites"
+msgstr "Zu &Favoriten hinzufügen"
+
+#: .\quivilib\control\menu.py:218
+msgid "Add &placeholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:218
+msgid "Add the current directory or compressed file to the favorites on the current image"
+msgstr ""
+
+#: .\quivilib\control\menu.py:221
 msgid "R&emove from favorites"
 msgstr "Aus den Favoriten e&ntfernen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:184
+#: .\quivilib\control\menu.py:221
 msgid "Remove the current directory or compressed file from the favorites"
 msgstr "Entfernt aktuelles Verzeichnis oder komprimierte Datei aus den Favoriten"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:189
+#: .\quivilib\control\menu.py:224
+msgid "Remove p&laceholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:224
+msgid "Remove the saved page for the current directory or compressed file from the favorites"
+msgstr ""
+
+#: .\quivilib\control\menu.py:229
+msgid "Open last placeholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:229
+msgid "Open the most recently created placeholder"
+msgstr ""
+
+#: .\quivilib\control\menu.py:234
 msgid "&Help (online)..."
 msgstr "&Online-Hilfe"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:189
+#: .\quivilib\control\menu.py:234
 msgid "Open the online help"
 msgstr "Öffnet die Online-Hilfe"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:192
+#: .\quivilib\control\menu.py:237
 msgid "&Feedback / Support (online)..."
 msgstr "&Feedback / Support ..."
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:192
+#: .\quivilib\control\menu.py:237
 msgid "Open the feedback / support online form"
 msgstr "Öffnet Feedbackformular"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:195
+#: .\quivilib\control\menu.py:240
 msgid "&About..."
 msgstr "&Über..."
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:195
+#: .\quivilib\control\menu.py:240
 msgid "Show information about the application"
 msgstr "Zeigt Informationen über diese Anwendung"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:200
+#: .\quivilib\control\menu.py:245
 msgid "Small move up"
 msgstr "Nach oben bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:203
+#: .\quivilib\control\menu.py:248
 msgid "Small move down"
 msgstr "Nach unten bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:206
+#: .\quivilib\control\menu.py:251
 msgid "Small move left"
 msgstr "Nach links bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:209
+#: .\quivilib\control\menu.py:254
 msgid "Small move right"
 msgstr "Nach rechts bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:212
+#: .\quivilib\control\menu.py:257
 msgid "Large move up"
 msgstr "Nach ganz unten bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:215
+#: .\quivilib\control\menu.py:260
 msgid "Large move down"
 msgstr "Nach ganz oben bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:218
+#: .\quivilib\control\menu.py:263
 msgid "Large move left"
 msgstr "Nach links außen bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:221
+#: .\quivilib\control\menu.py:266
 msgid "Large move right"
 msgstr "Nach rechts außen bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:226
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:17
-msgid "None"
-msgstr "Nicht skalieren"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:229
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:18
-msgid "Width"
-msgstr "Breite"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:232
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:19
-msgid "Height"
+#: .\quivilib\control\menu.py:269
+msgid "Full move up"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:235
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:20
-msgid "Window"
+#: .\quivilib\control\menu.py:272
+msgid "Full move down"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:238
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:21
-msgid "Width if larger"
+#: .\quivilib\control\menu.py:275
+msgid "Full move left"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:241
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:22
-msgid "Height if larger"
+#: .\quivilib\control\menu.py:278
+msgid "Full move right"
 msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:244
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:23
-msgid "Window if larger"
-msgstr ""
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:248
-#: D:\Conrado\workspace\quivi/quivilib/control/options.py:24
-msgid "Custom width"
-msgstr ""
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:258
-msgid "&File"
-msgstr "&Datei"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:259
-msgid "F&older"
-msgstr "O&rdner"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:260
-msgid "&View"
-msgstr "&Ansicht"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:261
-msgid "F&avorites"
-msgstr "&Favoriten"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:262
-msgid "&Help"
-msgstr "&Hilfe"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:263
-msgid "Move"
-msgstr "Bewegen"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:264
-msgid "Fit"
-msgstr "Skalieren"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/menu.py:265
-msgid "Misc"
-msgstr ""
-
-#: D:\Conrado\workspace\quivi/quivilib/control/wallpaper.py:46
-msgid "&Actual size"
-msgstr "&Aktuelle Größe"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/wallpaper.py:47
-msgid "&Tiled"
-msgstr "&Nebeneinander"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/wallpaper.py:48
-msgid "Stretch to fit screen, c&rop excess"
-msgstr "Skalieren auf Bildschirm, Überstehendes abschneiden"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/wallpaper.py:49
-msgid "Stretch to &fit screen, show entire image"
-msgstr "Skalieren auf &Bildschirm, dabei ganzes Bild anzeigen"
-
-#: D:\Conrado\workspace\quivi/quivilib/control/wallpaper.py:223
-msgid "Unable to set wallpaper"
-msgstr "Nicht als Hintergrundbild verwendbar"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/about.py:25
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:36
-msgid "&OK"
-msgstr "&OK"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/about.py:35
-msgid "About"
-msgstr "Über Quivi"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:19
-msgid "If you think this may be a bug, please report it. Thank you."
-msgstr "Falls Sie einen Fehler entdeckt haben, teilen Sie ihn mir bitte mit. Vielen Dank!"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:20
-msgid "Please copy the error information below and click the link in order to report this error."
-msgstr "Bitte kopieren Sie die untenstehende Fehlermeldung und melden Sie den Fehler über den Link."
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:22
-msgid "An error has occurred:"
-msgstr ""
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:33
-msgid "&Copy error information"
-msgstr "&Kopiere Fehlermeldung"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:34
-msgid "Report error"
-msgstr "Fehler melden"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:35
-msgid "&Report error"
-msgstr "&Fehler melden"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/error.py:48
-msgid "Error"
-msgstr "Fehler"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:69
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:388
-msgid "Files"
-msgstr "Dateien"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:377
-msgid "Loading..."
-msgstr "Laden..."
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:391
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:425
-msgid "&Download"
-msgstr "&Download"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:392
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:425
-msgid "Go to the download site"
-msgstr "Zur Downloadseite gehen"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:394
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:426
-msgid "&New version available!"
-msgstr "&Neuere Version verfügbar!"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/main.py:409
-msgid "Choose a directory:"
-msgstr "Verzeichnis wählen:"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:34
-msgid "Background color"
-msgstr "Hintergrundfarbe"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:39
-msgid "Start directory"
-msgstr "Standardverzeichnis"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:41
-msgid "Default system color"
-msgstr "Systemfarbe verwenden"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:42
-msgid "Custom color:"
-msgstr "benutzerspezifische Farbe"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:44
-msgid "Hide menu and status on full screen"
-msgstr ""
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:45
-msgid "Portable mode (save settings inside the program folder)"
-msgstr "Portabler Modus (Einstellungen werden im Programmordner gespeichert)"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:46
-msgid "Commands"
-msgstr "Befehle"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:48
-msgid "Shortcuts for selected command"
-msgstr ""
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:50
-msgid "Remove"
-msgstr "Entfernen"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:51
-msgid "New shortcut"
-msgstr "Neues Tastaturkürzel"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:52
-msgid "Press key"
-msgstr "Taste drücken"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:53
-msgid "Assign"
-msgstr "Zuweisen"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:55
-msgid "Reset all to defaults"
-msgstr "Auf Voreinstellungen zurücksetzen"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:57
-msgid "Left click"
-msgstr "Linksklick"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:59
-msgid "Middle click"
-msgstr "Mittlere Maustaste"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:61
-msgid "Right click"
-msgstr "Rechtsklick"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:64
-#: D:\Conrado\workspace\quivi/quivilib/gui/wallpaper.py:27
-msgid "&Cancel"
-msgstr "&Abbrechen"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:88
-msgid "Options"
-msgstr "Optionen"
-
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:94
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:95
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:96
+#: .\quivilib\control\menu.py:281
 msgid "Drag image"
 msgstr "Bild bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:183
-msgid "&Viewing"
+#: .\quivilib\control\menu.py:286 .\quivilib\control\options.py:12
+#: .\quivilib\gui\options.py:130
+msgid "None"
+msgstr "Nicht skalieren"
+
+#: .\quivilib\control\menu.py:289 .\quivilib\control\options.py:13
+#: .\quivilib\gui\options.py:73
+msgid "Width"
+msgstr "Breite"
+
+#: .\quivilib\control\menu.py:292 .\quivilib\control\options.py:14
+msgid "Height"
+msgstr ""
+
+#: .\quivilib\control\menu.py:295 .\quivilib\control\options.py:15
+msgid "Window"
+msgstr ""
+
+#: .\quivilib\control\menu.py:298 .\quivilib\control\options.py:16
+msgid "Width if larger"
+msgstr ""
+
+#: .\quivilib\control\menu.py:301 .\quivilib\control\options.py:17
+msgid "Height if larger"
+msgstr ""
+
+#: .\quivilib\control\menu.py:304 .\quivilib\control\options.py:18
+msgid "Window if larger"
+msgstr ""
+
+#: .\quivilib\control\menu.py:308 .\quivilib\control\options.py:19
+msgid "Custom width"
+msgstr ""
+
+#: .\quivilib\control\menu.py:313
+msgid "&File"
+msgstr "&Datei"
+
+#: .\quivilib\control\menu.py:314
+msgid "F&older"
+msgstr "O&rdner"
+
+#: .\quivilib\control\menu.py:315
+msgid "&View"
 msgstr "&Ansicht"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:184
-msgid "&Keys"
-msgstr "&Tasten"
+#: .\quivilib\control\menu.py:316
+msgid "F&avorites"
+msgstr "&Favoriten"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:185
-msgid "&Mouse"
-msgstr "&Maus"
+#: .\quivilib\control\menu.py:317
+msgid "&Help"
+msgstr "&Hilfe"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:186
-msgid "&Language"
-msgstr "&Sprache"
+#: .\quivilib\control\menu.py:319 .\quivilib\gui\options.py:71
+msgid "Fit"
+msgstr "Skalieren"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/options.py:278
-#, python-format
-msgid "Assigned for \"%s\""
-msgstr "zugewiesen \"%s\""
+#: .\quivilib\control\menu.py:326
+msgid "Favorites"
+msgstr ""
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/wallpaper.py:25
-msgid "&Position"
-msgstr "&Position"
+#: .\quivilib\control\menu.py:327
+msgid "Move"
+msgstr "Bewegen"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/wallpaper.py:26
-msgid "&Set wallpaper"
-msgstr "&Setze Hintergrundbild"
+#: .\quivilib\control\wallpaper.py:37
+msgid "&Actual size"
+msgstr "&Aktuelle Größe"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/wallpaper.py:28
-msgid "Zoom:"
-msgstr "Zoom:"
+#: .\quivilib\control\wallpaper.py:38
+msgid "&Tiled"
+msgstr "&Nebeneinander"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/wallpaper.py:32
-msgid "&Color:"
-msgstr "&Farbe"
+#: .\quivilib\control\wallpaper.py:39
+msgid "Stretch to fit screen, c&rop excess"
+msgstr "Skalieren auf Bildschirm, Überstehendes abschneiden"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/wallpaper.py:65
-msgid "Set as wallpaper"
-msgstr "Als Hintergrundbild verwenden"
+#: .\quivilib\control\wallpaper.py:40
+msgid "Stretch to &fit screen, show entire image"
+msgstr "Skalieren auf &Bildschirm, dabei ganzes Bild anzeigen"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/file_list_view/list_ctrl.py:146
+#: .\quivilib\control\wallpaper.py:210
+msgid "Unable to set wallpaper"
+msgstr "Nicht als Hintergrundbild verwendbar"
+
+#: .\quivilib\gui\about.py:23 .\quivilib\gui\error.py:37
+#: .\quivilib\gui\options.py:41
+msgid "&OK"
+msgstr "&OK"
+
+#: .\quivilib\gui\about.py:33
+msgid "About"
+msgstr "Über Quivi"
+
+#: .\quivilib\gui\error.py:20
+msgid "If you think this may be a bug, please report it. Thank you."
+msgstr "Falls Sie einen Fehler entdeckt haben, teilen Sie ihn mir bitte mit. Vielen Dank!"
+
+#: .\quivilib\gui\error.py:21
+msgid "Please copy the error information below and click the link in order to report this error."
+msgstr "Bitte kopieren Sie die untenstehende Fehlermeldung und melden Sie den Fehler über den Link."
+
+#: .\quivilib\gui\error.py:23
+msgid "An error has occurred:"
+msgstr ""
+
+#: .\quivilib\gui\error.py:34
+msgid "&Copy error information"
+msgstr "&Kopiere Fehlermeldung"
+
+#: .\quivilib\gui\error.py:35
+msgid "Report error"
+msgstr "Fehler melden"
+
+#: .\quivilib\gui\error.py:36
+msgid "&Report error"
+msgstr "&Fehler melden"
+
+#: .\quivilib\gui\error.py:49
+msgid "Error"
+msgstr "Fehler"
+
+#: .\quivilib\gui\file_list_view\list_ctrl.py:143
 msgid "File"
 msgstr "Datei"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/file_list_view/list_ctrl.py:147
+#: .\quivilib\gui\file_list_view\list_ctrl.py:144
 msgid "Extension"
 msgstr "Erweiterung"
 
-#: D:\Conrado\workspace\quivi/quivilib/gui/file_list_view/list_ctrl.py:148
+#: .\quivilib\gui\file_list_view\list_ctrl.py:145
 msgid "Last modified"
 msgstr "Zuletzt geändert"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:48
+#: .\quivilib\gui\main.py:57 .\quivilib\gui\main.py:386
+msgid "Files"
+msgstr "Dateien"
+
+#: .\quivilib\gui\main.py:279
+msgid "(Spread)"
+msgstr ""
+
+#: .\quivilib\gui\main.py:377
+msgid "Loading..."
+msgstr "Laden..."
+
+#: .\quivilib\gui\main.py:389 .\quivilib\gui\main.py:423
+msgid "&Download"
+msgstr "&Download"
+
+#: .\quivilib\gui\main.py:390 .\quivilib\gui\main.py:423
+msgid "Go to the download site"
+msgstr "Zur Downloadseite gehen"
+
+#: .\quivilib\gui\main.py:392 .\quivilib\gui\main.py:424
+msgid "&New version available!"
+msgstr "&Neuere Version verfügbar!"
+
+#: .\quivilib\gui\main.py:407
+msgid "Choose a directory:"
+msgstr "Verzeichnis wählen:"
+
+#: .\quivilib\gui\options.py:42 .\quivilib\gui\wallpaper.py:24
+msgid "&Cancel"
+msgstr "&Abbrechen"
+
+#: .\quivilib\gui\options.py:70
+msgid "Background color"
+msgstr "Hintergrundfarbe"
+
+#: .\quivilib\gui\options.py:75
+msgid "Start directory"
+msgstr "Standardverzeichnis"
+
+#: .\quivilib\gui\options.py:77
+msgid "Default system color"
+msgstr "Systemfarbe verwenden"
+
+#: .\quivilib\gui\options.py:78
+msgid "Custom color:"
+msgstr "benutzerspezifische Farbe"
+
+#: .\quivilib\gui\options.py:80
+msgid "Hide menu and status on full screen"
+msgstr ""
+
+#: .\quivilib\gui\options.py:81
+msgid "Open first image of the folder automatically"
+msgstr ""
+
+#: .\quivilib\gui\options.py:82
+msgid "Portable mode (save settings inside the program folder)"
+msgstr "Portabler Modus (Einstellungen werden im Programmordner gespeichert)"
+
+#: .\quivilib\gui\options.py:83
+msgid "Remember full screen on close"
+msgstr ""
+
+#: .\quivilib\gui\options.py:84
+msgid "View images right-to-left"
+msgstr ""
+
+#: .\quivilib\gui\options.py:85
+msgid "Scroll horizontally when scrolling past end of image"
+msgstr ""
+
+#: .\quivilib\gui\options.py:86
+msgid "Delete placeholders when opening"
+msgstr ""
+
+#: .\quivilib\gui\options.py:87
+msgid "Only allow a single placeholder"
+msgstr ""
+
+#: .\quivilib\gui\options.py:88
+msgid "Automatically jump to placeholder page on open"
+msgstr ""
+
+#: .\quivilib\gui\options.py:90
+msgid "Commands"
+msgstr "Befehle"
+
+#: .\quivilib\gui\options.py:92
+msgid "Shortcuts for selected command"
+msgstr ""
+
+#: .\quivilib\gui\options.py:94
+msgid "Remove"
+msgstr "Entfernen"
+
+#: .\quivilib\gui\options.py:95
+msgid "New shortcut"
+msgstr "Neues Tastaturkürzel"
+
+#: .\quivilib\gui\options.py:96
+msgid "Press key"
+msgstr "Taste drücken"
+
+#: .\quivilib\gui\options.py:97
+msgid "Assign"
+msgstr "Zuweisen"
+
+#: .\quivilib\gui\options.py:99
+msgid "Reset all to defaults"
+msgstr "Auf Voreinstellungen zurücksetzen"
+
+#: .\quivilib\gui\options.py:105
+msgid "Left click"
+msgstr "Linksklick"
+
+#: .\quivilib\gui\options.py:106
+msgid "Middle click"
+msgstr "Mittlere Maustaste"
+
+#: .\quivilib\gui\options.py:107
+msgid "Right click"
+msgstr "Rechtsklick"
+
+#: .\quivilib\gui\options.py:108
+msgid "Aux1 click"
+msgstr ""
+
+#: .\quivilib\gui\options.py:109
+msgid "Aux2 click"
+msgstr ""
+
+#: .\quivilib\gui\options.py:115
+msgid "Always drag image with left mouse"
+msgstr ""
+
+#: .\quivilib\gui\options.py:116
+msgid "Threshold:"
+msgstr ""
+
+#: .\quivilib\gui\options.py:117
+msgid "px"
+msgstr ""
+
+#: .\quivilib\gui\options.py:125
+msgid "Options"
+msgstr "Optionen"
+
+#: .\quivilib\gui\options.py:205
+msgid "&Viewing"
+msgstr "&Ansicht"
+
+#: .\quivilib\gui\options.py:206
+msgid "&Keys"
+msgstr "&Tasten"
+
+#: .\quivilib\gui\options.py:207
+msgid "&Mouse"
+msgstr "&Maus"
+
+#: .\quivilib\gui\options.py:208
+msgid "&Language"
+msgstr "&Sprache"
+
+#: .\quivilib\gui\options.py:391
+msgid "Assigned for \"%s\""
+msgstr "zugewiesen \"%s\""
+
+#: .\quivilib\gui\wallpaper.py:22
+msgid "&Position"
+msgstr "&Position"
+
+#: .\quivilib\gui\wallpaper.py:23
+msgid "&Set wallpaper"
+msgstr "&Setze Hintergrundbild"
+
+#: .\quivilib\gui\wallpaper.py:25
+msgid "Zoom:"
+msgstr "Zoom:"
+
+#: .\quivilib\gui\wallpaper.py:29
+msgid "&Color:"
+msgstr "&Farbe"
+
+#: .\quivilib\gui\wallpaper.py:62
+msgid "Set as wallpaper"
+msgstr "Als Hintergrundbild verwenden"
+
+#: .\quivilib\i18n\setup_strings.py:46
 msgid "en_US"
 msgstr "en_US"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:49
+#: .\quivilib\i18n\setup_strings.py:47
 msgid "Select users"
 msgstr "Wähle die Benutzer aus"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:50
+#: .\quivilib\i18n\setup_strings.py:48
 msgid "Select for which users you want to install $(^Name)"
 msgstr "Wählen Sie aus für welchen Benutzes Sie installieren möchten $(^Name)"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:51
+#: .\quivilib\i18n\setup_strings.py:49
 msgid "All users"
 msgstr "Alle Benutzer"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:52
+#: .\quivilib\i18n\setup_strings.py:50
 msgid "Current user"
 msgstr "Aktueller Benutzer"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:53
+#: .\quivilib\i18n\setup_strings.py:51
 msgid "$(^Name) (required)"
 msgstr "$(^Name) (erforderlich)"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:54
+#: .\quivilib\i18n\setup_strings.py:52
 msgid "Start Menu Group"
 msgstr "Eintrag im Startmenü"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:55
+#: .\quivilib\i18n\setup_strings.py:53
 msgid "Desktop Shortcut"
 msgstr "Verknüpfung auf dem Desktop"
 
-#: D:\Conrado\workspace\quivi/quivilib/i18n/setup_strings.py:56
+#: .\quivilib\i18n\setup_strings.py:54
 msgid "Associate extensions"
 msgstr "Verknüpfe Dateiendungen"
 
-#: D:\Conrado\workspace\quivi/quivilib/model/container/root.py:28
+#: .\quivilib\model\container\root.py:27 .\tests\unittests\root_test.py:62
 msgid "My Computer"
 msgstr "Mein Computer"
 
-#: D:\Conrado\workspace\quivi/quivilib/model/image/freeimage.py:59
+#: .\quivilib\model\image\freeimage.py:49
 msgid "Error while loading image"
 msgstr "Fehler beim Laden des Bildes"
 
 #~ msgid "Sorry, not yet implemented"
 #~ msgstr "Bisher noch nicht implementiert"
+
 #~ msgid "Fit width"
 #~ msgstr "Auf Breite skalieren"
+
 #~ msgid "Fit width if oversize"
 #~ msgstr "zu großes Bild auf Breite skalieren"
+
 #~ msgid "Fit height if oversize"
 #~ msgstr "zu großes Bild auf Höhe skalieren"
+
 #~ msgid "Fit window if oversize"
 #~ msgstr "zu großes Bild auf Fenstergröße skalieren"
-
