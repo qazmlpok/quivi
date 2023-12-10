@@ -66,6 +66,8 @@ class Item(object):
         return str(self.path)
     __repr__ = __str__
 
+#Note - prior to 3.11, IntEnum cannot be saved directly Settings (it has a custom __str__; in 3.11 __str__ is just int.__str__).
+#When storing this enum, be sure to use int().
 class SortOrder(IntEnum):
     NAME = auto()
     EXTENSION = auto()

@@ -76,7 +76,7 @@ class Settings(ConfigParser):
           ('Mouse', 'Aux2ClickCmd', -1),
           ('Mouse', 'AlwaysLeftMouseDrag', 1),
           ('Mouse', 'DragThreshold', 0),
-          ('FileList', 'SortOrder', SortOrder.TYPE),
+          ('FileList', 'SortOrder', int(SortOrder.TYPE)),
           ('Language', 'ID', 'default'),
           ('Update', 'LastCheck', ''),
           ('Update', 'Available', '0'),

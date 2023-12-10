@@ -33,7 +33,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
         self.SetColumnWidth(2, 120)
         
         #The name column actually sorts by type
-        self.columns = (SortOrder.TYPE, SortOrder.EXTENSION, SortOrder.LAST_MODIFIED)
+        self.columns = (int(SortOrder.TYPE), int(SortOrder.EXTENSION), int(SortOrder.LAST_MODIFIED))
 
         self.SetItemCount(0)
 
