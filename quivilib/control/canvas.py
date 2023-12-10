@@ -1,3 +1,4 @@
+from enum import Flag, auto
 import wx
 from pubsub import pub as Publisher
 
@@ -7,15 +8,20 @@ from quivilib.control.options import get_fit_choices
 
 ZOOM_FACTOR = 25
 
-(MOVE_LEFT,
- MOVE_RIGHT,
- MOVE_UP,
- MOVE_DOWN) = list(range(4))
- 
-(MOVE_SMALL,
- MOVE_LARGE,
- MOVE_FULL) = list(range(3))
-
+class MovementType(Flag):
+    MOVE = auto()
+    MOVE_HORI = auto()
+    MOVE_NEG = auto()
+    
+    MOVETYPE_SMALL = auto()
+    MOVETYPE_LARGE = auto()
+    MOVETYPE_FULL = auto()
+    
+    #Composite directions
+    MOVE_LEFT = MOVE | MOVE_HORI
+    MOVE_RIGHT = MOVE | MOVE_HORI | MOVE_NEG
+    MOVE_UP = MOVE
+    MOVE_DOWN = MOVE | MOVE_NEG
 
 
 class CanvasController(object):
@@ -181,16 +187,16 @@ class CanvasController(object):
         Publisher.sendMessage(f'{self.name}.changed')
         
     def move_image(self, direction, typ):
-        if direction in (MOVE_RIGHT, MOVE_LEFT):
+        if direction & MovementType.MOVE_HORI:
             scr = self.view.width
             scr_fn = self.canvas.scroll_hori
         else:
             scr = self.view.height
             scr_fn = self.canvas.scroll_vert
-        scr_rev = direction in (MOVE_RIGHT, MOVE_DOWN)
-        if typ == MOVE_LARGE:
+        scr_rev = direction & MovementType.MOVE_NEG
+        if typ == MovementType.MOVETYPE_LARGE:
             inc = int(scr * 0.8)
-        elif typ == MOVE_SMALL:
+        elif typ == MovementType.MOVETYPE_SMALL:
             inc = int(scr * 0.2)
         else:
             #Adding all these together will guarantee the scroll is always complete

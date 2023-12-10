@@ -1,4 +1,5 @@
 from pathlib import Path
+from enum import IntEnum, auto
 from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 
 
@@ -72,9 +73,8 @@ class SortOrder(object):
      TYPE,
      LAST_MODIFIED) = list(range(4))
 
-class ItemType():
-    (PARENT,
-     DIRECTORY,
-     IMAGE,
-     COMPRESSED,
-     ) = list(range(4))
+class ItemType(IntEnum):
+    PARENT = auto()
+    DIRECTORY = auto()
+    IMAGE = auto()
+    COMPRESSED = auto()
