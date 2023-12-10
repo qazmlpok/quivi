@@ -1,18 +1,15 @@
-
-
-from quivilib.i18n import _
-from quivilib import util
-
 import wx
 import wx.lib.colourselect as csel
 from pubsub import pub as Publisher
+
+from quivilib.i18n import _
+from quivilib import util
 
 #TODO: (1,3) Refactor: the whole preview_panel and the main window's panel can be
 #      refactored into a single class
 
 
 class WallpaperDialog(wx.Dialog):
-    
     def __init__(self, parent, choices, background_color):
         # begin wxGlade: WallpaperDialog.__init__
         wx.Dialog.__init__(self, parent=parent)
@@ -136,14 +133,18 @@ class WallpaperDialog(wx.Dialog):
     def on_mouse_wheel(self, event):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
         lines *= event.GetLinesPerAction()
-        Publisher.sendMessage('wpcanvas.scrolled', lines=lines)
+        if event.controlDown:
+            #Zoom instead of scrolling
+            Publisher.sendMessage('wpcanvas.zoom_at', lines=lines, x=event.X, y=event.Y)
+        else:
+            Publisher.sendMessage('wpcanvas.scrolled', lines=lines, horizontal=event.shiftDown)
         
     def on_mouse_left_down(self, event):
-        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=0)
+        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=0, x=event.x, y=event.y)
         event.Skip()
         
     def on_mouse_left_up(self, event):
-        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=1)
+        Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=1, x=event.x, y=event.y)
         event.Skip()
         
     def on_mouse_motion(self, event):

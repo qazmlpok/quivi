@@ -1,17 +1,10 @@
-
-
-from pathlib import Path
-
-import wx
-import re
 import sys
+from pathlib import Path
 from functools import update_wrapper
 import traceback
 import locale
 import string
-
-
-
+import wx
 
 def get_icon_for_extension(ext, small=True):
     if sys.platform == 'win32':
@@ -36,18 +29,6 @@ def get_icon_for_directory(small=True):
         return fn(small)
     size = (16, 16) if small else (32, 32)
     return wx.ArtProvider.GetIcon(wx.ART_FOLDER, wx.ART_OTHER, size)
-    
-def tryint(s):
-    try:
-        return int(s)
-    except ValueError:
-        return s.lower()
-    
-def alphanum_key(s):
-    """ Turn a string into a list of string and number chunks.
-        "z23a" -> ["z", 23, "a"]
-    """
-    return [tryint(c) for c in re.split('([0-9]+)', s)]
 
 def rescale_by_size_factor(width, height, max_width, max_height):
     assert width >= 0 and height >= 0 and max_height >= 0 and max_height >= 0
@@ -75,7 +56,7 @@ def error_handler(callback_fn):
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                callback_fn(e, args, kwargs)
+                return callback_fn(e, args, kwargs)
         return update_wrapper(error_handler_fn, fn)
     return error_handler_with_callback
 
@@ -126,7 +107,7 @@ def synchronized_method(lock_name):
     return decorator
 
 def get_formatted_zoom(zoom):
-    text = locale.format('%5.2f', zoom * 100)
+    text = locale.format_string('%5.2f', zoom * 100)
     for i in range(len(text)):
         if text[-1] == '0':
             text = text[:-1]

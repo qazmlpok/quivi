@@ -1,26 +1,21 @@
-
-
-from quivilib.model.container import Item
-from quivilib.model.container.base import BaseContainer
-from quivilib.model.container.directory import DirectoryContainer
-from pathlib import Path
-
-from pubsub import pub as Publisher
-from quivilib.meta import PATH_SEP
-
 import sys, os
-import zipfile
-from zipfile import ZipFile as PyZipFile
 import io
+import zipfile
+from pathlib import Path
+from zipfile import ZipFile as PyZipFile
 from datetime import datetime
 
-import quivilib.tempdir as tempdir
+from pubsub import pub as Publisher
+from quivilib.model.container import Item, ItemType
+from quivilib.model.container.base import BaseContainer
+from quivilib.model.container.directory import DirectoryContainer
+from quivilib.meta import PATH_SEP
+from quivilib import tempdir
 
 #if sys.platform == 'win32':
 #    from quivilib.thirdparty.UnRAR import Archive
 #else:
 #    from quivilib.thirdparty.rarfile import RarFile as PyRarFile
-
 
 
 def _copy_files(f_read, f_write):
@@ -58,7 +53,9 @@ class ZipFile(object):
             encpath = str(path)
         return io.BytesIO(self.file.read(encpath))
 
-
+    def close(self):
+        self.file.close()
+        self.file = None
 
 
 class RarFile(object):
@@ -98,11 +95,11 @@ class RarFile(object):
             raise
         finally:
             archive.close()
-
+    def close(self):
+        pass
 
 
 class RarFileExternal(RarFile):
-        
     def __init__(self, container, path):
         #Import here to delay creation of the temp dir until it's needed.
         import rarfile
@@ -121,13 +118,15 @@ class RarFileExternal(RarFile):
     def open_file(self, path):
         return io.BytesIO(self.file.read(self.conv_path(path)))
 
+    def close(self):
+        self.file.close()
+        self.file = None
+
     def conv_path(self, path):
         npath = str(path)
         #rarfile doesn't like Windows backslashes
         return npath.replace(os.sep, '/')
         #Anything else? There's a " 0" file, for example. Might be ".."
-
-
 
 
 class CompressedContainer(BaseContainer):
@@ -163,6 +162,10 @@ class CompressedContainer(BaseContainer):
             paths.append((path, last_modified, data))
         paths.insert(0, (Path('..'), None, None))
         return paths
+        
+    def close_container(self):
+        if self.file is not None:
+            self.file.close()
     
     @property
     def name(self):
@@ -175,7 +178,7 @@ class CompressedContainer(BaseContainer):
     
     def open_container(self, item_index):
         item = self.items[item_index]
-        if item.typ == Item.COMPRESSED:
+        if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
             return VirtualCompressedContainer(temp_file, item.name, [], [], self._path, self._sort_order, self.show_hidden)
         else:
@@ -228,8 +231,7 @@ class CompressedContainer(BaseContainer):
             _copy_files(in_file, out_file)
             temp_file = out_file.name
         return Path(temp_file)
-    
-    
+
 
 class VirtualCompressedContainer(CompressedContainer):
     def __init__(self, path, name, parent_names, parent_paths, original_container_path, sort_order, show_hidden):
@@ -264,7 +266,7 @@ class VirtualCompressedContainer(CompressedContainer):
         
     def open_container(self, item_index):
         item = self.items[item_index]
-        if item.typ == Item.COMPRESSED:
+        if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
             parent_names = self.parent_names[:]
             parent_names.append(self.name)

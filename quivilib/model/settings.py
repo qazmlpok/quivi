@@ -1,30 +1,10 @@
-
-
+import os
+from configparser import ConfigParser, ParsingError
+from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
 
-from configparser import SafeConfigParser
 
-from pubsub import pub as Publisher
-
-
-
-class UnicodeAwareConfigParser(SafeConfigParser):
-    def set(self, section, option, value):
-        value = str(value).encode('utf-8')
-        SafeConfigParser.set(self, section, option, value)
-
-    def get(self, section, option):
-        value = SafeConfigParser.get(self, section, option)
-        return value.decode('utf-8')
-    
-    def items(self, section):
-        options = self.options(section)
-        return [(option, self.get(section, option)) for option in options]
-    
-    
-#I don't believe UnicodeAwareConfigParser is necessary in python3.
-#(If it is, remember to add kwargs to the wrapper functions)
-class Settings(SafeConfigParser):
+class Settings(ConfigParser):
     (FIT_NONE,
      FIT_WIDTH_OVERSIZE,
      FIT_HEIGHT_OVERSIZE,
@@ -37,25 +17,30 @@ class Settings(SafeConfigParser):
      FIT_WIDTH,
      FIT_HEIGHT,
      FIT_BOTH) = list(range(12))
-     
-    (ZOOM_DEFAULT,
-     ZOOM_SYSTEM,
-     ZOOM_NEIGHBOR,
-     ZOOM_BILINEAR,
-     ZOOM_BICUBIC,
-     ZOOM_CATMULLROM) = list(range(6))
-     
-    (MOVE_DRAG,
-     MOVE_LOCK) = list(range(2))
-    
-    (BG_SYSTEM,
-     BG_BLACK,
-     BG_WHITE) = list(range(3))
-    
+
     def __init__(self, path):
-        SafeConfigParser.__init__(self)
+        ConfigParser.__init__(self)
         self.path = path
-        self.read(path)
+        
+        def _parseError():
+            backupname = None
+            if os.path.isfile(path):
+                backupname = f'{path}.bad'
+                os.replace(path, backupname)
+            Publisher.sendMessage('settings.corrupt', backupFilename=backupname)
+        
+        #Try reading the config twice; first as utf-8 and then as the default encoding.
+        #The write will now always be UTF-8, but existing files will be system default.
+        try:
+            self.read(path, encoding='utf-8')
+        except UnicodeDecodeError:
+            try:
+                self.read(path)
+            except:
+                _parseError()
+        except:
+            #Any other error should be treated as a parse error; the file is probably corrupt.
+            _parseError()
         self.__defaults = self._load_defaults()
         Publisher.sendMessage('settings.changed', settings=self)
         
@@ -67,6 +52,13 @@ class Settings(SafeConfigParser):
           ('Options', 'CustomBackground', 0),
           ('Options', 'CustomBackgroundColor', '0,0,0'),
           ('Options', 'RealFullscreen', 0),
+          ('Options', 'AutoFullscreen', 1),
+          ('Options', 'UseRightToLeft', 0),
+          ('Options', 'DetectSpreads', 0),
+          ('Options', 'HorizontalScrollAtBottom', 0),
+          ('Options', 'PlaceholderDelete', 1),
+          ('Options', 'PlaceholderSingle', 0),
+          ('Options', 'PlaceholderAutoOpen', 1),
           ('Options', 'OpenFirst', 0),
           ('Window', 'Perspective', ''),
           ('Window', 'MainWindowX', 50),
@@ -74,12 +66,15 @@ class Settings(SafeConfigParser):
           ('Window', 'MainWindowWidth', 700),
           ('Window', 'MainWindowHeight', 500),
           ('Window', 'MainWindowMaximized', '0'),
+          ('Window', 'MainWindowFullscreen', '0'),
           ('Window', 'FileListColumnsWidth', ''),
-          #TODO: (2,2) Refactor: change to constant. This is a dummy command ID
-          # for "drag image"
-          ('Mouse', 'LeftClickCmd', -1),
+          ('Mouse', 'LeftClickCmd', 16100),
           ('Mouse', 'MiddleClickCmd', 12001),
           ('Mouse', 'RightClickCmd', 13007),
+          ('Mouse', 'Aux1ClickCmd', -1),
+          ('Mouse', 'Aux2ClickCmd', -1),
+          ('Mouse', 'AlwaysLeftMouseDrag', 1),
+          ('Mouse', 'DragThreshold', 0),
           ('FileList', 'SortOrder', SortOrder.TYPE),
           ('Language', 'ID', 'default'),
           ('Update', 'LastCheck', ''),
@@ -95,7 +90,7 @@ class Settings(SafeConfigParser):
         return defaults
     
     def set(self, section, option, value):
-        SafeConfigParser.set(self, section, option, str(value))
+        ConfigParser.set(self, section, option, str(value))
         try:
             Publisher.sendMessage(f'settings.changed.{section}.{option}', settings=self)
         except Publisher.TopicNameError:
@@ -106,7 +101,7 @@ class Settings(SafeConfigParser):
     def save(self):
         if not self.path.parent.exists():
             self.path.parent.makedirs()
-        with self.path.open('w') as f:
+        with self.path.open('w', encoding='utf-8') as f:
             self.write(f)
             
     def get_default(self, section, option):
@@ -114,4 +109,3 @@ class Settings(SafeConfigParser):
             if isection == section and ioption == option:
                 return ivalue
         raise RuntimeError(f'Option {option} has no default value')
-        

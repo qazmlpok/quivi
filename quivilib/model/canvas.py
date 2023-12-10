@@ -1,30 +1,32 @@
-
+import traceback
+import logging as log
+from functools import partial
+from pubsub import pub as Publisher
 
 from quivilib.model.settings import Settings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 
-from pubsub import pub as Publisher
 
-from functools import partial
-import sys
-import traceback
-import logging as log
-    
-
-
-
+#Number of scrolls at the top/bottom of the image needed to switch to horizontal scroll.
+#Maybe a timestamp is more appropriate?
+STICKY_LIMIT = 2
 class Canvas(object):
-     
     def __init__(self, name, settings, quiet=False):
         self.name = name
         self.quiet = quiet
         if settings:
             self._get_int_setting = partial(settings.getint, 'Options')
+            self._get_bool_setting = partial(settings.getboolean, 'Options')
+        else:
+            #Wallpaper canvas won't include settings. Probably not the best solution, but it works.
+            self._get_int_setting = lambda x: 0
+            self._get_bool_setting = lambda x: False
         self.img = None
         self._zoom = 1
         self._left = 0
         self._top = 0
+        self.sticky = 0
         self.tiled = False
         self.view = None
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
@@ -52,8 +54,14 @@ class Canvas(object):
         self.view = view
         
     def load(self, f, path, adjust=True, delay=False):
-        img = image.open(f, str(path), self.__class__, delay)
+        if __debug__:
+            import time
+            start = time.perf_counter()
+        img = image.open(f, path, self.__class__, delay)
         self.load_img(img, adjust)
+        if __debug__:
+            stop = time.perf_counter()
+            log.debug(f'{path.name} took: {(stop - start)*1000:0.1f}ms.')
         
     def load_img(self, img, adjust=True):
         self.img = img
@@ -67,7 +75,6 @@ class Canvas(object):
         )
         self._sendMessage(f'{self.name}.changed')
 
-
     def adjust(self):
         fit_type = self._get_int_setting('FitType')
         self.set_zoom_by_fit_type(fit_type)
@@ -77,9 +84,18 @@ class Canvas(object):
             return
         view_w = self.view.width
         view_h = self.view.height
+        spread = self._get_bool_setting('DetectSpreads')
         img_w = self.img.original_width
         img_h = self.img.original_height
+        is_spread = False
+        if spread and img_w > (img_h * 1.3):
+            #Normal page layout is taller than it is long. If this is not true,
+            #assume it's two pages combined. display may be improved by calculating the width based on the "half" pages
+            img_w = (img_w+1) // 2
+            #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
+            is_spread = True
         self.tiled = False
+
         if fit_type == Settings.FIT_WIDTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
             self.zoom = factor
@@ -128,35 +144,52 @@ class Canvas(object):
             self.zoom = 1
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
+        
         if self.tiled:
             self.left = self.top = 0
         else:
             self.center()
-        Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type)
-        
-    def _set_zoom(self, zoom):
-        #TODO: (1,3) Refactor: maybe this should be another method;
-        #    like this, there are several places in this file where
-        #    self._zoom is set and an message must be sent.
-        #    So _set_zoom isn't always called when the zoom is set, so
-        #    it should be renamed (probably to 'resize')
+        Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=is_spread)
+
+    def _zoom_image(self, zoom):
+        """ Shared logic between zoom_to_center (default behavior) and zoom_to_point (new behavior)
+        This is still kinda confused because zoom_to_center is used as a setter.
+        Returns True if the zoom level changed. Caller needs to handle the left/top adjustment.
+        """
         if zoom >= 0.01 and zoom <= 16 and abs(zoom - self._zoom) >= 0.01:
-            old_w = self.width
-            old_h = self.height
             original_zoom = self._zoom
             if abs(zoom - 1) < 0.01:
                 zoom = 1
                 self._zoom = zoom
             else:
                 self._zoom = zoom
-            
             try:
                 self.img.resize_by_factor(self._zoom)
             except Exception:
                 #Revert without zooming
                 log.debug(traceback.format_exc())
                 self._zoom = original_zoom
-             
+                return False
+            return True
+        return False
+    def zoom_to_point(self, zoom, x, y):
+        old_w = self.width
+        old_h = self.height
+        if self._zoom_image(zoom):
+            #This isn't perfect, as left and top are properties, and modify the value at times
+            #but for the most part it works.
+            self.left += int((old_w - self.width) * ((x-self.left) / old_w))
+            self.top  += int((old_h - self.height) * ((y-self.top) / old_h))
+            self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
+    def _set_zoom(self, zoom):
+        #TODO: (1,3) Refactor: maybe this should be another method;
+        #    like this, there are several places in this file where
+        #    self._zoom is set and a message must be sent.
+        #    So _set_zoom isn't always called when the zoom is set, so
+        #    it should be renamed (probably to 'resize')
+        old_w = self.width
+        old_h = self.height
+        if self._zoom_image(zoom):
             self.left += old_w // 2 - self.width // 2
             self.top += old_h // 2 - self.height // 2
             self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
@@ -221,15 +254,48 @@ class Canvas(object):
         return self._top
     
     top = property(_get_top, _set_top)
+    
+    def scroll_hori(self, amount, reverse_direction = False):
+        """ Scrolls the canvas. Just calls _set_left.
+        """
+        if reverse_direction:
+            amount = -amount
+        self.left += amount
+    
+    def scroll_vert(self, amount, reverse_direction = False):
+        """ Scrolls the canvas. Calls _set_top.
+        However if the image is wider than the viewport and the canvas is already scrolled
+        to the top (or bottom, depending on direction), it will instead scroll left/right.
+        """
+        if reverse_direction:
+            amount = -amount
+        old_top = self.top
+        self.top += amount
+        #If the scroll didn't move at all, scroll to the left/right instead (if possible)
+        #To avoid accidental left/right scrolling, a counter is used to "delay" the scroll.
+        side_scroll = self._get_bool_setting('HorizontalScrollAtBottom')
+        if (old_top == self.top and self.width > self.view.width):
+            self.sticky += 1
+            if self.sticky > STICKY_LIMIT:
+                rtl = self._get_bool_setting('UseRightToLeft')
+                self.scroll_hori(amount, rtl)
+        else:
+            self.sticky = 0
         
     def center(self):
+        #TODO: Should rename. This only centers if the img is smaller than the viewport
         scr_w = self.view.width
         scr_h = self.view.height
         img_w = self.width
         img_h = self.height
         if img_w > scr_w:
+            rtl = self._get_bool_setting('UseRightToLeft')
             #align left (TODO: (1,4) Improve: customizable?
-            self.left = 0
+            if rtl:
+                #Scroll all the way to the right
+                self.left = scr_w - img_w
+            else:
+                self.left = 0
         else:
             #center
             self.left = scr_w // 2 - img_w // 2
@@ -239,6 +305,7 @@ class Canvas(object):
         else:
             #center
             self.top = scr_h // 2 - img_h // 2
+        self.sticky = 0
     
     @property
     def y_centered(self):

@@ -1,12 +1,7 @@
-
+from pubsub import pub as Publisher
 
 from quivilib.i18n import _
 from quivilib.model.settings import Settings
-
-import wx
-from pubsub import pub as Publisher
-
-
 
 #TODO: (1,2) Improve: when setting start dir, check if it is a special folder
 #    and if it is, save a reference (e.g. %DocumentsDir%) to it instead of the
@@ -26,7 +21,6 @@ def get_fit_choices():
     return fit_choices
 
 
-
 class OptionsController(object):
     def __init__(self, control, model):
         self.control = control
@@ -35,8 +29,8 @@ class OptionsController(object):
         
     def open_dialog(self):
         fit_choices = get_fit_choices()
-        categories = self.control.menu.main_menu
-                        
+        categories = self.control.menu.command_cats
+
         Publisher.sendMessage('options.open_dialog',
                                 fit_choices=fit_choices, 
                                 settings=self.model.settings, 
@@ -51,6 +45,10 @@ class OptionsController(object):
             fit_width = int(opt.fit_width_str)
         except ValueError:
             fit_width = None
+        try:
+            drag_threshold = int(opt.drag_threshold)
+        except ValueError:
+            drag_threshold = 0
         if fit_width is None or fit_width <= 0:
             #I guess there's no need to bother the user with this, so just use default
             fit_width = self.model.settings.get_default('Options', 'FitWidthCustomSize')
@@ -58,13 +56,14 @@ class OptionsController(object):
         custom_bg = '1' if opt.custom_bg else '0'
         custom_bg_color = '%d,%d,%d' % (opt.custom_bg_color.Red(), opt.custom_bg_color.Green(), opt.custom_bg_color.Blue())
         real_fullscreen = '1' if opt.real_fullscreen else '0'
+        auto_fullscreen = '1' if opt.auto_fullscreen else '0'
+        use_right_to_left = '1' if opt.use_right_to_left else '0'
+        scroll_at_bottom = '1' if opt.scroll_at_bottom else '0'
+        placeholder_delete = '1' if opt.placeholder_delete else '0'
+        placeholder_single = '1' if opt.placeholder_single else '0'
+        placeholder_autoopen = '1' if opt.placeholder_autoopen else '0'
+        always_drag = '1' if opt.always_drag else '0'
         open_first = '1' if opt.open_first else '0'
-        if opt.left_click_cmd is None:
-            opt.left_click_cmd = -1
-        if opt.middle_click_cmd is None:
-            opt.middle_click_cmd = -1
-        if opt.right_click_cmd is None:
-            opt.right_click_cmd = -1
         
         self.model.settings.set('Options', 'FitType', opt.fit_type)
         self.model.settings.set('Options', 'FitWidthCustomSize', fit_width)
@@ -72,10 +71,20 @@ class OptionsController(object):
         self.model.settings.set('Options', 'CustomBackgroundColor', custom_bg_color)
         self.model.settings.set('Options', 'CustomBackground', custom_bg)
         self.model.settings.set('Options', 'RealFullscreen', real_fullscreen)
+        self.model.settings.set('Options', 'AutoFullscreen', auto_fullscreen)
+        self.model.settings.set('Options', 'UseRightToLeft', use_right_to_left)
+        self.model.settings.set('Options', 'HorizontalScrollAtBottom', scroll_at_bottom)
+        self.model.settings.set('Options', 'PlaceholderDelete', placeholder_delete)
+        self.model.settings.set('Options', 'PlaceholderSingle', placeholder_single)
+        self.model.settings.set('Options', 'PlaceholderAutoOpen', placeholder_autoopen)
         self.model.settings.set('Options', 'OpenFirst', open_first)
         self.model.settings.set('Mouse', 'LeftClickCmd', opt.left_click_cmd)
         self.model.settings.set('Mouse', 'MiddleClickCmd', opt.middle_click_cmd)
         self.model.settings.set('Mouse', 'RightClickCmd', opt.right_click_cmd)
+        self.model.settings.set('Mouse', 'Aux1ClickCmd', opt.aux1_click_cmd)
+        self.model.settings.set('Mouse', 'Aux2ClickCmd', opt.aux2_click_cmd)
+        self.model.settings.set('Mouse', 'AlwaysLeftMouseDrag', always_drag)
+        self.model.settings.set('Mouse', 'DragThreshold', drag_threshold)
         self.control.i18n.language = opt.language
         self.control.menu.set_shortcuts(opt.shortcuts)
         self.control.set_settings_location(opt.save_locally)

@@ -1,28 +1,30 @@
-
+from enum import Flag, auto
+import wx
+from pubsub import pub as Publisher
 
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.control.options import get_fit_choices
 
-import wx
-from pubsub import pub as Publisher
-
-
-
 ZOOM_FACTOR = 25
 
-(MOVE_LEFT,
- MOVE_RIGHT,
- MOVE_UP,
- MOVE_DOWN) = list(range(4))
- 
-(MOVE_SMALL,
- MOVE_LARGE) = list(range(2))
-
+class MovementType(Flag):
+    MOVE = auto()
+    MOVE_HORI = auto()
+    MOVE_NEG = auto()
+    
+    MOVETYPE_SMALL = auto()
+    MOVETYPE_LARGE = auto()
+    MOVETYPE_FULL = auto()
+    
+    #Composite directions
+    MOVE_LEFT = MOVE | MOVE_HORI
+    MOVE_RIGHT = MOVE | MOVE_HORI | MOVE_NEG
+    MOVE_UP = MOVE
+    MOVE_DOWN = MOVE | MOVE_NEG
 
 
 class CanvasController(object):
-    
     #TODO: (1,4) Refactor: all canvas.changed should be sent by the model, but it would
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
@@ -35,6 +37,7 @@ class CanvasController(object):
         Publisher.subscribe(self.on_canvas_painted, f'{self.name}.painted')
         Publisher.subscribe(self.on_canvas_resized, f'{self.name}.resized')
         Publisher.subscribe(self.on_canvas_scrolled, f'{self.name}.scrolled')
+        Publisher.subscribe(self.on_canvas_zoom_point, f'{self.name}.zoom_at')
         Publisher.subscribe(self.on_canvas_mouse_event, f'{self.name}.mouse.event')
         Publisher.subscribe(self.on_canvas_mouse_motion, f'{self.name}.mouse.motion')
         #Indicates that the user is moving the image
@@ -42,6 +45,7 @@ class CanvasController(object):
         #Indicates that the user has moved the image significantly 
         self._moved_image = False
         self._old_mouse_pos = (-1, -1)
+        self._orig_mouse_pos = (-1, -1)
         self._default_cursor = wx.Cursor(images.cursor_hand.GetImage())
         self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())
         Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
@@ -63,26 +67,54 @@ class CanvasController(object):
         self.canvas.center()
         Publisher.sendMessage(f'{self.name}.changed')
         
-    def on_canvas_scrolled(self, *, lines):
-        scr = self.view.height
-        inc = int(scr * (0.2 / 3) * lines)
-        self.canvas.top += (inc)
+    def on_canvas_scrolled(self, *, lines, horizontal=False):
+        if horizontal:
+            rtl = self.settings.getboolean('Options', 'UseRightToLeft')
+            scr = self.view.width
+            inc = int(scr * (0.15 / 3) * lines)
+            #Invert direction if in right-to-left mode. Mousewheel down should always be to the "end" of the image.
+            self.canvas.scroll_hori(inc, rtl)
+        else:
+            scr = self.view.height
+            inc = int(scr * (0.2 / 3) * lines)
+            self.canvas.scroll_vert(inc)
         Publisher.sendMessage(f'{self.name}.changed')
-        
-    def on_canvas_mouse_event(self, *, button, event):
+    
+    def on_canvas_zoom_point(self, *, lines, x, y):
+        """ Zoom in or out. Unlike the keyboard command, this will shift the canvas as well
+        in order to zoom in/out specifically at the mouse's position.
+        """
+        old_top, old_left =  self.canvas.top, self.canvas.left
+        old_w, old_h = self.canvas.width, self.canvas.height
+        scale = ZOOM_FACTOR * (abs(lines) / 3)
+        self._zoom_to_point(lines > 0, x, y, zoom_scale=scale)
+        Publisher.sendMessage(f'{self.name}.changed')
+    
+    def on_canvas_mouse_event(self, *, button, event, x, y):
         if self.name == 'canvas':
-            button_name = ('Left', 'Middle', 'Right')[button]
+            button_name = ('Left', 'Middle', 'Right', 'Aux1', 'Aux2')[button]
             cmd_ide = self.settings.getint('Mouse', f'{button_name}ClickCmd')
-            #TODO: (2,2) Refactor: change to constant. This is a dummy command ID
-            # for "drag image". See settings.py
-            if event == 0 and button == 0:
-                Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
-                self._moving_image = True
-            if event == 1 and (not self._moved_image or button != 0):
+            always_drag = self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1'
+            drag_threshold = self.settings.getint('Mouse', 'DragThreshold')
+            #Reproduce the old drag behavior (left mouse always drags; run command iff mouse didn't move)
+            #if configured. Otherwise, the drag behavior will be a regular command.
+            if always_drag and button == 0:
+                if event == 0:
+                    Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
+                    self._moving_image = True
+                    self._orig_mouse_pos = (x, y)
+                elif event == 1:
+                    #If always dragging but the mouse hasn't moved (within the configured delta), execute the click event anyway
+                    xdiff = self._orig_mouse_pos[0] - x
+                    ydiff = self._orig_mouse_pos[1] - y
+                    if not self._moved_image or (xdiff**2 + ydiff**2 < drag_threshold**2):
+                        Publisher.sendMessage('command.execute', ide=cmd_ide)
+                    Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
+                    self._moving_image = False
+            elif event == 0:
+                Publisher.sendMessage('command.down_execute', ide=cmd_ide)
+            elif event == 1:
                 Publisher.sendMessage('command.execute', ide=cmd_ide)
-            if event == 1 and button == 0:
-                Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
-                self._moving_image = False
         else:
             #Not the main canvas (e.g. wallpaper dialog canvas)
             if button == 0 and event == 0:
@@ -93,6 +125,12 @@ class CanvasController(object):
                 self._moving_image = False
         self._moved_image = False
 
+    def image_drag_start(self):
+        Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
+        self._moving_image = True
+    def image_drag_end(self):
+        Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
+        self._moving_image = False
 
     def on_canvas_mouse_motion(self, *, x, y):
         old_x, old_y = self._old_mouse_pos
@@ -109,11 +147,16 @@ class CanvasController(object):
             Publisher.sendMessage(f'{self.name}.changed')
         self._old_mouse_pos = x, y
 
-    def _zoom(self, zoom_in):
-        zoom = 1 + ZOOM_FACTOR / 100.0
+    def _zoom(self, zoom_in, zoom_scale=ZOOM_FACTOR):
+        zoom = 1 + zoom_scale / 100.0
         zoom = zoom if zoom_in else 1.0 / zoom
+        #(Calls the setter _set_zoom)
         self.canvas.zoom *= zoom
-        
+    def _zoom_to_point(self, zoom_in, x, y, zoom_scale=ZOOM_FACTOR):
+        zoom = 1 + zoom_scale / 100.0
+        zoom = zoom if zoom_in else 1.0 / zoom
+        self.canvas.zoom_to_point(self.canvas.zoom * zoom, x, y)
+
     def zoom_in(self):
         self._zoom(True)
         Publisher.sendMessage(f'{self.name}.changed')
@@ -137,21 +180,32 @@ class CanvasController(object):
         if save:
             self.settings.set('Options', 'FitType', fit_type)
         Publisher.sendMessage(f'{self.name}.changed')
+    
+    def set_zoom_by_current_fit(self):
+        fit_type = self.settings.getint('Options', 'FitType')
+        self.set_zoom_by_fit_type(fit_type)
+        Publisher.sendMessage(f'{self.name}.changed')
         
     def move_image(self, direction, typ):
-        if direction in (MOVE_RIGHT, MOVE_LEFT):
+        if direction & MovementType.MOVE_HORI:
             scr = self.view.width
+            scr_fn = self.canvas.scroll_hori
         else:
             scr = self.view.height
-        inc = int(scr * (0.8 if typ == MOVE_LARGE else 0.2))
-        if direction == MOVE_LEFT:
-            self.canvas.left += inc
-        elif direction == MOVE_RIGHT:
-            self.canvas.left -= inc
-        elif direction == MOVE_UP:
-            self.canvas.top += inc
-        elif direction == MOVE_DOWN:
-            self.canvas.top -= inc
+            scr_fn = self.canvas.scroll_vert
+        scr_rev = direction & MovementType.MOVE_NEG
+        if typ == MovementType.MOVETYPE_LARGE:
+            inc = int(scr * 0.8)
+        elif typ == MovementType.MOVETYPE_SMALL:
+            inc = int(scr * 0.2)
+        else:
+            #Adding all these together will guarantee the scroll is always complete
+            #Any arbitrary number could theoretically be surpassed if I ever implement infinite scroll.
+            inc = self.canvas.width + self.canvas.view.width + self.canvas.height + self.canvas.view.height
+        
+        #Call the appropriate canvas scroll_x function
+        #Note - scroll up/down will scroll left/right if at the image border. I don't know if this is appropriate behavior for this source of scrolling.
+        scr_fn(inc, scr_rev)
         Publisher.sendMessage(f'{self.name}.changed')
         
     def rotate_image(self, clockwise):

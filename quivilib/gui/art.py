@@ -1,9 +1,6 @@
-
+import wx
 
 from quivilib.resources import images
-
-import wx
-import sys
 
 ART_THUMBNAIL_VIEW = b'quiviART_THUMBNAIL_VIEW'
 

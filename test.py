@@ -1,6 +1,6 @@
 
 
-import sys, unittest, os
+import sys, unittest, os, shutil
 
 import wx
 import logging
@@ -10,6 +10,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 class AllTests(unittest.TestSuite):
     def __init__(self):
         super(AllTests, self).__init__()
+        self.createImages()
         self.loadAllTests()
 
     def loadAllTests(self):
@@ -21,6 +22,28 @@ class AllTests(unittest.TestSuite):
             # modules.
             module = __import__(moduleName)
             self.addTests(unittest.defaultTestLoader.loadTestsFromName(moduleName))
+            
+    def createImages(self):
+        """ Makes a bunch of copies of python.png.
+        Probably not the best approach but I'd still prefer this over putting that much junk into git.
+        """
+        src = os.path.join('tests', 'python.png')
+        order = os.path.join('tests', 'Order')
+        nested_1 = os.path.join('tests', 'Order_nested', 'c1')
+        nested_2 = os.path.join('tests', 'Order_nested', 'c2')
+        os.makedirs(order, exist_ok = True)
+        os.makedirs(nested_1, exist_ok = True)
+        os.makedirs(nested_2, exist_ok = True)
+        
+        order_files = ['1.png', '10.png', '10a.png', '11.png', '11a.png', '1a.png', '2.png', '2a.png', '8.png', '8a.png', '9.png', '9a.png', 'a10.png', 'a11.png', 'a9.png']
+        c_files = ['1.png', '10.png', '11.png', '2.png', '8.png', '9.png',]
+        for f in order_files:
+            shutil.copyfile(src, os.path.join(order, f))
+        for f in c_files:
+            shutil.copyfile(src, os.path.join(nested_1, f))
+            shutil.copyfile(src, os.path.join(nested_2, f))
+        #This needs to be a zip.
+        shutil.make_archive(os.path.join('tests', 'Order_nested'), 'zip', os.path.join('tests', 'Order_nested'))
     
     @staticmethod
     def filenameToModuleName(filename):

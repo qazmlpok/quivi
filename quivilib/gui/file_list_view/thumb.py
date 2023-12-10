@@ -1,25 +1,26 @@
-from quivilib.model import image
-from quivilib.model.container import Item
-from quivilib import util
-from quivilib.util import error_handler
-from quivilib.gui.file_list_view.base import FileListViewBase
+import logging
+import threading
+
+from pubsub import pub as Publisher
+import wx
 from wx.lib.agw import thumbnailctrl as tc
 import wx.lib.agw.scrolledthumbnail as st
 from wx.lib.agw.thumbnailctrl import (
     THUMB_OUTLINE_FULL, THUMB_OUTLINE_IMAGE, THUMB_OUTLINE_NONE,
     THUMB_OUTLINE_RECT)
 
-import wx
-from pubsub import pub as Publisher
+from quivilib.model import image
+from quivilib.model.container import Item, ItemType
+from quivilib import util
+from quivilib.util import error_handler
+from quivilib.gui.file_list_view.base import FileListViewBase
 
-import threading
-import math
-import logging
-import collections
 log = logging.getLogger('thumb')
 
 OldScrolledThumbnail = None
 
+if __debug__:
+    import time
 
 def _handle_error(exception, args, kwargs):
     self = args[0]
@@ -142,6 +143,8 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
     def __init__(self, *args, **kwargs):
         OldScrolledThumbnail.__init__(self, *args, **kwargs)
         self._tOutlineNotSelected = False
+        self.thumbs_generated = False
+        self._isrunning = False
         self._thread = None
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         self.SetDropShadow(False)
@@ -159,14 +162,18 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         """ Threaded method to load images. Used internally. """
         
         for count, item in enumerate(container.items):
-            log.debug('Loading thumb #%d' % count)
+            if __debug__:
+                start = time.perf_counter()
+                log.debug('Loading thumb #%d' % count)
             if not self._isrunning:
                 return
             try:
                 self.LoadImageContainer(container, item, count)
             except:
                 log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=1)
-            log.debug('Loaded thumb #%d' % count)
+            if __debug__:
+                stop = time.perf_counter()
+                log.debug(f'Loaded thumb #{count}. Took: {(stop - start)*1000:0.1f}ms.')
             if count < 4:
                 wx.CallAfter(self.Refresh)
             elif count%4 == 0:
@@ -181,7 +188,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         """ Threaded method to load images. Used internally. """
         #TODO: (2,2) Refactor: this should be moved inside the Item class
         bmp = None
-        if item.typ == Item.IMAGE:
+        if item.typ == ItemType.IMAGE:
             f = container.open_image(index)
             try:
                 img = image.open(f, item.path, None)
@@ -191,11 +198,11 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
             bmp = img.create_thumbnail(300, 240, delay=True)
             alpha = False
             def delayed_fn(bmp=bmp):
-                if isinstance(bmp, collections.Callable):
+                if callable(bmp):
                     bmp = bmp()
                 img = bmp.ConvertToImage()
                 return img
-        elif item.typ in (Item.DIRECTORY, Item.PARENT):
+        elif item.typ in (ItemType.DIRECTORY, ItemType.PARENT):
             originalsize = 32, 32
             alpha = True
             def delayed_fn(bmp=bmp):
@@ -204,7 +211,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
                 bmp.CopyFromIcon(icon)
                 img = bmp.ConvertToImage()
                 return img
-        elif item.typ == Item.COMPRESSED:
+        elif item.typ == ItemType.COMPRESSED:
             originalsize = 32, 32
             alpha = True
             ext = container.get_item_extension(index)

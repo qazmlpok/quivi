@@ -1,19 +1,15 @@
+import sys
+import logging
 
+import wx
+import pyfreeimage as fi
 
+from pyfreeimage import Image
 from quivilib.i18n import _
 from quivilib.util import add_exception_custom_msg
 from quivilib.util import rescale_by_size_factor
 
-import pyfreeimage as fi
-from pyfreeimage import Image
-
-import wx
-
-import sys
-import logging
-
 log = logging.getLogger('freeimage')
-
 
 
 class FreeImage(object):
@@ -25,6 +21,7 @@ class FreeImage(object):
             if img is None:
                 fi.library.load().reset_last_error()
                 img = Image.load_from_file(f, path)
+
                 try:
                     if img.transparent:
                         img = img.composite(True)
@@ -67,7 +64,12 @@ class FreeImage(object):
             if self.zoomed_bmp:
                 self.zoomed_bmp = self.zoomed_bmp.convert_to_wx_bitmap(wx)
         self.delay = False
-        
+
+    def rescale(self, width, height):
+        #TODO: Make sure this isn't called multiple times with the same dimensions.
+        #I don't want to actually store this in zoomed_bmp, but something similar is fine.
+        return self.img.rescale(width, height, fi.FILTER_BICUBIC)
+
     def resize(self, width, height):
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
@@ -141,11 +143,10 @@ class FreeImage(object):
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(data)
                 wx.TheClipboard.Close()
-                
+
     def create_thumbnail(self, width, height, delay=False):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
-        if factor > 1:
-            factor = 1
+        factor = min(factor, 1)
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         img = self.img.rescale(width, height, fi.FILTER_BILINEAR)
@@ -156,6 +157,15 @@ class FreeImage(object):
         else:
             bmp = img.convert_to_wx_bitmap(wx)
             return bmp
-                
+
+    @staticmethod
+    def _get_extensions():
+        return fi.library.load().get_readable_extensions()
+    ext_list = _get_extensions()
+    
+    @staticmethod
+    def extensions():
+        return FreeImage.ext_list
+
     def close(self):
         pass

@@ -1,11 +1,9 @@
-
-
-from pyfreeimage.funct_list import FUNCTION_LIST
-
 import ctypes
 import sys
 import os
 import logging
+
+from pyfreeimage.funct_list import FUNCTION_LIST
 log = logging.getLogger('pyfreeimage.library')
 
 lib = None

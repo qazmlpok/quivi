@@ -1,24 +1,11 @@
-
-
-from quivilib.model.container import Item
-from quivilib.model.container import SortOrder
-from quivilib.model.container import UnsupportedPathError
-from quivilib.util import alphanum_key
-
+from pathlib import Path
 import operator
 
 from pubsub import pub as Publisher
-from pathlib import Path
+from natsort import natsort_keygen, ns
 
-#Check if Windows sort is available, by trying to calling it.
-#TODO: Replace with the python module natsort. Then finish removing cmpfunc
-try:
-    #from quivilib.windows.util import logical_cmp
-    #logical_cmp('dummy', 'dummy')
-    #wincmpfn = logical_cmp
-    wincmpfn = None
-except:
-    wincmpfn = None
+from quivilib.model.container import Item, ItemType, SortOrder
+from quivilib.model.container import UnsupportedPathError
 
 
 class BaseContainer(object):
@@ -34,47 +21,23 @@ class BaseContainer(object):
     
     def set_sort_order(self, order):
         if order == SortOrder.NAME:
-            #TODO: (3,2) Improve: should show directories first?
-            if wincmpfn:
-                keyfn = operator.attrgetter('path', 'ext')
-                def cmpfn(a, b):
-                    return cmp((wincmpfn(a[0], b[0]), wincmpfn(a[1], b[1])),
-                               (0, 0))
-            else:
-                def keyfn(elem):
-                    return alphanum_key(elem.namebase), alphanum_key(elem.ext)
-                cmpfn = None
+            def keyfn(elem):
+                return str(elem.path)
         elif order == SortOrder.TYPE:
-            if wincmpfn:
-                keyfn = operator.attrgetter('typ', 'path', 'ext')
-                def cmpfn(a, b):
-                    return cmp((cmp(a[0], b[0]),
-                                wincmpfn(a[1], b[1]),
-                                wincmpfn(a[2], b[2])),
-                               (0, 0, 0))
-            else:
-                def keyfn(elem):
-                    return elem.typ, alphanum_key(elem.namebase), alphanum_key(elem.ext)
-                cmpfn = None
+            def keyfn(elem):
+                return elem.typ, str(elem.path)
         elif order == SortOrder.EXTENSION:
-            if wincmpfn:
-                keyfn = operator.attrgetter('ext', 'path')
-                def cmpfn(a, b):
-                    return cmp((wincmpfn(a[0], b[0]), wincmpfn(a[1], b[1])),
-                               (0, 0))
-            else:
-                def keyfn(elem):
-                    return alphanum_key(elem.ext), alphanum_key(elem.namebase)
-                cmpfn = None
+            def keyfn(elem):
+                return elem.ext, elem.namebase
         elif order == SortOrder.LAST_MODIFIED:
             keyfn = operator.attrgetter('typ', 'last_modified')
-            cmpfn = None
         else:
             assert False, 'Invalid sort order specified'
         parent = None
         if self.items[0].path.name == '..':
             parent = self.items.pop(0)
-        self.items.sort(key=keyfn)
+        natsort_key = natsort_keygen(key=keyfn, alg=ns.PATH)
+        self.items.sort(key=natsort_key)
         if parent:
             self.items.insert(0, parent)
         self._sort_order = order
@@ -87,16 +50,19 @@ class BaseContainer(object):
         from quivilib.model.container.directory import DirectoryContainer
         from quivilib.model.container.compressed import CompressedContainer
         item = self.items[item_index]
-        assert item.typ != Item.IMAGE
-        if item.typ == Item.PARENT:
+        assert item.typ != ItemType.IMAGE
+        if item.typ == ItemType.PARENT:
             return self.open_parent()
-        elif item.typ == Item.DIRECTORY:
+        elif item.typ == ItemType.DIRECTORY:
             return DirectoryContainer(item.path, self._sort_order, self.show_hidden)
-        elif item.typ == Item.COMPRESSED:
+        elif item.typ == ItemType.COMPRESSED:
             return CompressedContainer(item.path, self._sort_order, self.show_hidden)
         else:
             assert False, 'Invalid container type specified'
-            
+
+    def close_container(self):
+        pass
+
     def refresh(self, show_hidden):
         self.show_hidden = show_hidden
         paths = self._list_paths()
@@ -123,7 +89,7 @@ class BaseContainer(object):
             #TODO: (1,4) Improve: check if item has really changed before sending message?
             #i.e., file has been modified (but it's probably overkill)
             self.selected_item = selected_item
-            if self.selected_item.typ == Item.IMAGE:
+            if self.selected_item.typ == ItemType.IMAGE:
                 Publisher.sendMessage('container.item.changed', index=self.items.index(self.selected_item))
 
     @property
@@ -196,4 +162,3 @@ class BaseContainer(object):
     
     def _list_paths(self):
         raise NotImplementedError()
-

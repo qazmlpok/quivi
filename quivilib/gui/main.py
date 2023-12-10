@@ -1,44 +1,36 @@
-
-from quivilib.control.options import get_fit_choices
-from quivilib.meta import PATH_SEP
+import traceback
+import logging as log
+from pathlib import Path
 
 import wx
 import wx.aui
 from pubsub import pub as Publisher
 
+from quivilib.control.options import get_fit_choices
 from quivilib.i18n import _
 from quivilib import meta
 from quivilib.util import error_handler
 from quivilib.gui.file_list import FileListPanel
-from pathlib import Path
 from quivilib.resources import images
 from quivilib import util
-
-import traceback
-import logging as log
 
 ZOOM_FIELD = 2
 SIZE_FIELD = 1
 FIT_FIELD = 3
 
-
-
 def _handle_error(exception, args, kwargs):
     self = args[0]
-    self.handle_error(exception)
-    
+    return self.handle_error(exception)
 
 
-#class MainWindow(wx.Frame, wx.FileDropTarget):
 class MainWindow(wx.Frame):
-
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=-1, title=meta.APPNAME)
         self.aui_mgr = wx.aui.AuiManager()
         self.aui_mgr.SetManagedWindow(self)
         self.aui_mgr.SetFlags(self.aui_mgr.GetFlags()
                               & ~wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
-        
+
         bundle = wx.IconBundle()
         bundle.AddIcon(images.quivi16.Icon)
         bundle.AddIcon(images.quivi32.Icon)
@@ -109,9 +101,9 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_bg_color_changed, 'settings.loaded')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackground')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
-        Publisher.subscribe(self.on_canvas_fit_changed, 'settings.loaded')
-        Publisher.subscribe(self.on_canvas_fit_changed, 'settings.changed.Options.FitType')
-        Publisher.subscribe(self.on_canvas_fit_changed, 'settings.changed.Options.FitWidthCustomSize')
+        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.loaded')
+        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitType')
+        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitWidthCustomSize')
         
         self._last_size = self.GetSize() 
         self._last_pos = self.GetPosition()
@@ -119,17 +111,19 @@ class MainWindow(wx.Frame):
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
         self.favorites_menu_items = []
+        self._favorite_menu_count = 0
         self.update_menu_item = None
+        self.accel_table = None
         #Track as a dictionary
         self.menus = {}
         
     def _bind_panel_mouse_events(self):
         def make_fn(button_idx, event_idx):
             def fn(event):
-                Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx)
+                Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx, x=event.x, y=event.y)
                 event.Skip()
             return fn
-        for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT')):
+        for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT', 'MOUSE_AUX1', 'MOUSE_AUX2')):
             for event_idx, event in enumerate(('DOWN', 'UP')):
                 eid = getattr(wx, f'EVT_{button}_{event}')
                 self.panel.Bind(eid, make_fn(button_idx, event_idx))
@@ -158,6 +152,7 @@ class MainWindow(wx.Frame):
         settings_lst.append(('Window', 'MainWindowWidth', self._last_size[0]))
         settings_lst.append(('Window', 'MainWindowHeight', self._last_size[1]))
         settings_lst.append(('Window', 'MainWindowMaximized', '1' if self.IsMaximized() else '0'))
+        settings_lst.append(('Window', 'MainWindowFullscreen', '1' if self.IsFullScreen() else '0'))
     
     def load(self, settings):
         perspective = settings.get('Window', 'Perspective')
@@ -171,7 +166,7 @@ class MainWindow(wx.Frame):
         self.Maximize(settings.getboolean('Window', 'MainWindowMaximized'))
         if wx.Display.GetFromWindow(self) == wx.NOT_FOUND:
             self.SetSize(0, 0, width, height)
-    
+
     def on_resize(self, event):
         Publisher.sendMessage('canvas.resized')
         if not self.IsMaximized():
@@ -235,15 +230,19 @@ class MainWindow(wx.Frame):
     def on_mouse_wheel(self, event):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
         lines *= event.GetLinesPerAction()
-        Publisher.sendMessage('canvas.scrolled', lines=lines)
+        if event.controlDown:
+            #Zoom instead of scrolling
+            Publisher.sendMessage('canvas.zoom_at', lines=lines, x=event.X, y=event.Y)
+        else:
+            Publisher.sendMessage('canvas.scrolled', lines=lines, horizontal=event.shiftDown)
         
     def on_mouse_enter(self, event):
         self.panel.SetFocus()
         
     def on_fit_context_menu(self, event):
+        """Appears on right-clicking the status bar"""
         menu = wx.Menu()
-        #I can't figure out how to test this. Is this reachable?
-        self.PopupMenu(self.menus['Fit'])
+        self.PopupMenu(self.menus['_fit'])
         menu.Destroy()
         
     def on_busy(self, *, busy):
@@ -267,18 +266,19 @@ class MainWindow(wx.Frame):
         
     def on_canvas_changed(self):
         self.panel.Refresh(eraseBackground=False)
-        
-    def on_canvas_fit_changed(self, *, settings=None, FitType=None):
-        #Using the same listener for two different messages,
-        #so parse it differently
-        if FitType is not None:
-            fit_type = FitType
-        else:
-            fit_type = settings.getint('Options', 'FitType')
+    
+    def on_canvas_fit_setting_changed(self, *, settings):
+        fit_type = settings.getint('Options', 'FitType')
+        self.on_canvas_fit_changed(FitType = fit_type)
+    
+    def on_canvas_fit_changed(self, *, FitType, IsSpread=False):
         fit_choices = get_fit_choices()
-        name = [name for name, typ in fit_choices if typ == fit_type][0]
-        self.status_bar.SetStatusText(name, FIT_FIELD)
-        
+        name = [name for name, typ in fit_choices if typ == FitType][0]
+        txt = name
+        if IsSpread:
+            txt += ' ' + _('(Spread)')
+        self.status_bar.SetStatusText(txt, FIT_FIELD)
+
     def on_canvas_cursor_changed(self, *, cursor):
         self.panel.SetCursor(cursor)
         
@@ -286,33 +286,31 @@ class MainWindow(wx.Frame):
         text = util.get_formatted_zoom(zoom)
         self.status_bar.SetStatusText(text, ZOOM_FIELD)
         
-    def on_menu_built(self, *, main_menu):
+    def on_menu_built(self, *, main_menu, commands):
         for category in main_menu:
             menu = self._make_menu(category.commands)
-            self.menu_bar.Append(menu, category.name)
-        #Remove the hidden menus.
-        #It is removed from the menu bar but a reference to it is kept
-        #in order to keep its keyboard shortcuts working
-        for category in main_menu:
-            #https://stackoverflow.com/questions/27662721/removing-a-menu-from-a-wxpython-menubar
-            menu_pos = self.menu_bar.FindMenu(category.name)
-            if menu_pos >= 0:
-                self.menus[category.clean_name] = self.menu_bar.GetMenu(menu_pos)
-            if category.hidden and menu_pos >= 0:
-                self.menu_bar.Remove(menu_pos)
-            
+            self.menus[category.idx] = menu
+            #Don't actually add the menu to the bar if it's hidden (it can still be opened via PopupMenu)
+            if not category.hidden:
+                self.menu_bar.Append(menu, category.name)
+
+        #Create actual bindings for the commands
+        for command in commands:
+            def event_fn(event, cmd=command):
+                try:
+                    cmd()
+                except Exception as e:
+                    self.handle_error(e)
+            self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
+        #Track as a class variable to avoid a magic number.
+        self._favorite_menu_count = self.menus['fav'].GetMenuItemCount()
+
     def _make_menu(self, commands):
         menu = wx.Menu()
         for command in commands:
             if command:
-                def event_fn(event, cmd=command):
-                    try:
-                        cmd()
-                    except Exception as e:
-                        self.handle_error(e)
                 style = wx.ITEM_CHECK if command.checkable else wx.ITEM_NORMAL
                 menu.Append(command.ide, command.name_and_shortcut, command.description, style)
-                self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
                 if command.update_function:
                     wx.GetApp().Bind(wx.EVT_UPDATE_UI, command.update_function, id=command.ide)
             else:
@@ -320,40 +318,37 @@ class MainWindow(wx.Frame):
         return menu
     
     def on_favorites_changed(self, *, favorites):
-        favorites_menu = self.menus['Favorites']
-        
-        #TODO: (1,2) Improve: likewise, 3 is the number of submenus in the favorites menu;
-        #      entries bigger than 3 are the favorites themselves.
-        while favorites_menu.GetMenuItemCount() > 2:
-            menu = favorites_menu.FindItemByPosition(2)
-            favorites_menu.Delete(menu)
-        items = favorites.getitems()
-        if items:
-            favorites_menu.AppendSeparator()
-        self.favorites_menu_items = []
-        i = 0
-        for path_key, path in items:
-            ide = wx.NewId()
-            def event_fn(event, favorite=path):
-                try:
-                    Publisher.sendMessage('favorite.open', favorite=favorite)
-                except Exception as e:
-                    self.handle_error(e)
-            #In path for drives (e.g. D:\), name is '' 
-            if path.name == '':
-                name = path
-            else:
-                name = path.name
-            #Handle universal path names
-            name = name.split(PATH_SEP)[-1]
-            #Prevents incorrect shortcut definition
-            name = name.replace('&', '&&')
-            if not name:
-                continue
-            favorites_menu.Append(ide, name)
-            self.favorites_menu_items.append((ide, name))
-            self.Bind(wx.EVT_MENU, event_fn, id=ide)
-            i += 1
+        favorites_menu = self.menus['fav']
+        self.menu_bar.Freeze()
+        try:
+            #self._favorite_menu_count is the number of submenus in the favorites menu;
+            #      entries bigger than this are the favorites themselves.
+            while favorites_menu.GetMenuItemCount() > self._favorite_menu_count:
+                menu = favorites_menu.FindItemByPosition(self._favorite_menu_count)
+                favorites_menu.Delete(menu)
+            items = favorites.getitems()
+            if items:
+                favorites_menu.AppendSeparator()
+            self.favorites_menu_items = []
+            i = 0
+            for path_key, fav in items:
+                ide = wx.NewId()
+                def event_fn(event, favorite=fav):
+                    try:
+                        Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
+                    except Exception as e:
+                        self.handle_error(e)
+                
+                name = fav.displayText()
+                if not name:
+                    continue
+                favorites_menu.Append(ide, name)
+                self.favorites_menu_items.append((ide, name))
+                self.Bind(wx.EVT_MENU, event_fn, id=ide)
+                i += 1
+        finally:
+            self.menu_bar.Thaw()
+            pass
 
     def on_menu_labels_changed(self, *, main_menu, commands, accel_table):
         self.accel_table = accel_table
@@ -422,7 +417,7 @@ class MainWindow(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
         
-    def on_update_available(self, *, down_url):
+    def on_update_available(self, *, down_url, check_time, version):
         menu = wx.Menu()
         ide = wx.NewId()
         self.update_menu_item = menu.Append(ide, _('&Download'), _('Go to the download site'))
@@ -430,7 +425,7 @@ class MainWindow(wx.Frame):
         def event_fn(event):
             Publisher.sendMessage('program.open_update_site', url=down_url)
         self.Bind(wx.EVT_MENU, event_fn, id=ide)
-        
+
     def on_bg_color_changed(self, *, settings):
         if settings.get('Options', 'CustomBackground') == '1':
             color = settings.get('Options', 'CustomBackgroundColor').split(',')
@@ -458,6 +453,7 @@ class MainWindow(wx.Frame):
     
     class QuiviFileDropTarget(wx.FileDropTarget):
         def __init__(self, window):
+            self.Window = window
             wx.FileDropTarget.__init__(self)
 
         @error_handler(_handle_error)
@@ -466,3 +462,7 @@ class MainWindow(wx.Frame):
             path = Path(filename)
             Publisher.sendMessage('file.dropped', path=path)
             return True
+        
+        def handle_error(self, exception):
+            self.Window.handle_error(exception)
+            return False

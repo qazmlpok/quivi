@@ -1,4 +1,3 @@
-
 """Setup strings.
 
 This module exists only to make the .po file include the strings
@@ -7,12 +6,11 @@ used in the setup, so translators need only to work on one file.
 It also writes the correct include file for the nsis setup script
 when run.
 """
+from pathlib import Path
 import wx
 
 from quivilib.i18n import _
 from quivilib.control.i18n import I18NController
-from pathlib import Path
-
 
 
 if __name__ == '__main__':

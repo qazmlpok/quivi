@@ -1,12 +1,9 @@
-
-
 import sys
 import logging
 import wx
 from quivilib.util import rescale_by_size_factor
 
 log = logging.getLogger('gdiplus')
-
 
 
 if sys.platform == 'win32':
@@ -36,7 +33,6 @@ if sys.platform == 'win32':
     gdiplus.GdiplusStartup(ctypes.pointer(token), ctypes.pointer(StartupInput), None)
 
 
-
 class _GdiPlusInnerImage(object):
     def __init__(self, path=None, istream=None):
         assert (path is None) ^ (istream is None)
@@ -62,13 +58,16 @@ class GdiPlusImage(object):
         if img is None:
             #TODO: load from f
             try:
+                #Note - this will only work if path is a real file, and not an archive entry.
                 img = _GdiPlusInnerImage(path=path)
             except EnvironmentError:
                 if not f:
                     raise
                 fs = util.FileStream(f)
                 istream = util.wrap(fs, pythoncom.IID_IStream)
-                img = _GdiPlusInnerImage(isttream=path)
+                #"ctypes.ArgumentError: argument 1: Don't know how to convert parameter 1"
+                #If this ever worked, it's dead now.
+                img = _GdiPlusInnerImage(istream=istream)
         
         width = ctypes.c_uint()
         gdiplus.GdipGetImageWidth(img.img, ctypes.byref(width))
@@ -82,6 +81,11 @@ class GdiPlusImage(object):
         self.zoomed_bmp = None
         self.delay = delay
         self.rotation = 0
+    
+    def extensions():
+        #Taken from https://docs.microsoft.com/en-us/windows/win32/api/gdiplusheaders/nf-gdiplusheaders-image-image(constwchar_bool)
+        #Webp (and possibly others) don't work but should. They display in Paint, which I understand is basically a wrapper around GDI.
+        return ['.bmp', '.emf', '.gif', '.jpg', '.jpeg', '.png', '.tiff']
         
     @property
     def width(self):
@@ -203,7 +207,7 @@ class GdiPlusImage(object):
     
     def close(self):
         self.img = None
-            
+
     def _get_rotated_coords(self, x, y, w, h):
         if self.rotation == 0:
             return x, y, x + w, y, x, y + h
@@ -215,4 +219,3 @@ class GdiPlusImage(object):
             return x, y + w, x, y, x + h, y + w 
         else:
             assert False, "invalid rotation"
-

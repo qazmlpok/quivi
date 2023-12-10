@@ -4,20 +4,45 @@
 
 from glob import glob
 
-#import quivilib.meta
-#sigh.
+#Importing the module here requires using the full path. I don't know why.
+#Taken from https://stackoverflow.com/questions/66345912
+import os
+import importlib.util
+cwd = os.getcwd()
+spec = importlib.util.spec_from_file_location(
+    "package", cwd + "/quivilib/meta.py"
+)
+meta = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(meta)
 
-APPNAME = 'Quivi'
-USE_FREEIMAGE = False
+
+#https://stackoverflow.com/questions/61718298
+def get_locales_data():
+    locales_data = []
+    for locale in os.listdir(os.path.join('./localization')):
+        full_path = os.path.join('./localization', locale)
+        if os.path.isdir(full_path):
+            locales_data.append((
+                os.path.join('./localization', locale, 'LC_MESSAGES/quivi.mo'),
+                os.path.join('localization', locale, 'LC_MESSAGES')
+            ))
+    return locales_data
 
 block_cipher = None
 
 datas=[('LICENSE.txt', '.')]
-if USE_FREEIMAGE:
-    datas.append(('FreeImage.dll', '.'), ('freeimage-license.txt', '.'))
-translation_files = glob('localization/*.mo') + ['localization/default.pot']
-for mo in translation_files:
-    datas.append((mo, 'localization'))
+excludes = []
+if meta.USE_FREEIMAGE:
+    datas.append(('freeimage-license.txt', '.'))
+if meta.USE_CAIRO:
+    datas.append(('cairo.dll', '.'))
+datas.extend(get_locales_data())
+
+#Don't include packages that are disabled by configuration
+if not meta.USE_CAIRO:
+    excludes.append('cairo')
+if not meta.USE_PIL:
+    excludes.append('PIL')
 
 a = Analysis(['quivi.pyw'],
              pathex=[],
@@ -27,7 +52,7 @@ a = Analysis(['quivi.pyw'],
              hookspath=[],
              hooksconfig={},
              runtime_hooks=[],
-             excludes=[],
+             excludes=excludes,
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
@@ -35,11 +60,16 @@ a = Analysis(['quivi.pyw'],
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 
+if not meta.USE_FREEIMAGE:
+    a.binaries = a.binaries - TOC([
+        ('freeimage.dll', None, None),
+    ])
+
 exe = EXE(pyz,
           a.scripts, 
           [],
           exclude_binaries=True,
-          name=APPNAME,
+          name=meta.APPNAME,
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -57,4 +87,4 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name=APPNAME)
+               name=meta.APPNAME)

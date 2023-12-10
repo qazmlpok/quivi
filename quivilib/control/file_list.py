@@ -1,21 +1,20 @@
+import sys
+from pathlib import Path
+import logging
 
+from pubsub import pub as Publisher
+import wx
 
 from quivilib.i18n import _
 from quivilib import meta
-from quivilib.model.container import Item
+from quivilib.model.container import Item, ItemType
 from quivilib.model.container import get_supported_extensions as get_supported_container_extensions
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.model.container.compressed import CompressedContainer
 from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from quivilib.control.cache import ImageCacheLoadRequest
-from pathlib import Path
-
-from pubsub import pub as Publisher
 from quivilib.meta import PATH_SEP
-import wx
 
-import sys
-import logging
 log = logging.getLogger('control.file_list')
 
 
@@ -38,6 +37,12 @@ def _delete_file(path, window=None):
     else:
         path.unlink()
 
+def _ask_delete_favorite(window, path):
+    dlg = wx.MessageDialog(window, _('''The file or directory "%s" couldn't be found. Remove the favorite?''') % path.name,
+                           _("Favorite not found"), wx.YES_NO | wx.ICON_QUESTION)
+    res = dlg.ShowModal()
+    dlg.Destroy()
+    return res
 
 class FileListController(object):
     def __init__(self, model, start_container):
@@ -59,7 +64,7 @@ class FileListController(object):
         
     def on_file_list_activated(self, *, index):
         container = self.model.container
-        if container.items[index].typ != Item.IMAGE:
+        if container.items[index].typ != ItemType.IMAGE:
             opened = container.open_container(index)
             if opened:
                 self._set_container(opened)
@@ -67,14 +72,14 @@ class FileListController(object):
     def on_file_list_selected(self, *, index):
         container = self.model.container
         container.selected_item = index
-        if container.items[index].typ == Item.IMAGE:
+        if container.items[index].typ == ItemType.IMAGE:
             self.open_item(index)
             
     def on_file_list_column_clicked(self, *, sort_order):
         self.model.container.sort_order = sort_order
         
     def on_file_list_begin_drag(self, *, obj):
-        if self.model.container.virtual_files == False:
+        if not self.model.container.virtual_files:
             obj.path = self.model.container.get_item_path(obj.idx)
         else:
             obj.path = None
@@ -82,20 +87,40 @@ class FileListController(object):
     def on_container_item_changed(self, *, index):
         self.open_item(index)
         
-    def on_favorite_open(self, *, favorite):
-        self.open_path(favorite)
+    def on_favorite_open(self, *, favorite, window=None):
+        try:
+            is_placeholder = favorite.page is not None
+            self._open_path(favorite.path, is_placeholder)
+            if is_placeholder:
+                #Bypass the default page open and manually select the saved index.
+                #Otherwise it will try to load the cover page and the selected page.
+                #TODO: Would calling open_path on the direct image work better?
+                self.select_index(int(favorite.page))
+                autodelete = self.model.settings.get('Options', 'PlaceholderDelete') == '1'
+                if autodelete:
+                    self.model.favorites.remove(favorite.path, is_placeholder)
+                    Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+                    log.debug(f'Removing placeholder on open: {favorite.path}')
+        except FileNotFoundError as e:
+            #Favorite invalid; probably deleted manually. Prompt user to remove.
+            if _ask_delete_favorite(window, favorite.path) == wx.ID_YES:
+                #Duplicate of remove_favorite in main.
+                self.model.favorites.remove(favorite.path, is_placeholder)
+                Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+                Publisher.sendMessage('favorite.opened', favorite=False)
+                
 
     def open_item(self, item_index):
         container = self.model.container
         item = container.items[item_index]
-        if item.typ == Item.IMAGE:
+        if item.typ == ItemType.IMAGE:
             Publisher.sendMessage('busy', busy=True)
             if meta.CACHE_ENABLED:
                 request = ImageCacheLoadRequest(container, item, self.model.canvas.view)
                 self.pending_request = request
                 Publisher.sendMessage('container.image.loading', item=container.items[item_index])
                 Publisher.sendMessage('cache.clear_pending', request=request)
-                log.debug("fl: requesting cache...")
+                log.debug(f"fl: requesting cache for {item_index}")
                 Publisher.sendMessage('cache.load_image', request=request)
                 log.debug("fl: cache requested")
                 if self._last_opened_item is None or item_index >= self._last_opened_item:
@@ -104,9 +129,9 @@ class FileListController(object):
                     self._direction = -1
                 for i in range(meta.PREFETCH_COUNT):
                     idx = item_index + ((i + 1) * self._direction)
-                    if idx > 0 and idx < len(container.items) and container.items[idx].typ == Item.IMAGE:
+                    if idx > 0 and idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
                         request = ImageCacheLoadRequest(container, container.items[idx], self.model.canvas.view)
-                        log.debug("fl: requesting prefetch...")
+                        log.debug(f"fl: requesting prefetch of {idx}")
                         Publisher.sendMessage('cache.load_image', request=request)
                         log.debug("fl: prefetch requested")
                 log.debug("fl: done")
@@ -156,20 +181,24 @@ class FileListController(object):
         Publisher.sendMessage('file_list.open_directory_dialog', req=req)
         if req.directory:
             self.open_path(req.directory)
-        
-    def select_next(self, skip):
+    
+    def select_index(self, nindex):
         container = self.model.container
-        nindex = container.selected_item_index + skip
         #Notice that it works even if no item is selected (item = -1)
         if 0 <= nindex < container.item_count:
             container.selected_item = nindex
-            if container.items[nindex].typ == Item.IMAGE:
+            if container.items[nindex].typ == ItemType.IMAGE:
                 self.open_item(nindex)
-            
+    
+    def select_next(self, skip):
+        container = self.model.container
+        nindex = container.selected_item_index + skip
+        self.select_index(nindex)
+
     def open_selected_container(self):
         container = self.model.container
         index = container.selected_item_index
-        if container.items[index].typ != Item.IMAGE:
+        if container.items[index].typ != ItemType.IMAGE:
             container = container.open_container(index)
             self._set_container(container)
             
@@ -183,7 +212,7 @@ class FileListController(object):
                 nindex = parent.selected_item_index + skip
                 if 0 <= nindex < parent.item_count:
                     self.open_item(nindex)
-                    if parent.items[nindex].typ == Item.IMAGE:
+                    if parent.items[nindex].typ == ItemType.IMAGE:
                         parent.selected_item = nindex
         finally:
             Publisher.sendMessage('gui.thaw') 
@@ -196,12 +225,10 @@ class FileListController(object):
         container = self.model.container
         self.refresh()
         nindex = deleted_index if self._direction == 1 else deleted_index - 1
-        if nindex < 0:
-            nindex = 0
-        if nindex >= len(container.items):
-            nindex = len(container.items) - 1
+        nindex = max(nindex, 0)
+        nindex = min(nindex, len(container.items) - 1)
         container.selected_item = nindex 
-        if container.items[nindex].typ == Item.IMAGE:
+        if container.items[nindex].typ == ItemType.IMAGE:
             self.open_item(nindex)
         
     def delete(self, window=None):
@@ -210,12 +237,12 @@ class FileListController(object):
             return
         index = self.model.container.selected_item_index
         path = self.model.container.items[index].path
-        type = self.model.container.items[index].typ
+        filetype = self.model.container.items[index].typ
         if _need_delete_confirmation():
             if _ask_delete_confirmation(window, path) == wx.ID_NO:
                 return
         #Release any handle on the file...
-        if type == Item.IMAGE and img:
+        if filetype == ItemType.IMAGE and img:
             img.close()
         _delete_file(path, window)
         self._refresh_after_delete(index)
@@ -229,30 +256,29 @@ class FileListController(object):
         if container.can_delete():
             index = container.selected_item_index
             if index != -1:
-                if container.items[index].typ in (Item.IMAGE, Item.COMPRESSED):
+                if container.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
                     can_delete = True
         return can_delete
         
-    def open_path(self, path):
+    def open_path(self, path, skip_open=False):
+        #Check if this path is saved as a placeholder. If it is, load it instead
+        autoload = self.model.settings.get('Options', 'PlaceholderAutoOpen') == '1'
+        if (autoload and self.model.favorites.contains(path, True)):
+            favorite = self.model.favorites.getFavorite(path, True)
+            self.on_favorite_open(favorite=favorite)
+        else:
+            self._open_path(path, skip_open)
+    def _open_path(self, path, skip_open=False):
+        """Open the given path for viewing. This may be a directory (show images), a single image,
+        or a archive (e.g. zip) containing images.
+        Opening a single image will open the containing directory and jump directly to that image.
+        """
         sort_order = self.model.container.sort_order
         show_hidden = self.model.container.show_hidden
-        #if path.startswith('onemanga:') or path.startswith('mangafox:'):
-        #    paths = Path(path[9:]).splitall()
-        #    if path.startswith('onemanga:'):
-        #        from quivilib.model.container.onemanga import OMContainer
-        #        container = OMContainer(sort_order, show_hidden)
-        #    else:
-        #        from quivilib.model.container.mangafox import MFContainer
-        #        container = MFContainer(sort_order, show_hidden)
-        #    container = self._open_virtual_path(container, paths[1:])
-        #    if container.selected_item_index == -1:
-        #        self._set_container(container)
-        #    else:
-        #        self.model.container = container
-        #        self.open_item(container.selected_item_index)
+        
         if path.is_dir():
             container = DirectoryContainer(path, sort_order, show_hidden)
-            self._set_container(container)
+            self._set_container(container, skip_open)
         elif path.is_file() and path.suffix.lower() in get_supported_image_extensions():
             container = DirectoryContainer(path.parent, sort_order, show_hidden)
             self.model.container = container
@@ -261,7 +287,7 @@ class FileListController(object):
                 self.open_item(container.selected_item_index)
         elif path.is_file() and path.suffix.lower() in get_supported_container_extensions():
             container = CompressedContainer(path, sort_order, show_hidden)
-            self._set_container(container)
+            self._set_container(container, skip_open)
         else:
             paths = str(path).split(PATH_SEP)
             root_container_path = Path(paths[0])
@@ -269,12 +295,12 @@ class FileListController(object):
                 root_container = CompressedContainer(root_container_path, sort_order, show_hidden)
                 container = self._open_virtual_path(root_container, paths[1:])
                 if container.selected_item_index == -1:
-                    self._set_container(container)
+                    self._set_container(container, skip_open)
                 else:
                     self.model.container = container
                     self.open_item(container.selected_item_index)
             else:
-                raise RuntimeError(_('File or directory does not exist'))
+                raise FileNotFoundError(_('File or directory does not exist'))
             
     def toggle_show_hidden(self):
         self.show_hidden = not self.show_hidden
@@ -291,30 +317,33 @@ class FileListController(object):
         if container.selected_item_index == -1:
             return container
         else:
-            if container.selected_item.typ == Item.IMAGE:
+            if container.selected_item.typ == ItemType.IMAGE:
                 return container
             else:
                 container = container.open_container(container.selected_item_index)
                 return self._open_virtual_path(container, paths[1:])
         
-    def _set_container(self, container):
+    def _set_container(self, container, skip_open=False):
+        if self.model.container is not None:
+            self.model.container.close_container()
         self.model.container = container
         self._last_opened_item = None
-        for idx, item in enumerate(self.model.container.items):
-            if item.typ == Item.IMAGE:
-                if self.model.settings.getint('Options', 'OpenFirst') and self.model.container.selected_item_index == -1:
-                    self.model.container.selected_item = idx
-                    self.open_item(idx)
-                else:
-                    request = ImageCacheLoadRequest(self.model.container, item, self.model.canvas.view)
-                    log.debug("fl: requesting prefetch of first image in container...")
-                    Publisher.sendMessage('cache.load_image', request=request)
-                break
+        if not skip_open:
+            for idx, item in enumerate(self.model.container.items):
+                if item.typ == ItemType.IMAGE:
+                    if self.model.settings.getint('Options', 'OpenFirst') and self.model.container.selected_item_index == -1:
+                        self.model.container.selected_item = idx
+                        self.open_item(idx)
+                    else:
+                        request = ImageCacheLoadRequest(self.model.container, item, self.model.canvas.view)
+                        log.debug("fl: requesting prefetch of first image in container...")
+                        Publisher.sendMessage('cache.load_image', request=request)
+                    break
         if self.model.settings.getint('Options', 'OpenFirst') and self.model.container.selected_item_index == -1:
             idx = -1
             if len(self.model.container.items) > 0:
                 idx = 0
-                if self.model.container.items[0].typ == Item.PARENT:
+                if self.model.container.items[0].typ == ItemType.PARENT:
                     if len(self.model.container.items) > 1:
                         idx = 1
             if idx != -1:

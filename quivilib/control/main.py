@@ -1,4 +1,10 @@
+import sys
+from pathlib import Path
+import logging as log
+import traceback
 
+import wx
+from pubsub import pub as Publisher
 
 from quivilib import meta
 from quivilib.model import App
@@ -13,19 +19,9 @@ from quivilib.control.options import OptionsController
 from quivilib.control.cache import ImageCache
 from quivilib.control.check_update import UpdateChecker
 from quivilib.control.i18n import I18NController
-from pathlib import Path
+from quivilib.model.favorites import Favorite
 from quivilib import util
-
-import quivilib.tempdir as tempdir
-
-import wx
-from pubsub import pub as Publisher
-
-import string
-import logging as log
-import traceback
-import sys
-
+from quivilib import tempdir
 
 
 class MainController(object):
@@ -49,10 +45,14 @@ class MainController(object):
             pass
         
         if meta.DEBUG:
-            log.basicConfig()
+            log.basicConfig(encoding='utf8')
+            log_file = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.LOG_FILE_NAME
+            fh = log.FileHandler(log_file, mode='w', encoding='utf8')
+            fh.setLevel(meta.LOG_LEVEL)
+            log.getLogger().addHandler(fh)
         else:
             log_file = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.LOG_FILE_NAME
-            log.basicConfig(filename=log_file, filemode='w')
+            log.basicConfig(filename=log_file, filemode='w', encoding='utf8')
         log.getLogger().setLevel(meta.LOG_LEVEL)
         
         wx.ArtProvider.Push(QuiviArtProvider())
@@ -63,6 +63,7 @@ class MainController(object):
         else:
             settings_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.INI_FILE_NAME
             stdio_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.STDIO_FILE_NAME
+        Publisher.subscribe(self.on_settings_corrupt, 'settings.corrupt')
         self.settings = Settings(settings_path)
         start_dir = self._get_start_dir(self.settings)
         if util.is_frozen():
@@ -88,6 +89,10 @@ class MainController(object):
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
         Publisher.sendMessage('settings.loaded', settings=self.model.settings)
         
+        #Receive messages for Settings from the Daemon thread
+        Publisher.subscribe(self.on_update_available, 'program.update_available')
+        Publisher.subscribe(self.on_no_update_available, 'program.no_update_available')
+        
         self.pane_info = None
         
         if file_to_open:
@@ -99,11 +104,30 @@ class MainController(object):
         self.view.Close()
         
     def toggle_fullscreen(self):
-        if self.settings.get('Options', 'RealFullscreen') == '1':
+        UseRealFullscreen = self.settings.get('Options', 'RealFullscreen') == '1'
+        if UseRealFullscreen:
             style = wx.FULLSCREEN_ALL
         else:
             style = (wx.FULLSCREEN_NOBORDER | wx.FULLSCREEN_NOCAPTION)
         self.view.ShowFullScreen(not self.view.IsFullScreen(), style)
+        
+    def toggle_spread(self):
+        using_feature = self.settings.get('Options', 'DetectSpreads') == '1'
+        #invert
+        self.settings.set('Options', 'DetectSpreads', '0' if using_feature else '1')
+        #This will reset zoom even if it isn't a spread - worth checking?
+        self.canvas.set_zoom_by_current_fit()
+    
+    def MaybeMaximize(self):
+        """
+        Set the MainWindow to fullscreen if the app was in fullscreen when last closed
+        This has to be done after Show() or the app gets messed up badly.
+        This used to be the case for Maximized, but maybe that was fixed.
+        """
+        useFullscreen = self.settings.getboolean('Window', 'MainWindowFullscreen')
+        autoFullscreen = self.settings.getboolean('Options', 'AutoFullscreen')
+        if useFullscreen and autoFullscreen:
+            self.toggle_fullscreen()
         
     def on_update_fullscreen_menu_item(self, event):
         event.Check(self.view.IsFullScreen())
@@ -122,6 +146,10 @@ class MainController(object):
         pane = self.view.aui_mgr.GetPane('file_list')
         event.Check(pane.IsShown())
         
+    def on_update_spread_toggle_menu_item(self, event):
+        using_feature = self.settings.get('Options', 'DetectSpreads') == '1'
+        event.Check(using_feature)
+        
     def on_update_image_available_menu_item(self, event):
         event.Enable(self.model.canvas.has_image())
         
@@ -136,17 +164,56 @@ class MainController(object):
     def add_favorite(self):
         path = self.model.container.universal_path
         if path:
-            self.model.favorites.insert(path)
+            favorite = Favorite(path, None, None)
+            self.model.favorites.insert(favorite)
             Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
             Publisher.sendMessage('favorite.opened', favorite=True)
-        
+    def add_placeholder(self):
+        """
+        Like favorites, but 1. includes the current page
+        2. Adding a new placeholder for the same object will replace the previous placeholder
+        3. Placeholders are intended to be temporary and may be automatically deleted on load
+           or on saving a placeholder for any other item. There are settings to control this.
+        """
+        path = self.model.container.universal_path
+        if path:
+            idx = self.model.container.selected_item_index
+            filename = self.model.container.items[idx].namebase
+            placeholder = Favorite(path, idx, filename)
+            self.model.favorites.insert(placeholder)
+            autodelete = self.settings.get('Options', 'PlaceholderSingle') == '1'
+            if autodelete:
+                #Look for a placeholder for any other container and delete it/them
+                favs = self.model.favorites.getitems()
+                for (k, fav) in favs:
+                    if fav.is_placeholder() and fav.path != path:
+                        log.debug(f"Remove existing placeholder: {fav.path}")
+                        self.model.favorites.remove(fav.path, True)
+            Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+
     def remove_favorite(self):
-        self.model.favorites.remove(self.model.container.path)
+        self.model.favorites.remove(self.model.container.path, False)
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
         Publisher.sendMessage('favorite.opened', favorite=False)
-        
+    
+    def remove_placeholder(self):
+        self.model.favorites.remove(self.model.container.path, True)
+        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+    
+    def open_latest_placeholder(self):
+        for fav in reversed(self.model.favorites.ordered_items()):
+            if fav.is_placeholder():
+                Publisher.sendMessage('favorite.open', favorite=fav, window=None)
+                break
+    
     def copy_to_clipboard(self):
         self.model.canvas.copy_to_clipboard()
+    def copy_path_to_clipboard(self):
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(str(self.model.container.path)))
+            #Keep data available even after application close.
+            wx.TheClipboard.Flush()
+            wx.TheClipboard.Close()
         
     def delete(self):
         self.file_list.delete(self.view)
@@ -175,6 +242,32 @@ class MainController(object):
         self.settings.save()
         tempdir.delete_tempdir()
         log.shutdown()
+
+    def on_update_available(self, *, down_url, check_time, version):
+        self.settings.set('Update', 'Available', '1')
+        if check_time is not None:
+            self.settings.set('Update', 'URL', down_url)
+            self.settings.set('Update', 'LastCheck', check_time)
+            self.settings.set('Update', 'Version', version)
+
+    def on_no_update_available(self, *, check_time):
+        self.settings.set('Update', 'Available', '0')
+        if check_time is not None:
+            self.settings.set('Update', 'LastCheck', check_time)
+
+    def on_settings_corrupt(self, *, backupFilename):
+        from quivilib.i18n import _
+        if backupFilename is not None:
+            msg = _('The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s.') % backupFilename
+        else:
+            msg = _('The settings file is corrupt and cannot be opened. Settings will return to their default values.')
+        #Self.view won't exist when this is called.
+        def fn():
+            #This honestly looks awful, but ideally it won't ever be displayed, so I'm not concerned.
+            dlg = wx.MessageDialog(self.view, msg, _('Settings lost'), wx.OK | wx.ICON_WARNING)
+            dlg.ShowModal()
+            dlg.Destroy()
+        wx.CallLater(1, fn)
 
     @property
     def localization_path(self):
@@ -233,4 +326,3 @@ class MainController(object):
         if not start_dir:
             start_dir = Path(wx.StandardPaths.Get().GetDocumentsDir())
         return start_dir
-

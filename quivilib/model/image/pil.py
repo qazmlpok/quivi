@@ -1,23 +1,71 @@
-
-
+import logging
+import wx
+from PIL import Image
 from quivilib.util import rescale_by_size_factor
 
-from PIL import Image
-import logging
 log = logging.getLogger('pil')
+#PIL has its own logging that's typically not relevant.
+logging.getLogger("PIL").setLevel(logging.ERROR)
 
-import wx
 
+class PilWrapper():
+    """ Wrapper class; used to store image data.
+    Adds a few functions to be consistent with FreeImage.
+    TODO: Add With support. Add an IsTemp to allow automatic disposal.
+    some methods may create a temporary object, which can just be removed automatically.
+    """
 
+    def __init__(self, img):
+        self.img = img
+        self.width = img.width
+        self.height = img.height
+    
+    def __getattr__(self, name):
+        return getattr(self.img, name)
+        
+    def getData(self):
+        b = self.img.tobytes()
+        return (self.width, self.height, b)
+    def maybeConvert32bit(self):
+        if self.img.mode != 'RGB':
+            return PilWrapper(self.img.convert('RGB'))
+        return self
+    def convert_to_raw_bits(self, width_bytes=None):
+        #width_bytes is ignored. Should it be?
+        im = self.img
+        if 'A' not in im.getbands():
+            im = im.copy()
+            im.putalpha(256)
+        arr = bytearray(im.tobytes('raw', 'BGRa'))
+        if im is not self.img:
+            del im
+        return arr
+    def rescale(self, width, height):
+        #I think this needs to return self if the width/height are the same.
+        img = self.img.resize((width, height), Image.BICUBIC)
+        return PilWrapper(img)
+    def __del__(self):
+        if self.img:
+            del self.img
 
 class PilImage(object):
     def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
         self.canvas_type = canvas_type
         self.delay = delay
-        
+
+        #Used to convert 16-bit int precision images to 8-bit.
+        #PIL's behavior is to truncate, which is not useful.
+        #Remove this if that ever changes. It's been reported, and it sounds like they
+        #stopped truncating, but it's still doing it.
+        def lookup(x):
+            return x / 256
+
         if img is None:
             img = Image.open(f)
-            if img.mode != 'RGB':
+            if img.mode == 'I':    #16-bit precision
+                #return img.point(PilImage.PixelLookup, 'RGB')
+                img = img.point(lookup, 'RGB')
+            elif img.mode != 'RGB':
                 img = img.convert('RGB')
         
         self.bmp = self._img_to_bmp(img)
@@ -25,7 +73,7 @@ class PilImage(object):
         self.original_width = self.width = img.size[0]
         self.original_height = self.height = img.size[1]
         
-        self.img = img
+        self.img = PilWrapper(img)
         self.zoomed_bmp = None
         self.rotation = 0
         
@@ -46,14 +94,15 @@ class PilImage(object):
         else:
             return wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
     
+    def rescale(self, width, height):
+        #Wrapper (needed for Cairo)
+        return self.img.rescale(width, height)
     def resize(self, width, height):
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:
-            img = self.img.resize((width, height), Image.BICUBIC)
-            w, h = img.size
-            s = img.tobytes()
-            del img
+            wrapper = self.img.rescale(width, height)
+            (w, h, s) = wrapper.getData()
             if self.delay:
                 #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
                 self.zoomed_bmp = (w, h, s)
@@ -100,14 +149,22 @@ class PilImage(object):
 
     def create_thumbnail(self, width, height, delay):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
-        if factor > 1:
-            factor = 1
+        factor = min(factor, 1)
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         img = self.img.resize((width, height), Image.BICUBIC)
         bmp = wx.Bitmap.FromBuffer(width, height, img.tobytes())
         #TODO: Implement delayed_fn. See freeimage.
         return bmp
+
+    @staticmethod
+    def _get_extensions():
+        return list(Image.registered_extensions().keys())
+    ext_list = _get_extensions()
+    
+    @staticmethod
+    def extensions():
+        return PilImage.ext_list
 
     def close(self):
         pass

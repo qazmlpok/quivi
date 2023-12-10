@@ -1,12 +1,9 @@
-
-
-import pyfreeimage.library as library
-import pyfreeimage.constants as CO
-from pyfreeimage.buffer import FileIO
-
 import ctypes
 import logging as log
 
+from pyfreeimage import library
+import pyfreeimage.constants as CO
+from pyfreeimage.buffer import FileIO
 
 
 class Image(object):
@@ -73,6 +70,9 @@ class Image(object):
     @property
     def bpp(self):
         return self._lib.GetBPP(self._dib)
+        
+    def colortype(self):
+        return self._lib.GetColorType(self._dib)()
     
     @property
     def pitch(self):
@@ -127,47 +127,72 @@ class Image(object):
             raise RuntimeError('Unable to convert image to 24 bits')
         return self.__class__(dib)
     
-    def convert_to_raw_bits(self):
-        buf = ctypes.create_string_buffer(self.height * self.width_bytes)
+    def convert_to_raw_bits(self, width_bytes=None):
+        if width_bytes is None:
+            width_bytes = self.width_bytes
+        else:
+            #freeimage and cairo may use different stride values.
+            width_bytes = max(width_bytes, self.width_bytes)
+        #Note - Stride: the number of bytes between the start of rows in the buffer as allocated.
+        #In other words, the length in bytes of a row in the image, _padded for alignment_
+        buf = ctypes.create_string_buffer(self.height * width_bytes)
         buf_idx = ctypes.addressof(buf)
         for line_idx in range(self.height-1, -1, -1):
             line_buf = self._lib.GetScanLine(self._dib, line_idx)
-            ctypes.memmove(buf_idx, line_buf, self.width_bytes)
-            buf_idx += self.width_bytes
+            ctypes.memmove(buf_idx, line_buf, width_bytes)
+            buf_idx += width_bytes
         return buf
         
     def convert_to_wx_bitmap(self, wx):
         #TODO: (1,4) Improve: handle another types of bitmaps
         if self.bpp == 32:
             img = self
+            img_format = wx.BitmapBufferFormat_ARGB32
+        #elif self.bpp == 24:
+        #Sigh. Still not working correctly.
+        #    img = self
+        #    img_format = wx.BitmapBufferFormat_RGB
         else:
             img = self.convert_to_32_bits()
+            img_format = wx.BitmapBufferFormat_ARGB32
         width, height, bpp, pitch = img.width, img.height, img.bpp, img.pitch
         buf = img.convert_to_raw_bits()
         if img is not self:
             del img
         bmp = wx.Bitmap(width, height, bpp)
-        bmp.CopyFromBuffer(buf, wx.BitmapBufferFormat_ARGB32, pitch)
+        bmp.CopyFromBuffer(buf, img_format, pitch)
         return bmp
     
     def convert_to_cairo_surface(self, cairo):
-        if self.bpp == 32:
-            img = self
-        else:
+        img = self
+        img_format = cairo.Format.ARGB32
+        if self.bpp == 8:
+            #In theory this can be done to avoid a conversion... but it's not working. It inverts the colors.
+            #img_format = cairo.Format.A8
             img = self.convert_to_32_bits()
+        elif self.bpp != 32:
+            img = self.convert_to_32_bits()
+        stride = img_format.stride_for_width(img.width)
         width, height = img.width, img.height
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-        data = surface.get_data()
-        arrayt = ctypes.c_char * len(data)
-        buf = arrayt.from_buffer(data)
-        buf_idx = ctypes.addressof(buf)
-        for line_idx in range(height-1, -1, -1):
-            line_buf = img._lib.GetScanLine(img._dib, line_idx)
-            ctypes.memmove(buf_idx, line_buf, img.width_bytes)
-            buf_idx += img.width_bytes
+        b = img.convert_to_raw_bits(width_bytes=stride)
+        surface = cairo.ImageSurface.create_for_data(b, img_format, width, height)
+        
         if img is not self:
             del img
         return surface
+    
+    def maybeConvert32bit(self):
+        """ Convert this image to 32 bit if it isn't already. This is needed because many operations
+        require 32 bit ARGB images.
+        TODO: Ideally conversions are only done if necessary, i.e. if the requestor can handle 8-bit
+        grayscale, add that as a parameter and don't convert it.
+        Possibly relevant (for cairo): https://stackoverflow.com/a/12384135 ?
+        TODO: Consider returning a wrapper class that supports with so the img can be auto-disposed
+        iff it was a clone.
+        """
+        if self.bpp != 32:
+            return self.convert_to_32_bits()
+        return self
     
     def rescale(self, width, height, resampling_filter):
         dib = self._lib.Rescale(self._dib, width, height, resampling_filter)
@@ -251,4 +276,3 @@ class Image(object):
         if self._dib:
             self._lib.Unload(self._dib)
             del self._dib
-

@@ -1,10 +1,8 @@
-
+import wx
 
 from quivilib.i18n import _
 from quivilib import meta
 from quivilib.resources import images
-
-import wx
 
 # begin wxGlade: dependencies
 # end wxGlade

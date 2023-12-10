@@ -1,12 +1,12 @@
+import logging
+from configparser import ConfigParser, NoOptionError, NoSectionError
+from pathlib import Path
 from quivilib import util
-
 from quivilib.i18n import _
 from quivilib.model.image import get_supported_extensions
-from pathlib import Path
 
-from configparser import SafeConfigParser, NoOptionError, NoSectionError
-import logging
 log = logging
+
 try:
     import winreg as reg
 except ImportError:
@@ -24,7 +24,6 @@ PROG_ID_NAME = 'Quivi'
 CONFIG_INI = 'config.ini'
 
 SOFTWARE_CLASSES = 'Software\\Classes\\'
-
 
 
 def parse_command_line(argv, main_script):
@@ -46,7 +45,7 @@ def parse_command_line(argv, main_script):
         fam.unregister_all(user)
         return True
     return False
-            
+
 def get_root_key(user):
     if user == CURRENT_USER:
         return reg.HKEY_CURRENT_USER
@@ -68,14 +67,12 @@ def get_prog_id_name(ext):
         return PROG_ID_NAME + ext    
 
 
-    
 class Action(object):
     def __init__(self, name, command):
         self.name = name
         self.command = command
- 
- 
- 
+
+
 class ProgId(object):
     def __init__(self, name, friendly_name, user):
         self.name = name
@@ -120,7 +117,6 @@ class ProgId(object):
         key = reg.OpenKey(self.root_key, self.key_name + r'\shell\%s\command' % action_name, 0, reg.KEY_READ)
         command = reg.QueryValueEx(key, '')[0]
         return Action(action_name, command)
-
 
 
 class FileType(object):
@@ -199,11 +195,9 @@ class FileType(object):
     def remove_prog_id(self, prog_id):
         key = reg.CreateKey(self.root_key, SOFTWARE_CLASSES + self.ext + r'\OpenWithProgids')
         reg.DeleteValue(key, prog_id)
-        
 
 
 class AssociationManager(object):
-    
     def __init__(self, main_script_path):
         self.main_script_path = main_script_path
 
@@ -214,7 +208,7 @@ class AssociationManager(object):
             desc = self._get_ext_description(ext)
             prog_id = self.register_prog_id(user, ext, desc, self.get_open_command())
             self.register_extension(user, ext, prog_id.name)
-            
+
     def unregister_all(self, user):
         for ext in get_supported_extensions():
             if ext in SKIP_EXT:
@@ -238,7 +232,7 @@ class AssociationManager(object):
                 ft = FileType.load(ext, user)
                 if ft.prog_id_name == prog_id_name:
                     FileType.remove(ext, user)
-                    
+
     def register_prog_id(self, user, ext, friendly_name, command):
         prog_id = ProgId(get_prog_id_name(ext), friendly_name, user)
         prog_id.default_icon = util.get_exe_path() + ',-' + str(ICON_ID)
@@ -282,7 +276,7 @@ class AssociationManager(object):
             ini_path = util.get_exe_path().parent / CONFIG_INI
         else:
             ini_path = self.main_script_path.parent / CONFIG_INI
-        ini = SafeConfigParser()
+        ini = ConfigParser()
         try:
             ini.read(ini_path)
             if ini.get('config', 'user') == 'current':
@@ -294,4 +288,3 @@ class AssociationManager(object):
     @staticmethod
     def _get_ext_description(ext):
         return f"{ext[1:].upper()} {_('Image')}"
-    

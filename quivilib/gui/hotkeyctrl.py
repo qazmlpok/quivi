@@ -83,15 +83,14 @@ def ConvertModifiersToFlags(modifiers):
     return flags
 
 
-
 class HotkeyUpdatedEvent(wx.PyCommandEvent):
-    def __init__(self, id, name, key_code, modifiers, object=None):
+    def __init__(self, id, name, key_code, modifiers, obj=None):
         wx.PyCommandEvent.__init__(self, wxEVT_COMMAND_HOTKEY_UPDATED, id)
 
         self._name = name
         self._key_code = key_code
         self._modifiers = modifiers
-        self.SetEventObject(object)
+        self.SetEventObject(obj)
         
     def GetHotkeyName(self):
         return self._name
@@ -104,7 +103,6 @@ class HotkeyUpdatedEvent(wx.PyCommandEvent):
     
     def GetAcceleratorFlags(self):
         return ConvertModifiersToFlags(self._modifiers)
-    
     
 
 class HotkeyCtrl(wx.TextCtrl):
@@ -142,7 +140,7 @@ class HotkeyCtrl(wx.TextCtrl):
         
     def IsOk(self):
         return self._key_code is not None
-            
+
     def GetKeyCode(self):
         return self._key_code
     
@@ -151,15 +149,12 @@ class HotkeyCtrl(wx.TextCtrl):
     
     def GetAcceleratorFlags(self):
         return ConvertModifiersToFlags(self._modifiers)
-            
+
     def GetHotkeyName(self):
         return self._name
-            
 
 
-            
 if __name__ == '__main__':
-    
     class MyDialog(wx.Dialog):
         def __init__(self, *args, **kwds):
             # begin wxGlade: MyDialog.__init__
@@ -177,7 +172,6 @@ if __name__ == '__main__':
             
         def on_hotkey_changed(self, event):
             print(event.GetHotkeyName())
-            
     
     app = wx.App(False)
     dlg = MyDialog(None)
