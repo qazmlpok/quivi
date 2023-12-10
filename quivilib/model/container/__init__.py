@@ -66,14 +66,14 @@ class Item(object):
         return str(self.path)
     __repr__ = __str__
 
-class ItemType(IntEnum):
-    PARENT = auto()
-    DIRECTORY = auto()
-    IMAGE = auto()
-    COMPRESSED = auto()
-
 class SortOrder(IntEnum):
     NAME = auto()
     EXTENSION = auto()
     TYPE = auto()
     LAST_MODIFIED = auto()
+
+class ItemType(IntEnum):
+    PARENT = auto()
+    DIRECTORY = auto()
+    IMAGE = auto()
+    COMPRESSED = auto()
