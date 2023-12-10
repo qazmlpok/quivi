@@ -273,7 +273,7 @@ class Canvas(object):
         #If the scroll didn't move at all, scroll to the left/right instead (if possible)
         #To avoid accidental left/right scrolling, a counter is used to "delay" the scroll.
         side_scroll = self._get_bool_setting('HorizontalScrollAtBottom')
-        if (old_top == self.top):
+        if (old_top == self.top and self.width > self.view.width):
             self.sticky += 1
             if self.sticky > STICKY_LIMIT:
                 rtl = self._get_bool_setting('UseRightToLeft')
@@ -304,6 +304,7 @@ class Canvas(object):
         else:
             #center
             self.top = scr_h // 2 - img_h // 2
+        self.sticky = 0
     
     @property
     def y_centered(self):

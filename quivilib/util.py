@@ -56,7 +56,7 @@ def error_handler(callback_fn):
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                callback_fn(e, args, kwargs)
+                return callback_fn(e, args, kwargs)
         return update_wrapper(error_handler_fn, fn)
     return error_handler_with_callback
 

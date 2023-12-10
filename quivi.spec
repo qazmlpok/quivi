@@ -16,7 +16,17 @@ meta = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(meta)
 
 
-
+#https://stackoverflow.com/questions/61718298
+def get_locales_data():
+    locales_data = []
+    for locale in os.listdir(os.path.join('./localization')):
+        full_path = os.path.join('./localization', locale)
+        if os.path.isdir(full_path):
+            locales_data.append((
+                os.path.join('./localization', locale, 'LC_MESSAGES/quivi.mo'),
+                os.path.join('localization', locale, 'LC_MESSAGES')
+            ))
+    return locales_data
 
 block_cipher = None
 
@@ -24,9 +34,9 @@ datas=[('LICENSE.txt', '.')]
 excludes = []
 if meta.USE_FREEIMAGE:
     datas.append(('freeimage-license.txt', '.'))
-translation_files = glob('localization/*.mo') + ['localization/default.pot']
-for mo in translation_files:
-    datas.append((mo, 'localization'))
+if meta.USE_CAIRO:
+    datas.append(('cairo.dll', '.'))
+datas.extend(get_locales_data())
 
 #Don't include packages that are disabled by configuration
 if not meta.USE_CAIRO:

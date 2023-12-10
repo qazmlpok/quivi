@@ -20,7 +20,7 @@ FIT_FIELD = 3
 
 def _handle_error(exception, args, kwargs):
     self = args[0]
-    self.handle_error(exception)
+    return self.handle_error(exception)
 
 
 class MainWindow(wx.Frame):
@@ -465,3 +465,4 @@ class MainWindow(wx.Frame):
         
         def handle_error(self, exception):
             self.Window.handle_error(exception)
+            return False
