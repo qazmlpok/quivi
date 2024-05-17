@@ -1,5 +1,6 @@
 import traceback
 import logging as log
+import math
 from functools import partial
 from pubsub import pub as Publisher
 
@@ -156,9 +157,10 @@ class Canvas(object):
         This is still kinda confused because zoom_to_center is used as a setter.
         Returns True if the zoom level changed. Caller needs to handle the left/top adjustment.
         """
-        if zoom >= 0.01 and zoom <= 16 and abs(zoom - self._zoom) >= 0.01:
+        if zoom >= 0.01 and zoom <= 16 and not math.isclose(zoom, self._zoom, rel_tol=1e-05):
             original_zoom = self._zoom
-            if abs(zoom - 1) < 0.01:
+            if math.isclose(zoom, 1, rel_tol=1e-03):
+                #Done to clear potential floating point inaccuracies. In practice even 1e-07 should be enough.
                 zoom = 1
                 self._zoom = zoom
             else:
