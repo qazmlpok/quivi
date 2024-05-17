@@ -16,6 +16,7 @@ from quivilib.control.menu import MenuController
 from quivilib.control.canvas import CanvasController
 from quivilib.control.wallpaper import WallpaperController
 from quivilib.control.options import OptionsController
+from quivilib.control.debug import DebugController
 from quivilib.control.cache import ImageCache
 from quivilib.control.check_update import UpdateChecker
 from quivilib.control.i18n import I18NController
@@ -81,6 +82,11 @@ class MainController(object):
                                        self.view.canvas_view, self.settings)
         self.wallpaper = WallpaperController(self.model)
         self.options = OptionsController(self, self.model)
+        
+        self.debugController = None
+        if __debug__:
+            self.debugController = DebugController(self.model)
+        
         #This must be the last controller created (it references the others)
         self.menu = MenuController(self, self.settings)
         

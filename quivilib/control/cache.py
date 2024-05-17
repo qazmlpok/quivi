@@ -64,6 +64,9 @@ class ImageCache(object):
         self.processing_request = None
         
     def on_load_image(self, *, request):
+        """Add a ImageCacheLoadRequest to the queue.
+        Invoked by message passing.
+        """
         hit = False 
         with self.c_lock:
             for req in self.cache:
@@ -76,6 +79,8 @@ class ImageCache(object):
             self._put_request(request)
             
     def on_image_loaded(self, request):
+        """ Called by the forked thread after the image is loaded. Handles the queue and message passing.
+        """
         with self.c_lock:
             if len(self.cache) >= meta.CACHE_SIZE:
                 self.cache.pop()
@@ -84,13 +89,20 @@ class ImageCache(object):
             self.notify_image_loaded(request)
             
     def on_flush(self):
+        """ Clear out the cache.
+        Invoked by message passing.
+        """
         with self.c_lock:
             self.cache.clear()
                 
     def notify_image_loaded(self, request):
+        """ Send message notifying of load completion.
+        """
         Publisher.sendMessage('cache.image_loaded', request=request)
         
     def notify_image_load_error(self, request, exception, tb):
+        """ Send message notifying of load failure.
+        """
         Publisher.sendMessage('cache.image_load_error', request=request, exception=exception, tb=tb)
         
     def _put_request(self, request):
@@ -102,11 +114,16 @@ class ImageCache(object):
                 self.semaphore.release()
             
     def on_clear_pending(self, *, request=None):
-        #parameter is passed in but not used.
+        """ Clear out the processing queue. parameter is passed in but not used.
+        Invoked by message passing.
+        """
         with self.q_lock:
             self.queue.clear()
                 
     def on_program_closed(self, *, settings_lst=None):
+        """Cleanup thread during program close.
+        Invoked by message passing.
+        """
         log.debug('main: on closed')
         #log.debug('main: clearing pending...')
         self.on_clear_pending()
@@ -119,6 +136,8 @@ class ImageCache(object):
         self.thread.join()
     
     def run(self):
+        """ Main thread loop for the forked thread.
+        """
         log.debug('thread: running...')
         while True:
             log.debug('thread: acquiring...')
@@ -149,3 +168,4 @@ class ImageCache(object):
                     self.processing_request = None
                 if tb:
                     wx.CallAfter(self.notify_image_load_error, req, e, tb)
+    #

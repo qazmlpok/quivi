@@ -95,6 +95,7 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_settings_loaded, 'settings.loaded')
         Publisher.subscribe(self.on_open_wallpaper_dialog, 'wallpaper.open_dialog')
         Publisher.subscribe(self.on_open_options_dialog, 'options.open_dialog')
+        Publisher.subscribe(self.on_open_debug_cache_dialog, 'debug.open_cache_dialog')
         Publisher.subscribe(self.on_open_about_dialog, 'about.open_dialog')
         Publisher.subscribe(self.on_open_directory_dialog, 'file_list.open_directory_dialog')
         Publisher.subscribe(self.on_update_available, 'program.update_available')
@@ -400,6 +401,12 @@ class MainWindow(wx.Frame):
     def on_open_options_dialog(self, *, fit_choices, settings, categories, available_languages, active_language, save_locally):
         from quivilib.gui.options import OptionsDialog
         dialog = OptionsDialog(self, fit_choices, settings, categories, available_languages, active_language, save_locally)
+        dialog.ShowModal()
+        dialog.Destroy()
+        
+    def on_open_debug_cache_dialog(self, *, params):
+        from quivilib.gui.debug import DebugDialog
+        dialog = DebugDialog(self)
         dialog.ShowModal()
         dialog.Destroy()
         
