@@ -55,9 +55,9 @@ class ImageCache(object):
         Publisher.subscribe(self.on_flush, 'cache.flush')
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         self.queue = []
-        self.qlock = Lock()
+        self.q_lock = Lock()
         self.cache = []
-        self.clock = Lock()
+        self.c_lock = Lock()
         self.semaphore = Semaphore(0)
         self.thread = Thread(target=self.run, daemon=True)
         self.thread.start()
@@ -65,7 +65,7 @@ class ImageCache(object):
         
     def on_load_image(self, *, request):
         hit = False 
-        with self.clock:
+        with self.c_lock:
             for req in self.cache:
                 if req == request:
                     log.debug('main: cache hit')
@@ -76,7 +76,7 @@ class ImageCache(object):
             self._put_request(request)
             
     def on_image_loaded(self, request):
-        with self.clock:
+        with self.c_lock:
             if len(self.cache) >= meta.CACHE_SIZE:
                 self.cache.pop()
             self.cache.insert(0, request)
@@ -84,9 +84,8 @@ class ImageCache(object):
             self.notify_image_loaded(request)
             
     def on_flush(self):
-        with self.clock:
-            while self.cache:
-                self.cache.pop()
+        with self.c_lock:
+            self.cache.clear()
                 
     def notify_image_loaded(self, request):
         Publisher.sendMessage('cache.image_loaded', request=request)
@@ -95,7 +94,7 @@ class ImageCache(object):
         Publisher.sendMessage('cache.image_load_error', request=request, exception=exception, tb=tb)
         
     def _put_request(self, request):
-        with self.qlock:  
+        with self.q_lock:  
             if request not in self.queue:
                 log.debug('main: inserting request')
                 self.queue.insert(0, request)
@@ -104,15 +103,14 @@ class ImageCache(object):
             
     def on_clear_pending(self, *, request=None):
         #parameter is passed in but not used.
-        with self.qlock:
-            while self.queue:
-                self.queue.pop()
+        with self.q_lock:
+            self.queue.clear()
                 
     def on_program_closed(self, *, settings_lst=None):
         log.debug('main: on closed')
         #log.debug('main: clearing pending...')
         self.on_clear_pending()
-        with self.qlock:
+        with self.q_lock:
             log.debug('main: adding None request')
             self.queue.insert(-1, None)
         log.debug('main: releasing...')
@@ -127,7 +125,7 @@ class ImageCache(object):
             self.semaphore.acquire()
             log.debug('thread: acquired. reading request...')
             while True:
-                with self.qlock:
+                with self.q_lock:
                     if not self.queue:
                         log.debug('thread: queue empty')
                         break
