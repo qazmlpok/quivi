@@ -11,6 +11,14 @@ from quivilib.util import synchronized_method
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)
 
+#TODO: The image cache is a simple queue. Items are never re-ordered.
+#If an image is requested that is already loaded, it should move that image to the top
+#Right now it is possible for the cache to dump the currently-displayed image due to pre-loading the next page,
+#which is kinda silly.
+
+#TODO: I want to save the resolution for any image that has been loaded, even if it is unloaded.
+#Should that go in here?
+
 
 class ImageCacheLoadRequest(object):
     def __init__(self, container, item, view):
@@ -45,6 +53,8 @@ class ImageCacheLoadRequest(object):
         
     def __ne__(self, other):
         return not self == other 
+    def __repr__(self):
+        return f'<ImageCacheLoadRequest: {self.path}>'
 
 
 class ImageCache(object):
@@ -83,7 +93,8 @@ class ImageCache(object):
         """
         with self.c_lock:
             if len(self.cache) >= meta.CACHE_SIZE:
-                self.cache.pop()
+                removed = self.cache.pop()
+                self.notify_cache_removed(removed)
             self.cache.insert(0, request)
             request.img.delayed_load()
             self.notify_image_loaded(request)
@@ -91,10 +102,11 @@ class ImageCache(object):
     def on_flush(self):
         """ Clear out the cache.
         Invoked by message passing.
+        TODO: This does not clear out the queue. Shouldn't it?
         """
         with self.c_lock:
             self.cache.clear()
-                
+
     def notify_image_loaded(self, request):
         """ Send message notifying of load completion.
         """
@@ -104,7 +116,14 @@ class ImageCache(object):
         """ Send message notifying of load failure.
         """
         Publisher.sendMessage('cache.image_load_error', request=request, exception=exception, tb=tb)
-        
+    
+    def notify_cache_removed(self, request):
+        """ Send message notifying of removal from cache (i.e. due to hitting the size limit).
+        This is only used by the debug window, so do nothing in a packaged build.
+        """
+        if __debug__:
+            Publisher.sendMessage('cache.image_removed', request=request)
+
     def _put_request(self, request):
         with self.q_lock:  
             if request not in self.queue:
@@ -119,7 +138,7 @@ class ImageCache(object):
         """
         with self.q_lock:
             self.queue.clear()
-                
+
     def on_program_closed(self, *, settings_lst=None):
         """Cleanup thread during program close.
         Invoked by message passing.

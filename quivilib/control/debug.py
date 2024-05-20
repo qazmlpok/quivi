@@ -8,8 +8,12 @@ class DebugController(object):
         self.control = control
         #self.model = model
         #Subscribe to cache events.
-        #Publisher.subscribe(self.on_cache_image_loaded, 'cache.image_loaded')
-        #Publisher.subscribe(self.on_cache_image_load_error, 'cache.image_load_error')
+        #Messages will be handled even if the window isn't open.
+        #Publisher.subscribe(self.on_queue_change, 'debug.queue_changed')
+        #Publisher.subscribe(self.on_cache_change, 'debug.cache_changed')
+        
+        #Is there an easy way to put all the list item stuff here?
+        self.queue_data = {}
         
     def open_debug_cache_dialog(self):
         #Currently no parameters.

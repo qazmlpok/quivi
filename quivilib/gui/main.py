@@ -11,6 +11,7 @@ from quivilib.i18n import _
 from quivilib import meta
 from quivilib.util import error_handler
 from quivilib.gui.file_list import FileListPanel
+from quivilib.gui.debug import DebugDialog
 from quivilib.resources import images
 from quivilib import util
 
@@ -105,6 +106,10 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.loaded')
         Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitType')
         Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitWidthCustomSize')
+        
+        if __debug__:
+            #This is created immediately because it listens for messages.
+            self.dbg_dialog = DebugDialog(self)
         
         self._last_size = self.GetSize() 
         self._last_pos = self.GetPosition()
@@ -405,10 +410,10 @@ class MainWindow(wx.Frame):
         dialog.Destroy()
         
     def on_open_debug_cache_dialog(self, *, params):
-        from quivilib.gui.debug import DebugDialog
-        dialog = DebugDialog(self)
-        dialog.ShowModal()
-        dialog.Destroy()
+        if __debug__:
+            self.dbg_dialog.Show()       #Modeless
+            #dialog.Destroy()
+        #Do nothing in a release build
         
     def on_open_directory_dialog(self, *, req):
         dialog = wx.DirDialog(self, _('Choose a directory:'),
