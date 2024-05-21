@@ -132,7 +132,7 @@ class FileListController(object):
                     if idx > 0 and idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
                         request = ImageCacheLoadRequest(container, container.items[idx], self.model.canvas.view)
                         log.debug(f"fl: requesting prefetch of {idx}")
-                        Publisher.sendMessage('cache.load_image', request=request)
+                        Publisher.sendMessage('cache.load_image', request=request, preload=True)
                         log.debug("fl: prefetch requested")
                 log.debug("fl: done")
             else:

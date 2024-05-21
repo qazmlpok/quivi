@@ -11,11 +11,6 @@ from quivilib.util import synchronized_method
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)
 
-#TODO: The image cache is a simple queue. Items are never re-ordered.
-#If an image is requested that is already loaded, it should move that image to the top
-#Right now it is possible for the cache to dump the currently-displayed image due to pre-loading the next page,
-#which is kinda silly.
-
 #TODO: I want to save the resolution for any image that has been loaded, even if it is unloaded.
 #Should that go in here?
 
@@ -76,20 +71,22 @@ class ImageCache(object):
         self.thread.start()
         self.processing_request = None
         
-    def on_load_image(self, *, request):
+    def on_load_image(self, *, request, preload=False):
         """Add a ImageCacheLoadRequest to the queue.
         Invoked by message passing.
         """
-        hit = False 
+        hit = False
         with self.c_lock:
             for req in self.cache:
                 if req == request:
                     log.debug('main: cache hit')
                     self.notify_image_loaded(req)
                     hit = True
-                    #Remove and then re-add the request so it is at the back of the queue.
-                    self.cache.remove(req)
-                    self.cache.insert(0, req)
+                    if not preload:
+                        #Remove and then re-add the request so it is at the back of the queue.
+                        #Only do this for actual loads, not preload fetch requests.
+                        self.cache.remove(req)
+                        self.cache.insert(0, req)
                     break
         if not hit and request != self.processing_request:
             log.debug('main: cache miss')

@@ -180,7 +180,7 @@ class DebugListCtrl(wx.ListCtrl):
             txt = self.GetItemText(i, 0)
             self.sorted_indices[int(txt)] = i
     #Events
-    def on_load_image(self, *, request):
+    def on_load_image(self, *, request, preload=False):
         """ Cache uses this to add an entry to the Queue.
         It will load the image and add it to the cache, then send cache.image_loaded
         """
