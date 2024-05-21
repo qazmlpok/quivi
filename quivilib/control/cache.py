@@ -21,6 +21,9 @@ log.setLevel(logging.ERROR)
 
 
 class ImageCacheLoadRequest(object):
+    """ Data class containing the necessary information for loading an image
+    i.e. the physical path and, after it has been loaded, the image itself.
+    """
     def __init__(self, container, item, view):
         self.container = container
         self.item = item
@@ -84,6 +87,10 @@ class ImageCache(object):
                     log.debug('main: cache hit')
                     self.notify_image_loaded(req)
                     hit = True
+                    #Remove and then re-add the request so it is at the back of the queue.
+                    self.cache.remove(req)
+                    self.cache.insert(0, req)
+                    break
         if not hit and request != self.processing_request:
             log.debug('main: cache miss')
             self._put_request(request)
@@ -95,6 +102,7 @@ class ImageCache(object):
             if len(self.cache) >= meta.CACHE_SIZE:
                 removed = self.cache.pop()
                 self.notify_cache_removed(removed)
+                log.debug(f'main: removed cache {removed.path}')
             self.cache.insert(0, request)
             request.img.delayed_load()
             self.notify_image_loaded(request)
