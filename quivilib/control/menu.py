@@ -317,7 +317,7 @@ class MenuController(object):
          make_category(3, 'fav' , _('F&avorites'), favorites_menu),
          make_category(4, 'help', _('&Help'), help_menu),
          #make_category(5, _('Move'), hidden_menu, True),
-         make_category(6, '_fit', _('Fit'), fit_menu, True)
+         make_category(6, '_fit', _('Fit'), fit_menu, True),
         )
         #The fit menu doesn't appear in the top, but can open via right click, so it needs to be created.
         #The other menus here exist to provide commands in the options, but aren't otherwise menus
@@ -327,6 +327,19 @@ class MenuController(object):
             make_category(3.1, '_fav', _('Favorites'), favorites_hidden_menu, True),
             make_category(5, '_mov', _('Move'), hidden_menu, True),
         )
+        if __debug__:
+            #Debug options. Disable when built as an application.
+            #Nothing here will be translated, and won't be available as shortcuts.
+            debug_menu = (
+                make(29900, 'Cache', 'Show Cache information',
+                     control.debugController.open_debug_cache_dialog,
+                     [], flags=Command.KB),
+                #Maybe an option to change the log level?
+                #I can't find any kind of built in wxpython diagnostics that would be trivial to include.
+            )
+            main_menu = main_menu + (
+                make_category(7, 'debug', 'Debug', debug_menu),
+            )
         
         return main_menu, command_cats, commands
     

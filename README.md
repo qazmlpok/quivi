@@ -39,6 +39,7 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
     - The intent is for when viewing standard page images that includes image files that are two physical pages joined together, i.e. full-page spreads. This _should_ keep the zoom level roughly consistent with the rest of the book.
     - This will lead to false positive if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
     - There's no indication that this is being done while in fullscreen, so if two pages are joined together but don't have shared art and contain ample margins, it will be easy to accidentally skip pages.
+- Increased the size of the image cache to better account for modern hardware (it's still hardcoded and doesn't check system RAM available or anything).
 
 
 # Removed features

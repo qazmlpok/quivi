@@ -17,8 +17,8 @@ ORIG_AUTHOR_EMAIL = 'conradoplg@gmail.com'
 COPYRIGHT = f"Copyright (c) 2009, {ORIG_AUTHOR} <{ORIG_AUTHOR_EMAIL}>\nCopyright (c) 2022, {AUTHOR} <{AUTHOR_EMAIL}>\nAll rights reserved."
 
 CACHE_ENABLED = True
-CACHE_SIZE = 3
-PREFETCH_COUNT = 1
+CACHE_SIZE = 7
+PREFETCH_COUNT = 2
 if __debug__:
     DEBUG = True
     LOG_LEVEL = logging.DEBUG
