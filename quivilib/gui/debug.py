@@ -46,7 +46,7 @@ class DebugDialog(wx.Dialog):
     def __do_layout(self):
         # begin wxGlade: OptionsDialog.__do_layout
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.cache_list)
+        sizer.Add(self.cache_list, wx.EXPAND)
         sizer.Add(self.ok_button)
         self.SetSizer(sizer)
         
@@ -73,11 +73,11 @@ class DebugListCtrl(wx.ListCtrl):
     def __init__(self, parent):
         wx.ListCtrl.__init__(
             self, parent, -1, 
-            style=wx.LC_REPORT|wx.LC_SINGLE_SEL|wx.LC_SORT_ASCENDING
+            style=wx.LC_REPORT|wx.LC_SINGLE_SEL
             )
         for i in range(len(DebugListCtrl.column_headers)):
             self.InsertColumn(i, DebugListCtrl.column_headers[i])
-        self.SetColumnWidth(0, 20)
+        self.SetColumnWidth(0, 25)
         self.SetColumnWidth(1, 240)
         self.SetColumnWidth(2, 80)
         self.SetColumnWidth(3, 80)
@@ -90,6 +90,8 @@ class DebugListCtrl(wx.ListCtrl):
         self.cache_data = {}
         #Alternative lookup table. Needed for sorting.
         self.cache_data_id = {}
+        #Needed to get the original row after sorting...
+        self.sorted_indices = {}
         
         #Messages the cache listens for
         Publisher.subscribe(self.on_load_image, 'cache.load_image')
@@ -102,12 +104,8 @@ class DebugListCtrl(wx.ListCtrl):
         Publisher.subscribe(self.on_cache_image_load_error, 'cache.image_load_error')
         Publisher.subscribe(self.on_cache_image_removed, 'cache.image_removed')
     #
-    
-    def get_or_insert(self, request):
-        path = request.path
-        if path in self.cache_data:
-            return self.cache_data[path]
-        entry = {
+    def create_entry(self, request):
+        return {
             'id': 0,
             'path': request.path,
             'filename': os.path.basename(request.path),
@@ -115,9 +113,16 @@ class DebugListCtrl(wx.ListCtrl):
             'cache': '',
             'resolution': '',
         }
+    def get_or_insert(self, request):
+        path = request.path
+        if path in self.cache_data:
+            return self.cache_data[path]
+        entry = self.create_entry(request)
         self.add_list_item(entry)
+        #Local lookup tables. I don't think the base listctrl exposes any real "find" methods.
         self.cache_data[path] = entry
         self.cache_data_id[entry['id']] = entry
+        self.update_list_item(entry)
         return entry
     def add_list_item(self, entry):
         """ Add an entry to the actual list control.
@@ -127,48 +132,53 @@ class DebugListCtrl(wx.ListCtrl):
         index = self.InsertItem(self.GetItemCount(), str(self.GetItemCount()))
         self.SetItemData(index, index)  #Must be an int.
         entry['id'] = index
-        
-        self.update_list_item(entry)
     def update_list_item(self, entry):
         """ Update the list control with the new values.
         """
+        #entry['id'] is the unsorted row number. Sorting will change this.
         index = entry['id']
+        if index in self.sorted_indices:
+            index = self.sorted_indices[index]
         for i in range(len(DebugListCtrl.column_order)):
             key = DebugListCtrl.column_order[i]
             self.SetItem(index, i, str(entry[key]))
-        #This causes problems with updating the data. It is modifying the actual index, not just the display order.
-        #self.SortItems(self.sort_fn)
-    
+        #Note - This modifies the actual index, not just the display order.
+        self.SortItems(self.sort_fn)
+        self.recalculate_ids()
     def sort_fn(self, id1, id2):
         """ Special sort order - put loaded images first.
         Not using the built-in mixin because I think that's primarily for "direct" sorting.
         """
-        if id2 not in self.cache_data_id:
-            #I guess this function can be called for records that don't exist. Well that's fun.
-            return 0
         item1 = self.cache_data_id[id1]
         item2 = self.cache_data_id[id2]
         k1 = self.sort_key(item1)
         k2 = self.sort_key(item2)
         if (k1 != k2):
-            return k1 - k2
+            return k2 - k1
         #Equal priority; sort by id
-        return item1['id'] - item2['id']
+        return item2['id'] - item1['id']
     def sort_key(self, item):
         """ Helper function for sorting; convert text strings to priorities.
         If priorities match, sort_fn will use id. Otherwise higher-priority items are always first.
         """
-        if item['cache'] is LOADED:
-            return 1100
-        if item['cache'] != '':
-            return 1000
         if item['queue'] is QUEUED:
+            return 1100
+        if item['cache'] is LOADED:
+            return 1000
+        if item['cache'] != '':
             return 110
         if item['queue'] != '':
             return 100
         return 0
-        
-    
+    def recalculate_ids(self):
+        """ Be sure to call this whenever the rows are sorted.
+        Sorting changes the indices. Fetch all of the new data to get the original id (first column)
+        I can't find any way to do this automatically.
+        """
+        self.sorted_indices.clear()
+        for i in range(len(self.cache_data_id)):
+            txt = self.GetItemText(i, 0)
+            self.sorted_indices[int(txt)] = i
     #Events
     def on_load_image(self, *, request):
         """ Cache uses this to add an entry to the Queue.
