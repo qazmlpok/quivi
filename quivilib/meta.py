@@ -3,7 +3,7 @@ import logging
 import sys
 
 APPNAME = 'Quivi'
-VERSION = '2.0.4'
+VERSION = '2.0.5'
 DESCRIPTION = 'Manga/comic reader and image viewer'
 URL = 'https://github.com/qazmlpok/quivi'
 UPDATE_URL = 'https://raw.githubusercontent.com/qazmlpok/quivi/master/VERSION.txt'
