@@ -55,16 +55,25 @@ class Canvas(object):
         self.view = view
         
     def load(self, f, path, adjust=True, delay=False):
+        """ Load an image file (using either a file handle or a file path)
+        into the canvas.
+        Calls load_img after opening the file, using quivilib.model.image.open().
+        """
         if __debug__:
             import time
             start = time.perf_counter()
         img = image.open(f, path, self.__class__, delay)
+        #TODO: Return img instead of calling load_img directly.
+        #This will avoid some unnecessary events from the cache (which nothing listens for)
         self.load_img(img, adjust)
         if __debug__:
             stop = time.perf_counter()
             log.debug(f'{path.name} took: {(stop - start)*1000:0.1f}ms.')
         
     def load_img(self, img, adjust=True):
+        """ Sets an already loaded image (by `load` or equivalent)
+        This is a separate function due to the cache: images can be load()ed before load_img()ed
+        """
         self.img = img
         self._zoom = float(img.width) / float(img.original_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)

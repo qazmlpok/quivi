@@ -68,7 +68,8 @@ class ImageCache(object):
         self.processing_request = None
         
     def on_load_image(self, *, request, preload=False):
-        """Add a ImageCacheLoadRequest to the queue.
+        """Add a ImageCacheLoadRequest to the queue. If the image is already in the cache, 
+        immediately send the image_loaded message instead.
         Invoked by message passing.
         """
         hit = False

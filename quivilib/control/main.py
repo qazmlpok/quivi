@@ -73,13 +73,13 @@ class MainController(object):
         self.view = MainWindow()
         
         self.model = App(self.settings, start_dir)
-        self.model.canvas.set_view(self.view.canvas_view)
         
         self.i18n = I18NController(self, self.settings)
         self.cache = ImageCache(self.settings)
+        self.canvas = CanvasController('canvas', self.view.canvas_view, self.settings)
+        #This will send messages due to opening the default container
+        #TODO: Probably should move that out of the constructor...
         self.file_list = FileListController(self.model, self.model.container)
-        self.canvas = CanvasController('canvas', self.model.canvas,
-                                       self.view.canvas_view, self.settings)
         self.wallpaper = WallpaperController(self.model)
         self.options = OptionsController(self, self.model)
         
@@ -157,7 +157,7 @@ class MainController(object):
         event.Check(using_feature)
         
     def on_update_image_available_menu_item(self, event):
-        event.Enable(self.model.canvas.has_image())
+        event.Enable(self.canvas.has_image())
         
     def toggle_thumbnails(self):
         pane = self.view.file_list_panel
@@ -213,7 +213,7 @@ class MainController(object):
                 break
     
     def copy_to_clipboard(self):
-        self.model.canvas.copy_to_clipboard()
+        self.canvas.copy_to_clipboard()
     def copy_path_to_clipboard(self):
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(str(self.model.container.path)))
@@ -222,6 +222,7 @@ class MainController(object):
             wx.TheClipboard.Close()
         
     def delete(self):
+        #TODO: Delete is broken. Try to move it out of the filelist.
         self.file_list.delete(self.view)
         
     def open_about_dialog(self):
