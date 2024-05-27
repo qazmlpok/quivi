@@ -35,10 +35,14 @@ class CanvasController(object):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name, view, settings=None):
+    def __init__(self, name, view, canvas=None, settings=None):
         self.name = name
-        self.canvas = Canvas('canvas', settings)
-        self.canvas.set_view(view)  #If this works, just move this to the constructor.
+        if canvas is None:
+            self.canvas = Canvas('canvas', settings)
+        else:
+            #Hack for the wallpaper. I don't like this but don't feel like trying to find something better.
+            self.canvas = canvas
+        self.canvas.set_view(view)
         self.view = view
         self.settings = settings
         self.pending_request = None
@@ -112,17 +116,10 @@ class CanvasController(object):
     #Drawing
     def on_canvas_painted(self, *, dc, painted_region):
         self.canvas.paint(dc)
-        if self.canvas.tiled:
-            #(Wallpaper only)
-            painted_region.top = 0
-            painted_region.left = 0
-            painted_region.width = self.view.width
-            painted_region.height = self.view.height
-        else:
-            painted_region.top = self.canvas.top
-            painted_region.left = self.canvas.left
-            painted_region.width = self.canvas.width
-            painted_region.height = self.canvas.height
+        painted_region.top = self.canvas.top
+        painted_region.left = self.canvas.left
+        painted_region.width = self.canvas.width
+        painted_region.height = self.canvas.height
         
     def on_canvas_resized(self):
         self.canvas.center()
@@ -271,3 +268,18 @@ class CanvasController(object):
         
     def rotate_image(self, clockwise):
         self.canvas.rotate(clockwise)
+
+class WallpaperCanvasController(CanvasController):
+    def __init__(self, name, canvas, view, settings=None):
+        #It should be possible to remove some of the event subscriptions
+        #but that would require a base class instead of direct inheritence.
+        super().__init__(name, view, canvas=canvas)
+    def on_canvas_painted(self, *, dc, painted_region):
+        self.canvas.paint(dc)
+        if self.canvas.tiled:
+            painted_region.top = 0
+            painted_region.left = 0
+            painted_region.width = self.view.width
+            painted_region.height = self.view.height
+        else:
+            super().on_canvas_painted(dc=dc, painted_region=painted_region)

@@ -382,7 +382,9 @@ class MainWindow(wx.Frame):
     def on_image_loading(self, *, item):
         self.status_bar.SetStatusText(_('Loading...'))
         
-    def on_image_loaded(self, *, width, height):
+    def on_image_loaded(self, *, img):
+        width = img.original_width
+        height = img.original_height
         self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
     
     def on_selection_changed(self, *, idx, item):

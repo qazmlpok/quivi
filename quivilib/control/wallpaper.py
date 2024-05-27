@@ -11,9 +11,9 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.model.canvas import Canvas
+from quivilib.model.canvas import WallpaperCanvas
 from quivilib.model.settings import Settings
-from quivilib.control.canvas import CanvasController
+from quivilib.control.canvas import WallpaperCanvasController
 from quivilib.model import image
 
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
@@ -26,26 +26,32 @@ positions = (Settings.FIT_SCREEN_NONE, Settings.FIT_TILED,
 class WallpaperController(object):
     def __init__(self, model):
         self.model = model
-        self.canvas = Canvas('wpcanvas', None)
+        self.canvas = WallpaperCanvas('wpcanvas', None)
         self.canvas_controller = None
         Publisher.subscribe(self.on_dialog_opened, 'wallpaper.dialog_opened')
         Publisher.subscribe(self.on_set_wallpaper, 'wallpaper.set')
         Publisher.subscribe(self.on_wallpaper_zoom, 'wallpaper.zoom')
         Publisher.subscribe(self.on_preview_position_changed, 'wallpaper.preview_position_changed')
+        #Track the main canvas's image.
+        Publisher.subscribe(self.on_image_loaded, 'canvas.image.loaded')
         
     def open_dialog(self):
         choices_str = [_("&Actual size"),
                        _("&Tiled"),
                        _("Stretch to fit screen, c&rop excess"),
                        _("Stretch to &fit screen, show entire image")]
-        if self.model.canvas.img:
+        if self.img:
             color = _get_bg_color()
             Publisher.sendMessage('wallpaper.open_dialog', choices=choices_str, color=color)
-            
+
+    def on_image_loaded(self, *, img):
+        self.img = img
+
     def on_dialog_opened(self, *, dialog):
+        #canvas_view is a CanvasAdapter with a width and height property.
         self.canvas.view = dialog.canvas_view
-        self.canvas_controller = CanvasController('wpcanvas', self.canvas, dialog.canvas_view)
-        self.canvas.load_img(self.model.canvas.img.copy(), False)
+        self.canvas_controller = WallpaperCanvasController('wpcanvas', self.canvas, dialog.canvas_view)
+        self.canvas.load_img(self.img.copy(), False)
         
     def on_set_wallpaper(self, *, pos_idx, color):
         position = positions[pos_idx]

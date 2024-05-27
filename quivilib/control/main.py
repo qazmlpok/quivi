@@ -76,7 +76,7 @@ class MainController(object):
         
         self.i18n = I18NController(self, self.settings)
         self.cache = ImageCache(self.settings)
-        self.canvas = CanvasController('canvas', self.view.canvas_view, self.settings)
+        self.canvas = CanvasController('canvas', self.view.canvas_view, settings=self.settings)
         #This will send messages due to opening the default container
         #TODO: Probably should move that out of the constructor...
         self.file_list = FileListController(self.model, self.model.container)
@@ -211,7 +211,7 @@ class MainController(object):
             if fav.is_placeholder():
                 Publisher.sendMessage('favorite.open', favorite=fav, window=None)
                 break
-    
+
     def copy_to_clipboard(self):
         self.canvas.copy_to_clipboard()
     def copy_path_to_clipboard(self):

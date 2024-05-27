@@ -5,7 +5,7 @@ from queue import Queue
 from pubsub import pub as Publisher
 import wx
 from quivilib import meta
-from quivilib.model.canvas import Canvas
+from quivilib.model.canvas import TempCanvas
 from quivilib.util import synchronized_method
 
 log = logging.getLogger('cache')
@@ -26,7 +26,7 @@ class ImageCacheLoadRequest(object):
         self.img = None
         
     def __call__(self, settings):
-        canvas = Canvas('tempcanvas', settings, True)
+        canvas = TempCanvas('tempcanvas', settings)
         item_index = self.container.items.index(self.item)
         f = self.container.open_image(item_index)
         assert f is not None, "Failed to open image from container"
