@@ -81,7 +81,7 @@ class Canvas(object):
         self.set_zoom_by_fit_type(fit_type)
         
     def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
-        if not self.img:
+        if not self.img or self.name == 'tempcanvas':
             return
         view_w = self.view.width
         view_h = self.view.height

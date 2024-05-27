@@ -23,11 +23,13 @@ def _need_delete_confirmation():
     return (sys.platform != 'win32')
 
 def _ask_delete_confirmation(window, path):
+    if not _need_delete_confirmation():
+        return True
     dlg = wx.MessageDialog(window, _('Are you sure you want to delete "%s"?') % path.name,
                            _("Confirm file deletion"), wx.YES_NO | wx.ICON_QUESTION)
     res = dlg.ShowModal()
     dlg.Destroy()
-    return res
+    return res == wx.ID_YES
 
 def _delete_file(path, window=None):
     if sys.platform == 'win32':
@@ -86,7 +88,7 @@ class FileListController(object):
             
     def on_container_item_changed(self, *, index):
         self.open_item(index)
-        
+
     def on_favorite_open(self, *, favorite, window=None):
         try:
             is_placeholder = favorite.page is not None
@@ -108,7 +110,7 @@ class FileListController(object):
                 self.model.favorites.remove(favorite.path, is_placeholder)
                 Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
                 Publisher.sendMessage('favorite.opened', favorite=False)
-                
+
 
     def open_item(self, item_index):
         container = self.model.container
@@ -116,7 +118,7 @@ class FileListController(object):
         if item.typ == ItemType.IMAGE:
             Publisher.sendMessage('busy', busy=True)
             if meta.CACHE_ENABLED:
-                request = ImageCacheLoadRequest(container, item, self.model.canvas.view)
+                request = ImageCacheLoadRequest(container, item)
                 self.pending_request = request
                 Publisher.sendMessage('container.image.loading', item=container.items[item_index])
                 Publisher.sendMessage('cache.clear_pending', request=request)
@@ -130,7 +132,7 @@ class FileListController(object):
                 for i in range(meta.PREFETCH_COUNT):
                     idx = item_index + ((i + 1) * self._direction)
                     if idx > 0 and idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
-                        request = ImageCacheLoadRequest(container, container.items[idx], self.model.canvas.view)
+                        request = ImageCacheLoadRequest(container, container.items[idx])
                         log.debug(f"fl: requesting prefetch of {idx}")
                         Publisher.sendMessage('cache.load_image', request=request, preload=True)
                         log.debug("fl: prefetch requested")
@@ -238,9 +240,8 @@ class FileListController(object):
         index = self.model.container.selected_item_index
         path = self.model.container.items[index].path
         filetype = self.model.container.items[index].typ
-        if _need_delete_confirmation():
-            if _ask_delete_confirmation(window, path) == wx.ID_NO:
-                return
+        if not _ask_delete_confirmation(window, path):
+            return
         #Release any handle on the file...
         if filetype == ItemType.IMAGE and img:
             img.close()
@@ -335,7 +336,7 @@ class FileListController(object):
                         self.model.container.selected_item = idx
                         self.open_item(idx)
                     else:
-                        request = ImageCacheLoadRequest(self.model.container, item, self.model.canvas.view)
+                        request = ImageCacheLoadRequest(self.model.container, item)
                         log.debug("fl: requesting prefetch of first image in container...")
                         Publisher.sendMessage('cache.load_image', request=request)
                     break

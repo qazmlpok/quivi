@@ -19,16 +19,14 @@ class ImageCacheLoadRequest(object):
     """ Data class containing the necessary information for loading an image
     i.e. the physical path and, after it has been loaded, the image itself.
     """
-    def __init__(self, container, item, view):
+    def __init__(self, container, item):
         self.container = container
         self.item = item
-        self.view = view
         self.path = item.path
         self.img = None
         
     def __call__(self, settings):
         canvas = Canvas('tempcanvas', settings, True)
-        canvas.view = self.view
         item_index = self.container.items.index(self.item)
         f = self.container.open_image(item_index)
         assert f is not None, "Failed to open image from container"
@@ -45,10 +43,8 @@ class ImageCacheLoadRequest(object):
         cont_eq = (self.container is other.container)
         item_eq = (self.item == other.item)
         return cont_eq and item_eq
-        
     def __hash__(self):
         return hash(self.container, self.item)
-        
     def __ne__(self, other):
         return not self == other 
     def __repr__(self):

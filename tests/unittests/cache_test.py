@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
         class Dummy:
             width = 800
             height = 600
-        req = ImageCacheLoadRequest(container, container.items[2], Dummy())
+        req = ImageCacheLoadRequest(container, container.items[2])
         s = Settings('filethatdoesnotexist.ini')
         cache = ImageCache(s)
         
