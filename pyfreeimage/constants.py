@@ -109,6 +109,9 @@ FIF_MUTLIPAGE = (FIF_TIFF, FIF_ICO, FIF_GIF)
 """
 Load / Save flag constants
 """
+#Common
+FIF_LOAD_NOPIXELS   = 0x8000
+
 #Bmp
 BMP_DEFAULT         = 0
 BMP_SAVE_RLE        = 1
