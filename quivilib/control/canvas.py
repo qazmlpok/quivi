@@ -7,6 +7,7 @@ from quivilib import meta
 from quivilib.model.canvas import Canvas
 from quivilib.model.settings import Settings
 from quivilib.resources import images
+from quivilib.util import DebugTimer
 from quivilib.control.cache import ImageCacheLoadRequest
 from quivilib.control.options import get_fit_choices
 
@@ -93,7 +94,9 @@ class CanvasController(object):
             f = container.open_image(item_index)
             #can't use "with" because not every file-like object used here supports it
             try:
-                self.canvas.load(f, path)
+                with DebugTimer(path.name):
+                    img = self.canvas.load(f, path)
+                    self.canvas.load_img(img)
             finally:
                 f.close()
             Publisher.sendMessage('busy', busy=False)

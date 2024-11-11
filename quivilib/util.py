@@ -3,6 +3,7 @@ from pathlib import Path
 from functools import update_wrapper
 import traceback
 import locale
+import logging as log
 import string
 import wx
 
@@ -136,3 +137,19 @@ def format_exception(exception, tb):
     #Due to the bug above, unicode coercing tb might fail. Take a safe approach.
     #tb = tb.decode('ascii', 'ignore')
     return msg, tb
+
+class DebugTimer():
+    def __init__(self, prefix=""):
+        self.start = None
+        self.prefix = prefix
+    def __enter__(self):
+        if __debug__:
+            import time
+            self.start = time.perf_counter()
+        return None
+    def __exit__(self, exc_type, exc_value, traceback):
+        if __debug__:
+            import time
+            stop = time.perf_counter()
+            log.debug(f'{self.prefix} took: {(stop - self.start)*1000:0.1f}ms.')
+#

@@ -6,7 +6,7 @@ from pubsub import pub as Publisher
 import wx
 from quivilib import meta
 from quivilib.model.canvas import TempCanvas
-from quivilib.util import synchronized_method
+from quivilib.util import synchronized_method, DebugTimer
 
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)
@@ -26,16 +26,18 @@ class ImageCacheLoadRequest(object):
         self.img = None
         
     def __call__(self, settings):
+        #TODO: This canvas honestly isn't needed because it just calls load img.
         canvas = TempCanvas('tempcanvas', settings)
         item_index = self.container.items.index(self.item)
         f = self.container.open_image(item_index)
         assert f is not None, "Failed to open image from container"
         #can't use "with" because not every file-like object used here supports it
         try:
-            canvas.load(f, self.path, delay=True)
+            with DebugTimer(f'Cache: {self.path.name}'):
+                img = canvas.load(f, self.path, delay=True)
         finally:
             f.close()
-        self.img = canvas.img
+        self.img = img
         
     def __eq__(self, other):
         if not other:

@@ -12,7 +12,7 @@ from wx.lib.agw.thumbnailctrl import (
 from quivilib.model import image
 from quivilib.model.container import Item, ItemType
 from quivilib import util
-from quivilib.util import error_handler
+from quivilib.util import error_handler, DebugTimer
 from quivilib.gui.file_list_view.base import FileListViewBase
 
 log = logging.getLogger('thumb')
@@ -162,23 +162,16 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         """ Threaded method to load images. Used internally. """
         
         for count, item in enumerate(container.items):
-            if __debug__:
-                start = time.perf_counter()
-                log.debug('Loading thumb #%d' % count)
-            if not self._isrunning:
-                return
-            try:
-                self.LoadImageContainer(container, item, count)
-            except:
-                log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=1)
-            if __debug__:
-                stop = time.perf_counter()
-                log.debug(f'Loaded thumb #{count}. Took: {(stop - start)*1000:0.1f}ms.')
-            if count < 4:
+            with DebugTimer(f'Loaded thumb #{count}.'):
+                if not self._isrunning:
+                    return
+                try:
+                    self.LoadImageContainer(container, item, count)
+                except:
+                    log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=1)
+            if count < 4 or count%4 == 0:
                 wx.CallAfter(self.Refresh)
-            elif count%4 == 0:
-                wx.CallAfter(self.Refresh)
-            log.debug('Refresh requested')
+                log.debug('Refresh requested')
 
         wx.CallAfter(self.Refresh)
         log.debug('Thumbs done!')
