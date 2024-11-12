@@ -14,7 +14,23 @@ class PilWrapper():
     TODO: Add With support. Add an IsTemp to allow automatic disposal.
     some methods may create a temporary object, which can just be removed automatically.
     """
-
+    @classmethod
+    def allocate(cls, width, height, bpp, red_mask=0, green_mask=0, blue_mask=0):
+        #*_mask is for FI compatibility; they will be ignored.
+        #Should be 8-bit monochrome
+        #Note - this will only ever actually be called with 24
+        mode = 'L'
+        if bpp == 32:
+            mode = 'RGBA'
+        elif bpp == 24:
+            mode = 'RGB'
+        img = Image.new(mode, size=(width, height))
+        return PilWrapper(img)
+    def AllocateNew(self, *args, **kwargs):
+        """ Forward to static implementation. Needed for polymorphism.
+        """
+        return PilWrapper.allocate(*args, **kwargs)
+        
     def __init__(self, img):
         self.img = img
         self.width = img.width
@@ -40,10 +56,33 @@ class PilWrapper():
         if im is not self.img:
             del im
         return arr
+    #Image operations; this needs to have the same interface as FI.
     def rescale(self, width, height):
         #I think this needs to return self if the width/height are the same.
         img = self.img.resize((width, height), Image.BICUBIC)
         return PilWrapper(img)
+    def fill(self, color):
+        (r, g, b) = color
+        img = self.img
+        img.paste( (r,g,b), (0, 0, img.size[0], img.size[1]))
+        
+    def paste(self, src, left, top, alpha=256):
+        #I honestly have no idea what the FI code is doing or if it's needed.
+        img = self.img
+        srcimg = src.img
+        img.paste(srcimg, (left, top, srcimg.size[0] + left, srcimg.size[1] + top))
+
+    def copy_region(self, left, top, right, bottom):
+        #The freeimage copy function will also crop. PIL's copy is just a straight copy.
+        img = self.img
+        copy = img.crop((left, top, right, bottom,))
+        return PilWrapper(copy)
+    def save_bitmap(self, path):
+        #FI needs a constant; this is exposed as a separate member for compatibility
+        return self.save(path)
+    def save(self, path):
+        #Type will be determined by path; there's no need to specify manually.
+        self.img.save(path)
     def __del__(self):
         if self.img:
             del self.img
@@ -139,7 +178,7 @@ class PilImage(object):
         dc.DrawBitmap(bmp, x, y)
 
     def copy(self):
-        return PilImage(img=self.img)
+        return PilWrapper(self.img)
     
     def copy_to_clipboard(self):
         data = wx.BitmapDataObject(self.bmp)

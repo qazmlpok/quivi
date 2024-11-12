@@ -1,12 +1,19 @@
 from enum import Flag, auto
+import logging
 import wx
 from pubsub import pub as Publisher
 
+from quivilib import meta
+from quivilib.model.canvas import Canvas
 from quivilib.model.settings import Settings
 from quivilib.resources import images
+from quivilib.util import DebugTimer
+from quivilib.control.cache import ImageCacheLoadRequest
 from quivilib.control.options import get_fit_choices
 
 ZOOM_FACTOR = 25
+
+log = logging.getLogger('control.canvas')
 
 class MovementType(Flag):
     MOVE = auto()
@@ -29,11 +36,20 @@ class CanvasController(object):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name, canvas, view, settings=None):
+    def __init__(self, name, view, canvas=None, settings=None):
         self.name = name
-        self.canvas = canvas
+        if canvas is None:
+            self.canvas = Canvas('canvas', settings)
+        else:
+            #Hack for the wallpaper. I don't like this but don't feel like trying to find something better.
+            self.canvas = canvas
+        self.canvas.set_view(view)
         self.view = view
         self.settings = settings
+        self.pending_request = None
+        Publisher.subscribe(self.on_request_open_image, f'{self.name}.load.img')
+        Publisher.subscribe(self.on_cache_image_loaded, 'cache.image_loaded')
+        Publisher.subscribe(self.on_cache_image_load_error, 'cache.image_load_error')
         Publisher.subscribe(self.on_canvas_painted, f'{self.name}.painted')
         Publisher.subscribe(self.on_canvas_resized, f'{self.name}.resized')
         Publisher.subscribe(self.on_canvas_scrolled, f'{self.name}.scrolled')
@@ -49,19 +65,64 @@ class CanvasController(object):
         self._default_cursor = wx.Cursor(images.cursor_hand.GetImage())
         self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())
         Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
-        
+
+    #Passthru methods to the model Canvas
+    def copy_to_clipboard(self):
+        return self.canvas.copy_to_clipboard()
+    def has_image(self):
+        return self.canvas.has_image()
+    def get_img(self):
+        return self.canvas.img
+
+    #Image loading (moved from file list)
+    def on_request_open_image(self, *, container, item, preload=False):
+        if meta.CACHE_ENABLED:
+            request = ImageCacheLoadRequest(container, item)
+            if not preload:
+                self.pending_request = request
+                Publisher.sendMessage('cache.clear_pending', request=request)
+                Publisher.sendMessage('container.image.loading', item=item)
+            Publisher.sendMessage('cache.load_image', request=request, preload=preload)
+            log.debug("canvas: cache requested")
+            if not preload and self.pending_request is not None:
+                #Small hack; if the image is cached on_cache_image_loaded will be called immediately.
+                Publisher.sendMessage('busy', busy=True)
+        else:
+            Publisher.sendMessage('busy', busy=True)
+            path = item.path
+            item_index = container.items.index(item)
+            f = container.open_image(item_index)
+            #can't use "with" because not every file-like object used here supports it
+            try:
+                with DebugTimer(path.name):
+                    img = self.canvas.load(f, path)
+                    self.canvas.load_img(img)
+            finally:
+                f.close()
+            Publisher.sendMessage('busy', busy=False)
+            Publisher.sendMessage('container.image.opened', item=item)
+
+    def on_cache_image_loaded(self, *, request):
+        if request == self.pending_request:
+            self.pending_request = None
+            self.canvas.load_img(request.img)
+            Publisher.sendMessage('busy', busy=False)
+            item = request.item
+            Publisher.sendMessage('container.image.opened', item=item)
+    def on_cache_image_load_error(self, *, request, exception, tb):
+        if request == self.pending_request:
+            Publisher.sendMessage('busy', busy=False)
+            Publisher.sendMessage('error', exception=exception, tb=tb)
+            #Wasn't being done before. Kinda odd.
+            self.pending_request = None
+
+    #Drawing
     def on_canvas_painted(self, *, dc, painted_region):
         self.canvas.paint(dc)
-        if self.canvas.tiled:
-            painted_region.top = 0
-            painted_region.left = 0
-            painted_region.width = self.view.width
-            painted_region.height = self.view.height
-        else:
-            painted_region.top = self.canvas.top
-            painted_region.left = self.canvas.left
-            painted_region.width = self.canvas.width
-            painted_region.height = self.canvas.height
+        painted_region.top = self.canvas.top
+        painted_region.left = self.canvas.left
+        painted_region.width = self.canvas.width
+        painted_region.height = self.canvas.height
         
     def on_canvas_resized(self):
         self.canvas.center()
@@ -210,3 +271,18 @@ class CanvasController(object):
         
     def rotate_image(self, clockwise):
         self.canvas.rotate(clockwise)
+
+class WallpaperCanvasController(CanvasController):
+    def __init__(self, name, canvas, view, settings=None):
+        #It should be possible to remove some of the event subscriptions
+        #but that would require a base class instead of direct inheritence.
+        super().__init__(name, view, canvas=canvas)
+    def on_canvas_painted(self, *, dc, painted_region):
+        self.canvas.paint(dc)
+        if self.canvas.tiled:
+            painted_region.top = 0
+            painted_region.left = 0
+            painted_region.width = self.view.width
+            painted_region.height = self.view.height
+        else:
+            super().on_canvas_painted(dc=dc, painted_region=painted_region)

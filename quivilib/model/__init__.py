@@ -10,4 +10,3 @@ class App(object):
         #Must be created before container in order to notify if it's a favorite
         self.favorites = Favorites(settings)
         self.container = DirectoryContainer(start_dir, sort_order, False)
-        self.canvas = Canvas('canvas', settings)

@@ -13,30 +13,21 @@ from quivilib.util import rescale_by_size_factor
 #Maybe a timestamp is more appropriate?
 STICKY_LIMIT = 2
 class Canvas(object):
-    def __init__(self, name, settings, quiet=False):
+    def __init__(self, name, settings):
         self.name = name
-        self.quiet = quiet
         if settings:
             self._get_int_setting = partial(settings.getint, 'Options')
             self._get_bool_setting = partial(settings.getboolean, 'Options')
-        else:
-            #Wallpaper canvas won't include settings. Probably not the best solution, but it works.
-            self._get_int_setting = lambda x: 0
-            self._get_bool_setting = lambda x: False
         self.img = None
         self._zoom = 1
         self._left = 0
         self._top = 0
         self.sticky = 0
-        self.tiled = False
         self.view = None
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
-        
+
     def _sendMessage(self, topic, **kwargs):
-        if not self.quiet:
-            Publisher.sendMessage(topic, **kwargs)
-        else:
-            pass
+        Publisher.sendMessage(topic, **kwargs)
         
     def set_view(self, view):
         """Set the physical canvas view being used.
@@ -54,26 +45,24 @@ class Canvas(object):
         """
         self.view = view
         
-    def load(self, f, path, adjust=True, delay=False):
-        if __debug__:
-            import time
-            start = time.perf_counter()
+    def load(self, f, path, delay=False):
+        """ Load an image file (using either a file handle or a file path)
+        and returns that img.
+        For immediate display, call load_img with the return value.
+        """
         img = image.open(f, path, self.__class__, delay)
-        self.load_img(img, adjust)
-        if __debug__:
-            stop = time.perf_counter()
-            log.debug(f'{path.name} took: {(stop - start)*1000:0.1f}ms.')
+        return img
         
     def load_img(self, img, adjust=True):
+        """ Sets an already loaded image (by `load` or equivalent)
+        This is a separate function due to the cache: images can be load()ed before load_img()ed
+        """
         self.img = img
         self._zoom = float(img.width) / float(img.original_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         if adjust:
             self.adjust()
-        self._sendMessage(f'{self.name}.image.loaded', 
-                            width=self.img.original_width, 
-                            height=self.img.original_height
-        )
+        self._sendMessage(f'{self.name}.image.loaded', img=self.img)
         self._sendMessage(f'{self.name}.changed')
 
     def adjust(self):
@@ -81,7 +70,7 @@ class Canvas(object):
         self.set_zoom_by_fit_type(fit_type)
         
     def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
-        if not self.img or self.name == 'tempcanvas':
+        if not self.img:
             return
         view_w = self.view.width
         view_h = self.view.height
@@ -95,7 +84,6 @@ class Canvas(object):
             img_w = (img_w+1) // 2
             #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
             is_spread = True
-        self.tiled = False
 
         if fit_type == Settings.FIT_WIDTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
@@ -123,33 +111,12 @@ class Canvas(object):
             factor = rescale_by_size_factor(img_w, img_h, custom_w, 0)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == Settings.FIT_SCREEN_CROP_EXCESS:
-            if img_w / float(img_h) > view_w / float(view_h):
-                factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
-            else:
-                factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
-            self.zoom = factor
-        elif fit_type == Settings.FIT_SCREEN_SHOW_ALL:
-            factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
-            self.zoom = factor
-        elif fit_type == Settings.FIT_SCREEN_NONE:
-            assert scr_w != -1, 'Screen width not specified'
-            factor = view_w / float(scr_w)
-            self.zoom = factor
-        elif fit_type == Settings.FIT_TILED:
-            assert scr_w != -1, 'Screen width not specified'
-            factor = view_w / float(scr_w)
-            self.zoom = factor
-            self.tiled = True
         elif fit_type == Settings.FIT_NONE:
             self.zoom = 1
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
         
-        if self.tiled:
-            self.left = self.top = 0
-        else:
-            self.center()
+        self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=is_spread)
 
     def _zoom_image(self, zoom):
@@ -207,14 +174,13 @@ class Canvas(object):
             return self.img.width
         else:
             return 0
-    
     @property
     def height(self):
         if self.img:
             return self.img.height
         else:
             return 0
-        
+
     def _set_left(self, left):
         img_w = self.width
         scr_w = self.view.width
@@ -230,10 +196,8 @@ class Canvas(object):
                 elif left > scr_w - img_w:
                     left = scr_w - img_w
         self._left = left
-        
     def _get_left(self):
         return self._left
-    
     left = property(_get_left, _set_left)
     
     def _set_top(self, top):
@@ -251,10 +215,8 @@ class Canvas(object):
                 elif top > scr_h - img_h:
                     top = scr_h - img_h
         self._top = top
-        
     def _get_top(self):
         return self._top
-    
     top = property(_get_top, _set_top)
     
     def scroll_hori(self, amount, reverse_direction = False):
@@ -314,13 +276,11 @@ class Canvas(object):
         scr_h = self.view.height
         img_h = self.height
         return (self.top == scr_h // 2 - img_h // 2)
-        
     @property
     def x_centered(self):
         scr_w = self.view.width
         img_w = self.width
         return (self.left == scr_w // 2 - img_w // 2)
-    
     @property
     def centered(self):
         return self.x_centered and self.y_centered
@@ -328,23 +288,13 @@ class Canvas(object):
     def copy_to_clipboard(self):
         if self.img is not None:
             self.img.copy_to_clipboard()
-            
+
     def has_image(self):
         return self.img is not None
-        
+
     def paint(self, dc):
         if not self.img:
             return
-        if self.tiled:
-            start_x = self.left % self.width
-            if start_x > 0:
-                start_x -= self.width
-            start_y = self.top % self.height
-            if start_y > 0:
-                start_y -= self.height
-            for x in range(start_x, self.view.width, self.width):
-                for y in range(start_y, self.view.height, self.height):
-                    self.img.paint(dc, x, y)
         else:
             self.img.paint(dc, self.left, self.top)
     
@@ -356,3 +306,83 @@ class Canvas(object):
         #If I've zoomed in manually, I don't want this to reset the zoom.
         self.adjust()
         self._sendMessage(f'{self.name}.changed')
+
+class WallpaperCanvas(Canvas):
+    """ Special canvas used for the wallpaper dialog. This is completely separate from the display canvas
+    It includes some additional fit modes that don't make sense for the standard image display.
+    """
+    def __init__(self, name, settings):
+        super().__init__(name, settings)
+        self.tiled = False
+        #Wallpaper canvas won't include settings.
+        self._get_int_setting = lambda x: 0
+        self._get_bool_setting = lambda x: False
+    def paint(self, dc):
+        if not self.img:
+            return
+        #Wallpaper can additionally be tiled.
+        if self.tiled:
+            start_x = self.left % self.width
+            if start_x > 0:
+                start_x -= self.width
+            start_y = self.top % self.height
+            if start_y > 0:
+                start_y -= self.height
+            for x in range(start_x, self.view.width, self.width):
+                for y in range(start_y, self.view.height, self.height):
+                    self.img.paint(dc, x, y)
+        else:
+            super().paint(dc)
+    def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
+        #The wallpaper fit includes additional options. This is a full copy of the original code.
+        #Except the spread code was removed; that doesn't make sense for the wallpaper.
+        if not self.img:
+            return
+        view_w = self.view.width
+        view_h = self.view.height
+        spread = self._get_bool_setting('DetectSpreads')
+        img_w = self.img.original_width
+        img_h = self.img.original_height
+        self.tiled = False
+
+        if fit_type == Settings.FIT_SCREEN_CROP_EXCESS:
+            if img_w / float(img_h) > view_w / float(view_h):
+                factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
+            else:
+                factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
+            self.zoom = factor
+        elif fit_type == Settings.FIT_SCREEN_SHOW_ALL:
+            factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
+            self.zoom = factor
+        elif fit_type == Settings.FIT_SCREEN_NONE:
+            assert scr_w != -1, 'Screen width not specified'
+            factor = view_w / float(scr_w)
+            self.zoom = factor
+        elif fit_type == Settings.FIT_TILED:
+            assert scr_w != -1, 'Screen width not specified'
+            factor = view_w / float(scr_w)
+            self.zoom = factor
+            self.tiled = True
+        else:
+            assert False, 'Invalid fit type: ' + str(fit_type)
+        
+        if self.tiled:
+            self.left = self.top = 0
+        else:
+            self.center()
+        Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=False)
+    #
+
+class TempCanvas(Canvas):
+    """ Used by the cache to load images. Suppresses most functionality
+    This never needs to render, for example. 
+    TODO: Which means, does it even need to be a canvas in the first place?
+    """
+    def __init__(self, name, settings):
+        super().__init__(name, settings)
+    def _sendMessage(self, topic, **kwargs):
+        #Do not send messages (equivalent to the old 'quiet' parameter)
+        pass
+    def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
+        #Explicitly do nothing. (the default implementation references the view to get screen width)
+        pass

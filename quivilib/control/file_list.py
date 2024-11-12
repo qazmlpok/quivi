@@ -55,8 +55,6 @@ class FileListController(object):
         Publisher.subscribe(self.on_file_list_begin_drag, 'file_list.begin_drag')
         Publisher.subscribe(self.on_favorite_open, 'favorite.open')
         Publisher.subscribe(self.on_container_item_changed, 'container.item.changed')
-        Publisher.subscribe(self.on_cache_image_loaded, 'cache.image_loaded')
-        Publisher.subscribe(self.on_cache_image_load_error, 'cache.image_load_error')
         Publisher.subscribe(self.on_file_dropped, 'file.dropped')
         self.pending_request = None
         self._last_opened_item = None
@@ -116,15 +114,10 @@ class FileListController(object):
         container = self.model.container
         item = container.items[item_index]
         if item.typ == ItemType.IMAGE:
-            Publisher.sendMessage('busy', busy=True)
+            log.debug(f"fl: requesting load for {item_index}")
+            Publisher.sendMessage('canvas.load.img', container=container, item=item, preload=False)
+            #If cache enabled, additionally send preload requests.
             if meta.CACHE_ENABLED:
-                request = ImageCacheLoadRequest(container, item)
-                self.pending_request = request
-                Publisher.sendMessage('container.image.loading', item=container.items[item_index])
-                Publisher.sendMessage('cache.clear_pending', request=request)
-                log.debug(f"fl: requesting cache for {item_index}")
-                Publisher.sendMessage('cache.load_image', request=request)
-                log.debug("fl: cache requested")
                 if self._last_opened_item is None or item_index >= self._last_opened_item:
                     self._direction = 1
                 else:
@@ -132,40 +125,15 @@ class FileListController(object):
                 for i in range(meta.PREFETCH_COUNT):
                     idx = item_index + ((i + 1) * self._direction)
                     if idx > 0 and idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
-                        request = ImageCacheLoadRequest(container, container.items[idx])
-                        log.debug(f"fl: requesting prefetch of {idx}")
-                        Publisher.sendMessage('cache.load_image', request=request, preload=True)
-                        log.debug("fl: prefetch requested")
+                        log.debug(f"fl: requesting cache preload of {idx}")
+                        Publisher.sendMessage('canvas.load.img', container=container, item=container.items[idx], preload=True)
                 log.debug("fl: done")
-            else:
-                path = container.items[item_index].path
-                f = container.open_image(item_index)
-                #can't use "with" because not every file-like object used here supports it
-                try:
-                    self.model.canvas.load(f, path)
-                finally:
-                    f.close()
-                Publisher.sendMessage('busy', busy=False)
-                Publisher.sendMessage('container.image.opened', item=container.items[item_index])
             self._last_opened_item = item_index
         else:
-            opened = self.model.container.open_container(item_index)
+            opened = container.open_container(item_index)
             if opened:
                 self._set_container(opened)
-                
-    def on_cache_image_loaded(self, *, request):
-        if request == self.pending_request:
-            self.pending_request = None
-            self.model.canvas.load_img(request.img)
-            Publisher.sendMessage('busy', busy=False)
-            item = request.item
-            Publisher.sendMessage('container.image.opened', item=item)
-        
-    def on_cache_image_load_error(self, *, request, exception, tb):
-        if request == self.pending_request:
-            Publisher.sendMessage('busy', busy=False)
-            Publisher.sendMessage('error', exception=exception, tb=tb)
-            
+
     def on_file_dropped(self, *, path):
         self.open_path(path)
 
@@ -234,7 +202,7 @@ class FileListController(object):
             self.open_item(nindex)
         
     def delete(self, window=None):
-        img = self.model.canvas.img
+        img = self.canvas.get_img()
         if not self._can_delete():
             return
         index = self.model.container.selected_item_index

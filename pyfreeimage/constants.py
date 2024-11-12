@@ -109,6 +109,9 @@ FIF_MUTLIPAGE = (FIF_TIFF, FIF_ICO, FIF_GIF)
 """
 Load / Save flag constants
 """
+#Common
+FIF_LOAD_NOPIXELS   = 0x8000
+
 #Bmp
 BMP_DEFAULT         = 0
 BMP_SAVE_RLE        = 1
@@ -149,6 +152,10 @@ JPEG_QUALITYAVERAGE = 0x400
 JPEG_QUALITYBAD     = 0x800
 JPEG_CMYK			= 0x1000
 JPEG_PROGRESSIVE	= 0x2000
+
+#WebP
+WEBP_DEFAULT        = 0
+WEBP_LOSSLESS       = 0x100
 
 #Others...
 CUT_DEFAULT         = 0
