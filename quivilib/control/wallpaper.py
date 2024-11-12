@@ -26,6 +26,7 @@ positions = (Settings.FIT_SCREEN_NONE, Settings.FIT_TILED,
 class WallpaperController(object):
     def __init__(self, model):
         self.model = model
+        self.img = None
         self.canvas = WallpaperCanvas('wpcanvas', None)
         self.canvas_controller = None
         Publisher.subscribe(self.on_dialog_opened, 'wallpaper.dialog_opened')
@@ -157,31 +158,41 @@ def _get_bg_color():
         color = _get_linux_bg_color()
     if color is None:
         log.debug("Error fetching desktop bg color")
-        color = wx.Color(0, 0, 0)
+        color = wx.Colour(0, 0, 0)
     return color    
 
 def _get_linux_bg_color():
-    color = Popen('gconftool-2 -g /desktop/gnome/background/primary_color'.split(),
-                  stdout=PIPE, stderr=open('/dev/null')).communicate()[0]
+    color = Popen('gsettings get org.gnome.desktop.background primary-color'.split(),
+                  stdout=PIPE, stderr=open('/dev/null'), text=True).communicate()[0]
     log.debug("gconf color: " + color)
-    if re.match('^#[0-9a-fA-F]{12}', color):
-        r = int(color[1:3], 16)
-        g = int(color[5:7], 16)
-        b = int(color[9:11], 16)
-        color = wx.Color(r, g, b)
-    elif re.match('^#[0-9a-fA-F]{6}', color):
-        r = int(color[1:3], 16)
-        g = int(color[3:5], 16)
-        b = int(color[5:7], 16)
-        color = wx.Color(r, g, b)
+    m1 = re.match(r"^'?#([0-9a-fA-F]{12})'?", color)
+    m2 = re.match(r"^'?#([0-9a-fA-F]{6})'?", color)
+    if m1:
+        color = m1.group(1)
+        r = int(color[0:2], 16)
+        g = int(color[4:6], 16)
+        b = int(color[8:10], 16)
+        color = wx.Colour(r, g, b)
+    elif m2:
+        color = m2.group(1)
+        r = int(color[0:2], 16)
+        g = int(color[2:4], 16)
+        b = int(color[4:6], 16)
+        color = wx.Colour(r, g, b)
+    else:
+        color = wx.Colour(0, 0, 0)
+        log.warning("Couldn't match color %s as a color" % color)
+    print("color", color, type(color))
     log.debug("gconf color processed: " + str(color))
     return color
 
 def _set_linux_wallpaper(filename, position, color):
-    call('gconftool-2 -t str -s /desktop/gnome/background/picture_filename'.split() + [filename],
+    #Update image URI
+    call('gsettings set org.gnome.desktop.background picture-uri'.split() + [f"'{filename}'"],
           stdout=PIPE, stderr=PIPE)
+    #Change to tiled/centered
     option = 'wallpaper' if position == Settings.FIT_TILED else 'centered'
-    call('gconftool-2 -t str -s /desktop/gnome/background/picture_options'.split() + [option],
+    call('gsettings set org.gnome.desktop.background picture-options'.split() + [f"'{option}'"],
          stdout=PIPE, stderr=PIPE)
     color = [hex(color[0])[2:], hex(color[1])[2:], hex(color[2])[2:]]
     for i in range(3):
@@ -191,7 +202,8 @@ def _set_linux_wallpaper(filename, position, color):
         color[i] = s
     color = '#' + ''.join(color)
     log.debug('gconf color set: ' + color)
-    call('gconftool-2 -t str -s /desktop/gnome/background/primary_color'.split() + [color],
+    #Updddate primary color
+    call('gsettings set org.gnome.desktop.background primary-color'.split() + [f"'{color}'"],
          stdout=PIPE, stderr=PIPE)
 
 def _get_windows_bg_color():
