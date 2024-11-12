@@ -62,7 +62,9 @@ class WallpaperController(object):
         #can't use "with" because not every file-like object used here supports it
         img = None
         try:
-            img = image.open_direct(f, path, None)
+            #This does .img to get the lower-level interface (for FI, at least)
+            #I'm not certain if it should be using that or the upper one.
+            img = image.open_direct(f, path, None).img
         finally:
             f.close()
         if not img:
@@ -99,29 +101,31 @@ class WallpaperController(object):
         top = int(self.canvas.top * self.preview_scale)
         if position == Settings.FIT_TILED:
             if left == 0 and top == 0:
+                #If the img is at the top-left (i.e. the user did not move it) let the Desktop handle the tiling.
                 return img
             nleft = left % img.width
             ntop = top % img.height
-            nimg = fi.Image.allocate(img.width, img.height, 24)
+            nimg = img.AllocateNew(img.width, img.height, 24)
             #Copy SE quadrant
-            pimg = img.copy(0, 0, img.width - nleft, img.height - ntop)
+            pimg = img.copy_region(0, 0, img.width - nleft, img.height - ntop)
             nimg.paste(pimg, nleft, ntop)
             #Copy NE quadrant
-            pimg = img.copy(0, img.height - ntop, img.width - nleft, img.height)
+            pimg = img.copy_region(0, img.height - ntop, img.width - nleft, img.height)
             nimg.paste(pimg, nleft, 0)
             #Copy SW quadrant
-            pimg = img.copy(img.width - nleft, 0, img.width, img.height - ntop)
+            pimg = img.copy_region(img.width - nleft, 0, img.width, img.height - ntop)
             nimg.paste(pimg, 0, ntop)
             #Copy NW quadrant
-            pimg = img.copy(img.width - nleft, img.height - ntop, img.width, img.height)
+            pimg = img.copy_region(img.width - nleft, img.height - ntop, img.width, img.height)
             nimg.paste(pimg, 0, 0)
             return nimg
         else:
             if self.canvas.centered:
+                #If the img is centered (i.e. the user did not move it) let the Desktop handle the positioning.
                 return img
             width = wx.Display(0).GetGeometry().width
             height = wx.Display(0).GetGeometry().height
-            nimg = fi.Image.allocate(width, height, 24)
+            nimg = img.AllocateNew(width, height, 24)
             if color != (0, 0, 0):
                 nimg.fill(color)
             nimg.paste(img, left, top)
@@ -139,7 +143,7 @@ def _set_wallpaper(img, position, color):
     except Exception as e:
         pass
     filename = path / WALLPAPER_FILE_NAME
-    img.save(str(filename), fif=fi.constants.FIF_BMP)
+    img.save_bitmap(str(filename))
     
     if sys.platform == 'win32':
         _set_windows_wallpaper(filename, position, color)

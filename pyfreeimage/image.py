@@ -45,7 +45,9 @@ class Image(object):
     def __init__(self, dib):
         self._lib = library.load()
         self._dib = dib
-        
+
+    def save_bitmap(self, path):
+        return self.save(path, fif=CO.FIF_BMP)
     def save(self, path, flags = 0, fif = CO.FIF_UNKNOWN):
         lib = self._lib
         dib = self._dib
@@ -194,7 +196,12 @@ class Image(object):
             return self.convert_to_32_bits()
         return self
     
-    def rescale(self, width, height, resampling_filter):
+    def AllocateNew(self, *args, **kwargs):
+        """ Forward to static implementation. Needed for polymorphism.
+        """
+        return Image.allocate(*args, **kwargs)
+
+    def rescale(self, width, height, resampling_filter=CO.FILTER_BICUBIC):
         dib = self._lib.Rescale(self._dib, width, height, resampling_filter)
         if not dib:
             raise RuntimeError('Unable to rescale image')
@@ -212,7 +219,7 @@ class Image(object):
             raise RuntimeError('Unable to composite image')
         return self.__class__(dib)
     
-    def copy(self, left, top, right, bottom):
+    def copy_region(self, left, top, right, bottom):
         dib = self._lib.Copy(self._dib, left, top, right, bottom)
         if not dib:
             raise RuntimeError('Unable to copy image')
@@ -243,7 +250,7 @@ class Image(object):
             copy_required = True
             cheight -= (top + src.height - self.height)
         if copy_required:
-            src = src.copy(cleft, ctop, cleft + cwidth, ctop + cheight)
+            src = src.copy_region(cleft, ctop, cleft + cwidth, ctop + cheight)
         res = self._lib.Paste(self._dib, src._dib, nleft, ntop, alpha)
         if not res:
             raise RuntimeError('Unable to paste image')
