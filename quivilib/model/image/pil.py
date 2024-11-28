@@ -2,8 +2,11 @@ import logging
 import wx
 from PIL import Image
 from quivilib.util import rescale_by_size_factor
+from typing import Any, TypeVar
 
-log = logging.getLogger('pil')
+_TPilWrapper = TypeVar('_TPilWrapper', bound=PilWrapper)
+
+log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
 logging.getLogger("PIL").setLevel(logging.ERROR)
 
@@ -15,7 +18,7 @@ class PilWrapper():
     some methods may create a temporary object, which can just be removed automatically.
     """
     @classmethod
-    def allocate(cls, width, height, bpp, red_mask=0, green_mask=0, blue_mask=0):
+    def allocate(cls: type[_TPilWrapper], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> _TPilWrapper:
         #*_mask is for FI compatibility; they will be ignored.
         #Should be 8-bit monochrome
         #Note - this will only ever actually be called with 24
@@ -31,7 +34,7 @@ class PilWrapper():
         """
         return PilWrapper.allocate(*args, **kwargs)
         
-    def __init__(self, img):
+    def __init__(self, img) -> None:
         self.img = img
         self.width = img.width
         self.height = img.height
@@ -39,14 +42,14 @@ class PilWrapper():
     def __getattr__(self, name):
         return getattr(self.img, name)
         
-    def getData(self):
+    def getData(self) -> tuple[Any, Any, Any]:
         b = self.img.tobytes()
         return (self.width, self.height, b)
-    def maybeConvert32bit(self):
+    def maybeConvert32bit(self: _TPilWrapper) -> _TPilWrapper:
         if self.img.mode != 'RGB':
             return PilWrapper(self.img.convert('RGB'))
         return self
-    def convert_to_raw_bits(self, width_bytes=None):
+    def convert_to_raw_bits(self, width_bytes=None) -> bytearray:
         #width_bytes is ignored. Should it be?
         im = self.img
         if 'A' not in im.getbands():
@@ -57,22 +60,22 @@ class PilWrapper():
             del im
         return arr
     #Image operations; this needs to have the same interface as FI.
-    def rescale(self, width, height):
+    def rescale(self: _TPilWrapper, width: int, height: int) -> _TPilWrapper:
         #I think this needs to return self if the width/height are the same.
         img = self.img.resize((width, height), Image.BICUBIC)
         return PilWrapper(img)
-    def fill(self, color):
+    def fill(self, color) -> None:
         (r, g, b) = color
         img = self.img
         img.paste( (r,g,b), (0, 0, img.size[0], img.size[1]))
         
-    def paste(self, src, left, top, alpha=256):
+    def paste(self, src, left: int, top: int, alpha: int = 256) -> None:
         #I honestly have no idea what the FI code is doing or if it's needed.
         img = self.img
         srcimg = src.img
         img.paste(srcimg, (left, top, srcimg.size[0] + left, srcimg.size[1] + top))
 
-    def copy_region(self, left, top, right, bottom):
+    def copy_region(self: _TPilWrapper, left: int, top: int, right: int, bottom: int) -> _TPilWrapper:
         #The freeimage copy function will also crop. PIL's copy is just a straight copy.
         img = self.img
         copy = img.crop((left, top, right, bottom,))
@@ -80,15 +83,15 @@ class PilWrapper():
     def save_bitmap(self, path):
         #FI needs a constant; this is exposed as a separate member for compatibility
         return self.save(path)
-    def save(self, path):
+    def save(self, path) -> None:
         #Type will be determined by path; there's no need to specify manually.
         self.img.save(path)
-    def __del__(self):
+    def __del__(self) -> None:
         if self.img:
             del self.img
 
 class PilImage(object):
-    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
+    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False) -> None:
         self.canvas_type = canvas_type
         self.delay = delay
 
@@ -116,7 +119,7 @@ class PilImage(object):
         self.zoomed_bmp = None
         self.rotation = 0
         
-    def delayed_load(self):
+    def delayed_load(self) -> None:
         if not self.delay:
             log.debug("delayed_load was called but delay was off")
             return
@@ -133,10 +136,10 @@ class PilImage(object):
         else:
             return wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
     
-    def rescale(self, width, height):
+    def rescale(self, width: int, height: int):
         #Wrapper (needed for Cairo)
         return self.img.rescale(width, height)
-    def resize(self, width, height):
+    def resize(self, width: int, height: int) -> None:
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:
@@ -150,12 +153,12 @@ class PilImage(object):
         self.width = width
         self.height = height
 
-    def resize_by_factor(self, factor):
+    def resize_by_factor(self, factor: float) -> None:
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         self.resize(width, height)
         
-    def rotate(self, clockwise):
+    def rotate(self, clockwise: int) -> None:
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
         self.img = self.img.transpose(Image.ROTATE_90 if clockwise else Image.ROTATE_270)
@@ -170,23 +173,23 @@ class PilImage(object):
             #which makes this unnecessary. But this would need to be predicted.
             self.resize(self.width, self.height)
         
-    def paint(self, dc, x, y):
+    def paint(self, dc, x: int, y: int) -> None:
         if self.delay:
             log.error("paint called but image was not loaded")
             return
         bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
         dc.DrawBitmap(bmp, x, y)
 
-    def copy(self):
+    def copy(self) -> PilWrapper:
         return PilWrapper(self.img)
     
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
         data = wx.BitmapDataObject(self.bmp)
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
 
-    def create_thumbnail(self, width, height, delay):
+    def create_thumbnail(self, width: int, height: int, delay: bool):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
         factor = min(factor, 1)
         width = int(self.original_width * factor)
@@ -197,13 +200,14 @@ class PilImage(object):
         return bmp
 
     @staticmethod
-    def _get_extensions():
+    def _get_extensions() -> list[str]:
         return list(Image.registered_extensions().keys())
-    ext_list = _get_extensions()
+    ext_list: Any = _get_extensions()
     
     @staticmethod
     def extensions():
         return PilImage.ext_list
 
-    def close(self):
+    def close(self) -> None:
         pass
+
