@@ -61,7 +61,7 @@ class PilWrapper(ImageWrapper):
     #Image operations; this needs to have the same interface as FI.
     def rescale(self, width: int, height: int) -> 'PilWrapper':
         #I think this needs to return self if the width/height are the same.
-        img = self.img.resize((width, height), Image.BICUBIC)
+        img = self.img.resize((width, height), Image.Resampling.BICUBIC)
         return PilWrapper(img)
     def fill(self, color) -> None:
         (r, g, b) = color
@@ -160,7 +160,7 @@ class PilImage(object):
     def rotate(self, clockwise: int) -> None:
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
-        self.img = self.img.transpose(Image.ROTATE_90 if clockwise else Image.ROTATE_270)
+        self.img = self.img.transpose(Image.Resampling.ROTATE_90 if clockwise else Image.Resampling.ROTATE_270)
         #Update the bmp
         self.bmp = self._img_to_bmp(self.img)
         #Rotate the stored dimensions for any future/current zoom operations
@@ -193,7 +193,7 @@ class PilImage(object):
         factor = min(factor, 1)
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
-        img = self.img.resize((width, height), Image.BICUBIC)
+        img = self.img.resize((width, height), Image.Resampling.BICUBIC)
         bmp = wx.Bitmap.FromBuffer(width, height, img.tobytes())
         #TODO: Implement delayed_fn. See freeimage.
         return bmp

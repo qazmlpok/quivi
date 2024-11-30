@@ -81,7 +81,8 @@ class GdiPlusImage(object):
         self.zoomed_bmp = None
         self.delay = delay
         self.rotation = 0
-    
+
+    @staticmethod
     def extensions():
         #Taken from https://docs.microsoft.com/en-us/windows/win32/api/gdiplusheaders/nf-gdiplusheaders-image-image(constwchar_bool)
         #Webp (and possibly others) don't work but should. They display in Paint, which I understand is basically a wrapper around GDI.

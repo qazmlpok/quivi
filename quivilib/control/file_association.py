@@ -10,7 +10,7 @@ log = logging
 try:
     import winreg as reg
 except ImportError:
-    reg = None
+    pass
 
 
 SKIP_EXT = ('.psd', '.ico')
