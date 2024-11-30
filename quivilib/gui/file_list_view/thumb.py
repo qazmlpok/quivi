@@ -190,7 +190,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
             originalsize = (img.original_width, img.original_height)
             bmp = img.create_thumbnail(300, 240, delay=True)
             alpha = False
-            def delayed_fn(bmp=bmp):
+            def delayed_fn(bmp=bmp, ext=None):
                 if callable(bmp):
                     bmp = bmp()
                 img = bmp.ConvertToImage()
@@ -198,7 +198,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         elif item.typ in (ItemType.DIRECTORY, ItemType.PARENT):
             originalsize = 32, 32
             alpha = True
-            def delayed_fn(bmp=bmp):
+            def delayed_fn(bmp=bmp, ext=None):
                 icon = util.get_icon_for_directory(small=False)
                 bmp = wx.Bitmap(icon.GetWidth(), icon.GetHeight())
                 bmp.CopyFromIcon(icon)
