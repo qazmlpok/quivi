@@ -14,8 +14,7 @@ log = logging.getLogger('freeimage')
 
 
 class FreeImage(ImageHandler):
-    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
-        self.canvas_type = canvas_type
+    def __init__(self, f=None, path=None, img=None, delay=False):
         self.delay = delay
         
         try:
@@ -128,7 +127,7 @@ class FreeImage(ImageHandler):
             dc.DrawBitmap(bmp, x, y)
             
     def copy(self) -> ImageHandler:
-        return FreeImage(self.canvas_type, img=self.img)
+        return FreeImage(img=self.img)
     
     def copy_to_clipboard(self) -> None:
         if sys.platform == 'win32':

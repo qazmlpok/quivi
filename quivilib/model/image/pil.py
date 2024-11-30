@@ -90,8 +90,7 @@ class PilWrapper():
             del self.img
 
 class PilImage(ImageHandler):
-    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False) -> None:
-        self.canvas_type = canvas_type
+    def __init__(self, f=None, path=None, img=None, delay=False) -> None:
         self.delay = delay
 
         #Used to convert 16-bit int precision images to 8-bit.

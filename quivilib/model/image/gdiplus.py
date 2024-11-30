@@ -50,10 +50,9 @@ class _GdiPlusInnerImage(object):
             del self.img
 
 class GdiPlusImage(object):
-    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
+    def __init__(self, f=None, path=None, img=None, delay=False):
         import pythoncom
         from win32com.server import util
-        self.canvas_type = canvas_type
 
         if img is None:
             #TODO: load from f
@@ -168,7 +167,7 @@ class GdiPlusImage(object):
             gdiplus.GdipDeleteGraphics(graphics)
             
     def copy(self) -> ImageHandler:
-        return GdiPlusImage(self.canvas_type, img=self.img)
+        return GdiPlusImage(img=self.img)
     
     def copy_to_clipboard(self) -> None:
         bmp = wx.Bitmap(self._width, self._height, 24)

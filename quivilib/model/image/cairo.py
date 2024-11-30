@@ -12,9 +12,7 @@ log = logging.getLogger('cairo')
 
 
 class CairoImage(ImageHandler):
-    def __init__(self, canvas_type, src=None, img=None, delay=False):
-        self.canvas_type = canvas_type
-        
+    def __init__(self, src=None, img=None, delay=False):
         if src is None:
             raise Exception("Cairo must have a separate image loader.")
             #if img.transparent:
@@ -199,7 +197,7 @@ class CairoImage(ImageHandler):
         ctx.paint()
 
     def copy(self) -> ImageHandler:
-        return CairoImage(self.canvas_type, img=self.img, src=self.src)
+        return CairoImage(img=self.img, src=self.src)
     
     def copy_to_clipboard(self) -> None:
         bmp = wxcairo.BitmapFromImageSurface(self.img)

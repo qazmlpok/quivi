@@ -50,7 +50,7 @@ class Canvas(object):
         and returns that img.
         For immediate display, call load_img with the return value.
         """
-        img = image.open(f, path, self.__class__, delay)
+        img = image.open(f, path, delay)
         return img
         
     def load_img(self, img, adjust=True):
