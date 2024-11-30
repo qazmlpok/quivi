@@ -4,7 +4,6 @@ import sys
 
 from quivilib import meta
 
-
 IMG_CLASSES = []
 IMG_LOAD_CLASSES = []
 if 'win' in sys.platform and meta.USE_GDI_PLUS:

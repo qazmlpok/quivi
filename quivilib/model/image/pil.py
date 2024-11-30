@@ -2,23 +2,22 @@ import logging
 import wx
 from PIL import Image
 from quivilib.util import rescale_by_size_factor
+from quivilib.model.image.interface import ImageWrapper
 from typing import Any, TypeVar
-
-_TPilWrapper = TypeVar('_TPilWrapper', bound=PilWrapper)
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
 logging.getLogger("PIL").setLevel(logging.ERROR)
 
 
-class PilWrapper():
+class PilWrapper(ImageWrapper):
     """ Wrapper class; used to store image data.
     Adds a few functions to be consistent with FreeImage.
     TODO: Add With support. Add an IsTemp to allow automatic disposal.
     some methods may create a temporary object, which can just be removed automatically.
     """
     @classmethod
-    def allocate(cls: type[_TPilWrapper], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> _TPilWrapper:
+    def allocate(cls: type['PilWrapper'], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> 'PilWrapper':
         #*_mask is for FI compatibility; they will be ignored.
         #Should be 8-bit monochrome
         #Note - this will only ever actually be called with 24
@@ -29,7 +28,7 @@ class PilWrapper():
             mode = 'RGB'
         img = Image.new(mode, size=(width, height))
         return PilWrapper(img)
-    def AllocateNew(self, *args, **kwargs):
+    def AllocateNew(self, *args, **kwargs) -> 'PilWrapper':
         """ Forward to static implementation. Needed for polymorphism.
         """
         return PilWrapper.allocate(*args, **kwargs)
@@ -45,7 +44,7 @@ class PilWrapper():
     def getData(self) -> tuple[Any, Any, Any]:
         b = self.img.tobytes()
         return (self.width, self.height, b)
-    def maybeConvert32bit(self: _TPilWrapper) -> _TPilWrapper:
+    def maybeConvert32bit(self) -> 'PilWrapper':
         if self.img.mode != 'RGB':
             return PilWrapper(self.img.convert('RGB'))
         return self
@@ -60,7 +59,7 @@ class PilWrapper():
             del im
         return arr
     #Image operations; this needs to have the same interface as FI.
-    def rescale(self: _TPilWrapper, width: int, height: int) -> _TPilWrapper:
+    def rescale(self, width: int, height: int) -> 'PilWrapper':
         #I think this needs to return self if the width/height are the same.
         img = self.img.resize((width, height), Image.BICUBIC)
         return PilWrapper(img)
@@ -75,7 +74,7 @@ class PilWrapper():
         srcimg = src.img
         img.paste(srcimg, (left, top, srcimg.size[0] + left, srcimg.size[1] + top))
 
-    def copy_region(self: _TPilWrapper, left: int, top: int, right: int, bottom: int) -> _TPilWrapper:
+    def copy_region(self, left: int, top: int, right: int, bottom: int) -> 'PilWrapper':
         #The freeimage copy function will also crop. PIL's copy is just a straight copy.
         img = self.img
         copy = img.crop((left, top, right, bottom,))
