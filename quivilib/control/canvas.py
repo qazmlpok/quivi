@@ -102,14 +102,14 @@ class CanvasController(object):
             Publisher.sendMessage('busy', busy=False)
             Publisher.sendMessage('container.image.opened', item=item)
 
-    def on_cache_image_loaded(self, *, request):
+    def on_cache_image_loaded(self, *, request: ImageCacheLoadRequest):
         if request == self.pending_request:
             self.pending_request = None
             self.canvas.load_img(request.img)
             Publisher.sendMessage('busy', busy=False)
             item = request.item
             Publisher.sendMessage('container.image.opened', item=item)
-    def on_cache_image_load_error(self, *, request, exception, tb):
+    def on_cache_image_load_error(self, *, request: ImageCacheLoadRequest, exception, tb):
         if request == self.pending_request:
             Publisher.sendMessage('busy', busy=False)
             Publisher.sendMessage('error', exception=exception, tb=tb)

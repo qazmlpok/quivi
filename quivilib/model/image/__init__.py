@@ -1,11 +1,14 @@
 import logging as log
 import traceback
 import sys
+from typing import List, Type
 
 from quivilib import meta
+from quivilib.model.image.interface import ImageWrapper, ImageHandler
 
-IMG_CLASSES = []
-IMG_LOAD_CLASSES = []
+IMG_CLASSES: List[Type[ImageHandler]] = []
+IMG_LOAD_CLASSES: List[Type[ImageHandler]] = []
+
 if 'win' in sys.platform and meta.USE_GDI_PLUS:
     from quivilib.model.image.gdiplus import GdiPlusImage
     IMG_CLASSES.append(GdiPlusImage)

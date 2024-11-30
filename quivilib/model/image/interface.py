@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 class ImageWrapper(Protocol):
     def allocate(cls: type['ImageWrapper'], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> 'ImageWrapper':
@@ -18,4 +18,22 @@ class ImageWrapper(Protocol):
     def save_bitmap(self, path) -> None:
         pass
     def save(self, path) -> None:
+        pass
+
+class ImageHandler(Protocol):
+    def delayed_load(self) -> None:
+        pass
+    def resize(self, width: int, height: int) -> None:
+        pass
+    def resize_by_factor(self, factor: float) -> None:
+        pass
+    def rotate(self, clockwise: int) -> None:
+        pass
+    def paint(self, dc, x: int, y: int) -> None:
+        pass
+    def copy(self) -> ImageWrapper:
+        pass
+    def copy_to_clipboard(self) -> None:
+        pass
+    def create_thumbnail(self, width: int, height: int, delay: bool):
         pass

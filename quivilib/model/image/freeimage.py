@@ -6,13 +6,14 @@ import pyfreeimage as fi
 
 from pyfreeimage import Image
 from quivilib.i18n import _
+from quivilib.model.image.interface import ImageWrapper, ImageHandler
 from quivilib.util import add_exception_custom_msg
 from quivilib.util import rescale_by_size_factor
 
 log = logging.getLogger('freeimage')
 
 
-class FreeImage(object):
+class FreeImage(ImageHandler):
     def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
         self.canvas_type = canvas_type
         self.delay = delay
@@ -55,7 +56,7 @@ class FreeImage(object):
             add_exception_custom_msg(e, error_msg)
             raise
         
-    def delayed_load(self):
+    def delayed_load(self) -> None:
         if not self.delay:
             log.debug("delayed_load was called but delay was off")
             return
@@ -70,7 +71,7 @@ class FreeImage(object):
         #I don't want to actually store this in zoomed_bmp, but something similar is fine.
         return self.img.rescale(width, height, fi.FILTER_BICUBIC)
 
-    def resize(self, width, height):
+    def resize(self, width: int, height: int) -> None:
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
         else:
@@ -85,12 +86,12 @@ class FreeImage(object):
         self.width = width
         self.height = height
         
-    def resize_by_factor(self, factor):
+    def resize_by_factor(self, factor: float) -> None:
         width = int(self.original_width * factor)
         height = int(self.original_height * factor)
         self.resize(width, height)
         
-    def rotate(self, clockwise):
+    def rotate(self, clockwise: int) -> None:
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
         self.img = self.img.rotate(90 if clockwise else 270)
@@ -106,7 +107,7 @@ class FreeImage(object):
             self.width = self.original_width
             self.height = self.original_height
         
-    def paint(self, dc, x, y):
+    def paint(self, dc, x: int, y: int) -> None:
         if self.delay:
             log.error("paint called but image was not loaded")
             return
@@ -126,10 +127,10 @@ class FreeImage(object):
             bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
             dc.DrawBitmap(bmp, x, y)
             
-    def copy(self):
+    def copy(self) -> ImageWrapper:
         return FreeImage(self.canvas_type, img=self.img)
     
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
         if sys.platform == 'win32':
             #TODO: (2,2) Improve: there's a better way to do this with Win32 API
             #    (check FreeImagePlus's copy)
@@ -144,7 +145,7 @@ class FreeImage(object):
                 wx.TheClipboard.SetData(data)
                 wx.TheClipboard.Close()
 
-    def create_thumbnail(self, width, height, delay=False):
+    def create_thumbnail(self, width: int, height: int, delay: bool = False):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
         factor = min(factor, 1)
         width = int(self.original_width * factor)

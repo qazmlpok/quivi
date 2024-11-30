@@ -2,7 +2,7 @@ import logging
 import wx
 from PIL import Image
 from quivilib.util import rescale_by_size_factor
-from quivilib.model.image.interface import ImageWrapper
+from quivilib.model.image.interface import ImageWrapper, ImageHandler
 from typing import Any, TypeVar
 
 log: logging.Logger = logging.getLogger('pil')
@@ -89,7 +89,7 @@ class PilWrapper(ImageWrapper):
         if self.img:
             del self.img
 
-class PilImage(object):
+class PilImage(ImageHandler):
     def __init__(self, canvas_type, f=None, path=None, img=None, delay=False) -> None:
         self.canvas_type = canvas_type
         self.delay = delay
@@ -160,7 +160,7 @@ class PilImage(object):
     def rotate(self, clockwise: int) -> None:
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
-        self.img = self.img.transpose(Image.Resampling.ROTATE_90 if clockwise else Image.Resampling.ROTATE_270)
+        self.img = self.img.transpose(Image.Transpose.ROTATE_90 if clockwise else Image.Transpose.ROTATE_270)
         #Update the bmp
         self.bmp = self._img_to_bmp(self.img)
         #Rotate the stored dimensions for any future/current zoom operations
