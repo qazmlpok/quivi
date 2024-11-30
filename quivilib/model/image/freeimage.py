@@ -6,7 +6,7 @@ import pyfreeimage as fi
 
 from pyfreeimage import Image
 from quivilib.i18n import _
-from quivilib.model.image.interface import ImageWrapper, ImageHandler
+from quivilib.model.image.interface import ImageHandler
 from quivilib.util import add_exception_custom_msg
 from quivilib.util import rescale_by_size_factor
 
@@ -127,7 +127,7 @@ class FreeImage(ImageHandler):
             bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
             dc.DrawBitmap(bmp, x, y)
             
-    def copy(self) -> ImageWrapper:
+    def copy(self) -> ImageHandler:
         return FreeImage(self.canvas_type, img=self.img)
     
     def copy_to_clipboard(self) -> None:

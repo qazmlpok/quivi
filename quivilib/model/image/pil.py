@@ -2,7 +2,7 @@ import logging
 import wx
 from PIL import Image
 from quivilib.util import rescale_by_size_factor
-from quivilib.model.image.interface import ImageWrapper, ImageHandler
+from quivilib.model.image.interface import ImageHandler
 from typing import Any, TypeVar
 
 log: logging.Logger = logging.getLogger('pil')
@@ -10,7 +10,7 @@ log: logging.Logger = logging.getLogger('pil')
 logging.getLogger("PIL").setLevel(logging.ERROR)
 
 
-class PilWrapper(ImageWrapper):
+class PilWrapper():
     """ Wrapper class; used to store image data.
     Adds a few functions to be consistent with FreeImage.
     TODO: Add With support. Add an IsTemp to allow automatic disposal.
@@ -33,7 +33,7 @@ class PilWrapper(ImageWrapper):
         """
         return PilWrapper.allocate(*args, **kwargs)
         
-    def __init__(self, img) -> None:
+    def __init__(self, img: Image.Image) -> None:
         self.img = img
         self.width = img.width
         self.height = img.height
@@ -179,8 +179,8 @@ class PilImage(ImageHandler):
         bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
         dc.DrawBitmap(bmp, x, y)
 
-    def copy(self) -> PilWrapper:
-        return PilWrapper(self.img)
+    def copy(self) -> ImageHandler:
+        return PilImage("", img=self.img.img)
     
     def copy_to_clipboard(self) -> None:
         data = wx.BitmapDataObject(self.bmp)

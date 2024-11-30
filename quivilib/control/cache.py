@@ -9,7 +9,7 @@ from quivilib.model.canvas import TempCanvas
 from quivilib.util import synchronized_method, DebugTimer
 
 from typing import List
-from quivilib.model.image.interface import ImageWrapper
+from quivilib.model.image.interface import ImageHandler
 
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)
@@ -55,7 +55,7 @@ class ImageCacheLoaded(ImageCacheLoadRequest):
                 img = canvas.load(f, self.path, delay=True)
         finally:
             f.close()
-        self.img: ImageWrapper = img
+        self.img: ImageHandler = img
 
 class ImageCache(object):
     def __init__(self, settings) -> None:

@@ -5,7 +5,7 @@ import sys
 from quivilib import meta
 
 from typing import List, Type
-from quivilib.model.image.interface import ImageWrapper, ImageHandler
+from quivilib.model.image.interface import ImageHandler
 
 IMG_CLASSES: List[Type[ImageHandler]] = []
 IMG_LOAD_CLASSES: List[Type[ImageHandler]] = []

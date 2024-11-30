@@ -167,7 +167,7 @@ class GdiPlusImage(object):
             gdiplus.GdipDrawImagePointsI(graphics, self.img.img, arr, 3)
             gdiplus.GdipDeleteGraphics(graphics)
             
-    def copy(self) -> ImageWrapper:
+    def copy(self) -> ImageHandler:
         return GdiPlusImage(self.canvas_type, img=self.img)
     
     def copy_to_clipboard(self) -> None:

@@ -5,7 +5,7 @@ import logging
 from wx.lib import wxcairo
 import cairo
 import wx
-from quivilib.model.image.interface import ImageWrapper, ImageHandler
+from quivilib.model.image.interface import ImageHandler
 from quivilib.util import rescale_by_size_factor
 
 log = logging.getLogger('cairo')
@@ -198,7 +198,7 @@ class CairoImage(ImageHandler):
         ctx.set_source(imgpat)
         ctx.paint()
 
-    def copy(self) -> ImageWrapper:
+    def copy(self) -> ImageHandler:
         return CairoImage(self.canvas_type, img=self.img, src=self.src)
     
     def copy_to_clipboard(self) -> None:
