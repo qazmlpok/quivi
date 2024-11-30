@@ -8,7 +8,7 @@ from quivilib.model.canvas import Canvas
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.util import DebugTimer
-from quivilib.control.cache import ImageCacheLoadRequest
+from quivilib.control.cache import ImageCacheLoadRequest, ImageCacheLoaded
 from quivilib.control.options import get_fit_choices
 
 ZOOM_FACTOR = 25
@@ -102,7 +102,7 @@ class CanvasController(object):
             Publisher.sendMessage('busy', busy=False)
             Publisher.sendMessage('container.image.opened', item=item)
 
-    def on_cache_image_loaded(self, *, request: ImageCacheLoadRequest):
+    def on_cache_image_loaded(self, *, request: ImageCacheLoaded):
         if request == self.pending_request:
             self.pending_request = None
             self.canvas.load_img(request.img)

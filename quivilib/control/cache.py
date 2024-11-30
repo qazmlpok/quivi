@@ -8,6 +8,9 @@ from quivilib import meta
 from quivilib.model.canvas import TempCanvas
 from quivilib.util import synchronized_method, DebugTimer
 
+from typing import List
+from quivilib.model.image.interface import ImageWrapper
+
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)
 
@@ -17,28 +20,12 @@ log.setLevel(logging.ERROR)
 
 class ImageCacheLoadRequest(object):
     """ Data class containing the necessary information for loading an image
-    i.e. the physical path and, after it has been loaded, the image itself.
+    i.e. the physical path.
     """
-    def __init__(self, container, item):
+    def __init__(self, container, item) -> None:
         self.container = container
         self.item = item
         self.path = item.path
-        self.img = None
-        
-    def __call__(self, settings):
-        #TODO: This canvas honestly isn't needed because it just calls load img.
-        canvas = TempCanvas('tempcanvas', settings)
-        item_index = self.container.items.index(self.item)
-        f = self.container.open_image(item_index)
-        assert f is not None, "Failed to open image from container"
-        #can't use "with" because not every file-like object used here supports it
-        try:
-            with DebugTimer(f'Cache: {self.path.name}'):
-                img = canvas.load(f, self.path, delay=True)
-        finally:
-            f.close()
-        self.img = img
-        
     def __eq__(self, other):
         if not other:
             return False
@@ -52,17 +39,34 @@ class ImageCacheLoadRequest(object):
     def __repr__(self):
         return f'<ImageCacheLoadRequest: {self.path}>'
 
+class ImageCacheLoaded(ImageCacheLoadRequest):
+    """ An ImageCacheLoadRequest that has an actual image loaded.
+    """
+    def __init__(self, src, settings) -> None:
+        super().__init__(src.container, src.item)
+        #TODO: This canvas honestly isn't needed because it just calls load img.
+        canvas = TempCanvas('tempcanvas', settings)
+        item_index = self.container.items.index(self.item)
+        f = self.container.open_image(item_index)
+        assert f is not None, "Failed to open image from container"
+        #can't use "with" because not every file-like object used here supports it
+        try:
+            with DebugTimer(f'Cache: {self.path.name}'):
+                img = canvas.load(f, self.path, delay=True)
+        finally:
+            f.close()
+        self.img: ImageWrapper = img
 
 class ImageCache(object):
-    def __init__(self, settings):
+    def __init__(self, settings) -> None:
         self.settings = settings
         Publisher.subscribe(self.on_load_image, 'cache.load_image')
         Publisher.subscribe(self.on_clear_pending, 'cache.clear_pending')
         Publisher.subscribe(self.on_flush, 'cache.flush')
         Publisher.subscribe(self.on_program_closed, 'program.closed')
-        self.queue = []
+        self.queue : List[ImageCacheLoadRequest] = []
         self.q_lock = Lock()
-        self.cache = []
+        self.cache : List[ImageCacheLoaded] = []
         self.c_lock = Lock()
         self.semaphore = Semaphore(0)
         self.thread = Thread(target=self.run, daemon=True)
@@ -91,7 +95,7 @@ class ImageCache(object):
             log.debug('main: cache miss')
             self._put_request(request)
             
-    def on_image_loaded(self, request: ImageCacheLoadRequest):
+    def on_image_loaded(self, request: ImageCacheLoaded):
         """ Called by the forked thread after the image is loaded. Handles the queue and message passing.
         """
         with self.c_lock:
@@ -111,7 +115,7 @@ class ImageCache(object):
         with self.c_lock:
             self.cache.clear()
 
-    def notify_image_loaded(self, request: ImageCacheLoadRequest):
+    def notify_image_loaded(self, request: ImageCacheLoaded):
         """ Send message notifying of load completion.
         """
         Publisher.sendMessage('cache.image_loaded', request=request)
@@ -178,9 +182,10 @@ class ImageCache(object):
                 e, tb = None, None
                 try:
                     log.debug('thread: running request...')
-                    req(self.settings)
+                    #Convert the request to a Loaded image.
+                    loaded = ImageCacheLoaded(req, self.settings)
                     log.debug('thread: request processed, notifying')
-                    wx.CallAfter(self.on_image_loaded, req)
+                    wx.CallAfter(self.on_image_loaded, loaded)
                     log.debug('thread: request processed notified')
                 except Exception as ex:
                     tb = traceback.format_exc()

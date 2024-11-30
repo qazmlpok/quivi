@@ -1,9 +1,10 @@
 import logging as log
 import traceback
 import sys
-from typing import List, Type
 
 from quivilib import meta
+
+from typing import List, Type
 from quivilib.model.image.interface import ImageWrapper, ImageHandler
 
 IMG_CLASSES: List[Type[ImageHandler]] = []
@@ -42,7 +43,7 @@ def get_supported_extensions():
 supported_extensions = get_supported_extensions()
 
 
-def open(f, path, canvas_type, delay=False):
+def open(f, path, canvas_type, delay=False) -> ImageHandler:
     """ Open the provided filehandle/path as an image.
     Wraps the image in a Cairo object if USE_CAIRO is True
     (This would also use GDI on Windows, if GDI was still supported)
@@ -58,7 +59,7 @@ def open(f, path, canvas_type, delay=False):
             log.debug(traceback.format_exc())
     return img
 
-def open_direct(f, path, canvas_type, delay=False):
+def open_direct(f, path, canvas_type, delay=False) -> ImageHandler:
     """ Open the provided filehandle/path as an image.
     PIL/Freeimage is used to open the image, depending on configuration.
     """
@@ -76,4 +77,6 @@ def open_direct(f, path, canvas_type, delay=False):
                 raise
             else:
                 log.debug(traceback.format_exc())
-    return img
+    if img is not None:
+        return img
+    raise Exception(f"Could not open {path} (unsupported extension?)")
