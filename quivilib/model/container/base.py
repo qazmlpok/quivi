@@ -45,7 +45,7 @@ class BaseContainer(object):
         
     sort_order = property(get_sort_order, set_sort_order)
     
-    def open_container(self, item_index):
+    def open_container(self, item_index) -> 'BaseContainer':
         #Import here to avoid circular import
         from quivilib.model.container.directory import DirectoryContainer
         from quivilib.model.container.compressed import CompressedContainer
@@ -154,7 +154,7 @@ class BaseContainer(object):
     def universal_path(self):
         raise NotImplementedError()
     
-    def open_parent(self):
+    def open_parent(self) -> 'BaseContainer':
         raise NotImplementedError()
     
     def open_image(self, item_index):

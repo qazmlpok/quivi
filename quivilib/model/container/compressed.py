@@ -171,12 +171,12 @@ class CompressedContainer(BaseContainer):
     def name(self):
         return self._path.name
 
-    def open_parent(self):
+    def open_parent(self) -> BaseContainer:
         parent = DirectoryContainer(self._path.parent, self._sort_order, self.show_hidden)
         parent.selected_item = self._path
         return parent
     
-    def open_container(self, item_index):
+    def open_container(self, item_index) -> BaseContainer:
         item = self.items[item_index]
         if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
@@ -264,7 +264,7 @@ class VirtualCompressedContainer(CompressedContainer):
                                        self.parent_names + [self._name]))
         CompressedContainer.__init__(self, path, sort_order, show_hidden)
         
-    def open_container(self, item_index):
+    def open_container(self, item_index) -> BaseContainer:
         item = self.items[item_index]
         if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
@@ -278,7 +278,7 @@ class VirtualCompressedContainer(CompressedContainer):
         else:
             return BaseContainer.open_container(self, item_index)
         
-    def open_parent(self):
+    def open_parent(self) -> BaseContainer:
         parent = None
         if len(self.parent_names) == 0:
             parent = CompressedContainer(self.original_container_path, self.sort_order, self.show_hidden)

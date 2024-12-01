@@ -30,8 +30,8 @@ class RootContainer(BaseContainer):
     def path(self):
         return ''
        
-    def open_parent(self):
-        return None
+    def open_parent(self) -> BaseContainer:
+        return self
     
     def can_delete(self):
         return False

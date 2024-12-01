@@ -64,16 +64,16 @@ class ImageCache(object):
         Publisher.subscribe(self.on_clear_pending, 'cache.clear_pending')
         Publisher.subscribe(self.on_flush, 'cache.flush')
         Publisher.subscribe(self.on_program_closed, 'program.closed')
-        self.queue : List[ImageCacheLoadRequest] = []
+        self.queue : List[ImageCacheLoadRequest|None] = []
         self.q_lock = Lock()
         self.cache : List[ImageCacheLoaded] = []
         self.c_lock = Lock()
         self.semaphore = Semaphore(0)
         self.thread = Thread(target=self.run, daemon=True)
         self.thread.start()
-        self.processing_request = None
+        self.processing_request:ImageCacheLoadRequest|None = None
         
-    def on_load_image(self, *, request: ImageCacheLoadRequest, preload=False):
+    def on_load_image(self, *, request: ImageCacheLoadRequest, preload=False) -> None:
         """Add a ImageCacheLoadRequest to the queue. If the image is already in the cache, 
         immediately send the image_loaded message instead.
         Invoked by message passing.
@@ -95,7 +95,7 @@ class ImageCache(object):
             log.debug('main: cache miss')
             self._put_request(request)
             
-    def on_image_loaded(self, request: ImageCacheLoaded):
+    def on_image_loaded(self, request: ImageCacheLoaded) -> None:
         """ Called by the forked thread after the image is loaded. Handles the queue and message passing.
         """
         with self.c_lock:
@@ -107,7 +107,7 @@ class ImageCache(object):
             request.img.delayed_load()
             self.notify_image_loaded(request)
             
-    def on_flush(self):
+    def on_flush(self) -> None:
         """ Clear out the cache.
         Invoked by message passing.
         TODO: This does not clear out the queue. Shouldn't it?
@@ -115,24 +115,24 @@ class ImageCache(object):
         with self.c_lock:
             self.cache.clear()
 
-    def notify_image_loaded(self, request: ImageCacheLoaded):
+    def notify_image_loaded(self, request: ImageCacheLoaded) -> None:
         """ Send message notifying of load completion.
         """
         Publisher.sendMessage('cache.image_loaded', request=request)
         
-    def notify_image_load_error(self, request: ImageCacheLoadRequest, exception, tb):
+    def notify_image_load_error(self, request: ImageCacheLoadRequest, exception, tb) -> None:
         """ Send message notifying of load failure.
         """
         Publisher.sendMessage('cache.image_load_error', request=request, exception=exception, tb=tb)
     
-    def notify_cache_removed(self, request: ImageCacheLoadRequest):
+    def notify_cache_removed(self, request: ImageCacheLoadRequest) -> None:
         """ Send message notifying of removal from cache (i.e. due to hitting the size limit).
         This is only used by the debug window, so do nothing in a packaged build.
         """
         if __debug__:
             Publisher.sendMessage('cache.image_removed', request=request)
 
-    def _put_request(self, request: ImageCacheLoadRequest):
+    def _put_request(self, request: ImageCacheLoadRequest) -> None:
         with self.q_lock:  
             if request not in self.queue:
                 log.debug('main: inserting request')
@@ -140,14 +140,14 @@ class ImageCache(object):
                 log.debug('main: releasing...')
                 self.semaphore.release()
             
-    def on_clear_pending(self, *, request: ImageCacheLoadRequest | None = None):
+    def on_clear_pending(self, *, request: ImageCacheLoadRequest | None = None) -> None:
         """ Clear out the processing queue. parameter is passed in but not used.
         Invoked by message passing.
         """
         with self.q_lock:
             self.queue.clear()
 
-    def on_program_closed(self, *, settings_lst=None):
+    def on_program_closed(self, *, settings_lst=None) -> None:
         """Cleanup thread during program close.
         Invoked by message passing.
         """
@@ -162,7 +162,7 @@ class ImageCache(object):
         log.debug('main: joining...')
         self.thread.join()
     
-    def run(self):
+    def run(self) -> None:
         """ Main thread loop for the forked thread.
         """
         log.debug('thread: running...')

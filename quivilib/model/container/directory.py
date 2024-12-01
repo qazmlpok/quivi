@@ -56,7 +56,8 @@ class DirectoryContainer(BaseContainer):
                 return '/'
         return self.path.name
        
-    def open_parent(self):
+    def open_parent(self) -> BaseContainer:
+        parent: BaseContainer
         p = self.path.parent
         if p == self.path and p.drive != '':
             #The parent is the root, and drives exists

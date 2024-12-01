@@ -54,7 +54,7 @@ class Canvas(object):
         img = image.open(f, path, delay)
         return img
         
-    def load_img(self, img, adjust=True) -> None:
+    def load_img(self, img: ImageHandler, adjust=True) -> None:
         """ Sets an already loaded image (by `load` or equivalent)
         This is a separate function due to the cache: images can be load()ed before load_img()ed
         """

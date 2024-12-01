@@ -110,7 +110,7 @@ class FileListController(object):
                 Publisher.sendMessage('favorite.opened', favorite=False)
 
 
-    def open_item(self, item_index):
+    def open_item(self, item_index: int) -> None:
         container = self.model.container
         item = container.items[item_index]
         if item.typ == ItemType.IMAGE:
@@ -140,7 +140,7 @@ class FileListController(object):
     def open_parent(self):
         container = self.model.container
         parent = container.open_parent()
-        if parent:
+        if parent and parent is not container:
             self._set_container(parent)
 
     def open_directory(self):
@@ -177,7 +177,7 @@ class FileListController(object):
         try:
             container = self.model.container
             parent = container.open_parent()
-            if parent:
+            if parent and parent is not container:
                 self.model.container = parent
                 nindex = parent.selected_item_index + skip
                 if 0 <= nindex < parent.item_count:

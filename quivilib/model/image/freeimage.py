@@ -15,7 +15,7 @@ log = logging.getLogger('freeimage')
 
 
 class FreeImage(ImageHandler):
-    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False):
+    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False) -> None:
         self.delay = delay
         
         try:
