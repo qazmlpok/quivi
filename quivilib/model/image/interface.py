@@ -1,6 +1,8 @@
-from typing import Protocol, TypeVar
+from typing import Protocol, TypeVar, List, Any, IO
 
 class ImageHandler(Protocol):
+    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, delay=False) -> None:
+        pass
     def delayed_load(self) -> None:
         pass
     def resize(self, width: int, height: int) -> None:
@@ -16,4 +18,19 @@ class ImageHandler(Protocol):
     def copy_to_clipboard(self) -> None:
         pass
     def create_thumbnail(self, width: int, height: int, delay: bool):
+        pass
+    
+    width: int
+    height: int
+    original_width: int
+    original_height: int
+    #This is an implementation detail so it should probably at least be a function...
+    img: Any
+    
+    @staticmethod
+    def extensions() -> List[str]:
+        pass
+
+class SecondaryImageHandler(ImageHandler):
+    def __init__(self, src:ImageHandler|None=None, delay=False) -> None:
         pass

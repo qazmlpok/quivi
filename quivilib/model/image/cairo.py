@@ -5,14 +5,14 @@ import logging
 from wx.lib import wxcairo
 import cairo
 import wx
-from quivilib.model.image.interface import ImageHandler
+from quivilib.model.image.interface import ImageHandler, SecondaryImageHandler
 from quivilib.util import rescale_by_size_factor
 
 log = logging.getLogger('cairo')
 
 
-class CairoImage(ImageHandler):
-    def __init__(self, src=None, img=None, delay=False):
+class CairoImage(SecondaryImageHandler):
+    def __init__(self, src:ImageHandler|None=None, img=None, delay=False) -> None:
         if src is None:
             raise Exception("Cairo must have a separate image loader.")
             #if img.transparent:
@@ -211,3 +211,9 @@ class CairoImage(ImageHandler):
 
     def close(self):
         pass
+
+    @staticmethod
+    def extensions():
+        """ Extensions do not matter for Cairo.
+        """
+        return []

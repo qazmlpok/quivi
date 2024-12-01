@@ -5,14 +5,14 @@ import sys
 from quivilib import meta
 
 from typing import List, Type
-from quivilib.model.image.interface import ImageHandler
+from quivilib.model.image.interface import ImageHandler, SecondaryImageHandler
 
-IMG_CLASSES: List[Type[ImageHandler]] = []
+IMG_CLASSES: List[Type[SecondaryImageHandler]] = []
 IMG_LOAD_CLASSES: List[Type[ImageHandler]] = []
 
-if 'win' in sys.platform and meta.USE_GDI_PLUS:
-    from quivilib.model.image.gdiplus import GdiPlusImage
-    IMG_CLASSES.append(GdiPlusImage)
+#if 'win' in sys.platform and meta.USE_GDI_PLUS:
+#    from quivilib.model.image.gdiplus import GdiPlusImage
+#    IMG_CLASSES.append(GdiPlusImage)
 if meta.USE_CAIRO:
     from quivilib.model.image.cairo import CairoImage
     IMG_CLASSES.append(CairoImage)

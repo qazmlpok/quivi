@@ -3,7 +3,8 @@ import wx
 from PIL import Image
 from quivilib.util import rescale_by_size_factor
 from quivilib.model.image.interface import ImageHandler
-from typing import Any, TypeVar
+
+from typing import Any, TypeVar, IO, Tuple
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
@@ -90,7 +91,7 @@ class PilWrapper():
             del self.img
 
 class PilImage(ImageHandler):
-    def __init__(self, f=None, path=None, img=None, delay=False) -> None:
+    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False) -> None:
         self.delay = delay
 
         #Used to convert 16-bit int precision images to 8-bit.
@@ -100,7 +101,7 @@ class PilImage(ImageHandler):
         def lookup(x):
             return x / 256
 
-        if img is None:
+        if img is None and f is not None:
             img = Image.open(f)
             if img.mode == 'I':    #16-bit precision
                 #return img.point(PilImage.PixelLookup, 'RGB')
@@ -114,7 +115,7 @@ class PilImage(ImageHandler):
         self.original_height = self.height = img.size[1]
         
         self.img = PilWrapper(img)
-        self.zoomed_bmp = None
+        self.zoomed_bmp: Tuple[int, int, int]|None = None
         self.rotation = 0
         
     def delayed_load(self) -> None:
@@ -179,7 +180,7 @@ class PilImage(ImageHandler):
         dc.DrawBitmap(bmp, x, y)
 
     def copy(self) -> ImageHandler:
-        return PilImage("", img=self.img.img)
+        return PilImage(img=self.img.img)
     
     def copy_to_clipboard(self) -> None:
         data = wx.BitmapDataObject(self.bmp)

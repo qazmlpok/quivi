@@ -3,18 +3,19 @@ import logging
 
 import wx
 import pyfreeimage as fi
-
 from pyfreeimage import Image
 from quivilib.i18n import _
 from quivilib.model.image.interface import ImageHandler
 from quivilib.util import add_exception_custom_msg
 from quivilib.util import rescale_by_size_factor
 
+from typing import IO
+
 log = logging.getLogger('freeimage')
 
 
 class FreeImage(ImageHandler):
-    def __init__(self, f=None, path=None, img=None, delay=False):
+    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False):
         self.delay = delay
         
         try:

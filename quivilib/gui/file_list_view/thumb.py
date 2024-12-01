@@ -177,7 +177,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         log.debug('Thumbs done!')
         self._isrunning = False
 
-    def LoadImageContainer(self, container, item, index):
+    def LoadImageContainer(self, container, item, index) -> None:
         """ Threaded method to load images. Used internally. """
         #TODO: (2,2) Refactor: this should be moved inside the Item class
         bmp = None
