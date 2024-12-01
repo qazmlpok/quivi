@@ -33,7 +33,7 @@ class RootContainer(BaseContainer):
     def open_parent(self) -> BaseContainer:
         return self
     
-    def can_delete(self):
+    def can_delete(self) -> bool:
         return False
     
     @property

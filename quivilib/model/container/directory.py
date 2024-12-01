@@ -71,7 +71,7 @@ class DirectoryContainer(BaseContainer):
         img = self.items[item_index].path.open('rb')
         return img
     
-    def can_delete(self):
+    def can_delete(self) -> bool:
         return True
     
     @property

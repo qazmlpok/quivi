@@ -7,11 +7,12 @@ from natsort import natsort_keygen, ns
 from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container import UnsupportedPathError
 
+from typing import List
 
 class BaseContainer(object):
-    def __init__(self, sort_order, show_hidden):
+    def __init__(self, sort_order: SortOrder, show_hidden: bool) -> None:
         self._selected_item = None
-        self.items = []
+        self.items: List[Item] = []
         self._sort_order = sort_order
         self.show_hidden = show_hidden
         self.refresh(show_hidden)
@@ -60,10 +61,10 @@ class BaseContainer(object):
         else:
             assert False, 'Invalid container type specified'
 
-    def close_container(self):
+    def close_container(self) -> None:
         pass
 
-    def refresh(self, show_hidden):
+    def refresh(self, show_hidden: bool) -> None:
         self.show_hidden = show_hidden
         paths = self._list_paths()
         self.items = []
@@ -108,7 +109,7 @@ class BaseContainer(object):
             return ext[1:]
         return ext
     
-    def get_item_path(self, item_index):
+    def get_item_path(self, item_index: int) -> Path:
         return self.items[item_index].path
     
     def get_item_last_modified(self, item_index):
@@ -147,7 +148,7 @@ class BaseContainer(object):
     def virtual_files(self):
         return False
     
-    def can_delete(self):
+    def can_delete(self) -> bool:
         raise NotImplementedError()
     
     @property

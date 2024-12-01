@@ -12,6 +12,8 @@ from quivilib.model.container.directory import DirectoryContainer
 from quivilib.meta import PATH_SEP
 from quivilib import tempdir
 
+from typing import Any, Tuple, List, Protocol, Type
+
 #if sys.platform == 'win32':
 #    from quivilib.thirdparty.UnRAR import Archive
 #else:
@@ -26,11 +28,23 @@ def _is_hidden(path):
         return True
     return False
 
+class CompressedFileFormat(Protocol):
+    def __init__(self, container, path: Path) -> None:
+        pass
+    @staticmethod
+    def is_valid_extension(ext) -> bool:
+        pass
+    def list_files(self) -> Tuple[Path, Any]:
+        pass
+    def open_file(self, path) -> io.BytesIO:
+        pass
+    def close(self) -> None:
+        pass
 
-class ZipFile(object):
+class ZipFile(CompressedFileFormat):
     #TODO: (3,4) Improve: how to deal with password protected files?
     
-    def __init__(self, container, path):
+    def __init__(self, container, path: Path) -> None:
         self.path = path
         self.file = PyZipFile(path, 'r')
         self.mapping = {}
@@ -58,8 +72,8 @@ class ZipFile(object):
         self.file = None
 
 
-class RarFile(object):
-    def __init__(self, container, path):
+class RarFile(CompressedFileFormat):
+    def __init__(self, container, path: Path) -> None:
         self.path = path
         #Force an exception if the file is invalid
         self.list_files()
@@ -84,10 +98,8 @@ class RarFile(object):
                 if f.filename == path:
                     stream = f.open('rb')
                     try:
-                        string = stream.read()
-                        fstr = io.BytesIO(string)
-                    except:
-                        raise
+                        data = stream.read()
+                        fstr = io.BytesIO(data)
                     finally:
                         stream.close()
                     return fstr
@@ -100,7 +112,7 @@ class RarFile(object):
 
 
 class RarFileExternal(RarFile):
-    def __init__(self, container, path):
+    def __init__(self, container, path: Path) -> None:
         #Import here to delay creation of the temp dir until it's needed.
         import rarfile
         rarfile.HACK_TMP_DIR = tempdir.get_temp_dir()
@@ -125,16 +137,15 @@ class RarFileExternal(RarFile):
     def conv_path(self, path):
         npath = str(path)
         #rarfile doesn't like Windows backslashes
-        return npath.replace(os.sep, '/')
         #Anything else? There's a " 0" file, for example. Might be ".."
-
+        return npath.replace(os.sep, '/')
 
 class CompressedContainer(BaseContainer):
-    def __init__(self, path, sort_order, show_hidden):
+    def __init__(self, path, sort_order, show_hidden) -> None:
         self._path = path.resolve()
         #RarCls = RarFile if sys.platform == 'win32' else RarFileExternal
         RarCls = RarFileExternal
-        classes = []
+        classes: List[Type[CompressedFileFormat]] = []
         if ZipFile.is_valid_extension(self._path.suffix):
             classes = [ZipFile, RarCls]
         elif RarFile.is_valid_extension(self._path.suffix):
@@ -163,7 +174,7 @@ class CompressedContainer(BaseContainer):
         paths.insert(0, (Path('..'), None, None))
         return paths
         
-    def close_container(self):
+    def close_container(self) -> None:
         if self.file is not None:
             self.file.close()
     
@@ -205,10 +216,10 @@ class CompressedContainer(BaseContainer):
     def universal_path(self):
         return self.path
     
-    def can_delete(self):
+    def can_delete(self) -> bool:
         return False
     
-    def get_item_path(self, item_index):
+    def get_item_path(self, item_index: int) -> Path:
         if item_index == 0:
             return BaseContainer.get_item_path(self, item_index)
         return self.path / self.items[item_index].path
@@ -303,14 +314,14 @@ class VirtualCompressedContainer(CompressedContainer):
     def name(self):
         return self._name
     
-    def can_delete(self):
+    def can_delete(self) -> bool:
         return False
     
     @property
     def universal_path(self):
         return self._universal_path
     
-    def get_item_path(self, item_index):
+    def get_item_path(self, item_index: int) -> Path:
         if item_index == 0:
             return CompressedContainer.get_item_path(self, item_index)
         return self.container_path / self.items[item_index].path
