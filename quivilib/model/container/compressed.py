@@ -67,46 +67,11 @@ class ZipFile(CompressedFileFormat):
         self.file.close()
         self.file = None    # type: ignore[assignment]
 
-
-class RarFile(CompressedFileFormat):
-    def __init__(self, container, path: Path) -> None:
-        self.path = path
-        #Force an exception if the file is invalid
-        self.list_files()
-    
+class RarFileExternal(CompressedFileFormat):
     @staticmethod
     def is_valid_extension(ext):
         return ext.lower() in ['.rar', '.cbr']
-    
-    def list_files(self):
-        archive = Archive(str(self.path))
-        try:
-            return [(Path(f.filename), datetime(*f.datetime[0:6]))
-                 for f in archive.iterfiles()]
-        finally:
-            archive.close()
-    
-    def open_file(self, path) -> IO[bytes]:
-        archive = Archive(str(self.path))
-        path = str(path)
-        try:
-            for f in archive.iterfiles():
-                if f.filename == path:
-                    stream = f.open('rb')
-                    try:
-                        data = stream.read()
-                        fstr = io.BytesIO(data)
-                    finally:
-                        stream.close()
-                    return fstr
-        finally:
-            archive.close()
-        raise Exception("No matching entry in archive.")
-    def close(self) -> None:
-        pass
 
-
-class RarFileExternal(RarFile):
     def __init__(self, container, path: Path) -> None:
         #Import here to delay creation of the temp dir until it's needed.
         import rarfile
@@ -135,15 +100,15 @@ class RarFileExternal(RarFile):
         #Anything else? There's a " 0" file, for example. Might be ".."
         return npath.replace(os.sep, '/')
 
+
 class CompressedContainer(BaseContainer):
     def __init__(self, path, sort_order, show_hidden) -> None:
         self._path = path.resolve()
-        RarCls = RarFileExternal
         classes: List[Type[CompressedFileFormat]] = []
         if ZipFile.is_valid_extension(self._path.suffix):
-            classes = [ZipFile, RarCls]
-        elif RarFile.is_valid_extension(self._path.suffix):
-            classes = [RarCls, ZipFile]
+            classes = [ZipFile, RarFileExternal]
+        elif RarFileExternal.is_valid_extension(self._path.suffix):
+            classes = [RarFileExternal, ZipFile]
         else:
             assert False, 'Invalid compressed file extension'
         #TODO: Rewrite this logic to not require exactly 2 classes.
@@ -200,7 +165,7 @@ class CompressedContainer(BaseContainer):
     
     @staticmethod
     def is_valid_extension(ext):
-        return ZipFile.is_valid_extension(ext) or RarFile.is_valid_extension(ext)
+        return ZipFile.is_valid_extension(ext) or RarFileExternal.is_valid_extension(ext)
     
     @property
     def path(self) -> Path:
