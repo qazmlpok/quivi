@@ -7,7 +7,7 @@ from natsort import natsort_keygen, ns
 from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container import UnsupportedPathError
 
-from typing import List
+from typing import List, IO
 
 class BaseContainer(object):
     def __init__(self, sort_order: SortOrder, show_hidden: bool) -> None:
@@ -17,10 +17,10 @@ class BaseContainer(object):
         self.show_hidden = show_hidden
         self.refresh(show_hidden)
         
-    def get_sort_order(self):
+    def get_sort_order(self) -> SortOrder:
         return self._sort_order
     
-    def set_sort_order(self, order):
+    def set_sort_order(self, order: SortOrder) -> None:
         if order == SortOrder.NAME:
             def keyfn(elem):
                 return str(elem.path)
@@ -46,7 +46,7 @@ class BaseContainer(object):
         
     sort_order = property(get_sort_order, set_sort_order)
     
-    def open_container(self, item_index) -> 'BaseContainer':
+    def open_container(self, item_index: int) -> 'BaseContainer':
         #Import here to avoid circular import
         from quivilib.model.container.directory import DirectoryContainer
         from quivilib.model.container.compressed import CompressedContainer
@@ -152,13 +152,13 @@ class BaseContainer(object):
         raise NotImplementedError()
     
     @property
-    def universal_path(self):
+    def universal_path(self) -> Path|None:
         raise NotImplementedError()
     
     def open_parent(self) -> 'BaseContainer':
         raise NotImplementedError()
     
-    def open_image(self, item_index):
+    def open_image(self, item_index: int) -> IO[bytes]:
         raise NotImplementedError()
     
     def _list_paths(self):

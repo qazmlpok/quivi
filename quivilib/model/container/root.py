@@ -13,7 +13,7 @@ except ImportError:
     pass
 
 class RootContainer(BaseContainer):
-    def __init__(self, sort_order, show_hidden):
+    def __init__(self, sort_order, show_hidden) -> None:
         Publisher.sendMessage('container.opened', container=self)
         BaseContainer.__init__(self, sort_order, show_hidden)
 
@@ -27,8 +27,8 @@ class RootContainer(BaseContainer):
         return _('My Computer')
     
     @property
-    def path(self):
-        return ''
+    def path(self) -> Path:
+        return Path('/')
        
     def open_parent(self) -> BaseContainer:
         return self
@@ -37,5 +37,5 @@ class RootContainer(BaseContainer):
         return False
     
     @property
-    def universal_path(self):
+    def universal_path(self) -> Path|None:
         return None

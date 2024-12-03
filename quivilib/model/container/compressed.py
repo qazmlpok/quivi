@@ -2,7 +2,7 @@ import sys, os
 import io
 import zipfile
 from pathlib import Path
-from zipfile import ZipFile as PyZipFile
+from zipfile import ZipFile as PyZipFile, ZipInfo
 from datetime import datetime
 
 from pubsub import pub as Publisher
@@ -12,13 +12,20 @@ from quivilib.model.container.directory import DirectoryContainer
 from quivilib.meta import PATH_SEP
 from quivilib import tempdir
 
-from typing import Any, Tuple, List, Protocol, Type
+from typing import Any, Tuple, List, Protocol, Type, IO
 
-#if sys.platform == 'win32':
-#    from quivilib.thirdparty.UnRAR import Archive
-#else:
-#    from quivilib.thirdparty.rarfile import RarFile as PyRarFile
-
+class CompressedFileFormat(Protocol):
+    def __init__(self, container, path: Path) -> None:
+        pass
+    @staticmethod
+    def is_valid_extension(ext) -> bool:
+        pass
+    def list_files(self) -> List[Tuple[Path, datetime]]:
+        pass
+    def open_file(self, path) -> IO[bytes]:
+        pass
+    def close(self) -> None:
+        pass
 
 def _copy_files(f_read, f_write):
     f_write.write(f_read.read())
@@ -28,18 +35,6 @@ def _is_hidden(path):
         return True
     return False
 
-class CompressedFileFormat(Protocol):
-    def __init__(self, container, path: Path) -> None:
-        pass
-    @staticmethod
-    def is_valid_extension(ext) -> bool:
-        pass
-    def list_files(self) -> Tuple[Path, Any]:
-        pass
-    def open_file(self, path) -> io.BytesIO:
-        pass
-    def close(self) -> None:
-        pass
 
 class ZipFile(CompressedFileFormat):
     #TODO: (3,4) Improve: how to deal with password protected files?
@@ -55,21 +50,22 @@ class ZipFile(CompressedFileFormat):
     def is_valid_extension(ext):
         return ext.lower() in ['.zip', '.cbz']
     
-    def list_files(self):
+    def list_files(self) -> List[Tuple[Path, datetime]]:
         return [(path, datetime(*info.date_time))
                 for path,info in self.mapping.items()
                 if not info.is_dir()]
         
-    def open_file(self, path):
+    def open_file(self, path) -> IO[bytes]:
+        encpath: str|ZipInfo
         if path in self.mapping:
             encpath = self.mapping[path]
         else:
             encpath = str(path)
         return io.BytesIO(self.file.read(encpath))
 
-    def close(self):
+    def close(self) -> None:
         self.file.close()
-        self.file = None
+        self.file = None    # type: ignore[assignment]
 
 
 class RarFile(CompressedFileFormat):
@@ -90,7 +86,7 @@ class RarFile(CompressedFileFormat):
         finally:
             archive.close()
     
-    def open_file(self, path):
+    def open_file(self, path) -> IO[bytes]:
         archive = Archive(str(self.path))
         path = str(path)
         try:
@@ -103,11 +99,10 @@ class RarFile(CompressedFileFormat):
                     finally:
                         stream.close()
                     return fstr
-        except:
-            raise
         finally:
             archive.close()
-    def close(self):
+        raise Exception("No matching entry in archive.")
+    def close(self) -> None:
         pass
 
 
@@ -127,12 +122,12 @@ class RarFileExternal(RarFile):
                 for f in self.file.infolist() 
                 if f.filename[-1] not in '\\/']
         
-    def open_file(self, path):
+    def open_file(self, path) -> IO[bytes]:
         return io.BytesIO(self.file.read(self.conv_path(path)))
 
-    def close(self):
+    def close(self) -> None:
         self.file.close()
-        self.file = None
+        self.file = None    # type: ignore[assignment]
 
     def conv_path(self, path):
         npath = str(path)
@@ -143,7 +138,6 @@ class RarFileExternal(RarFile):
 class CompressedContainer(BaseContainer):
     def __init__(self, path, sort_order, show_hidden) -> None:
         self._path = path.resolve()
-        #RarCls = RarFile if sys.platform == 'win32' else RarFileExternal
         RarCls = RarFileExternal
         classes: List[Type[CompressedFileFormat]] = []
         if ZipFile.is_valid_extension(self._path.suffix):
@@ -187,7 +181,7 @@ class CompressedContainer(BaseContainer):
         parent.selected_item = self._path
         return parent
     
-    def open_container(self, item_index) -> BaseContainer:
+    def open_container(self, item_index: int) -> BaseContainer:
         item = self.items[item_index]
         if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
@@ -195,7 +189,7 @@ class CompressedContainer(BaseContainer):
         else:
             return BaseContainer.open_container(self, item_index)
     
-    def open_image(self, item_index):
+    def open_image(self, item_index: int) -> IO[bytes]:
         path = self.items[item_index].path
         img = self.file.open_file(path)
         return img 
@@ -209,11 +203,11 @@ class CompressedContainer(BaseContainer):
         return ZipFile.is_valid_extension(ext) or RarFile.is_valid_extension(ext)
     
     @property
-    def path(self):
+    def path(self) -> Path:
         return self._path
     
     @property
-    def universal_path(self):
+    def universal_path(self) -> Path|None:
         return self.path
     
     def can_delete(self) -> bool:
@@ -275,7 +269,7 @@ class VirtualCompressedContainer(CompressedContainer):
                                        self.parent_names + [self._name]))
         CompressedContainer.__init__(self, path, sort_order, show_hidden)
         
-    def open_container(self, item_index) -> BaseContainer:
+    def open_container(self, item_index: int) -> BaseContainer:
         item = self.items[item_index]
         if item.typ == ItemType.COMPRESSED:
             temp_file = self._save_container(item)
@@ -307,7 +301,7 @@ class VirtualCompressedContainer(CompressedContainer):
         return parent
         
     @property
-    def path(self):
+    def path(self) -> Path:
         return self.container_path
     
     @property
@@ -318,7 +312,7 @@ class VirtualCompressedContainer(CompressedContainer):
         return False
     
     @property
-    def universal_path(self):
+    def universal_path(self) -> Path|None:
         return self._universal_path
     
     def get_item_path(self, item_index: int) -> Path:

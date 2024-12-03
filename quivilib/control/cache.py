@@ -9,6 +9,7 @@ from quivilib.model.canvas import TempCanvas
 from quivilib.util import synchronized_method, DebugTimer
 
 from typing import List
+from quivilib.model.container.base import BaseContainer
 from quivilib.model.image.interface import ImageHandler
 
 log = logging.getLogger('cache')
@@ -22,7 +23,7 @@ class ImageCacheLoadRequest(object):
     """ Data class containing the necessary information for loading an image
     i.e. the physical path.
     """
-    def __init__(self, container, item) -> None:
+    def __init__(self, container: BaseContainer, item) -> None:
         self.container = container
         self.item = item
         self.path = item.path

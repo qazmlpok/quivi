@@ -7,6 +7,8 @@ from pubsub import pub as Publisher
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.root import RootContainer
 
+from typing import IO
+
 
 def _is_hidden(path):
     if sys.platform == 'win32':
@@ -24,8 +26,7 @@ def _is_hidden(path):
 
 
 class DirectoryContainer(BaseContainer):
-    
-    def __init__(self, directory, sort_order, show_hidden):
+    def __init__(self, directory, sort_order, show_hidden) -> None:
         self.path = directory.resolve()
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
@@ -67,7 +68,7 @@ class DirectoryContainer(BaseContainer):
         parent.selected_item = self.path
         return parent
     
-    def open_image(self, item_index):
+    def open_image(self, item_index: int) -> IO[bytes]:
         img = self.items[item_index].path.open('rb')
         return img
     
@@ -75,5 +76,5 @@ class DirectoryContainer(BaseContainer):
         return True
     
     @property
-    def universal_path(self):
+    def universal_path(self) -> Path|None:
         return self.path
