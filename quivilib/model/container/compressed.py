@@ -123,8 +123,8 @@ class CompressedContainer(BaseContainer):
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
 
-    def _list_paths(self):
-        paths = []
+    def _list_paths(self) -> List[Tuple[Path, datetime|None, None]]:
+        paths: List[Tuple[Path, datetime|None, None]] = []
         for path, last_modified in self.file.list_files():
             data = None
             if not self.show_hidden and _is_hidden(path):

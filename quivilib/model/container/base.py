@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 import operator
 
@@ -7,11 +8,11 @@ from natsort import natsort_keygen, ns
 from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container import UnsupportedPathError
 
-from typing import List, IO
+from typing import List, IO, Tuple
 
 class BaseContainer(object):
     def __init__(self, sort_order: SortOrder, show_hidden: bool) -> None:
-        self._selected_item = None
+        self._selected_item: Item|None = None
         self.items: List[Item] = []
         self._sort_order = sort_order
         self.show_hidden = show_hidden
@@ -103,7 +104,7 @@ class BaseContainer(object):
             return path.drive
         return path.name
     
-    def get_item_extension(self, item_index):
+    def get_item_extension(self, item_index: int) -> str:
         ext = self.items[item_index].ext
         if ext and ext[0] == '.':
             return ext[1:]
@@ -115,7 +116,7 @@ class BaseContainer(object):
     def get_item_last_modified(self, item_index):
         return self.items[item_index].last_modified
     
-    def set_selected_item(self, item):
+    def set_selected_item(self, item: int|Path|Item) -> None:
         old_selected_item = self._selected_item
         if isinstance(item, int):
             self._selected_item = self.items[item]
@@ -137,6 +138,8 @@ class BaseContainer(object):
 
     @property
     def selected_item_index(self):
+        if self._selected_item is None:
+            return -1
         try:
             return self.items.index(self._selected_item)
         except ValueError:
@@ -161,5 +164,5 @@ class BaseContainer(object):
     def open_image(self, item_index: int) -> IO[bytes]:
         raise NotImplementedError()
     
-    def _list_paths(self):
+    def _list_paths(self) -> List[Tuple[Path, datetime|None, None]]:
         raise NotImplementedError()
