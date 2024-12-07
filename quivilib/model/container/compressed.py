@@ -6,7 +6,7 @@ from zipfile import ZipFile as PyZipFile, ZipInfo
 from datetime import datetime
 
 from pubsub import pub as Publisher
-from quivilib.model.container import Item, ItemType
+from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.meta import PATH_SEP
@@ -30,7 +30,7 @@ class CompressedFileFormat(Protocol):
 def _copy_files(f_read, f_write):
     f_write.write(f_read.read())
 
-def _is_hidden(path):
+def _is_hidden(path) -> bool:
     if sys.platform != 'win32' and path.name.startswith('.'):
         return True
     return False
@@ -102,7 +102,7 @@ class RarFileExternal(CompressedFileFormat):
 
 
 class CompressedContainer(BaseContainer):
-    def __init__(self, path, sort_order, show_hidden) -> None:
+    def __init__(self, path: Path, sort_order: SortOrder, show_hidden: bool) -> None:
         self._path = path.resolve()
         classes: List[Type[CompressedFileFormat]] = []
         if ZipFile.is_valid_extension(self._path.suffix):
@@ -123,14 +123,13 @@ class CompressedContainer(BaseContainer):
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
 
-    def _list_paths(self) -> List[Tuple[Path, datetime|None, None]]:
-        paths: List[Tuple[Path, datetime|None, None]] = []
+    def _list_paths(self) -> List[Tuple[Path, datetime|None]]:
+        paths: List[Tuple[Path, datetime|None]] = []
         for path, last_modified in self.file.list_files():
-            data = None
             if not self.show_hidden and _is_hidden(path):
                 continue
-            paths.append((path, last_modified, data))
-        paths.insert(0, (Path('..'), None, None))
+            paths.append((path, last_modified))
+        paths.insert(0, (Path('..'), None))
         return paths
         
     def close_container(self) -> None:
@@ -204,7 +203,7 @@ class CompressedContainer(BaseContainer):
 
 
 class VirtualCompressedContainer(CompressedContainer):
-    def __init__(self, path, name, parent_names, parent_paths, original_container_path, sort_order, show_hidden):
+    def __init__(self, path: Path, name, parent_names, parent_paths, original_container_path, sort_order: SortOrder, show_hidden: bool):
         """Create a VirtualCompressedContainer (a compressed file inside another
         compressed file).
         

@@ -72,9 +72,9 @@ class BaseContainer(object):
         old_selected_item = self._selected_item
         self._selected_item = None
         selected_item = None
-        for path, last_modified, data in paths:
+        for path, last_modified in paths:
             try:
-                item = Item(path, last_modified, not self.virtual_files, data)
+                item = Item(path, last_modified, not self.virtual_files, None)
                 self.items.append(item)
             except UnsupportedPathError:
                 continue
@@ -164,5 +164,5 @@ class BaseContainer(object):
     def open_image(self, item_index: int) -> IO[bytes]:
         raise NotImplementedError()
     
-    def _list_paths(self) -> List[Tuple[Path, datetime|None, None]]:
+    def _list_paths(self) -> List[Tuple[Path, datetime|None]]:
         raise NotImplementedError()

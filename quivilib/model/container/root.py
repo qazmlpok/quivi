@@ -16,12 +16,12 @@ except ImportError:
     pass
 
 class RootContainer(BaseContainer):
-    def __init__(self, sort_order, show_hidden) -> None:
+    def __init__(self, sort_order, show_hidden: bool) -> None:
         Publisher.sendMessage('container.opened', container=self)
         BaseContainer.__init__(self, sort_order, show_hidden)
 
-    def _list_paths(self) -> List[Tuple[Path, datetime|None, None]]:
-        return [(Path(str(path)), None, None) for path
+    def _list_paths(self) -> List[Tuple[Path, datetime|None]]:
+        return [(Path(str(path)), None) for path
                 in GetLogicalDriveStrings().split('\x00')[:-1]]
 
     @property
