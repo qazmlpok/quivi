@@ -8,7 +8,6 @@ from quivilib import meta
 from quivilib.model.canvas import TempCanvas
 from quivilib.util import synchronized_method, DebugTimer
 
-from typing import List
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.image.interface import ImageHandler
 
@@ -65,9 +64,9 @@ class ImageCache(object):
         Publisher.subscribe(self.on_clear_pending, 'cache.clear_pending')
         Publisher.subscribe(self.on_flush, 'cache.flush')
         Publisher.subscribe(self.on_program_closed, 'program.closed')
-        self.queue : List[ImageCacheLoadRequest|None] = []
+        self.queue : list[ImageCacheLoadRequest|None] = []
         self.q_lock = Lock()
-        self.cache : List[ImageCacheLoaded] = []
+        self.cache : list[ImageCacheLoaded] = []
         self.c_lock = Lock()
         self.semaphore = Semaphore(0)
         self.thread = Thread(target=self.run, daemon=True)

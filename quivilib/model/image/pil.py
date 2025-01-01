@@ -4,7 +4,7 @@ from PIL import Image
 from quivilib.util import rescale_by_size_factor
 from quivilib.model.image.interface import ImageHandler
 
-from typing import Any, TypeVar, IO, Tuple
+from typing import Any, TypeVar, IO
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
@@ -115,7 +115,7 @@ class PilImage(ImageHandler):
         self.original_height = self.height = img.size[1]
         
         self.img = PilWrapper(img)
-        self.zoomed_bmp: Tuple[int, int, int]|None = None
+        self.zoomed_bmp: tuple[int, int, int]|None = None
         self.rotation = 0
         
     def delayed_load(self) -> None:

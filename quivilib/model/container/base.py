@@ -8,12 +8,12 @@ from natsort import natsort_keygen, ns
 from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container import UnsupportedPathError
 
-from typing import List, IO, Tuple
+from typing import IO
 
 class BaseContainer(object):
     def __init__(self, sort_order: SortOrder, show_hidden: bool) -> None:
         self._selected_item: Item|None = None
-        self.items: List[Item] = []
+        self.items: list[Item] = []
         self._sort_order = sort_order
         self.show_hidden = show_hidden
         self.refresh(show_hidden)
@@ -164,5 +164,5 @@ class BaseContainer(object):
     def open_image(self, item_index: int) -> IO[bytes]:
         raise NotImplementedError()
     
-    def _list_paths(self) -> List[Tuple[Path, datetime|None]]:
+    def _list_paths(self) -> list[tuple[Path, datetime|None]]:
         raise NotImplementedError()

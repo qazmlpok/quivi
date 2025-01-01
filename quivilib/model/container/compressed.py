@@ -12,7 +12,7 @@ from quivilib.model.container.directory import DirectoryContainer
 from quivilib.meta import PATH_SEP
 from quivilib import tempdir
 
-from typing import Any, Tuple, List, Protocol, Type, IO
+from typing import Any, Protocol, IO
 
 class CompressedFileFormat(Protocol):
     def __init__(self, container, path: Path) -> None:
@@ -20,7 +20,7 @@ class CompressedFileFormat(Protocol):
     @staticmethod
     def is_valid_extension(ext) -> bool:
         pass
-    def list_files(self) -> List[Tuple[Path, datetime]]:
+    def list_files(self) -> list[tuple[Path, datetime]]:
         pass
     def open_file(self, path) -> IO[bytes]:
         pass
@@ -50,7 +50,7 @@ class ZipFile(CompressedFileFormat):
     def is_valid_extension(ext):
         return ext.lower() in ['.zip', '.cbz']
     
-    def list_files(self) -> List[Tuple[Path, datetime]]:
+    def list_files(self) -> list[tuple[Path, datetime]]:
         return [(path, datetime(*info.date_time))
                 for path,info in self.mapping.items()
                 if not info.is_dir()]
@@ -104,7 +104,7 @@ class RarFileExternal(CompressedFileFormat):
 class CompressedContainer(BaseContainer):
     def __init__(self, path: Path, sort_order: SortOrder, show_hidden: bool) -> None:
         self._path = path.resolve()
-        classes: List[Type[CompressedFileFormat]] = []
+        classes: list[type[CompressedFileFormat]] = []
         if ZipFile.is_valid_extension(self._path.suffix):
             classes = [ZipFile, RarFileExternal]
         elif RarFileExternal.is_valid_extension(self._path.suffix):
@@ -123,8 +123,8 @@ class CompressedContainer(BaseContainer):
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
 
-    def _list_paths(self) -> List[Tuple[Path, datetime|None]]:
-        paths: List[Tuple[Path, datetime|None]] = []
+    def _list_paths(self) -> list[tuple[Path, datetime|None]]:
+        paths: list[tuple[Path, datetime|None]] = []
         for path, last_modified in self.file.list_files():
             if not self.show_hidden and _is_hidden(path):
                 continue

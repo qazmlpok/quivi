@@ -6,7 +6,7 @@ from quivilib.i18n import _
 from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
 
-from typing import IO, List, Tuple
+from typing import IO
 
 
 try:
@@ -20,7 +20,7 @@ class RootContainer(BaseContainer):
         Publisher.sendMessage('container.opened', container=self)
         BaseContainer.__init__(self, sort_order, show_hidden)
 
-    def _list_paths(self) -> List[Tuple[Path, datetime|None]]:
+    def _list_paths(self) -> list[tuple[Path, datetime|None]]:
         return [(Path(str(path)), None) for path
                 in GetLogicalDriveStrings().split('\x00')[:-1]]
 

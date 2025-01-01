@@ -4,11 +4,10 @@ import sys
 
 from quivilib import meta
 
-from typing import List, Type
 from quivilib.model.image.interface import ImageHandler, SecondaryImageHandler
 
-IMG_CLASSES: List[Type[SecondaryImageHandler]] = []
-IMG_LOAD_CLASSES: List[Type[ImageHandler]] = []
+IMG_CLASSES: list[type[SecondaryImageHandler]] = []
+IMG_LOAD_CLASSES: list[type[ImageHandler]] = []
 
 #if 'win' in sys.platform and meta.USE_GDI_PLUS:
 #    from quivilib.model.image.gdiplus import GdiPlusImage

@@ -7,7 +7,7 @@ from pubsub import pub as Publisher
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.root import RootContainer
 
-from typing import IO, List, Tuple
+from typing import IO
 
 
 def _is_hidden(path) -> bool:
@@ -31,7 +31,7 @@ class DirectoryContainer(BaseContainer):
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
                 
-    def _list_paths(self) -> List[Tuple[Path, datetime|None]]:
+    def _list_paths(self) -> list[tuple[Path, datetime|None]]:
         paths = []
         for path in self.path.iterdir():
             last_modified: datetime|None = None

@@ -1,4 +1,4 @@
-from typing import Protocol, TypeVar, List, Any, IO
+from typing import Protocol, Any, IO
 
 class ImageHandler(Protocol):
     def __init__(self, f:IO[bytes]|None=None, path:str|None=None, delay=False) -> None:
@@ -28,7 +28,7 @@ class ImageHandler(Protocol):
     img: Any
     
     @staticmethod
-    def extensions() -> List[str]:
+    def extensions() -> list[str]:
         pass
 
 class SecondaryImageHandler(ImageHandler):
