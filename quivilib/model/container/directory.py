@@ -7,8 +7,10 @@ from pubsub import pub as Publisher
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.root import RootContainer
 
+from typing import IO
 
-def _is_hidden(path):
+
+def _is_hidden(path) -> bool:
     if sys.platform == 'win32':
         import win32api
         import win32con
@@ -24,16 +26,15 @@ def _is_hidden(path):
 
 
 class DirectoryContainer(BaseContainer):
-    
-    def __init__(self, directory, sort_order, show_hidden):
+    def __init__(self, directory: Path, sort_order, show_hidden: bool) -> None:
         self.path = directory.resolve()
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
                 
-    def _list_paths(self):
+    def _list_paths(self) -> list[tuple[Path, datetime|None]]:
         paths = []
         for path in self.path.iterdir():
-            last_modified = None
+            last_modified: datetime|None = None
             if not self.show_hidden and _is_hidden(path):
                 continue
             try:
@@ -41,9 +42,8 @@ class DirectoryContainer(BaseContainer):
                 last_modified = datetime.fromtimestamp(path.lstat().st_mtime)
             except (ValueError, os.error):
                 pass
-            data = None
-            paths.append((path, last_modified, data))
-        paths.insert(0, (Path('..'), None, None))
+            paths.append((path, last_modified))
+        paths.insert(0, (Path('..'), None))
         return paths
             
     @property
@@ -56,7 +56,8 @@ class DirectoryContainer(BaseContainer):
                 return '/'
         return self.path.name
        
-    def open_parent(self):
+    def open_parent(self) -> BaseContainer:
+        parent: BaseContainer
         p = self.path.parent
         if p == self.path and p.drive != '':
             #The parent is the root, and drives exists
@@ -66,13 +67,13 @@ class DirectoryContainer(BaseContainer):
         parent.selected_item = self.path
         return parent
     
-    def open_image(self, item_index):
+    def open_image(self, item_index: int) -> IO[bytes]:
         img = self.items[item_index].path.open('rb')
         return img
     
-    def can_delete(self):
+    def can_delete(self) -> bool:
         return True
     
     @property
-    def universal_path(self):
+    def universal_path(self) -> Path|None:
         return self.path

@@ -5,15 +5,14 @@ import logging
 from wx.lib import wxcairo
 import cairo
 import wx
+from quivilib.model.image.interface import ImageHandler, SecondaryImageHandler
 from quivilib.util import rescale_by_size_factor
 
 log = logging.getLogger('cairo')
 
 
-class CairoImage(object):
-    def __init__(self, canvas_type, src=None, img=None, delay=False):
-        self.canvas_type = canvas_type
-        
+class CairoImage(SecondaryImageHandler):
+    def __init__(self, src:ImageHandler|None=None, img=None, delay=False) -> None:
         if src is None:
             raise Exception("Cairo must have a separate image loader.")
             #if img.transparent:
@@ -122,7 +121,7 @@ class CairoImage(object):
         self.timer = threading.Timer(0.2, self.delayed_resize, args=[self._width, self._height])
         self.timer.start()
 
-    def resize(self, width, height):
+    def resize(self, width: int, height: int) -> None:
         #The actual resizing will be done on-demand by a matrix transformation.
         self._width = width
         self._height = height
@@ -142,16 +141,16 @@ class CairoImage(object):
         #del resized
         return ret
         
-    def resize_by_factor(self, factor):
+    def resize_by_factor(self, factor: float) -> None:
         width = int(self._original_width * factor)
         height = int(self._original_height * factor)
         self.resize(width, height)
         
-    def rotate(self, clockwise):
+    def rotate(self, clockwise: int) -> None:
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
 
-    def paint(self, dc, x, y):
+    def paint(self, dc, x: int, y: int) -> None:
         img = self.zoomed_bmp if self.zoomed_bmp else self.img
         ctx = wxcairo.ContextFromDC(dc)
         imgpat = cairo.SurfacePattern(img)
@@ -197,18 +196,24 @@ class CairoImage(object):
         ctx.set_source(imgpat)
         ctx.paint()
 
-    def copy(self):
-        return CairoImage(self.canvas_type, img=self.img, src=self.src)
+    def copy(self) -> ImageHandler:
+        return CairoImage(img=self.img, src=self.src)
     
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
         bmp = wxcairo.BitmapFromImageSurface(self.img)
         data = wx.BitmapDataObject(bmp)
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
 
-    def create_thumbnail(self, width, height, delay=False):
+    def create_thumbnail(self, width: int, height: int, delay: bool = False):
         return self.src.create_thumbnail(width, height, delay)
 
     def close(self):
         pass
+
+    @staticmethod
+    def extensions():
+        """ Extensions do not matter for Cairo.
+        """
+        return []

@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 import operator
 
@@ -7,19 +8,20 @@ from natsort import natsort_keygen, ns
 from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container import UnsupportedPathError
 
+from typing import IO
 
 class BaseContainer(object):
-    def __init__(self, sort_order, show_hidden):
-        self._selected_item = None
-        self.items = []
+    def __init__(self, sort_order: SortOrder, show_hidden: bool) -> None:
+        self._selected_item: Item|None = None
+        self.items: list[Item] = []
         self._sort_order = sort_order
         self.show_hidden = show_hidden
         self.refresh(show_hidden)
         
-    def get_sort_order(self):
+    def get_sort_order(self) -> SortOrder:
         return self._sort_order
     
-    def set_sort_order(self, order):
+    def set_sort_order(self, order: SortOrder) -> None:
         if order == SortOrder.NAME:
             def keyfn(elem):
                 return str(elem.path)
@@ -45,7 +47,7 @@ class BaseContainer(object):
         
     sort_order = property(get_sort_order, set_sort_order)
     
-    def open_container(self, item_index):
+    def open_container(self, item_index: int) -> 'BaseContainer':
         #Import here to avoid circular import
         from quivilib.model.container.directory import DirectoryContainer
         from quivilib.model.container.compressed import CompressedContainer
@@ -60,19 +62,19 @@ class BaseContainer(object):
         else:
             assert False, 'Invalid container type specified'
 
-    def close_container(self):
+    def close_container(self) -> None:
         pass
 
-    def refresh(self, show_hidden):
+    def refresh(self, show_hidden: bool) -> None:
         self.show_hidden = show_hidden
         paths = self._list_paths()
         self.items = []
         old_selected_item = self._selected_item
         self._selected_item = None
         selected_item = None
-        for path, last_modified, data in paths:
+        for path, last_modified in paths:
             try:
-                item = Item(path, last_modified, not self.virtual_files, data)
+                item = Item(path, last_modified, not self.virtual_files, None)
                 self.items.append(item)
             except UnsupportedPathError:
                 continue
@@ -102,19 +104,19 @@ class BaseContainer(object):
             return path.drive
         return path.name
     
-    def get_item_extension(self, item_index):
+    def get_item_extension(self, item_index: int) -> str:
         ext = self.items[item_index].ext
         if ext and ext[0] == '.':
             return ext[1:]
         return ext
     
-    def get_item_path(self, item_index):
+    def get_item_path(self, item_index: int) -> Path:
         return self.items[item_index].path
     
     def get_item_last_modified(self, item_index):
         return self.items[item_index].last_modified
     
-    def set_selected_item(self, item):
+    def set_selected_item(self, item: int|Path|Item) -> None:
         old_selected_item = self._selected_item
         if isinstance(item, int):
             self._selected_item = self.items[item]
@@ -136,6 +138,8 @@ class BaseContainer(object):
 
     @property
     def selected_item_index(self):
+        if self._selected_item is None:
+            return -1
         try:
             return self.items.index(self._selected_item)
         except ValueError:
@@ -147,18 +151,18 @@ class BaseContainer(object):
     def virtual_files(self):
         return False
     
-    def can_delete(self):
+    def can_delete(self) -> bool:
         raise NotImplementedError()
     
     @property
-    def universal_path(self):
+    def universal_path(self) -> Path|None:
         raise NotImplementedError()
     
-    def open_parent(self):
+    def open_parent(self) -> 'BaseContainer':
         raise NotImplementedError()
     
-    def open_image(self, item_index):
+    def open_image(self, item_index: int) -> IO[bytes]:
         raise NotImplementedError()
     
-    def _list_paths(self):
+    def _list_paths(self) -> list[tuple[Path, datetime|None]]:
         raise NotImplementedError()

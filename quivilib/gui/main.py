@@ -15,6 +15,9 @@ from quivilib.gui.debug import DebugDialog
 from quivilib.resources import images
 from quivilib import util
 
+from quivilib.model.container.base import BaseContainer
+
+
 ZOOM_FIELD = 2
 SIZE_FIELD = 1
 FIT_FIELD = 3
@@ -371,7 +374,7 @@ class MainWindow(wx.Frame):
                 idx = self.menu_bar.FindMenu(category.name)
                 self.menu_bar.SetMenuLabel(idx, category.name)
     
-    def on_container_opened(self, *, container):
+    def on_container_opened(self, *, container: BaseContainer):
         self.SetTitle(f'{container.name} - {meta.APPNAME}')
         self.status_bar.SetStatusText(container.name)
     

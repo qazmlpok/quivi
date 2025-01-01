@@ -424,5 +424,6 @@ class OptionsDialog(wx.Dialog):
 
 if __name__ == '__main__':
     app = wx.App(False)
-    dlg = OptionsDialog(None)
+    #This is not going to work.
+    dlg = OptionsDialog(None, [], None, [], [], '', True)
     dlg.ShowModal()

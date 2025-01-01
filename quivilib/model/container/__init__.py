@@ -14,7 +14,7 @@ class UnsupportedPathError(Exception):
 
 
 class Item(object):
-    def __init__(self, path, last_modified=None, chktyp = True, data=None):
+    def __init__(self, path:Path, last_modified=None, chktyp:bool = True, data=None) -> None:
         """Create a Item.
         
         @param path: the item path
@@ -30,6 +30,7 @@ class Item(object):
         if not isinstance(path, Path):
             print(repr(path), type(path))
             assert False, "non-path given to " + __file__
+        
         if path.name == '..':
             self.typ = ItemType.PARENT
             self.ext = ''
@@ -45,7 +46,7 @@ class Item(object):
                 raise UnsupportedPathError()
         else:
             if not chktyp and path.name in '/\\':
-                self.path = Path(self.path[:-1]) 
+                self.path = self.path.parent
             #TODO: (2,2) Test: check if it's really correct to default to directory
             self.typ = ItemType.DIRECTORY
             self.ext = ''
@@ -67,11 +68,13 @@ class Item(object):
     __repr__ = __str__
 
 
-class SortOrder(object):
-    (NAME,
-     EXTENSION,
-     TYPE,
-     LAST_MODIFIED) = list(range(4))
+#TODO: Replace with a special IntStrEnum. This is saved into the config as an int.
+#It should be saved as a string. For compatibility, it should read both and then write as str.
+class SortOrder(IntEnum):
+    NAME = 0
+    EXTENSION = 1
+    TYPE = 2
+    LAST_MODIFIED = 3
 
 class ItemType(IntEnum):
     PARENT = auto()

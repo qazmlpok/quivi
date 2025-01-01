@@ -8,18 +8,19 @@ from quivilib.model.settings import Settings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 
+from quivilib.model.image.interface import ImageHandler
 
 #Number of scrolls at the top/bottom of the image needed to switch to horizontal scroll.
 #Maybe a timestamp is more appropriate?
 STICKY_LIMIT = 2
 class Canvas(object):
-    def __init__(self, name, settings):
+    def __init__(self, name, settings) -> None:
         self.name = name
         if settings:
             self._get_int_setting = partial(settings.getint, 'Options')
             self._get_bool_setting = partial(settings.getboolean, 'Options')
-        self.img = None
-        self._zoom = 1
+        self.img: ImageHandler|None = None
+        self._zoom = 1.0
         self._left = 0
         self._top = 0
         self.sticky = 0
@@ -45,15 +46,15 @@ class Canvas(object):
         """
         self.view = view
         
-    def load(self, f, path, delay=False):
+    def load(self, f, path, delay=False) -> ImageHandler:
         """ Load an image file (using either a file handle or a file path)
         and returns that img.
         For immediate display, call load_img with the return value.
         """
-        img = image.open(f, path, self.__class__, delay)
+        img = image.open(f, path, delay)
         return img
         
-    def load_img(self, img, adjust=True):
+    def load_img(self, img: ImageHandler, adjust=True) -> None:
         """ Sets an already loaded image (by `load` or equivalent)
         This is a separate function due to the cache: images can be load()ed before load_img()ed
         """
@@ -119,11 +120,13 @@ class Canvas(object):
         self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=is_spread)
 
-    def _zoom_image(self, zoom):
+    def _zoom_image(self, zoom) -> bool:
         """ Shared logic between zoom_to_center (default behavior) and zoom_to_point (new behavior)
         This is still kinda confused because zoom_to_center is used as a setter.
         Returns True if the zoom level changed. Caller needs to handle the left/top adjustment.
         """
+        assert self.img is not None
+        
         if zoom >= 0.01 and zoom <= 16 and not math.isclose(zoom, self._zoom, rel_tol=1e-05):
             original_zoom = self._zoom
             if math.isclose(zoom, 1, rel_tol=1e-03):
@@ -141,7 +144,7 @@ class Canvas(object):
                 return False
             return True
         return False
-    def zoom_to_point(self, zoom, x, y):
+    def zoom_to_point(self, zoom, x:int, y:int) -> None:
         old_w = self.width
         old_h = self.height
         if self._zoom_image(zoom):
@@ -150,7 +153,7 @@ class Canvas(object):
             self.left += int((old_w - self.width) * ((x-self.left) / old_w))
             self.top  += int((old_h - self.height) * ((y-self.top) / old_h))
             self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
-    def _set_zoom(self, zoom):
+    def _set_zoom(self, zoom:float) -> None:
         #TODO: (1,3) Refactor: maybe this should be another method;
         #    like this, there are several places in this file where
         #    self._zoom is set and a message must be sent.
@@ -163,7 +166,7 @@ class Canvas(object):
             self.top += old_h // 2 - self.height // 2
             self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
             
-    def _get_zoom(self):
+    def _get_zoom(self) -> float:
         return self._zoom
     
     zoom = property(_get_zoom, _set_zoom)

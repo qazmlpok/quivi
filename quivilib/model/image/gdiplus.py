@@ -50,10 +50,9 @@ class _GdiPlusInnerImage(object):
             del self.img
 
 class GdiPlusImage(object):
-    def __init__(self, canvas_type, f=None, path=None, img=None, delay=False):
+    def __init__(self, f=None, path=None, img=None, delay=False):
         import pythoncom
         from win32com.server import util
-        self.canvas_type = canvas_type
 
         if img is None:
             #TODO: load from f
@@ -112,10 +111,10 @@ class GdiPlusImage(object):
             return self._original_height
         return self._original_width
         
-    def delayed_load(self):
+    def delayed_load(self) -> None:
         self.delay = False
         
-    def resize(self, width, height):
+    def resize(self, width: int, height: int) -> None:
         if self._original_width == width and self._original_height == height:
             self.zoomed_bmp = None
         else:
@@ -142,18 +141,18 @@ class GdiPlusImage(object):
         gdiplus.GdipDeleteGraphics(graphics)
         return zoomed_bmp
         
-    def resize_by_factor(self, factor):
+    def resize_by_factor(self, factor: float) -> None:
         width = int(self._original_width * factor)
         height = int(self._original_height * factor)
         self.resize(width, height)
         
-    def rotate(self, clockwise):
+    def rotate(self, clockwise: int) -> None:
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
         if self.zoomed_bmp:
             self.zoomed_bmp = self._resize_img(self.width, self.height)
         
-    def paint(self, dc, x, y):
+    def paint(self, dc, x: int, y: int) -> None:
         if self.zoomed_bmp:
             dc.DrawBitmap(self.zoomed_bmp, x, y)
         elif self.img:
@@ -167,10 +166,10 @@ class GdiPlusImage(object):
             gdiplus.GdipDrawImagePointsI(graphics, self.img.img, arr, 3)
             gdiplus.GdipDeleteGraphics(graphics)
             
-    def copy(self):
-        return GdiPlusImage(self.canvas_type, img=self.img)
+    def copy(self) -> ImageHandler:
+        return GdiPlusImage(img=self.img)
     
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
         bmp = wx.Bitmap(self._width, self._height, 24)
         dc = wx.MemoryDC(bmp)
         assert dc.IsOk()
@@ -187,7 +186,7 @@ class GdiPlusImage(object):
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
             
-    def create_thumbnail(self, width, height, delay):
+    def create_thumbnail(self, width: int, height: int, delay: bool):
         factor = rescale_by_size_factor(self.original_width, self.original_height, width, height)
         if factor > 1:
             factor = 1
