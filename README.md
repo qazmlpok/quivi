@@ -51,18 +51,19 @@ For the most part, existing functionality is being kept intact. A few things wer
 # Porting progress
 Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that need to be cleaned up. It's also likely there's some real division that needs to be corrected. Some of the Unicode hacks were removed, but others may remain. Python3 should give much better Unicode support overall.
 
+Type hints have been added to some methods. This is mostly added to subclasses to ensure they adhere to the common interface. I don't intend on adding type hints everywhere, only where "most needed" (or just trivial functions)
+
 - Updated to support Python 3.11.3. Minimum required version is Python 3.6 due to the use of fstrings.
 - wx updated to 4.2.0
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
-- Image display supports Freeimage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
+- Image display supports FreeImage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
 - Removed third party path utlity; pathlib (core Python module) is used instead.
 - Only minimal testing has been done in Linux. The console logs numerous warnings about key accelerators, but for the most part the app works (tested in an Ubuntu VM)
 - Tests haven't been modified, except for the automated conversion.
 
 # Known Issues
-- 16-bit precision images do not work with freeimage. PIL support is hackish.
-- The wallpaper dialog broke due to other changes to the canvas and I haven't bothered to fix it.
+- 16-bit precision images do not work with FreeImage. PIL support is hackish.
 
 # Missing translations
 The following text strings are new and have not been added to any of the translation files.
