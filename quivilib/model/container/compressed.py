@@ -111,14 +111,20 @@ class CompressedContainer(BaseContainer):
             classes = [RarFileExternal, ZipFile]
         else:
             assert False, 'Invalid compressed file extension'
-        #TODO: Rewrite this logic to not require exactly 2 classes.
-        try:
-            self.file = classes[0](self, self._path)
-            #this will force an exception if it's not the right type of file
-        except:
-            self.file = classes[1](self, self._path)
-            #this will force an exception if it's not the right type of file
-            self.file.list_files()
+        firstExcep: Exception|None = None
+        for zipclass in classes:
+            try:
+                zipfile = zipclass(self, self._path)
+                #this will force an exception if it's not the right type of file
+                zipfile.list_files()
+                break
+            except Exception as e:
+                if firstExcep is None:
+                    firstExcep = e
+        if zipfile is None:
+            #Report the first error raised (e.g. "Not a zip file"), not the last.
+            raise firstExcep
+        self.file: CompressedFileFormat = zipfile
             
         BaseContainer.__init__(self, sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)

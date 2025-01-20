@@ -14,6 +14,7 @@ class BaseContainer(object):
     def __init__(self, sort_order: SortOrder, show_hidden: bool) -> None:
         self._selected_item: Item|None = None
         self.items: list[Item] = []
+        self._name: str
         self._sort_order = sort_order
         self.show_hidden = show_hidden
         self.refresh(show_hidden)
@@ -97,6 +98,10 @@ class BaseContainer(object):
     @property
     def item_count(self):
         return len(self.items)
+        
+    @property
+    def name(self):
+        pass
 
     def get_item_name(self, item_index):
         path = self.items[item_index]
