@@ -51,6 +51,9 @@ class Item(object):
             self.typ = ItemType.DIRECTORY
             self.ext = ''
             self.namebase = self.path.name
+        
+        #Set by the caller
+        self.full_path: Path
 
     def __getattr__(self, name):
         #Allow path functions to be called within this class

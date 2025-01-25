@@ -125,8 +125,8 @@ class CompressedContainer(BaseContainer):
             #Report the first error raised (e.g. "Not a zip file"), not the last.
             raise firstExcep
         self.file: CompressedFileFormat = zipfile
-            
-        BaseContainer.__init__(self, sort_order, show_hidden)
+
+        super().__init__(sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
 
     def _list_paths(self) -> list[tuple[Path, datetime|None]]:
@@ -141,6 +141,10 @@ class CompressedContainer(BaseContainer):
     def close_container(self) -> None:
         if self.file is not None:
             self.file.close()
+
+    @property
+    def can_move(self):
+        return True
     
     @property
     def name(self):
@@ -157,7 +161,7 @@ class CompressedContainer(BaseContainer):
             temp_file = self._save_container(item)
             return VirtualCompressedContainer(temp_file, item.name, [], [], self._path, self._sort_order, self.show_hidden)
         else:
-            return BaseContainer.open_container(self, item_index)
+            return super().open_container(item_index)
     
     def open_image(self, item_index: int) -> IO[bytes]:
         path = self.items[item_index].path
@@ -185,19 +189,17 @@ class CompressedContainer(BaseContainer):
     
     def get_item_path(self, item_index: int) -> Path:
         if item_index == 0:
-            return BaseContainer.get_item_path(self, item_index)
+            return super().get_item_path(item_index)
         return self.path / self.items[item_index].path
     
     def get_item_name(self, item_index):
         return str(self.items[item_index].path)
         
-    def _save_container(self, item):
+    def _save_container(self, item: Item) -> Path:
         """Save a container inside this container as a temp file.
         
         @param item: item of the container
-        @type item: Item
         @return: temp file path
-        @rtype: Path
         """
         ext = item.suffix
         in_file = self.file.open_file(item.path)
@@ -209,21 +211,16 @@ class CompressedContainer(BaseContainer):
 
 
 class VirtualCompressedContainer(CompressedContainer):
-    def __init__(self, path: Path, name, parent_names, parent_paths, original_container_path, sort_order: SortOrder, show_hidden: bool):
+    def __init__(self, path: Path, name: str, parent_names: list[str], parent_paths: list[Path], original_container_path: Path, sort_order: SortOrder, show_hidden: bool):
         """Create a VirtualCompressedContainer (a compressed file inside another
         compressed file).
         
         @param path: physical path of the file (will be a in a temp dir with a random name)
-        @type path: Path
         @param name: file name of the container (as originally inside the parent)
-        @type name: unicode
         @param parent_names: names of parent containers
-        @type parent_names: list(unicode)
         @param parent_paths: physical paths of parent containers
-        @type parent_paths: list(Path)
         @param original_container_path: path of the first 'real' ancestor of the container
             (the first which is not in a temp dir)
-        @type original_container_path: Path
         """
         self._name = name
         self.parent_names = parent_names
@@ -269,7 +266,12 @@ class VirtualCompressedContainer(CompressedContainer):
         #Works on single-level archives, at least.
         parent.selected_item = self.path
         return parent
-        
+
+    @property
+    def can_move(self) -> bool:
+        #Doesn't make sense for a nested container.
+        return False
+
     @property
     def path(self) -> Path:
         return self.container_path

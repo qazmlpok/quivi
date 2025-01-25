@@ -96,3 +96,4 @@ The following text strings are new and have not been added to any of the transla
 - Show &spread
 - Attempt to show combined pages at regular zoom
 - (Spread)
+- Move the opened zip file to a new location

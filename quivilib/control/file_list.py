@@ -1,4 +1,4 @@
-import sys
+import os, sys
 from pathlib import Path
 import logging
 
@@ -228,7 +228,69 @@ class FileListController(object):
                 if container.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
                     can_delete = True
         return can_delete
+
+    def move_file(self, new_dir: Path):
+        """ If the opened container is a zipfile, prompt to move it to a new location.
+        In theory this could be done for regular dirs too, but this isn't supported.
+        """
+        #Real fn should query the container to make sure it's a zip. TODO: For now it's just True
+        if not self._can_move():
+            return
+        cont = self.model.container
+        old_path = cont.path
+        filename = old_path.name
+        new_path = new_dir / filename
+        #Also abort if: new_dir doesn't exist, new_dir isn't a directory, new_dir is the current location
+        #Destination shouldn't already have a file with same name
+        #These should all be checked by the dialog, so throw if it still happens here.
         
+        if (old_path.parent == new_dir):
+            raise Exception("The destination and source directories are the same.")
+        if not os.path.isdir(new_dir):
+            raise Exception(f"The target path '{new_dir}' isn't a directory")
+        if os.path.isfile(new_path):
+            raise Exception(f"The target path '{new_path}' already exists")
+        
+        #Preserve
+        sort_order = self.model.container.sort_order
+        show_hidden = self.model.container.show_hidden
+        selection = cont.selected_item_index
+        cont.close_container()
+        self.model.container = None
+        
+        #Move. Use shutil for when moving between different physical drives.
+        #This also needs to block the UI, show spinner, etc. Again for different drives.
+        import shutil
+        shutil.move(old_path, new_path)
+        
+        #Reopen to the old position.
+        #I think _open_path could do everything, including the img re-open but I don't trust that block of code.
+        cont = CompressedContainer(new_path, sort_order, show_hidden)
+        #This will send an event but it should be harmless.
+        cont.set_selected_item(selection)
+        self._set_container(cont, True)
+        #self.model.container = cont
+        #There _should_ be no need to send messages or open anything.
+        
+        #The cache is _effectively_ invalidated. This is because a request is the container plus path.
+        #It should be fine to just make a custom message to "shift" the cache.
+        
+        #Moving is a 3 step process to deal with opened file handles
+        #1. Close the zip file, but not the container itself
+        #Rename this; it's "move" in container now. It should just close it.
+        #2. Physically move the file
+        #3. Re-open the zip-file at the new location. Try to keep the same current img.
+        #I believe this will invalidate the cache by necessity, but it's hardly the biggest deal.
+        #It should still be as seamless as possible.
+        
+        
+    def on_update_move_menu_item(self, event):
+        event.Enable(self._can_move())
+
+    def _can_move(self):
+        #TODO. Should invoke Container's can move.
+        return True
+
     def open_path(self, path, skip_open=False):
         #Check if this path is saved as a placeholder. If it is, load it instead
         autoload = self.model.settings.get('Options', 'PlaceholderAutoOpen') == '1'

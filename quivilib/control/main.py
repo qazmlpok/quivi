@@ -82,6 +82,7 @@ class MainController(object):
         self.file_list = FileListController(self.model, self.model.container)
         self.wallpaper = WallpaperController(self.model)
         self.options = OptionsController(self, self.model)
+        #self.move_dialog = MoveDialogController(self, self.model)
         
         self.debugController = None
         if __debug__:
@@ -224,7 +225,14 @@ class MainController(object):
     def delete(self):
         #TODO: Delete is broken. Try to move it out of the filelist.
         self.file_list.delete(self.view)
-        
+    def open_move_dialog(self):
+        #self.move_dialog.open_dialog(...)
+        #This should prompt the user to select a destination and then call the actual move function
+        #Skip that for now and just move it.
+        print('open_move_dialog.')
+        target = Path('E:/temp/move_temp')
+        self.file_list.move_file(target)
+        pass
     def open_about_dialog(self):
         Publisher.sendMessage('about.open_dialog')
         

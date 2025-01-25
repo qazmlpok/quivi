@@ -64,6 +64,7 @@ class ImageCache(object):
         Publisher.subscribe(self.on_clear_pending, 'cache.clear_pending')
         Publisher.subscribe(self.on_flush, 'cache.flush')
         Publisher.subscribe(self.on_program_closed, 'program.closed')
+        
         self.queue : list[ImageCacheLoadRequest|None] = []
         self.q_lock = Lock()
         self.cache : list[ImageCacheLoaded] = []
@@ -82,7 +83,7 @@ class ImageCache(object):
         with self.c_lock:
             for req in self.cache:
                 if req == request:
-                    log.debug('main: cache hit')
+                    log.debug(f'main: cache HIT   -- {request.path}')
                     self.notify_image_loaded(req)
                     hit = True
                     if not preload:
@@ -92,7 +93,7 @@ class ImageCache(object):
                         self.cache.insert(0, req)
                     break
         if not hit and request != self.processing_request:
-            log.debug('main: cache miss')
+            log.debug(f'main: cache MISS   -- {request.path}')
             self._put_request(request)
             
     def on_image_loaded(self, request: ImageCacheLoaded) -> None:
@@ -114,6 +115,7 @@ class ImageCache(object):
         """
         with self.c_lock:
             self.cache.clear()
+            log.debug('main: cleared cache')
 
     def notify_image_loaded(self, request: ImageCacheLoaded) -> None:
         """ Send message notifying of load completion.
