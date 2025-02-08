@@ -82,7 +82,6 @@ class MainController(object):
         self.file_list = FileListController(self.model, self.model.container)
         self.wallpaper = WallpaperController(self.model)
         self.options = OptionsController(self, self.model)
-        #self.move_dialog = MoveDialogController(self, self.model)
         
         self.debugController = None
         if __debug__:
@@ -230,9 +229,11 @@ class MainController(object):
         #This should prompt the user to select a destination and then call the actual move function
         #Skip that for now and just move it.
         print('open_move_dialog.')
-        target = Path('E:/temp/move_temp')
-        self.file_list.move_file(target)
-        pass
+        #This will come later, but the dialog needs information from the settings.
+        settings = []
+        Publisher.sendMessage('movefile.open_dialog', settings=settings)
+        #target = Path('E:/temp/move_temp')
+        #self.file_list.move_file(target)
     def open_about_dialog(self):
         Publisher.sendMessage('about.open_dialog')
         

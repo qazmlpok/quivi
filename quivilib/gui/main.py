@@ -32,8 +32,7 @@ class MainWindow(wx.Frame):
         wx.Frame.__init__(self, parent=None, id=-1, title=meta.APPNAME)
         self.aui_mgr = wx.aui.AuiManager()
         self.aui_mgr.SetManagedWindow(self)
-        self.aui_mgr.SetFlags(self.aui_mgr.GetFlags()
-                              & ~wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
+        self.aui_mgr.SetFlags(self.aui_mgr.GetFlags() & ~wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
 
         bundle = wx.IconBundle()
         bundle.AddIcon(images.quivi16.Icon)
@@ -99,6 +98,7 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_settings_loaded, 'settings.loaded')
         Publisher.subscribe(self.on_open_wallpaper_dialog, 'wallpaper.open_dialog')
         Publisher.subscribe(self.on_open_options_dialog, 'options.open_dialog')
+        Publisher.subscribe(self.on_open_movefile_dialog, 'movefile.open_dialog')
         Publisher.subscribe(self.on_open_debug_cache_dialog, 'debug.open_cache_dialog')
         Publisher.subscribe(self.on_open_about_dialog, 'about.open_dialog')
         Publisher.subscribe(self.on_open_directory_dialog, 'file_list.open_directory_dialog')
@@ -412,6 +412,16 @@ class MainWindow(wx.Frame):
         from quivilib.gui.options import OptionsDialog
         dialog = OptionsDialog(self, fit_choices, settings, categories, available_languages, active_language, save_locally)
         dialog.ShowModal()
+        dialog.Destroy()
+    
+    def on_open_movefile_dialog(self, *, settings):
+        from quivilib.gui.move_file import MoveFileDialog
+        dialog = MoveFileDialog(self, settings)
+        if dialog.ShowModal() == wx.ID_OK:
+            target_path = Path(dialog.GetPath())
+            #Actually do the file move.
+            #This should then send another message with the path.
+            #Either MainController or the filelist will need to listen for it.
         dialog.Destroy()
         
     def on_open_debug_cache_dialog(self, *, params):
