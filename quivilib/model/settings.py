@@ -19,7 +19,7 @@ class Settings(ConfigParser):
      FIT_BOTH) = list(range(12))
 
     def __init__(self, path):
-        ConfigParser.__init__(self)
+        ConfigParser.__init__(self, interpolation=None)
         self.path = path
         
         def _parseError():
