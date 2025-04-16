@@ -21,7 +21,8 @@ class MoveFileDialog(wx.Dialog):
         self.CurrentPathTxt = wx.TextCtrl(self, wx.ID_ANY, "")
         self.BrowseBtn = wx.Button(self, wx.ID_ANY, _("Browse"))
         self.SavePathBtn = wx.Button(self, wx.ID_ANY, "+")      #This would look better with an icon
-        self.RightSideSizer = wx.BoxSizer(wx.VERTICAL)
+        self.RightSideSizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, _("Saved paths")), wx.VERTICAL)
+        self.SavedPathNameTxt = wx.TextCtrl(self, wx.ID_ANY, "")
         self.ok_button = wx.Button(self, wx.ID_OK, "")
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, "")
 
@@ -50,11 +51,12 @@ class MoveFileDialog(wx.Dialog):
 
     def __set_properties(self):
         # begin wxGlade: MoveFileDialog.__set_properties
-        self.SetTitle("Move zip file to another folder")
+        self.SetTitle(_("Move zip file to another folder"))
         self.ok_button.SetDefault()
         self.SetAffirmativeId(self.ok_button.GetId())
         self.SetEscapeId(self.cancel_button.GetId())
         self.CurrentPathTxt.SetValue('')
+        self.SavedPathNameTxt.SetValue('')
         # end wxGlade
 
     def __do_layout(self):
@@ -75,12 +77,20 @@ class MoveFileDialog(wx.Dialog):
         sizer_3.Add(self.CurrentPathTxt, 0, wx.ALL, 2)
 
         sizer_3.Add(self.BrowseBtn, 0, wx.ALL, 2)
+        
+        SavePathSizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, _("Save path")), wx.HORIZONTAL)
+        LeftSideSizer.Add(SavePathSizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 16)
+        
+        label_5 = wx.StaticText(self, wx.ID_ANY, _("Name:"))
+        SavePathSizer.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
-        self.SavePathBtn.SetMinSize((32, 32))
+        SavePathSizer.Add(self.SavedPathNameTxt, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        
+        self.SavePathBtn.SetMinSize((24, 24))
         self.SavePathBtn.SetToolTip(_("Save"))
-        LeftSideSizer.Add(self.SavePathBtn, 0, wx.ALIGN_RIGHT | wx.RIGHT, 7)
+        SavePathSizer.Add(self.SavePathBtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
 
-        SplitSizer.Add(self.RightSideSizer, 1, wx.EXPAND, 0)
+        SplitSizer.Add(self.RightSideSizer, 1, wx.EXPAND | wx.RIGHT, 4)
         #Contents of RightSideSizer added dynamically later.
 
         btnsizer = wx.StdDialogButtonSizer()
