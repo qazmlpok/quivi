@@ -4,16 +4,20 @@ from pathlib import Path
 
 from quivilib.i18n import _
 from quivilib import util
+from quivilib.model.savedpath import SavedPaths
 
 #The height will potentially need to expand to cover more saved items. The dialog is not static.
 WINDOW_SIZE = (450, 175)
 
 class MoveFileDialog(wx.Dialog):
-    def __init__(self, parent, saved_folders, start_path=''):
+    def __init__(self, parent, settings, start_path=''):
         #The path to the currently opened container. This is used as the starting dir when doing browse,
         #but not for anything else
         self.current_path = start_path
-        self.saved_folders = saved_folders
+        #Need to store this for saving the settings after.
+        self.paths_modified = False
+        self._settings = settings
+        self.saved_folders = SavedPaths(settings)
         # begin wxGlade: MoveFileDialog.__init__
         wx.Dialog.__init__(self, parent=parent)
         
@@ -104,17 +108,16 @@ class MoveFileDialog(wx.Dialog):
         """ Uses a loop to add the saved folders to the right side sizer.
         There is no limit to the number of folders that could be saved; some kind of special handling
         is probably needed for large lists. Nothing is implemented until needed.
-        Input is a list of tuples: (name, path).
         """
         self.RightSideSizer.Clear()
         
-        if (len(saved_folders) == 0):
+        if (saved_folders.count() == 0):
             #Add text saying "No saved folders"?
             return
         
         for (name, path) in saved_folders:
             def _event_handler(event, _path=path):
-                self.CurrentPathTxt.SetValue(_path)
+                self.CurrentPathTxt.SetValue(str(_path))
                 event.Skip()
             #These are buttons for easy use of events; I think statictext can't have events
             #Might be able to use a listctrl, maybe?
@@ -146,7 +149,9 @@ class MoveFileDialog(wx.Dialog):
         Alternatively, this shouldn't be "add", but "Manage saved paths".
         """
         #settings aren't hooked up; for now just save to the local copy.
-        existing_paths = {x[1]: 1 for x in self.saved_folders}
+        existing_paths = self.saved_folders.get_bare_paths()
+        #TODO: instead of this function, the collection should be checking this...
+        #Since it tracks stuff as actual Path objects, not strings.
         
         newpath = self.CurrentPathTxt.GetValue()
         newname = self.SavedPathNameTxt.GetValue()
@@ -158,11 +163,17 @@ class MoveFileDialog(wx.Dialog):
         if not newname:
             #Validation message
             return
+        if '|' in newpath or '|' in newname:
+            #| will be used for handling the settings. This is an implementation detail, but isn't worth
+            #trying to move this logic into savedpaths.
+            #Validation message
+            return
         
         #TODO Validate: Forbid creating duplicate paths.
         #Save to actual settings
         #Update local copy. Or possibly refresh from settings
-        self.saved_folders.append((newname, newpath))
+        self.saved_folders.add_new(newname, newpath)
+        self.paths_modified = True
         #Need to re-apply layout. Fit is also necessary; not sure why.
         self.__layout_saved_folders(self.saved_folders)
         self.RightSideSizer.Layout()
@@ -171,6 +182,7 @@ class MoveFileDialog(wx.Dialog):
         self.SavedPathNameTxt.SetValue('')
 
     def on_ok(self, event):  # wxGlade: MoveFileDialog.<event_handler>
+        self._save_settings()
         print("Event handler 'on_ok' not implemented!")
         #This should handle validation of the path (ensure it's a real folder, etc)
         #and show an error if it's invalid. Returning false will prevent the dialog from closing.
@@ -178,9 +190,17 @@ class MoveFileDialog(wx.Dialog):
         event.Skip()
 
     def on_cancel(self, event):  # wxGlade: MoveFileDialog.<event_handler>
+        self._save_settings()
         event.Skip()
         # end wxGlade
 
+    def _save_settings(self):
+        if not self.paths_modified:
+            return
+        try:
+            self.saved_folders.save(self._settings)
+        except:
+            log.error("Failed to save paths")
 
     
     def GetPath(self):
@@ -193,6 +213,7 @@ if __name__ == '__main__':
     app = wx.App(False)
     #Need something that can work as fake saved_folders.
     #Or maybe it should be the saved paths extracted from the settings.
+    #-This is no longer just a list of tuples.
     saved_folders = [('One', 'E:/temp'),('Two', 'E:/temp/temp'),('Three', 'E:/temp/temp/temp'),('Four_but also this is much longer', 'E:/temp/temp/temp/temp'),]
     dlg = MoveFileDialog(None, saved_folders)
     if dialog.ShowModal() == wx.ID_OK:

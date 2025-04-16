@@ -229,12 +229,9 @@ class MainController(object):
         #This should prompt the user to select a destination and then call the actual move function
         #Skip that for now and just move it.
         print('open_move_dialog.')
-        #This will come later, but the dialog needs information from the settings.
-        #saved_folders = [('One', 'E:/temp'),('Two', 'E:/temp/temp'),('Three', 'E:/temp/temp/temp'),('Four but also this is much longer', 'E:/temp/temp/temp/temp'),]
-        saved_folders = [('One', 'E:/temp'),('Two', 'E:/temp/temp')]
         #Nested virtual containers can't be moved, so a single parent is always fine.
         start_path = str(self.model.container.path.parent)
-        Publisher.sendMessage('movefile.open_dialog', saved_folders=saved_folders, start_path=start_path)
+        Publisher.sendMessage('movefile.open_dialog', settings=self.settings, start_path=start_path)
         #target = Path('E:/temp/move_temp')
         #self.file_list.move_file(target)
     def open_about_dialog(self):
