@@ -13,6 +13,7 @@ class MoveFileDialog(wx.Dialog):
         #The path to the currently opened container. This is used as the starting dir when doing browse,
         #but not for anything else
         self.current_path = start_path
+        self.saved_folders = saved_folders
         # begin wxGlade: MoveFileDialog.__init__
         wx.Dialog.__init__(self, parent=parent)
         
@@ -28,7 +29,7 @@ class MoveFileDialog(wx.Dialog):
 
         self.__set_properties()
         self.__do_layout()
-        self.__layout_saved_folders(saved_folders)
+        self.__layout_saved_folders(self.saved_folders)
         #Need to call Layout here because I split __do_layout()
         self.SetSizer(self.MainSizer)
         self.Layout()
@@ -105,9 +106,7 @@ class MoveFileDialog(wx.Dialog):
         is probably needed for large lists. Nothing is implemented until needed.
         Input is a list of tuples: (name, path).
         """
-        #Clear
-        for existing in self.RightSideSizer.GetChildren():
-            self.RightSideSizer.Remove(existing)
+        self.RightSideSizer.Clear()
         
         if (len(saved_folders) == 0):
             #Add text saying "No saved folders"?
@@ -141,13 +140,35 @@ class MoveFileDialog(wx.Dialog):
         #event.Skip()
 
     def on_save_path(self, event):  # wxGlade: MoveFileDialog.<event_handler>
-        """ Save (the currently entered?) path to the settings.
+        """ Save the currently entered path to the settings.
         This will be a combination of the path and a "friendly name", so it likely needs another dialog.
         Or, at minimum, another text field.
         Alternatively, this shouldn't be "add", but "Manage saved paths".
         """
-        print("Event handler 'on_save_path' not implemented!")
-        event.Skip()
+        #settings aren't hooked up; for now just save to the local copy.
+        existing_paths = {x[1]: 1 for x in self.saved_folders}
+        
+        newpath = self.CurrentPathTxt.GetValue()
+        newname = self.SavedPathNameTxt.GetValue()
+        
+        if not newpath:
+            #Validation message
+            return
+        #Enforce path-exists? Probably not necessary.
+        if not newname:
+            #Validation message
+            return
+        
+        #TODO Validate: Forbid creating duplicate paths.
+        #Save to actual settings
+        #Update local copy. Or possibly refresh from settings
+        self.saved_folders.append((newname, newpath))
+        #Need to re-apply layout. Fit is also necessary; not sure why.
+        self.__layout_saved_folders(self.saved_folders)
+        self.RightSideSizer.Layout()
+        self.Fit()
+        #Clear name, but not path
+        self.SavedPathNameTxt.SetValue('')
 
     def on_ok(self, event):  # wxGlade: MoveFileDialog.<event_handler>
         print("Event handler 'on_ok' not implemented!")
