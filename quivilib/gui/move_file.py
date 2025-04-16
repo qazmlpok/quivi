@@ -98,17 +98,20 @@ class MoveFileDialog(wx.Dialog):
         #Clear
         for existing in self.RightSideSizer.GetChildren():
             self.RightSideSizer.Remove(existing)
-            pass
         
         if (len(saved_folders) == 0):
             #Add text saying "No saved folders"?
             return
         
         for (name, path) in saved_folders:
-            label = wx.StaticText(self, wx.ID_ANY, name)
-            self.RightSideSizer.Add(label, 0, wx.ALL, 2)
-            #Need an onclick
-            #Need hover, so it's slightly more clear this is interactable.
+            def _event_handler(event, _path=path):
+                self.CurrentPathTxt.SetValue(_path)
+                event.Skip()
+            #These are buttons for easy use of events; I think statictext can't have events
+            #Might be able to use a listctrl, maybe?
+            btn = wx.Button(self, wx.ID_ANY, name)
+            self.RightSideSizer.Add(btn, 0, 0)
+            self.Bind(wx.EVT_BUTTON, _event_handler, btn)
     
     def on_open_browse_folder(self, event):  # wxGlade: MoveFileDialog.<event_handler>
         """ Open a standard directory browse dialog. This will be the location the file is moved to
@@ -117,8 +120,7 @@ class MoveFileDialog(wx.Dialog):
         """
         dialog = wx.DirDialog(self, _('Choose a directory:'),
                               style=wx.DD_DEFAULT_STYLE|wx.DD_DIR_MUST_EXIST)
-        #Reminder; CurrentPathTxt is freely editable. The dialog behavior gets kinda weird
-        #if it is populated but doesn't exist.
+        #Reminder; CurrentPathTxt is freely editable. SetPath appears to do nothing if it doesn't exist.
         val = self.CurrentPathTxt.GetValue()
         if val is not None and val.strip() != '':
             dialog.SetPath(val)
@@ -160,7 +162,7 @@ if __name__ == '__main__':
     app = wx.App(False)
     #Need something that can work as fake saved_folders.
     #Or maybe it should be the saved paths extracted from the settings.
-    saved_folders = [('One', 'E:/temp'),('Two', 'E:/temp/temp'),('Three', 'E:/temp/temp/temp'),('Four', 'E:/temp/temp/temp/temp'),]
+    saved_folders = [('One', 'E:/temp'),('Two', 'E:/temp/temp'),('Three', 'E:/temp/temp/temp'),('Four_but also this is much longer', 'E:/temp/temp/temp/temp'),]
     dlg = MoveFileDialog(None, saved_folders)
     if dialog.ShowModal() == wx.ID_OK:
         path = Path(dialog.GetPath())
