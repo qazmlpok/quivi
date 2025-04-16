@@ -5,31 +5,34 @@ from pathlib import Path
 from quivilib.i18n import _
 from quivilib import util
 
-#TODO: (1,3) Refactor: the whole preview_panel and the main window's panel can be
-#      refactored into a single class
-
 #The height will potentially need to expand to cover more saved items. The dialog is not static.
 WINDOW_SIZE = (450, 175)
 
 class MoveFileDialog(wx.Dialog):
-    def __init__(self, parent, settings):
+    def __init__(self, parent, saved_folders, start_path=''):
+        #The path to the currently opened container. This is used as the starting dir when doing browse,
+        #but not for anything else
+        self.current_path = start_path
         # begin wxGlade: MoveFileDialog.__init__
         wx.Dialog.__init__(self, parent=parent)
         
         
+        self.MainSizer = wx.BoxSizer(wx.VERTICAL)
         self.CurrentPathTxt = wx.TextCtrl(self, wx.ID_ANY, "")
         self.BrowseBtn = wx.Button(self, wx.ID_ANY, _("Browse"))
-        self.SavePathBtn = wx.Button(self, wx.ID_ANY, _("+"))   #This would look better with an icon
+        self.SavePathBtn = wx.Button(self, wx.ID_ANY, "+")      #This would look better with an icon
         self.RightSideSizer = wx.BoxSizer(wx.VERTICAL)
         self.ok_button = wx.Button(self, wx.ID_OK, "")
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, "")
 
         self.__set_properties()
         self.__do_layout()
+        self.__layout_saved_folders(saved_folders)
+        #Need to call Layout here because I split __do_layout()
+        self.SetSizer(self.MainSizer)
+        self.Layout()
         
         #Clear validation messages (item doesn't exist)
-        
-        #Dynamically populate the right side to include items from the settings.
         
         #Do this after do_layout for GetBestSize() to work.
         bestsize = self.GetBestSize()
@@ -40,7 +43,6 @@ class MoveFileDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.on_save_path, self.SavePathBtn)
         self.Bind(wx.EVT_BUTTON, self.on_ok, self.ok_button)
         self.Bind(wx.EVT_BUTTON, self.on_cancel, self.cancel_button)
-        #Publisher.subscribe(self.on_canvas_zoom_changed, 'wpcanvas.zoom.changed')
         
         #Probably not needed.
         Publisher.sendMessage('move_file.dialog_opened', dialog=self)
@@ -57,10 +59,8 @@ class MoveFileDialog(wx.Dialog):
 
     def __do_layout(self):
         # begin wxGlade: MoveFileDialog.__do_layout
-        MainSizer = wx.BoxSizer(wx.VERTICAL)
-
         SplitSizer = wx.BoxSizer(wx.HORIZONTAL)
-        MainSizer.Add(SplitSizer, 1, wx.EXPAND, 0)
+        self.MainSizer.Add(SplitSizer, 1, wx.EXPAND, 0)
 
         LeftSideSizer = wx.BoxSizer(wx.VERTICAL)
         SplitSizer.Add(LeftSideSizer, 1, wx.EXPAND, 0)
@@ -81,32 +81,52 @@ class MoveFileDialog(wx.Dialog):
         LeftSideSizer.Add(self.SavePathBtn, 0, wx.ALIGN_RIGHT | wx.RIGHT, 7)
 
         SplitSizer.Add(self.RightSideSizer, 1, wx.EXPAND, 0)
-
-        label_2 = wx.StaticText(self, wx.ID_ANY, _("One"))
-        self.RightSideSizer.Add(label_2, 0, wx.ALL, 2)
-
-        label_3 = wx.StaticText(self, wx.ID_ANY, _("Two"))
-        self.RightSideSizer.Add(label_3, 0, wx.ALL, 2)
-
-        label_4 = wx.StaticText(self, wx.ID_ANY, _("Three"))
-        self.RightSideSizer.Add(label_4, 0, wx.ALL, 2)
+        #Contents of RightSideSizer added dynamically later.
 
         btnsizer = wx.StdDialogButtonSizer()
-        MainSizer.Add(btnsizer, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
+        self.MainSizer.Add(btnsizer, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
 
         btnsizer.AddButton(self.ok_button)
-
         btnsizer.AddButton(self.cancel_button)
-
         btnsizer.Realize()
-
-        self.SetSizer(MainSizer)
-        self.Layout()
-        self.Centre()
+    def __layout_saved_folders(self, saved_folders):
+        """ Uses a loop to add the saved folders to the right side sizer.
+        There is no limit to the number of folders that could be saved; some kind of special handling
+        is probably needed for large lists. Nothing is implemented until needed.
+        Input is a list of tuples: (name, path).
+        """
+        #Clear
+        for existing in self.RightSideSizer.GetChildren():
+            self.RightSideSizer.Remove(existing)
+            pass
         
+        if (len(saved_folders) == 0):
+            #Add text saying "No saved folders"?
+            return
+        
+        for (name, path) in saved_folders:
+            label = wx.StaticText(self, wx.ID_ANY, name)
+            self.RightSideSizer.Add(label, 0, wx.ALL, 2)
+            #Need an onclick
+            #Need hover, so it's slightly more clear this is interactable.
+    
     def on_open_browse_folder(self, event):  # wxGlade: MoveFileDialog.<event_handler>
-        print("Event handler 'on_open_browse_folder' not implemented!")
-        event.Skip()
+        """ Open a standard directory browse dialog. This will be the location the file is moved to
+        (this control only sets the text field; the actual move occurs later)
+        If a path is currently filled in, the dialog will open there; otherwise it's the current location
+        """
+        dialog = wx.DirDialog(self, _('Choose a directory:'),
+                              style=wx.DD_DEFAULT_STYLE|wx.DD_DIR_MUST_EXIST)
+        #Reminder; CurrentPathTxt is freely editable. The dialog behavior gets kinda weird
+        #if it is populated but doesn't exist.
+        val = self.CurrentPathTxt.GetValue()
+        if val is not None and val.strip() != '':
+            dialog.SetPath(val)
+        elif self.current_path != '':
+            dialog.SetPath(self.current_path)
+        if dialog.ShowModal() == wx.ID_OK:
+            self.CurrentPathTxt.SetValue(dialog.GetPath())
+        #event.Skip()
 
     def on_save_path(self, event):  # wxGlade: MoveFileDialog.<event_handler>
         """ Save (the currently entered?) path to the settings.
@@ -138,9 +158,10 @@ class MoveFileDialog(wx.Dialog):
 
 if __name__ == '__main__':
     app = wx.App(False)
-    #Need something that can work as fake settings.
+    #Need something that can work as fake saved_folders.
     #Or maybe it should be the saved paths extracted from the settings.
-    dlg = MoveFileDialog(None, [])
+    saved_folders = [('One', 'E:/temp'),('Two', 'E:/temp/temp'),('Three', 'E:/temp/temp/temp'),('Four', 'E:/temp/temp/temp/temp'),]
+    dlg = MoveFileDialog(None, saved_folders)
     if dialog.ShowModal() == wx.ID_OK:
         path = Path(dialog.GetPath())
         print(f"Selected: {path}")

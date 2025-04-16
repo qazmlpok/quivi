@@ -123,7 +123,7 @@ class MenuController(object):
               control.delete,
               [(wx.ACCEL_CTRL, wx.WXK_DELETE)],
               checkable=False, update_function=control.file_list.on_update_delete_menu_item),
-         make(11006, _('&Move'), _('Move the opened zip file to a new location'),
+         make(11006, _('&Move...'), _('Move the opened zip file to a new location'),
               control.open_move_dialog,
               [(wx.ACCEL_CTRL, ord('N'))],
               #checkable=False, update_function=control.file_list.on_update_move_menu_item),

@@ -414,9 +414,9 @@ class MainWindow(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
     
-    def on_open_movefile_dialog(self, *, settings):
+    def on_open_movefile_dialog(self, *, saved_folders, start_path=''):
         from quivilib.gui.move_file import MoveFileDialog
-        dialog = MoveFileDialog(self, settings)
+        dialog = MoveFileDialog(self, saved_folders, start_path)
         if dialog.ShowModal() == wx.ID_OK:
             target_path = Path(dialog.GetPath())
             #Actually do the file move.
