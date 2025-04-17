@@ -228,8 +228,6 @@ class MainController(object):
         #Nested virtual containers can't be moved, so a single parent is always fine.
         start_path = str(self.model.container.path.parent)
         Publisher.sendMessage('movefile.open_dialog', settings=self.settings, start_path=start_path)
-        #target = Path('E:/temp/move_temp')
-        #self.file_list.move_file(target)
     def open_about_dialog(self):
         Publisher.sendMessage('about.open_dialog')
         

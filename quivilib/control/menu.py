@@ -126,10 +126,7 @@ class MenuController(object):
          make(11006, _('&Move...'), _('Move the opened zip file to a new location'),
               control.open_move_dialog,
               [(wx.ACCEL_CTRL, ord('N'))],
-              #checkable=False, update_function=control.file_list.on_update_move_menu_item),
-              checkable=False),
-              #Fix the update fn
-              #Also find a better key.
+              checkable=False, update_function=control.file_list.on_update_move_menu_item),
          None,
          make(11003, _('&Options...'), _('Open the options dialog'),
               control.options.open_dialog,

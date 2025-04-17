@@ -283,8 +283,9 @@ class FileListController(object):
         event.Enable(self._can_move())
 
     def _can_move(self):
-        #TODO. Should invoke Container's can move.
-        return True
+        if not self.model.container:
+            return False
+        return self.model.container.can_move
 
     def open_path(self, path, skip_open=False):
         #Check if this path is saved as a placeholder. If it is, load it instead
