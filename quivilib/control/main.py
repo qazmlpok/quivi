@@ -225,10 +225,6 @@ class MainController(object):
         #TODO: Delete is broken. Try to move it out of the filelist.
         self.file_list.delete(self.view)
     def open_move_dialog(self):
-        #self.move_dialog.open_dialog(...)
-        #This should prompt the user to select a destination and then call the actual move function
-        #Skip that for now and just move it.
-        print('open_move_dialog.')
         #Nested virtual containers can't be moved, so a single parent is always fine.
         start_path = str(self.model.container.path.parent)
         Publisher.sendMessage('movefile.open_dialog', settings=self.settings, start_path=start_path)

@@ -14,6 +14,7 @@ from quivilib.model.container.compressed import CompressedContainer
 from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from quivilib.control.cache import ImageCacheLoadRequest
 from quivilib.meta import PATH_SEP
+from quivilib.util import DebugTimer
 
 log = logging.getLogger('control.file_list')
 
@@ -56,6 +57,7 @@ class FileListController(object):
         Publisher.subscribe(self.on_favorite_open, 'favorite.open')
         Publisher.subscribe(self.on_container_item_changed, 'container.item.changed')
         Publisher.subscribe(self.on_file_dropped, 'file.dropped')
+        Publisher.subscribe(self.on_move_file, 'file_list.move_file')
         self.pending_request = None
         self._last_opened_item = None
         self._direction = 1
@@ -229,7 +231,7 @@ class FileListController(object):
                     can_delete = True
         return can_delete
 
-    def move_file(self, new_dir: Path):
+    def on_move_file(self, *, new_dir: Path):
         """ If the opened container is a zipfile, prompt to move it to a new location.
         In theory this could be done for regular dirs too, but this isn't supported.
         """
@@ -237,13 +239,12 @@ class FileListController(object):
         if not self._can_move():
             return
         cont = self.model.container
+        old_cont = cont
         old_path = cont.path
         filename = old_path.name
         new_path = new_dir / filename
-        #Also abort if: new_dir doesn't exist, new_dir isn't a directory, new_dir is the current location
-        #Destination shouldn't already have a file with same name
-        #These should all be checked by the dialog, so throw if it still happens here.
         
+        #Basic validation; the UI will check some of these, and `move` should throw if there are other problems
         if (old_path.parent == new_dir):
             raise Exception("The destination and source directories are the same.")
         if not os.path.isdir(new_dir):
@@ -258,10 +259,13 @@ class FileListController(object):
         cont.close_container()
         self.model.container = None
         
-        #Move. Use shutil for when moving between different physical drives.
-        #This also needs to block the UI, show spinner, etc. Again for different drives.
-        import shutil
-        shutil.move(old_path, new_path)
+        #On the same physical drive this is nearly instant; across volumes it's potentially hundreds of ms
+        #(longer if the drive has to start up or anything else). It's definitely noticable.
+        Publisher.sendMessage('busy', busy=True)
+        with DebugTimer(f"move: Moving opened archive to '{new_path}'"):
+            import shutil
+            shutil.move(old_path, new_path)
+        Publisher.sendMessage('busy', busy=False)
         
         #Reopen to the old position.
         #I think _open_path could do everything, including the img re-open but I don't trust that block of code.
@@ -269,20 +273,11 @@ class FileListController(object):
         #This will send an event but it should be harmless.
         cont.set_selected_item(selection)
         self._set_container(cont, True)
-        #self.model.container = cont
         #There _should_ be no need to send messages or open anything.
         
         #The cache is _effectively_ invalidated. This is because a request is the container plus path.
-        #It should be fine to just make a custom message to "shift" the cache.
-        
-        #Moving is a 3 step process to deal with opened file handles
-        #1. Close the zip file, but not the container itself
-        #Rename this; it's "move" in container now. It should just close it.
-        #2. Physically move the file
-        #3. Re-open the zip-file at the new location. Try to keep the same current img.
-        #I believe this will invalidate the cache by necessity, but it's hardly the biggest deal.
-        #It should still be as seamless as possible.
-        
+        #Tell the cache to update references to avoid this issue
+        Publisher.sendMessage('cache.move_file', old_cont=old_cont, new_cont=cont)
         
     def on_update_move_menu_item(self, event):
         event.Enable(self._can_move())

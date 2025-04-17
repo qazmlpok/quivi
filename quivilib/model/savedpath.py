@@ -39,12 +39,15 @@ class SavedPaths(object):
         for elem in self._paths:
             yield (elem.name, elem.path)
     
-    def get_bare_paths(self):
-        """ Return a dictionary of Path=>1 for all of the recorded paths.
-        Used for easier lookup to detect duplicates.
-        This could be tracked separately, but there won't be enough paths stored for the performance to be a concern.
+    def path_already_exists(self, testpath):
+        """ Determine if the provided path already exists in settings.
+        Normalization is just what is provided by pathlib
         """
-        return {x.path: 1 for x in self._paths}
+        testpath = Path(testpath)
+        lookup = {x.path: 1 for x in self._paths}
+        return testpath in lookup
+    def path_is_valid(self, testname, testpath):
+        return not ('|' in testname or '|' in testpath)
 
 class SavedPath:
     def __init__(self, name, path):

@@ -418,10 +418,8 @@ class MainWindow(wx.Frame):
         from quivilib.gui.move_file import MoveFileDialog
         dialog = MoveFileDialog(self, settings, start_path)
         if dialog.ShowModal() == wx.ID_OK:
-            target_path = Path(dialog.GetPath())
-            #Actually do the file move.
-            #This should then send another message with the path.
-            #Either MainController or the filelist will need to listen for it.
+            target_path = dialog.GetPath()
+            Publisher.sendMessage('file_list.move_file', new_dir=target_path)
         dialog.Destroy()
         
     def on_open_debug_cache_dialog(self, *, params):

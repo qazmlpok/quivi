@@ -1,3 +1,4 @@
+import os
 import wx
 from pubsub import pub as Publisher
 from pathlib import Path
@@ -28,6 +29,7 @@ class MoveFileDialog(wx.Dialog):
         self.SavePathBtn = wx.Button(self, wx.ID_ANY, "+")      #This would look better with an icon
         self.RightSideSizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, _("Saved paths")), wx.VERTICAL)
         self.SavedPathNameTxt = wx.TextCtrl(self, wx.ID_ANY, "")
+        self.ValidationMessage = wx.StaticText(self, wx.ID_ANY, "")
         self.ok_button = wx.Button(self, wx.ID_OK, "")
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, "")
 
@@ -37,8 +39,6 @@ class MoveFileDialog(wx.Dialog):
         #Need to call Layout here because I split __do_layout()
         self.SetSizer(self.MainSizer)
         self.Layout()
-        
-        #Clear validation messages (item doesn't exist)
         
         #Do this after do_layout for GetBestSize() to work.
         bestsize = self.GetBestSize()
@@ -62,6 +62,8 @@ class MoveFileDialog(wx.Dialog):
         self.SetEscapeId(self.cancel_button.GetId())
         self.CurrentPathTxt.SetValue('')
         self.SavedPathNameTxt.SetValue('')
+        self.ValidationMessage.SetLabel('')
+        self.ValidationMessage.SetForegroundColour(wx.Colour(255, 0, 0))
         # end wxGlade
 
     def __do_layout(self):
@@ -97,6 +99,10 @@ class MoveFileDialog(wx.Dialog):
 
         SplitSizer.Add(self.RightSideSizer, 1, wx.EXPAND | wx.RIGHT, 4)
         #Contents of RightSideSizer added dynamically later.
+        
+        padding_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.MainSizer.Add(padding_sizer, 0, wx.ALL | wx.EXPAND, 4)
+        padding_sizer.Add(self.ValidationMessage, 0, wx.EXPAND | wx.LEFT, 10)
 
         btnsizer = wx.StdDialogButtonSizer()
         self.MainSizer.Add(btnsizer, 0, wx.ALIGN_RIGHT | wx.ALL, 4)
@@ -148,45 +154,48 @@ class MoveFileDialog(wx.Dialog):
         Or, at minimum, another text field.
         Alternatively, this shouldn't be "add", but "Manage saved paths".
         """
-        #settings aren't hooked up; for now just save to the local copy.
-        existing_paths = self.saved_folders.get_bare_paths()
-        #TODO: instead of this function, the collection should be checking this...
-        #Since it tracks stuff as actual Path objects, not strings.
-        
         newpath = self.CurrentPathTxt.GetValue()
         newname = self.SavedPathNameTxt.GetValue()
         
         if not newpath:
-            #Validation message
+            self.ValidationMessage.SetLabel(_("A name is required for the path to save"))
             return
         #Enforce path-exists? Probably not necessary.
         if not newname:
-            #Validation message
+            self.ValidationMessage.SetLabel(_("A path must be entered to save"))
             return
-        if '|' in newpath or '|' in newname:
-            #| will be used for handling the settings. This is an implementation detail, but isn't worth
-            #trying to move this logic into savedpaths.
-            #Validation message
+        if not self.saved_folders.path_is_valid(newname, newpath):
+            #The error message is an implementation detail but I don't want to put the message in savedpath.
+            self.ValidationMessage.SetLabel(_("The '|' character cannot appear in the name or path"))
+            return
+        if self.saved_folders.path_already_exists(newpath):
+            self.ValidationMessage.SetLabel(_("The entered path is already saved"))
             return
         
-        #TODO Validate: Forbid creating duplicate paths.
-        #Save to actual settings
-        #Update local copy. Or possibly refresh from settings
+        #Save to settings; this will be saved to disk when the modal is closed.
         self.saved_folders.add_new(newname, newpath)
         self.paths_modified = True
         #Need to re-apply layout. Fit is also necessary; not sure why.
         self.__layout_saved_folders(self.saved_folders)
         self.RightSideSizer.Layout()
         self.Fit()
+        
         #Clear name, but not path
         self.SavedPathNameTxt.SetValue('')
+        self.ValidationMessage.SetLabel('')
 
     def on_ok(self, event):  # wxGlade: MoveFileDialog.<event_handler>
+        newpath = self.CurrentPathTxt.GetValue()
+        if not newpath or not os.path.isdir(newpath):
+            self.ValidationMessage.SetLabel(_("The path must be a valid directory"))
+            #It also needs to be writable, but I'd rather just let the move throw.
+            return False
+        if self.current_path and self.current_path == newpath:
+            self.ValidationMessage.SetLabel(_("The target path is the same as the file's current location"))
+            return False
+        #Anything else to check here?
+
         self._save_settings()
-        print("Event handler 'on_ok' not implemented!")
-        #This should handle validation of the path (ensure it's a real folder, etc)
-        #and show an error if it's invalid. Returning false will prevent the dialog from closing.
-        #return False
         event.Skip()
 
     def on_cancel(self, event):  # wxGlade: MoveFileDialog.<event_handler>
