@@ -55,7 +55,6 @@ class DebugDialog(wx.Dialog):
 
 
     def on_ok_click(self, event): # wxGlade: OptionsDialog.<event_handler>
-        #event.Skip()
         #This window needs to always be alive; don't destroy it.
         self.Hide()
 

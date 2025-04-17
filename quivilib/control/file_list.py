@@ -235,7 +235,6 @@ class FileListController(object):
         """ If the opened container is a zipfile, prompt to move it to a new location.
         In theory this could be done for regular dirs too, but this isn't supported.
         """
-        #Real fn should query the container to make sure it's a zip. TODO: For now it's just True
         if not self._can_move():
             return
         cont = self.model.container

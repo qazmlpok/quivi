@@ -68,36 +68,36 @@ class MoveFileDialog(wx.Dialog):
 
     def __do_layout(self):
         # begin wxGlade: MoveFileDialog.__do_layout
-        SplitSizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.MainSizer.Add(SplitSizer, 1, wx.EXPAND, 0)
+        split_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.MainSizer.Add(split_sizer, 1, wx.EXPAND, 0)
 
-        LeftSideSizer = wx.BoxSizer(wx.VERTICAL)
-        SplitSizer.Add(LeftSideSizer, 1, wx.EXPAND, 0)
+        left_side_sizer = wx.BoxSizer(wx.VERTICAL)
+        split_sizer.Add(left_side_sizer, 1, wx.EXPAND, 0)
 
-        label_1 = wx.StaticText(self, wx.ID_ANY, _("Select folder"))
-        LeftSideSizer.Add(label_1, 0, wx.LEFT | wx.TOP, 5)
+        select_folder_lbl = wx.StaticText(self, wx.ID_ANY, _("Select folder"))
+        left_side_sizer.Add(select_folder_lbl, 0, wx.LEFT | wx.TOP, 5)
 
-        sizer_3 = wx.BoxSizer(wx.HORIZONTAL)
-        LeftSideSizer.Add(sizer_3, 0, wx.ALL, 5)
+        select_dir_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        left_side_sizer.Add(select_dir_sizer, 0, wx.ALL, 5)
 
         self.CurrentPathTxt.SetMinSize((200, 23))
-        sizer_3.Add(self.CurrentPathTxt, 0, wx.ALL, 2)
+        select_dir_sizer.Add(self.CurrentPathTxt, 0, wx.ALL, 2)
 
-        sizer_3.Add(self.BrowseBtn, 0, wx.ALL, 2)
+        select_dir_sizer.Add(self.BrowseBtn, 0, wx.ALL, 2)
         
-        SavePathSizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, _("Save path")), wx.HORIZONTAL)
-        LeftSideSizer.Add(SavePathSizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 16)
+        save_path_sizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, _("Save path")), wx.HORIZONTAL)
+        left_side_sizer.Add(save_path_sizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 16)
         
-        label_5 = wx.StaticText(self, wx.ID_ANY, _("Name:"))
-        SavePathSizer.Add(label_5, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        name_lbl = wx.StaticText(self, wx.ID_ANY, _("Name:"))
+        save_path_sizer.Add(name_lbl, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
-        SavePathSizer.Add(self.SavedPathNameTxt, 0, wx.ALIGN_CENTER_VERTICAL, 0)
+        save_path_sizer.Add(self.SavedPathNameTxt, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         
         self.SavePathBtn.SetMinSize((24, 24))
         self.SavePathBtn.SetToolTip(_("Save"))
-        SavePathSizer.Add(self.SavePathBtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
+        save_path_sizer.Add(self.SavePathBtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
 
-        SplitSizer.Add(self.RightSideSizer, 1, wx.EXPAND | wx.RIGHT, 4)
+        split_sizer.Add(self.RightSideSizer, 1, wx.EXPAND | wx.RIGHT, 4)
         #Contents of RightSideSizer added dynamically later.
         
         padding_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -146,8 +146,7 @@ class MoveFileDialog(wx.Dialog):
             dialog.SetPath(self.current_path)
         if dialog.ShowModal() == wx.ID_OK:
             self.CurrentPathTxt.SetValue(dialog.GetPath())
-        #event.Skip()
-
+    #
     def on_save_path(self, event):  # wxGlade: MoveFileDialog.<event_handler>
         """ Save the currently entered path to the settings.
         This will be a combination of the path and a "friendly name", so it likely needs another dialog.
