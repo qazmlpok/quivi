@@ -8,13 +8,14 @@ from quivilib import util
 from quivilib.model.savedpath import SavedPaths
 
 #The height will potentially need to expand to cover more saved items. The dialog is not static.
-WINDOW_SIZE = (450, 175)
+WINDOW_SIZE = (450, 200)
 
 class MoveFileDialog(wx.Dialog):
-    def __init__(self, parent, settings, start_path=''):
+    def __init__(self, parent, settings, name='', start_path=''):
         #The path to the currently opened container. This is used as the starting dir when doing browse,
         #but not for anything else
         self.current_path = start_path
+        self.container_name = name
         #Need to store this for saving the settings after.
         self.paths_modified = False
         self._settings = settings
@@ -27,7 +28,8 @@ class MoveFileDialog(wx.Dialog):
         self.CurrentPathTxt = wx.TextCtrl(self, wx.ID_ANY, "")
         self.BrowseBtn = wx.Button(self, wx.ID_ANY, _("Browse"))
         self.SavePathBtn = wx.Button(self, wx.ID_ANY, "+")      #This would look better with an icon
-        self.RightSideSizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, _("Saved paths")), wx.VERTICAL)
+        self.RightSideBox = wx.StaticBox(self, wx.ID_ANY, _("Saved paths"))
+        self.RightSideSizer = wx.StaticBoxSizer(self.RightSideBox, wx.VERTICAL)
         self.SavedPathNameTxt = wx.TextCtrl(self, wx.ID_ANY, "")
         self.ValidationMessage = wx.StaticText(self, wx.ID_ANY, "")
         self.ok_button = wx.Button(self, wx.ID_OK, "")
@@ -68,6 +70,11 @@ class MoveFileDialog(wx.Dialog):
 
     def __do_layout(self):
         # begin wxGlade: MoveFileDialog.__do_layout
+        if (self.container_name):
+            name_lbl = wx.StaticText(self, wx.ID_ANY, self.container_name, style=wx.ST_ELLIPSIZE_END)
+            name_lbl.SetMaxSize((360, -1))
+            self.MainSizer.Add(name_lbl, 0, wx.EXPAND | wx.ALL, 4)
+        
         split_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.MainSizer.Add(split_sizer, 1, wx.EXPAND, 0)
 
@@ -128,7 +135,7 @@ class MoveFileDialog(wx.Dialog):
                 event.Skip()
             #These are buttons for easy use of events; I think statictext can't have events
             #Might be able to use a listctrl, maybe?
-            btn = wx.Button(self, wx.ID_ANY, name)
+            btn = wx.Button(self.RightSideBox, wx.ID_ANY, name)
             self.RightSideSizer.Add(btn, 0, 0)
             self.Bind(wx.EVT_BUTTON, _event_handler, btn)
     
