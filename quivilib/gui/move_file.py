@@ -1,4 +1,4 @@
-import os
+import os, sys
 import wx
 from pubsub import pub as Publisher
 from pathlib import Path
@@ -81,9 +81,9 @@ class MoveFileDialog(wx.Dialog):
         left_side_sizer.Add(select_dir_sizer, 0, wx.ALL, 5)
 
         self.CurrentPathTxt.SetMinSize((200, 23))
-        select_dir_sizer.Add(self.CurrentPathTxt, 0, wx.ALL, 2)
+        select_dir_sizer.Add(self.CurrentPathTxt, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
 
-        select_dir_sizer.Add(self.BrowseBtn, 0, wx.ALL, 2)
+        select_dir_sizer.Add(self.BrowseBtn, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
         
         save_path_sizer = wx.StaticBoxSizer(wx.StaticBox(self, wx.ID_ANY, _("Save path")), wx.HORIZONTAL)
         left_side_sizer.Add(save_path_sizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 16)
@@ -91,9 +91,10 @@ class MoveFileDialog(wx.Dialog):
         name_lbl = wx.StaticText(self, wx.ID_ANY, _("Name:"))
         save_path_sizer.Add(name_lbl, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
-        save_path_sizer.Add(self.SavedPathNameTxt, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        
-        self.SavePathBtn.SetMinSize((24, 24))
+        save_path_sizer.Add(self.SavedPathNameTxt, 1, wx.ALIGN_CENTER_VERTICAL, 0)
+        if sys.platform == 'win32':
+            #This works in Win fine but breaks GTK.
+            self.SavePathBtn.SetMinSize((24, 24))
         self.SavePathBtn.SetToolTip(_("Save"))
         save_path_sizer.Add(self.SavePathBtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
 
