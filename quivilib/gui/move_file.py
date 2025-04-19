@@ -79,7 +79,7 @@ class MoveFileDialog(wx.Dialog):
         self.MainSizer.Add(split_sizer, 1, wx.EXPAND, 0)
 
         left_side_sizer = wx.BoxSizer(wx.VERTICAL)
-        split_sizer.Add(left_side_sizer, 1, wx.EXPAND, 0)
+        split_sizer.Add(left_side_sizer, 2, wx.EXPAND | wx.RIGHT, 8)
 
         select_folder_lbl = wx.StaticText(self, wx.ID_ANY, _("Select folder"))
         left_side_sizer.Add(select_folder_lbl, 0, wx.LEFT | wx.TOP, 5)
@@ -105,7 +105,7 @@ class MoveFileDialog(wx.Dialog):
         self.SavePathBtn.SetToolTip(_("Save"))
         save_path_sizer.Add(self.SavePathBtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
 
-        split_sizer.Add(self.RightSideSizer, 1, wx.EXPAND | wx.RIGHT, 4)
+        split_sizer.Add(self.RightSideSizer, 1, wx.EXPAND | wx.RIGHT, 8)
         #Contents of RightSideSizer added dynamically later.
         
         padding_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -165,11 +165,14 @@ class MoveFileDialog(wx.Dialog):
         newname = self.SavedPathNameTxt.GetValue()
         
         if not newpath:
+            self.ValidationMessage.SetLabel(_("A path must be entered to save"))
+            return
+        if not newname:
             self.ValidationMessage.SetLabel(_("A name is required for the path to save"))
             return
-        #Enforce path-exists? Probably not necessary.
-        if not newname:
-            self.ValidationMessage.SetLabel(_("A path must be entered to save"))
+        if len(newname) > 25:
+            #Even this is a lot; the display gets wonky with long names.
+            self.ValidationMessage.SetLabel(_("Maximum length for a name is 25 characters"))
             return
         if not self.saved_folders.path_is_valid(newname, newpath):
             #The error message is an implementation detail but I don't want to put the message in savedpath.
