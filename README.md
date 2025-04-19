@@ -56,8 +56,8 @@ Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that
 
 Type hints have been added to some methods. This is mostly added to subclasses to ensure they adhere to the common interface. I don't intend on adding type hints everywhere, only where "most needed" (or just trivial functions)
 
-- Updated to support Python 3.11.3. Minimum required version is Python 3.6 due to the use of fstrings.
-- wx updated to 4.2.0
+- Updated to support Python 3.13.3. Minimum required version is Python 3.6 due to the use of fstrings.
+- wx updated to 4.2.3
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
 - Image display supports FreeImage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
