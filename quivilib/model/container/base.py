@@ -83,7 +83,7 @@ class BaseContainer(object):
                 selected_item = self.items[-1]
             #TODO: (2,3) Test: check is exceptions can be thrown inside the loop
         
-        #Fill aditional item info
+        #Fill in additional item info
         for idx, item in enumerate(self.items):
             item.full_path = self.get_item_path(idx)
         
@@ -137,7 +137,7 @@ class BaseContainer(object):
         if self._selected_item and self._selected_item != old_selected_item:
             idx = self.items.index(self._selected_item)
             Publisher.sendMessage('container.selection_changed', idx=idx, item=self._selected_item)
-            
+
     def get_selected_item(self):
         return self._selected_item
 
@@ -153,11 +153,16 @@ class BaseContainer(object):
     selected_item = property(get_selected_item, set_selected_item)
     
     @property
-    def virtual_files(self):
+    def virtual_files(self) -> bool:
         return False
     
     def can_delete(self) -> bool:
         raise NotImplementedError()
+        
+    @property
+    def can_move(self) -> bool:
+        #Only compressed archives will implement this (for now), so default to false.
+        return False
     
     @property
     def universal_path(self) -> Path|None:

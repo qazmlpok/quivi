@@ -64,6 +64,8 @@ class ImageCache(object):
         Publisher.subscribe(self.on_clear_pending, 'cache.clear_pending')
         Publisher.subscribe(self.on_flush, 'cache.flush')
         Publisher.subscribe(self.on_program_closed, 'program.closed')
+        Publisher.subscribe(self.on_container_moved, 'cache.move_file')
+        
         self.queue : list[ImageCacheLoadRequest|None] = []
         self.q_lock = Lock()
         self.cache : list[ImageCacheLoaded] = []
@@ -82,7 +84,7 @@ class ImageCache(object):
         with self.c_lock:
             for req in self.cache:
                 if req == request:
-                    log.debug('main: cache hit')
+                    log.debug(f'main: cache HIT   -- {request.path}')
                     self.notify_image_loaded(req)
                     hit = True
                     if not preload:
@@ -92,7 +94,7 @@ class ImageCache(object):
                         self.cache.insert(0, req)
                     break
         if not hit and request != self.processing_request:
-            log.debug('main: cache miss')
+            log.debug(f'main: cache MISS   -- {request.path}')
             self._put_request(request)
             
     def on_image_loaded(self, request: ImageCacheLoaded) -> None:
@@ -114,6 +116,7 @@ class ImageCache(object):
         """
         with self.c_lock:
             self.cache.clear()
+            log.debug('main: cleared cache')
 
     def notify_image_loaded(self, request: ImageCacheLoaded) -> None:
         """ Send message notifying of load completion.
@@ -133,7 +136,7 @@ class ImageCache(object):
             Publisher.sendMessage('cache.image_removed', request=request)
 
     def _put_request(self, request: ImageCacheLoadRequest) -> None:
-        with self.q_lock:  
+        with self.q_lock:
             if request not in self.queue:
                 log.debug('main: inserting request')
                 self.queue.insert(0, request)
@@ -162,6 +165,25 @@ class ImageCache(object):
         log.debug('main: joining...')
         self.thread.join()
     
+    def on_container_moved(self, *, old_cont: BaseContainer, new_cont: BaseContainer):
+        """ Special operation for when moving the open container from one folder to another
+        This requires re-opening the container, which means old cache entries won't be found
+        NOTE - this modifies the objects. The objects implement __hash__.
+        The current cache uses a list, but if this is changed to a dict, the objects need to be
+        removed and re-added. __hash__ is only called once during insertion.
+        """
+        with self.c_lock:
+            for entry in self.cache:
+                if entry.container == old_cont:
+                    log.debug('cache: Modifying cache container value...')
+                    entry.container = new_cont
+        with self.q_lock:
+            for entry in self.queue:
+                print("Check cache:", entry, entry.container)
+                if entry.container == old_cont:
+                    log.debug('cache: Modifying queue container value...')
+                    entry.container = new_cont
+
     def run(self) -> None:
         """ Main thread loop for the forked thread.
         """

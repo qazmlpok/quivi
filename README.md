@@ -37,9 +37,12 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
     - To prevent accidental horizontal scrolling, there's a small "buffer" that needs to be overcome; scroll while at the bottom 3+ times and it should start.
 - New feature: Spread page viewing. If enabled and the current image is taller than it is long (height > width), fit-to-width will be calculating using half of the image width instead of the full width.
     - The intent is for when viewing standard page images that includes image files that are two physical pages joined together, i.e. full-page spreads. This _should_ keep the zoom level roughly consistent with the rest of the book.
-    - This will lead to false positive if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
+    - This will lead to false positives if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
     - There's no indication that this is being done while in fullscreen, so if two pages are joined together but don't have shared art and contain ample margins, it will be easy to accidentally skip pages.
 - Increased the size of the image cache to better account for modern hardware (it's still hardcoded and doesn't check system RAM available or anything).
+- New feature: Move the currently opened archive to another folder.
+    - Folders can be saved to settings to quickly move zip archives to a specific "archive" folder
+    - There is currently no way to reorder or delete these saved folders, only add.
 
 
 # Removed features
@@ -53,8 +56,8 @@ Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that
 
 Type hints have been added to some methods. This is mostly added to subclasses to ensure they adhere to the common interface. I don't intend on adding type hints everywhere, only where "most needed" (or just trivial functions)
 
-- Updated to support Python 3.11.3. Minimum required version is Python 3.6 due to the use of fstrings.
-- wx updated to 4.2.0
+- Updated to support Python 3.13.3. Minimum required version is Python 3.6 due to the use of fstrings.
+- wx updated to 4.2.3
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
 - Image display supports FreeImage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
@@ -96,3 +99,17 @@ The following text strings are new and have not been added to any of the transla
 - Show &spread
 - Attempt to show combined pages at regular zoom
 - (Spread)
+- Move the opened zip file to a new location
+- Browse
+- Saved paths
+- Move zip file to another folder
+- Select folder
+- Save path
+- Name:
+- Save
+- A name is required for the path to save
+- A path must be entered to save
+- The '|' character cannot appear in the name or path
+- The entered path is already saved
+- The path must be a valid directory
+- The target path is the same as the file's current location

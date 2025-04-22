@@ -1,4 +1,4 @@
-import sys
+import os, sys
 from pathlib import Path
 import logging
 
@@ -14,6 +14,7 @@ from quivilib.model.container.compressed import CompressedContainer
 from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from quivilib.control.cache import ImageCacheLoadRequest
 from quivilib.meta import PATH_SEP
+from quivilib.util import DebugTimer
 
 log = logging.getLogger('control.file_list')
 
@@ -56,6 +57,7 @@ class FileListController(object):
         Publisher.subscribe(self.on_favorite_open, 'favorite.open')
         Publisher.subscribe(self.on_container_item_changed, 'container.item.changed')
         Publisher.subscribe(self.on_file_dropped, 'file.dropped')
+        Publisher.subscribe(self.on_move_file, 'file_list.move_file')
         self.pending_request = None
         self._last_opened_item = None
         self._direction = 1
@@ -228,7 +230,62 @@ class FileListController(object):
                 if container.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
                     can_delete = True
         return can_delete
+
+    def on_move_file(self, *, new_dir: Path):
+        """ If the opened container is a zipfile, prompt to move it to a new location.
+        In theory this could be done for regular dirs too, but this isn't supported.
+        """
+        if not self._can_move():
+            return
+        cont = self.model.container
+        old_cont = cont
+        old_path = cont.path
+        filename = old_path.name
+        new_path = new_dir / filename
         
+        #Basic validation; the UI will check some of these, and `move` should throw if there are other problems
+        if (old_path.parent == new_dir):
+            raise Exception("The destination and source directories are the same.")
+        if not os.path.isdir(new_dir):
+            raise Exception(f"The target path '{new_dir}' isn't a directory")
+        if os.path.isfile(new_path):
+            raise Exception(f"The target path '{new_path}' already exists")
+        
+        #Preserve
+        sort_order = self.model.container.sort_order
+        show_hidden = self.model.container.show_hidden
+        selection = cont.selected_item_index
+        cont.close_container()
+        self.model.container = None
+        
+        #On the same physical drive this is nearly instant; across volumes it's potentially hundreds of ms
+        #(longer if the drive has to start up or anything else). It's definitely noticable.
+        Publisher.sendMessage('busy', busy=True)
+        with DebugTimer(f"move: Moving opened archive to '{new_path}'"):
+            import shutil
+            shutil.move(old_path, new_path)
+        Publisher.sendMessage('busy', busy=False)
+        
+        #Reopen to the old position.
+        #I think _open_path could do everything, including the img re-open but I don't trust that block of code.
+        cont = CompressedContainer(new_path, sort_order, show_hidden)
+        #This will send an event but it should be harmless.
+        cont.set_selected_item(selection)
+        self._set_container(cont, True)
+        #There _should_ be no need to send messages or open anything.
+        
+        #The cache is _effectively_ invalidated. This is because a request is the container plus path.
+        #Tell the cache to update references to avoid this issue
+        Publisher.sendMessage('cache.move_file', old_cont=old_cont, new_cont=cont)
+        
+    def on_update_move_menu_item(self, event):
+        event.Enable(self._can_move())
+
+    def _can_move(self):
+        if not self.model.container:
+            return False
+        return self.model.container.can_move
+
     def open_path(self, path, skip_open=False):
         #Check if this path is saved as a placeholder. If it is, load it instead
         autoload = self.model.settings.get('Options', 'PlaceholderAutoOpen') == '1'
