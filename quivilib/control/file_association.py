@@ -1,5 +1,5 @@
 import logging
-from configparser import ConfigParser, NoOptionError, NoSectionError
+from configparser import RawConfigParser, NoOptionError, NoSectionError
 from pathlib import Path
 from quivilib import util
 from quivilib.i18n import _
@@ -277,7 +277,7 @@ class AssociationManager(object):
             ini_path = util.get_exe_path().parent / CONFIG_INI
         else:
             ini_path = self.main_script_path.parent / CONFIG_INI
-        ini = ConfigParser(interpolation=None)
+        ini = RawConfigParser()
         try:
             ini.read(ini_path)
             if ini.get('config', 'user') == 'current':

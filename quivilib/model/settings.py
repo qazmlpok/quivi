@@ -1,10 +1,10 @@
 import os
-from configparser import ConfigParser, ParsingError
+from configparser import RawConfigParser, ParsingError
 from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
 
 
-class Settings(ConfigParser):
+class Settings(RawConfigParser):
     (FIT_NONE,
      FIT_WIDTH_OVERSIZE,
      FIT_HEIGHT_OVERSIZE,
@@ -19,7 +19,7 @@ class Settings(ConfigParser):
      FIT_BOTH) = list(range(12))
 
     def __init__(self, path):
-        ConfigParser.__init__(self, interpolation=None)
+        RawConfigParser.__init__(self)
         self.path = path
         
         def _parseError():
@@ -90,7 +90,7 @@ class Settings(ConfigParser):
         return defaults
     
     def set(self, section, option, value):
-        ConfigParser.set(self, section, option, str(value))
+        RawConfigParser.set(self, section, option, str(value))
         try:
             Publisher.sendMessage(f'settings.changed.{section}.{option}', settings=self)
         except Publisher.TopicNameError:
