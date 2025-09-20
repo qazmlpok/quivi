@@ -296,12 +296,17 @@ class MainWindow(wx.Frame):
         self.status_bar.SetStatusText(text, ZOOM_FIELD)
         
     def on_menu_built(self, *, main_menu: tuple[CommandCategory, ...], commands: list[Command]):
+        i = 0
         for category in main_menu:
             menu = self._make_menu(category.commands)
             self.menus[category.idx] = menu
             #Don't actually add the menu to the bar if it's hidden (it can still be opened via PopupMenu)
             if not category.hidden:
                 self.menu_bar.Append(menu, category.name)
+                #Need to manually track the id. Searching by name doesn't work if the name can change (translations)
+                #Just counting up is fine as long as there aren't existing menu items, and there shouldn't be.
+                category.menu_idx = i
+                i += 1
 
         #Create actual bindings for the commands
         for command in commands:
@@ -369,10 +374,10 @@ class MainWindow(wx.Frame):
                 menu_item.SetHelp(cmd.description)
         for idx, category in enumerate(main_menu):
             if not category.hidden:
-                #Get the actual index of the menu, not what the array specifies.
-                #This allows putting hidden images before visible ones.
-                idx = self.menu_bar.FindMenu(category.name)
-                self.menu_bar.SetMenuLabel(idx, category.name)
+                #Need to use the idx stored in the category (when the bar is created)
+                #Finding by name isn't reliable if the name can change.
+                midx = category.menu_idx
+                self.menu_bar.SetMenuLabel(midx, category.name)
     
     def on_container_opened(self, *, container: BaseContainer):
         self.SetTitle(f'{container.name} - {meta.APPNAME}')
