@@ -389,3 +389,7 @@ class TempCanvas(Canvas):
     def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
         #Explicitly do nothing. (the default implementation references the view to get screen width)
         pass
+
+class PaintedRegion(object):
+    def __init__(self):
+        self.left = self.top = self.width = self.height = -1

@@ -2,6 +2,7 @@ import wx
 import wx.lib.colourselect as csel
 from pubsub import pub as Publisher
 
+from quivilib.model.canvas import PaintedRegion
 from quivilib.i18n import _
 from quivilib import util
 
@@ -186,9 +187,6 @@ class WallpaperDialog(wx.Dialog):
         dc = wx.PaintDC(self.preview_panel)
         #This is required on Linux
         dc.SetBackground(wx.Brush(self.preview_panel.GetBackgroundColour()))
-        class PaintedRegion(object):
-            def __init__(self):
-                self.left = self.top = self.width = self.height = -1
         painted_region = PaintedRegion()
         #The recipient will update the painted_region fields.
         Publisher.sendMessage('wpcanvas.painted', dc=dc, painted_region=painted_region)

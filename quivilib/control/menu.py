@@ -320,7 +320,6 @@ class MenuController(object):
          make_category(2, 'view', _('&View'), view_menu),
          make_category(3, 'fav' , _('F&avorites'), favorites_menu),
          make_category(4, 'help', _('&Help'), help_menu),
-         #make_category(5, _('Move'), hidden_menu, True),
          make_category(6, '_fit', _('Fit'), fit_menu, True),
         )
         #The fit menu doesn't appear in the top, but can open via right click, so it needs to be created.
@@ -339,7 +338,7 @@ class MenuController(object):
                      control.debugController.open_debug_cache_dialog,
                      [], flags=Command.KB),
                 #Maybe an option to change the log level?
-                #I can't find any kind of built in wxpython diagnostics that would be trivial to include.
+                #I can't find any kind of built-in wxpython diagnostics that would be trivial to include.
             )
             main_menu = main_menu + (
                 make_category(7, 'debug', 'Debug', debug_menu),

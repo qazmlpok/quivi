@@ -173,16 +173,18 @@ class ImageCache(object):
         removed and re-added. __hash__ is only called once during insertion.
         """
         with self.c_lock:
-            for entry in self.cache:
-                if entry.container == old_cont:
+            for c in self.cache:
+                if c.container == old_cont:
                     log.debug('cache: Modifying cache container value...')
-                    entry.container = new_cont
+                    c.container = new_cont
         with self.q_lock:
-            for entry in self.queue:
-                print("Check cache:", entry, entry.container)
-                if entry.container == old_cont:
+            for q in self.queue:
+                if q is None:
+                    continue
+                print("Check cache:", q, q.container)
+                if q.container == old_cont:
                     log.debug('cache: Modifying queue container value...')
-                    entry.container = new_cont
+                    q.container = new_cont
 
     def run(self) -> None:
         """ Main thread loop for the forked thread.
