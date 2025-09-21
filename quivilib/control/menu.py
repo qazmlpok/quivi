@@ -58,7 +58,7 @@ class MenuController(object):
         )
         
     def on_language_changed(self):
-        self._make_commands(self.control, True)
+        self._update_menu_translations()
         Publisher.sendMessage('menu.labels.changed', 
                                 main_menu=self.main_menu,
                                 commands=self.commands,
@@ -71,38 +71,33 @@ class MenuController(object):
     def on_command_down_execute(self, *, ide):
         [cmd.on_down() for cmd in self.commands if cmd.ide == ide]
 
-    def _make_commands(self, control, update=False):
-        """Make (or update) all commands.
+    def _update_menu_translations(self):
+        """ Instruct the menu items to update their current translation
+        The saved key is re-applied to the translation function.
+        """
+        #Update menu items
+        for cmd in self.commands:
+            cmd.update_translation()
+        #Update menu categories
+        for idx in self.main_menu_dict:
+            category = self.main_menu_dict[idx]
+            category.update_translation()
+    def _make_commands(self, control):
+        """Make all commands.
         
         @param control: reference to the main controller instance
-        @update: if True, then it will only update the existing commands.
-            (Which will retranslate them when changing languages)
         """
-        #TODO: (1,2) Refactor: does two different things 
         commands = []
-        if update:
-            cmd_dict = dict((cmd.ide, cmd) for cmd in self.commands)
-            def make(ide, function, **kwparams):
-                definition = self.command_definitions.commands[ide]
-                cmd_dict[ide].update_translation(definition)
-                return None
-            
-            def make_category(*params):
-                idx, name = params[1:3]
-                if idx in self.main_menu_dict:
-                    category = self.main_menu_dict[idx]
-                    category.name = name
-                return None
-        else:
-            def make(ide, function, **kwparams):
-                definition = self.command_definitions.commands[ide]
-                command = Command(definition, function, **kwparams)
-                commands.append(command)
-                return command
-            
-            def make_category(*params):
-                category = CommandCategory(*params)
-                return category
+        
+        def make(ide, function, **kwparams):
+            definition = self.command_definitions.commands[ide]
+            command = Command(definition, function, **kwparams)
+            commands.append(command)
+            return command
+        
+        def make_category(*params):
+            category = CommandCategory(*params)
+            return category
         
         file_menu = (
             make(CommandName.SET_WALLPAPER, 
@@ -218,20 +213,20 @@ class MenuController(object):
             make(CommandName.ZOOM_CUSTOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True)),
         )
         main_menu = (
-            make_category(0, 'file', _('&File'), file_menu),
-            make_category(1, 'fold', _('F&older'), folder_menu),
-            make_category(2, 'view', _('&View'), view_menu),
-            make_category(3, 'fav' , _('F&avorites'), favorites_menu),
-            make_category(4, 'help', _('&Help'), help_menu),
-            make_category(6, '_fit', _('Fit'), fit_menu, True),
+            make_category(0, 'file', '&File', file_menu),
+            make_category(1, 'fold', 'F&older', folder_menu),
+            make_category(2, 'view', '&View', view_menu),
+            make_category(3, 'fav' , 'F&avorites', favorites_menu),
+            make_category(4, 'help', '&Help', help_menu),
+            make_category(6, '_fit', 'Fit', fit_menu, True),
         )
         #The fit menu doesn't appear in the top, but can open via right click, so it needs to be created.
         #The other menus here exist to provide commands in the options, but aren't otherwise menus
         #Names can overlap with actual menu names (this is deliberate)
         #Order (first parameter) controls where it will appear in the Settings dialog only
         command_cats = main_menu + (
-            make_category(3.1, '_fav', _('Favorites'), favorites_hidden_menu, True),
-            make_category(5, '_mov', _('Move'), hidden_menu, True),
+            make_category(3.1, '_fav', 'Favorites', favorites_hidden_menu, True),
+            make_category(5, '_mov', 'Move', hidden_menu, True),
         )
         if __debug__:
             #Debug options. Disable when built as an application.

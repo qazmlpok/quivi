@@ -15,6 +15,7 @@ class CommandFlags(IntFlag):
     KBM = KB|MOUSE
     MASK = KB|MOUSE|NOMENU #Mask to ensure that at least one of these is set.
     
+    #Using either CHECKABLE or DISABLEABLE requires that an update function is provided
     NEED_UPDATE = CHECKABLE | DISABLEABLE
 #
 

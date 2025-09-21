@@ -6,19 +6,13 @@ from quivilib.model.shortcut import Shortcut
 from quivilib.model.commandlist import *
 
 class Command():
-    def __init__(self, definition: CommandDefinition, function, 
-            down_function=None, update_function=None):
+    def __init__(self, definition: CommandDefinition, function, down_function=None, update_function=None):
         """
             Create a new command category.
             
-            @param ide: Unique identifier for this command
-            @param name: Display name for this command. Translated, will include &.
-            @param description: Description for this command. Translated.
+            @param definition: Static definition for the command; contains most fields.
             @param function: Function to execute upon selecting this command.
-            @param default_shortcuts: Default keyboard combination for this command
-            @param flags: Flags for controlling where this command can be used, i.e. keyboard/mouse
             @param down_function: For mouse events, command to execute on mouse down
-            @param checkable: If true, potentially show a checkmark in the menu (ref update_function)
             @param update_function: Function used to modify display of this menu item, e.g. to disable it or to check the checkbox.
         """
         self.ide = definition.uid
@@ -27,23 +21,19 @@ class Command():
         self._function = function
         self._down_function = down_function
         self.default_shortcuts = definition.shortcuts
-        self.shortcuts = []
-        self.checkable = (definition.flags&CommandFlags.CHECKABLE)
+        self.shortcuts: list[Shortcut] = []
         self.update_function = update_function
         self.flags = definition.flags
-        if self.flags is None:
-            self.flags = Command.KBM
-        self.update_translation(definition)
+        self.update_translation()
         
         need_update = (definition.flags & CommandFlags.NEED_UPDATE) != 0
         #Some consistency checks
         if (need_update and update_function is None):
-            print(definition.flags)
             raise Exception(f"Menu item {self.clean_name} requires an update function but doesn't have one")
         if (not need_update and update_function is not None):
             raise Exception(f"Menu item {self.clean_name} was given an update function but can't use one")
         
-    def update_translation(self, definition):
+    def update_translation(self):
         #dumb hack to avoid translating the debug menu option stuff.
         if self.ide < CommandName.CACHE_INFO:
             self.name = _(self.nameKey)
@@ -73,23 +63,27 @@ class Command():
     @property
     def clean_name(self):
         return self.name.replace('&', '').replace('...', '')
+    
+    @property
+    def checkable(self) -> bool:
+        return (self.flags & CommandFlags.CHECKABLE) != 0
 #
 
 class CommandCategory():
-    def __init__(self, order: int, idx: str, name: str, commands: list[Command], hidden=False):
+    def __init__(self, order: int, idx: str, nameKey: str, commands: list[Command], hidden=False):
         """
             Create a new command category.
             
             @param order: The order within the Options menu (not used elsewhere)
             @param idx: string key to use as a unique identifier for this menu. Needed for updates.
             @param commands: Collection of commands (e.g. menu items) associated with this category.
-            @param name: Display name for the menu - translated to the target language
+            @param nameKey: Display name for the menu - will be translated to the target language
             @param hidden: If true, the menu will be created but not added to the menu bar.
         """
         self.order = order
         self.idx = idx
         self.commands = commands
-        self.name = name
+        self.name = self.nameKey = nameKey
         self.hidden = hidden
         
         #From what I'm seeing, the only way to find a menu is by the position or by the title.
@@ -97,6 +91,13 @@ class CommandCategory():
         #So to work around this, store the id when inserting the menu into the bar.
         #This will be set when the menu is built.
         self.menu_idx = -1
+        
+        self.update_translation()
+
+    def update_translation(self):
+        #dumb hack to avoid translating the debug menu option stuff.
+        if self.nameKey != 'Debug':
+            self.name = _(self.nameKey)
         
     @property
     def clean_name(self):
