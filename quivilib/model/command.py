@@ -18,13 +18,14 @@ class Command():
         self.ide = definition.uid
         self.name = self.nameKey = definition.nameKey
         self.description = self.descrKey = definition.descrKey
-        self._function = function
-        self._down_function = down_function
         self.default_shortcuts = definition.shortcuts
         self.shortcuts: list[Shortcut] = []
-        self.update_function = update_function
         self.flags = definition.flags
         self.update_translation()
+        
+        self._function = function
+        self.update_function = update_function
+        self._down_function = down_function
         
         need_update = (definition.flags & CommandFlags.NEED_UPDATE) != 0
         #Some consistency checks

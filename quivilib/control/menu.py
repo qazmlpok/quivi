@@ -95,10 +95,6 @@ class MenuController(object):
             commands.append(command)
             return command
         
-        def make_category(*params):
-            category = CommandCategory(*params)
-            return category
-        
         file_menu = (
             make(CommandName.SET_WALLPAPER, 
                 control.wallpaper.open_dialog,
@@ -213,20 +209,20 @@ class MenuController(object):
             make(CommandName.ZOOM_CUSTOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True)),
         )
         main_menu = (
-            make_category(0, 'file', '&File', file_menu),
-            make_category(1, 'fold', 'F&older', folder_menu),
-            make_category(2, 'view', '&View', view_menu),
-            make_category(3, 'fav' , 'F&avorites', favorites_menu),
-            make_category(4, 'help', '&Help', help_menu),
-            make_category(6, '_fit', 'Fit', fit_menu, True),
+            CommandCategory(0, 'file', '&File', file_menu),
+            CommandCategory(1, 'fold', 'F&older', folder_menu),
+            CommandCategory(2, 'view', '&View', view_menu),
+            CommandCategory(3, 'fav' , 'F&avorites', favorites_menu),
+            CommandCategory(4, 'help', '&Help', help_menu),
+            CommandCategory(6, '_fit', 'Fit', fit_menu, True),
         )
         #The fit menu doesn't appear in the top, but can open via right click, so it needs to be created.
         #The other menus here exist to provide commands in the options, but aren't otherwise menus
         #Names can overlap with actual menu names (this is deliberate)
         #Order (first parameter) controls where it will appear in the Settings dialog only
         command_cats = main_menu + (
-            make_category(3.1, '_fav', 'Favorites', favorites_hidden_menu, True),
-            make_category(5, '_mov', 'Move', hidden_menu, True),
+            CommandCategory(3.1, '_fav', 'Favorites', favorites_hidden_menu, True),
+            CommandCategory(5, '_mov', 'Move', hidden_menu, True),
         )
         if __debug__:
             #Debug options. Disable when built as an application.
@@ -236,7 +232,7 @@ class MenuController(object):
                 #I can't find any kind of built-in wxpython diagnostics that would be trivial to include.
             )
             main_menu = main_menu + (
-                make_category(7, 'debug', 'Debug', debug_menu),
+                CommandCategory(7, 'debug', 'Debug', debug_menu),
             )
         
         return main_menu, command_cats, commands
