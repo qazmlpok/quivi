@@ -6,6 +6,9 @@ import wx
 import wx.aui
 from pubsub import pub as Publisher
 
+from quivilib.model.command import Command, CommandCategory
+from quivilib.model.canvas import PaintedRegion
+from quivilib.model.container.base import BaseContainer
 from quivilib.control.options import get_fit_choices
 from quivilib.i18n import _
 from quivilib import meta
@@ -15,8 +18,7 @@ from quivilib.gui.debug import DebugDialog
 from quivilib.resources import images
 from quivilib import util
 
-from quivilib.model.container.base import BaseContainer
-
+from typing import Any
 
 ZOOM_FIELD = 2
 SIZE_FIELD = 1
@@ -176,18 +178,18 @@ class MainWindow(wx.Frame):
         if wx.Display.GetFromWindow(self) == wx.NOT_FOUND:
             self.SetSize(0, 0, width, height)
 
-    def on_resize(self, event):
+    def on_resize(self, event: wx.SizeEvent):
         Publisher.sendMessage('canvas.resized')
         if not self.IsMaximized():
             self._last_size = self.GetSize()
             
-    def on_move(self, event):
+    def on_move(self, event: wx.MoveEvent):
         if not self.IsMaximized():
             self._last_pos = self.GetPosition()
         
     @error_handler(_handle_error)
-    def on_close(self, event):
-        settings_lst = []
+    def on_close(self, event: wx.CloseEvent):
+        settings_lst: Any = []
         self.save(settings_lst)
         self.file_list_panel.save(settings_lst)
         try:
@@ -199,7 +201,7 @@ class MainWindow(wx.Frame):
         del self.aui_mgr
         self.Destroy()
         
-    def on_mouse_motion(self, event):
+    def on_mouse_motion(self, event: wx.MouseEvent):
         Publisher.sendMessage('canvas.mouse.motion', x=event.GetX(), y=event.GetY())
         event.Skip()
         
@@ -207,7 +209,7 @@ class MainWindow(wx.Frame):
         self.load(settings)
         self.file_list_panel.load(settings)
     
-    def on_panel_paint(self, event):
+    def on_panel_paint(self, event: wx.PaintEvent):
         if meta.DOUBLE_BUFFERING:
             dc = wx.BufferedPaintDC(self.panel)
             dc.Clear()
@@ -215,8 +217,6 @@ class MainWindow(wx.Frame):
             dc = wx.PaintDC(self.panel)
         #This is required on Linux
         dc.SetBackground(wx.Brush(self.panel.GetBackgroundColour()))
-        class PaintedRegion(object):
-            pass
         painted_region = PaintedRegion()
         #The recipient will update the painted_region fields.
         Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
@@ -236,7 +236,7 @@ class MainWindow(wx.Frame):
                 dc.Clear()
                 iter.Next()
         
-    def on_mouse_wheel(self, event):
+    def on_mouse_wheel(self, event: wx.MouseEvent):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
         lines *= event.GetLinesPerAction()
         if event.controlDown:
@@ -245,10 +245,10 @@ class MainWindow(wx.Frame):
         else:
             Publisher.sendMessage('canvas.scrolled', lines=lines, horizontal=event.shiftDown)
         
-    def on_mouse_enter(self, event):
+    def on_mouse_enter(self, event: wx.MouseEvent):
         self.panel.SetFocus()
         
-    def on_fit_context_menu(self, event):
+    def on_fit_context_menu(self, event: wx.ContextMenuEvent):
         """Appears on right-clicking the status bar"""
         menu = wx.Menu()
         self.PopupMenu(self.menus['_fit'])
@@ -295,13 +295,18 @@ class MainWindow(wx.Frame):
         text = util.get_formatted_zoom(zoom)
         self.status_bar.SetStatusText(text, ZOOM_FIELD)
         
-    def on_menu_built(self, *, main_menu, commands):
+    def on_menu_built(self, *, main_menu: tuple[CommandCategory, ...], commands: list[Command]):
+        i = 0
         for category in main_menu:
             menu = self._make_menu(category.commands)
             self.menus[category.idx] = menu
             #Don't actually add the menu to the bar if it's hidden (it can still be opened via PopupMenu)
             if not category.hidden:
                 self.menu_bar.Append(menu, category.name)
+                #Need to manually track the id. Searching by name doesn't work if the name can change (translations)
+                #Just counting up is fine as long as there aren't existing menu items, and there shouldn't be.
+                category.menu_idx = i
+                i += 1
 
         #Create actual bindings for the commands
         for command in commands:
@@ -369,10 +374,10 @@ class MainWindow(wx.Frame):
                 menu_item.SetHelp(cmd.description)
         for idx, category in enumerate(main_menu):
             if not category.hidden:
-                #Get the actual index of the menu, not what the array specifies.
-                #This allows putting hidden images before visible ones.
-                idx = self.menu_bar.FindMenu(category.name)
-                self.menu_bar.SetMenuLabel(idx, category.name)
+                #Need to use the idx stored in the category (when the bar is created)
+                #Finding by name isn't reliable if the name can change.
+                midx = category.menu_idx
+                self.menu_bar.SetMenuLabel(midx, category.name)
     
     def on_container_opened(self, *, container: BaseContainer):
         self.SetTitle(f'{container.name} - {meta.APPNAME}')

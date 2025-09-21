@@ -7,7 +7,7 @@ from wx.lib import langlistctrl
 
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
-from quivilib.model.command import Command
+from quivilib.model.command import CommandFlags
 from quivilib.model.settings import Settings
 import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
@@ -135,9 +135,9 @@ class OptionsDialog(wx.Dialog):
                 if cmd is None:
                     continue
                 text = f'{category.clean_name} | {cmd.clean_name}'
-                if cmd.flags & Command.KB:
+                if cmd.flags & CommandFlags.KB:
                     self.commands_lst.Append(text, cmd)
-                if cmd.flags & Command.MOUSE:
+                if cmd.flags & CommandFlags.MOUSE:
                     for m in self._mouse_cbos:
                         m.Append(text, cmd.ide)
 

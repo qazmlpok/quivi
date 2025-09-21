@@ -6,7 +6,7 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.model.command import Command, CommandCategory
+from quivilib.model.command import CommandName, Command, CommandCategory, CommandDefinitionList
 from quivilib.model.shortcut import Shortcut
 from quivilib.control import canvas
 from quivilib.control.canvas import MovementType
@@ -20,8 +20,9 @@ class MenuController(object):
         self.settings = settings
         self.control = control
         self.commands = []
+        self.command_definitions = CommandDefinitionList()
         self.main_menu, self.command_cats, self.commands = self._make_commands(self.control)
-        self.main_menu_dict = {x.name: x for x in self.main_menu}
+        self.main_menu_dict = {x.idx: x for x in self.main_menu}
         self._load_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
         #These must be sent in this order
@@ -57,7 +58,7 @@ class MenuController(object):
         )
         
     def on_language_changed(self):
-        self._make_commands(self.control, True)
+        self._update_menu_translations()
         Publisher.sendMessage('menu.labels.changed', 
                                 main_menu=self.main_menu,
                                 commands=self.commands,
@@ -70,279 +71,168 @@ class MenuController(object):
     def on_command_down_execute(self, *, ide):
         [cmd.on_down() for cmd in self.commands if cmd.ide == ide]
 
-    def _make_commands(self, control, update=False):
-        """Make (or update) all commands.
+    def _update_menu_translations(self):
+        """ Instruct the menu items to update their current translation
+        The saved key is re-applied to the translation function.
+        """
+        #Update menu items
+        for cmd in self.commands:
+            cmd.update_translation()
+        #Update menu categories
+        for idx in self.main_menu_dict:
+            category = self.main_menu_dict[idx]
+            category.update_translation()
+    def _make_commands(self, control):
+        """Make all commands.
         
         @param control: reference to the main controller instance
-        @update: if True, then it will only update the existing commands.
-            (Which will retranslate them when changing languages)
         """
-        #TODO: (1,2) Refactor: does two different things 
         commands = []
-        if update:
-            cmd_dict = dict((cmd.ide, cmd) for cmd in self.commands)
-            def make(*params, **kwparams):
-                ide, name, description = params[0:3]
-                cmd_dict[ide].name = name
-                cmd_dict[ide].description = description
-                return None
-            
-            def make_category(*params):
-                idx, name = params[1:3]
-                if idx in self.main_menu_dict:
-                    category = self.main_menu[idx]
-                    category.name = name
-                return None
-        else:
-            def make(*params, **kwparams):
-                params = list(params)
-                for idx in range(len(params[4])):
-                    params[4][idx] = Shortcut(*params[4][idx])
-                command = Command(*params, **kwparams)
-                commands.append(command)
-                return command
-            
-            def make_category(*params):
-                category = CommandCategory(*params)
-                return category
+        
+        def make(ide, function, **kwparams):
+            definition = self.command_definitions.commands[ide]
+            command = Command(definition, function, **kwparams)
+            commands.append(command)
+            return command
         
         file_menu = (
-         make(11001, _('Set as &wallpaper...'), _('Set the opened image as wallpaper'),
-              control.wallpaper.open_dialog,
-              [(wx.ACCEL_NORMAL, wx.WXK_F3)],
-              update_function=control.on_update_image_available_menu_item),
-         make(11002, _('&Copy'), _('Copy the opened image to the clipboard'),
-              control.copy_to_clipboard,
-              [(wx.ACCEL_CTRL, ord('C'))],
-              update_function=control.on_update_image_available_menu_item),
-         make(11005, _('&Copy path'), _('Copy the path of the current container to the clipboard'),
-              control.copy_path_to_clipboard,
-              [(wx.ACCEL_CTRL, ord('B'))],
-              update_function=control.on_update_image_available_menu_item),
-         make(11004, _('&Delete'), _('Delete the opened image'),
-              control.delete,
-              [(wx.ACCEL_CTRL, wx.WXK_DELETE)],
-              checkable=False, update_function=control.file_list.on_update_delete_menu_item),
-         make(11006, _('&Move...'), _('Move the opened zip file to a new location'),
-              control.open_move_dialog,
-              [(wx.ACCEL_CTRL, ord('N'))],
-              checkable=False, update_function=control.file_list.on_update_move_menu_item),
-         None,
-         make(11003, _('&Options...'), _('Open the options dialog'),
-              control.options.open_dialog,
-              [(wx.ACCEL_NORMAL, wx.WXK_F4)]),
-         None,
-         make(wx.ID_EXIT, _('&Quit'), _('Close the application'),
-              control.quit,
-              [], flags=Command.KB)
+            make(CommandName.SET_WALLPAPER, 
+                control.wallpaper.open_dialog,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.COPY, 
+                control.copy_to_clipboard,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.COPY_PATH, 
+                control.copy_path_to_clipboard,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.DELETE, 
+                control.delete,
+                update_function=control.file_list.on_update_delete_menu_item),
+            make(CommandName.MOVE,
+                control.open_move_dialog,
+                update_function=control.file_list.on_update_move_menu_item),
+            None,
+            make(CommandName.OPTIONS, control.options.open_dialog),
+            None,
+            make(CommandName.QUIT, control.quit)
         )
         folder_menu = (
-         make(12001, _('Select/Open &next'), _('Select the next item; if it is an image, show it'),
-              partial(control.file_list.select_next, 1),
-              [(wx.ACCEL_NORMAL, wx.WXK_END), (wx.ACCEL_NORMAL, wx.WXK_SPACE)]),
-         make(12002, _('Select/Open &previous'), _('Select the previous item; if it is an image, show it'),
-              partial(control.file_list.select_next, -1),
-              [(wx.ACCEL_NORMAL, wx.WXK_HOME)]),
-         make(12003, _('Open selected &directory'), _('If a directory or a compressed file is selected, open it'),
-              control.file_list.open_selected_container,
-              [(wx.ACCEL_NORMAL, wx.WXK_INSERT)]),
-         make(12004, _('Open p&arent'), _('Open the parent directory or compressed file'),
-              control.file_list.open_parent,
-              [(wx.ACCEL_NORMAL, wx.WXK_DELETE)]),
-         make(12005, _('Open ne&xt sibling'), _('Open the next directory or compressed file inside the parent'),
-              partial(control.file_list.open_sibling, 1),
-              [(wx.ACCEL_CTRL, wx.WXK_END)]),
-         make(12006, _('Open previou&s sibling'), _('Open the previous directory or compressed file inside the parent'),
-              partial(control.file_list.open_sibling, -1),
-              [(wx.ACCEL_CTRL, wx.WXK_HOME)]),
-         make(12007, _('&Refresh'), _('Refresh the current directory or compressed file; reload the image shown if any'),
-              control.file_list.refresh,
-              [(wx.ACCEL_NORMAL, wx.WXK_F5)]),
-         make(12008, _('Open direc&tory...'), _('Browse for a directory to open'),
-              control.file_list.open_directory,
-              [(wx.ACCEL_CTRL, ord('O'))])
+            make(CommandName.SELECT_NEXT, partial(control.file_list.select_next, 1)),
+            make(CommandName.SELECT_PREVIOUS, partial(control.file_list.select_next, -1)),
+            make(CommandName.OPEN_SELECTED_DIRECTORY, control.file_list.open_selected_container),
+            make(CommandName.OPEN_PARENT, control.file_list.open_parent),
+            make(CommandName.OPEN_NEXT, partial(control.file_list.open_sibling, 1)),
+            make(CommandName.OPEN_PREVIOUS,  partial(control.file_list.open_sibling, -1)),
+            make(CommandName.REFRESH, control.file_list.refresh),
+            make(CommandName.OPEN_DIRECTORY, control.file_list.open_directory)
         )
         view_menu = (
-         make(13001, _('Zoom &in'), _('Zoom in'),
-              control.canvas.zoom_in,
-              [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_ADD)],
-              update_function=control.on_update_image_available_menu_item),
-         make(13002, _('Zoom &out'), _('Zoom out'),
-              control.canvas.zoom_out,
-              [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_SUBTRACT)],
-              update_function=control.on_update_image_available_menu_item),
-         #TODO: Add mouse-specific version that zooms in on mouse position. Also give it NOMENU.
-         #When NOMENU is implemented, also remove the hidden menus.
-         make(13003, _('&Zoom 100%'), _('Show the image in its real size'),
-              control.canvas.zoom_reset,
-              [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_MULTIPLY)],
-              update_function=control.on_update_image_available_menu_item),
-         make(13004, _('Fit &width'), _('Zooms the image in order to make its width fit the window'),
-              control.canvas.zoom_fit_width,
-              [(wx.ACCEL_CTRL, ord('W'))],
-              update_function=control.on_update_image_available_menu_item),
-         make(13005, _('Fit &height'), _('Zooms the image in order to make its height fit the window'),
-              control.canvas.zoom_fit_height,
-              [(wx.ACCEL_CTRL, ord('H'))],
-              update_function=control.on_update_image_available_menu_item),
-         #TODO: All the messaging around this feature is awful but I don't know how to better word it.
-         make(13040, _('Show &spread'), _('Attempt to show combined pages at regular zoom'),
-              control.toggle_spread,
-              [(wx.ACCEL_CTRL, ord('E'))],
-              checkable=True, update_function=control.on_update_spread_toggle_menu_item),
-         make(13008, _('Rotate &clockwise'), _('Rotate the image clockwise'),
-              partial(control.canvas.rotate_image, 1),
-              [(wx.ACCEL_CTRL, ord('L'))],
-              update_function=control.on_update_image_available_menu_item),
-         make(13009, _('Rotate coun&ter clockwise'), _('Rotate the image counter clockwise'),
-              partial(control.canvas.rotate_image, 0),
-              [(wx.ACCEL_CTRL, ord('K'))],
-              update_function=control.on_update_image_available_menu_item),
-         None,
-         make(13006, _('&Full screen'), _('Go to/leave full screen mode'),
-              control.toggle_fullscreen,
-              [(wx.ACCEL_ALT, wx.WXK_RETURN)],
-              checkable=True, update_function=control.on_update_fullscreen_menu_item),
-         make(13007, _('File &list'), _('Show/hide the file list'),
-              control.toggle_file_list,
-              [(wx.ACCEL_NORMAL, wx.WXK_TAB)],
-              checkable=True, update_function=control.on_update_file_list_menu_item),
-         make(13011, _('Thumb&nails'), _('Show/hide the thumbnails'),
-              control.toggle_thumbnails,
-              [(wx.ACCEL_NORMAL, wx.WXK_F6)],
-              checkable=True, update_function=control.on_update_thumbnail_menu_item),
-         make(13010, _('Hi&dden files'), _('Show/hide hidden files in the file list'),
-              control.file_list.toggle_show_hidden,
-              [(wx.ACCEL_CTRL, ord('A'))],
-              checkable=True, update_function=control.file_list.on_update_hidden_menu_item)
+            make(CommandName.ZOOM_IN, 
+                control.canvas.zoom_in,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.ZOOM_OUT, 
+                control.canvas.zoom_out,
+                update_function=control.on_update_image_available_menu_item),
+            #TODO: Add mouse-specific version that zooms in on mouse position. Also give it NOMENU.
+            #When NOMENU is implemented, also remove the hidden menus.
+            make(CommandName.ZOOM_FULL, 
+                control.canvas.zoom_reset,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.FIT_WIDTH, 
+                control.canvas.zoom_fit_width,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.FIT_HEIGHT, 
+                control.canvas.zoom_fit_height,
+                update_function=control.on_update_image_available_menu_item),
+            #TODO: All the messaging around this feature is awful but I don't know how to better word it.
+            make(CommandName.SHOW_SPREAD, 
+                control.toggle_spread,
+                update_function=control.on_update_spread_toggle_menu_item),
+            make(CommandName.ROTATE_CLOCKWISE, 
+                partial(control.canvas.rotate_image, 1),
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.ROTATE_COUNTER_CLOCKWISE, 
+                partial(control.canvas.rotate_image, 0),
+                update_function=control.on_update_image_available_menu_item),
+            None,
+            make(CommandName.FULL_SCREEN, 
+                control.toggle_fullscreen,
+                update_function=control.on_update_fullscreen_menu_item),
+            make(CommandName.SHOW_FILE_LIST, 
+                control.toggle_file_list,
+                update_function=control.on_update_file_list_menu_item),
+            make(CommandName.SHOW_THUMBNAILS, 
+                control.toggle_thumbnails,
+                update_function=control.on_update_thumbnail_menu_item),
+            make(CommandName.SHOW_HIDDEN_FILES, 
+                control.file_list.toggle_show_hidden,
+                update_function=control.file_list.on_update_hidden_menu_item)
         )
         favorites_menu = (
-         make(14001, _('Add to &favorites'), _('Add the current directory or compressed file to the favorites'),
-              control.add_favorite,
-              [(wx.ACCEL_CTRL, ord('D'))]),
-         make(14003, _('Add &placeholder'), _('Add the current directory or compressed file to the favorites on the current image'),
-              control.add_placeholder,
-              [(wx.ACCEL_CTRL, ord('F'))]),
-         make(14002, _('R&emove from favorites'), _('Remove the current directory or compressed file from the favorites'),
-              control.remove_favorite,
-              [(wx.ACCEL_CTRL, ord('R'))]),
-         make(14004, _('Remove p&laceholder'), _('Remove the saved page for the current directory or compressed file from the favorites'),
-              control.remove_placeholder,
-              [(wx.ACCEL_CTRL, ord('V'))]),
+            make(CommandName.ADD_FAVORITES, control.add_favorite),
+            make(CommandName.ADD_PLACEHOLDER, control.add_placeholder),
+            make(CommandName.REMOVE_FAVORITES, control.remove_favorite),
+            make(CommandName.REMOVE_PLACEHOLDER, control.remove_placeholder),
         )
         favorites_hidden_menu = (
-         make(14005, _('Open last placeholder'), _('Open the most recently created placeholder'),
-              control.open_latest_placeholder,
-              [(wx.ACCEL_CTRL, ord('L'))]),
+            make(CommandName.OPEN_LAST_PLACEHOLDER, control.open_latest_placeholder),
         )
         help_menu = (
-          make(15001, _('&Help (online)...'), _('Open the online help'),
-               control.open_help,
-               [(wx.ACCEL_NORMAL, wx.WXK_F1)], flags=Command.KB),
-          make(15002, _('&Feedback / Support (online)...'), _('Open the feedback / support online form'),
-               control.open_feedback,
-               [], flags=Command.KB),
-          make(wx.ID_ABOUT, _('&About...'), _('Show information about the application'),
-               control.open_about_dialog,
-               [], flags=Command.KB)
+            make(CommandName.HELP, control.open_help),
+            make(CommandName.FEEDBACK, control.open_feedback),
+            make(CommandName.ABOUT, control.open_about_dialog)
         )
         hidden_menu = (
-          make(16001, _('Small move up'), _('Small move up'),
-               partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_UP)], flags=Command.KB),
-          make(16002, _('Small move down'), _('Small move down'),
-               partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_DOWN)], flags=Command.KB),
-          make(16003, _('Small move left'), _('Small move left'),
-               partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_LEFT)], flags=Command.KB),
-          make(16004, _('Small move right'), _('Small move right'),
-               partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL),
-               [(wx.ACCEL_NORMAL, wx.WXK_RIGHT)], flags=Command.KB),
-          make(16005, _('Large move up'), _('Large move up'),
-               partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE),
-               [(wx.ACCEL_NORMAL, wx.WXK_PAGEUP)], flags=Command.KB),
-          make(16006, _('Large move down'), _('Large move down'),
-               partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE),
-               [(wx.ACCEL_NORMAL, wx.WXK_PAGEDOWN)], flags=Command.KB),
-          make(16007, _('Large move left'), _('Large move left'),
-               partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE),
-               [], flags=Command.KB),
-          make(16008, _('Large move right'), _('Large move right'),
-               partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE),
-               [], flags=Command.KB),
-          make(16009, _('Full move up'), _('Full move up'),
-               partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL),
-               [], flags=Command.KB),
-          make(16010, _('Full move down'), _('Full move down'),
-               partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL),
-               [], flags=Command.KB),
-          make(16011, _('Full move left'), _('Full move left'),
-               partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL),
-               [], flags=Command.KB),
-          make(16012, _('Full move right'), _('Full move right'),
-               partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL),
-               [], flags=Command.KB),
-          make(16100, _('Drag image'), _('Drag image'),
-               control.canvas.image_drag_end,
-               [], down_function=control.canvas.image_drag_start, flags=Command.MOUSE),
+            make(CommandName.MOVE_SMALL_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_SMALL_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_SMALL_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_SMALL_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_LARGE_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_LARGE_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_LARGE_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_LARGE_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_FULL_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL)),
+            make(CommandName.MOVE_FULL_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL)),
+            make(CommandName.MOVE_FULL_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL)),
+            make(CommandName.MOVE_FULL_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL)),
+            make(CommandName.DRAG_IMAGE, control.canvas.image_drag_end, down_function=control.canvas.image_drag_start),
         )
         fit_menu = (
-          make(17001, _('None'), _('None'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_NONE, save=True),
-               []),
-          make(17002, _('Width'), _('Width'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH, save=True),
-               []),
-          make(17003, _('Height'), _('Height'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT, save=True),
-               []),
-          make(17004, _('Window'), _('Window'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH, save=True),
-               []),
-          make(17005, _('Width if larger'), _('Width if larger'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH_OVERSIZE, save=True),
-               []),
-          make(17006, _('Height if larger'), _('Height if larger'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT_OVERSIZE, save=True),
-               []),
-          make(17007, _('Window if larger'), _('Window if larger'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH_OVERSIZE, save=True),
-               []),
-          #TODO: (2,2) Add: ask for the custom width?
-          make(17008, _('Custom width'), _('Custom width'),
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True),
-               []),
+            make(CommandName.ZOOM_NONE, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_NONE, save=True)),
+            make(CommandName.ZOOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH, save=True)),
+            make(CommandName.ZOOM_HEIGHT, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT, save=True)),
+            make(CommandName.ZOOM_WINDOW, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH, save=True)),
+            make(CommandName.ZOOM_WIDTH_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH_OVERSIZE, save=True)),
+            make(CommandName.ZOOM_HEIGHT_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT_OVERSIZE, save=True)),
+            make(CommandName.ZOOM_WINDOW_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH_OVERSIZE, save=True)),
+            #TODO: (2,2) Add: ask for the custom width?
+            make(CommandName.ZOOM_CUSTOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True)),
         )
         main_menu = (
-         make_category(0, 'file', _('&File'), file_menu),
-         make_category(1, 'fold', _('F&older'), folder_menu),
-         make_category(2, 'view', _('&View'), view_menu),
-         make_category(3, 'fav' , _('F&avorites'), favorites_menu),
-         make_category(4, 'help', _('&Help'), help_menu),
-         #make_category(5, _('Move'), hidden_menu, True),
-         make_category(6, '_fit', _('Fit'), fit_menu, True),
+            CommandCategory(0, 'file', '&File', file_menu),
+            CommandCategory(1, 'fold', 'F&older', folder_menu),
+            CommandCategory(2, 'view', '&View', view_menu),
+            CommandCategory(3, 'fav' , 'F&avorites', favorites_menu),
+            CommandCategory(4, 'help', '&Help', help_menu),
+            CommandCategory(6, '_fit', 'Fit', fit_menu, True),
         )
         #The fit menu doesn't appear in the top, but can open via right click, so it needs to be created.
         #The other menus here exist to provide commands in the options, but aren't otherwise menus
         #Names can overlap with actual menu names (this is deliberate)
         #Order (first parameter) controls where it will appear in the Settings dialog only
         command_cats = main_menu + (
-            make_category(3.1, '_fav', _('Favorites'), favorites_hidden_menu, True),
-            make_category(5, '_mov', _('Move'), hidden_menu, True),
+            CommandCategory(3.1, '_fav', 'Favorites', favorites_hidden_menu, True),
+            CommandCategory(5, '_mov', 'Move', hidden_menu, True),
         )
         if __debug__:
             #Debug options. Disable when built as an application.
-            #Nothing here will be translated, and won't be available as shortcuts.
             debug_menu = (
-                make(29900, 'Cache', 'Show Cache information',
-                     control.debugController.open_debug_cache_dialog,
-                     [], flags=Command.KB),
+                make(CommandName.CACHE_INFO, control.debugController.open_debug_cache_dialog),
                 #Maybe an option to change the log level?
-                #I can't find any kind of built in wxpython diagnostics that would be trivial to include.
+                #I can't find any kind of built-in wxpython diagnostics that would be trivial to include.
             )
             main_menu = main_menu + (
-                make_category(7, 'debug', 'Debug', debug_menu),
+                CommandCategory(7, 'debug', 'Debug', debug_menu),
             )
         
         return main_menu, command_cats, commands
@@ -350,8 +240,13 @@ class MenuController(object):
     @staticmethod
     def _get_toolbar_commands(commands):
         cmd_dict = dict((cmd.ide, cmd) for cmd in commands)
-        #TODO: (2,2) Refactor: use constants
-        cmd_ids = (12008, 14001, 14002, 12004, 13011)
+        cmd_ids = (
+            CommandName.OPEN_DIRECTORY,
+            CommandName.ADD_FAVORITES,
+            CommandName.REMOVE_FAVORITES,
+            CommandName.OPEN_PARENT,
+            CommandName.SHOW_THUMBNAILS
+        )
         return tuple(cmd_dict[id] for id in cmd_ids)
     
     @staticmethod

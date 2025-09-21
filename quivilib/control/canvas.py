@@ -4,12 +4,11 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib import meta
-from quivilib.model.canvas import Canvas
+from quivilib.model.canvas import Canvas, PaintedRegion
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.util import DebugTimer
 from quivilib.control.cache import ImageCacheLoadRequest, ImageCacheLoaded
-from quivilib.control.options import get_fit_choices
 
 ZOOM_FACTOR = 25
 
@@ -117,7 +116,7 @@ class CanvasController(object):
             self.pending_request = None
 
     #Drawing
-    def on_canvas_painted(self, *, dc, painted_region):
+    def on_canvas_painted(self, *, dc, painted_region: PaintedRegion):
         self.canvas.paint(dc)
         painted_region.top = self.canvas.top
         painted_region.left = self.canvas.left
