@@ -105,164 +105,125 @@ class MenuController(object):
                 return category
         
         file_menu = (
-         make(11001, 
-              control.wallpaper.open_dialog,
-              update_function=control.on_update_image_available_menu_item),
-         make(11002, 
-              control.copy_to_clipboard,
-              update_function=control.on_update_image_available_menu_item),
-         make(11005, 
-              control.copy_path_to_clipboard,
-              update_function=control.on_update_image_available_menu_item),
-         make(11004, 
-              control.delete,
-              update_function=control.file_list.on_update_delete_menu_item),
-         make(11006, 
-              control.open_move_dialog,
-              update_function=control.file_list.on_update_move_menu_item),
-         None,
-         make(11003, 
-              control.options.open_dialog),
-         None,
-         make(wx.ID_EXIT, 
-              control.quit)
+            make(CommandName.SET_WALLPAPER, 
+                control.wallpaper.open_dialog,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.COPY, 
+                control.copy_to_clipboard,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.COPY_PATH, 
+                control.copy_path_to_clipboard,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.DELETE, 
+                control.delete,
+                update_function=control.file_list.on_update_delete_menu_item),
+            make(CommandName.MOVE,
+                control.open_move_dialog,
+                update_function=control.file_list.on_update_move_menu_item),
+            None,
+            make(CommandName.OPTIONS, control.options.open_dialog),
+            None,
+            make(CommandName.QUIT, control.quit)
         )
         folder_menu = (
-         make(12001, 
-              partial(control.file_list.select_next, 1)),
-         make(12002, 
-              partial(control.file_list.select_next, -1)),
-         make(12003, 
-              control.file_list.open_selected_container),
-         make(12004, 
-              control.file_list.open_parent),
-         make(12005, 
-              partial(control.file_list.open_sibling, 1)),
-         make(12006, 
-              partial(control.file_list.open_sibling, -1)),
-         make(12007, 
-              control.file_list.refresh),
-         make(12008, 
-              control.file_list.open_directory)
+            make(CommandName.SELECT_NEXT, partial(control.file_list.select_next, 1)),
+            make(CommandName.SELECT_PREVIOUS, partial(control.file_list.select_next, -1)),
+            make(CommandName.OPEN_SELECTED_DIRECTORY, control.file_list.open_selected_container),
+            make(CommandName.OPEN_PARENT, control.file_list.open_parent),
+            make(CommandName.OPEN_NEXT, partial(control.file_list.open_sibling, 1)),
+            make(CommandName.OPEN_PREVIOUS,  partial(control.file_list.open_sibling, -1)),
+            make(CommandName.REFRESH, control.file_list.refresh),
+            make(CommandName.OPEN_DIRECTORY, control.file_list.open_directory)
         )
         view_menu = (
-         make(13001, 
-              control.canvas.zoom_in,
-              update_function=control.on_update_image_available_menu_item),
-         make(13002, 
-              control.canvas.zoom_out,
-              update_function=control.on_update_image_available_menu_item),
-         #TODO: Add mouse-specific version that zooms in on mouse position. Also give it NOMENU.
-         #When NOMENU is implemented, also remove the hidden menus.
-         make(13003, 
-              control.canvas.zoom_reset,
-              update_function=control.on_update_image_available_menu_item),
-         make(13004, 
-              control.canvas.zoom_fit_width,
-              update_function=control.on_update_image_available_menu_item),
-         make(13005, 
-              control.canvas.zoom_fit_height,
-              update_function=control.on_update_image_available_menu_item),
-         #TODO: All the messaging around this feature is awful but I don't know how to better word it.
-         make(13040, 
-              control.toggle_spread,
-              update_function=control.on_update_spread_toggle_menu_item),
-         make(13008, 
-              partial(control.canvas.rotate_image, 1),
-              update_function=control.on_update_image_available_menu_item),
-         make(13009, 
-              partial(control.canvas.rotate_image, 0),
-              update_function=control.on_update_image_available_menu_item),
-         None,
-         make(13006, 
-              control.toggle_fullscreen,
-              update_function=control.on_update_fullscreen_menu_item),
-         make(13007, 
-              control.toggle_file_list,
-              update_function=control.on_update_file_list_menu_item),
-         make(13011, 
-              control.toggle_thumbnails,
-              update_function=control.on_update_thumbnail_menu_item),
-         make(13010, 
-              control.file_list.toggle_show_hidden,
-              update_function=control.file_list.on_update_hidden_menu_item)
+            make(CommandName.ZOOM_IN, 
+                control.canvas.zoom_in,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.ZOOM_OUT, 
+                control.canvas.zoom_out,
+                update_function=control.on_update_image_available_menu_item),
+            #TODO: Add mouse-specific version that zooms in on mouse position. Also give it NOMENU.
+            #When NOMENU is implemented, also remove the hidden menus.
+            make(CommandName.ZOOM_FULL, 
+                control.canvas.zoom_reset,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.FIT_WIDTH, 
+                control.canvas.zoom_fit_width,
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.FIT_HEIGHT, 
+                control.canvas.zoom_fit_height,
+                update_function=control.on_update_image_available_menu_item),
+            #TODO: All the messaging around this feature is awful but I don't know how to better word it.
+            make(CommandName.SHOW_SPREAD, 
+                control.toggle_spread,
+                update_function=control.on_update_spread_toggle_menu_item),
+            make(CommandName.ROTATE_CLOCKWISE, 
+                partial(control.canvas.rotate_image, 1),
+                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.ROTATE_COUNTER_CLOCKWISE, 
+                partial(control.canvas.rotate_image, 0),
+                update_function=control.on_update_image_available_menu_item),
+            None,
+            make(CommandName.FULL_SCREEN, 
+                control.toggle_fullscreen,
+                update_function=control.on_update_fullscreen_menu_item),
+            make(CommandName.SHOW_FILE_LIST, 
+                control.toggle_file_list,
+                update_function=control.on_update_file_list_menu_item),
+            make(CommandName.SHOW_THUMBNAILS, 
+                control.toggle_thumbnails,
+                update_function=control.on_update_thumbnail_menu_item),
+            make(CommandName.SHOW_HIDDEN_FILES, 
+                control.file_list.toggle_show_hidden,
+                update_function=control.file_list.on_update_hidden_menu_item)
         )
         favorites_menu = (
-         make(14001, 
-              control.add_favorite),
-         make(14003, 
-              control.add_placeholder),
-         make(14002, 
-              control.remove_favorite),
-         make(14004, 
-              control.remove_placeholder),
+            make(CommandName.ADD_FAVORITES, control.add_favorite),
+            make(CommandName.ADD_PLACEHOLDER, control.add_placeholder),
+            make(CommandName.REMOVE_FAVORITES, control.remove_favorite),
+            make(CommandName.REMOVE_PLACEHOLDER, control.remove_placeholder),
         )
         favorites_hidden_menu = (
-         make(14005, 
-              control.open_latest_placeholder),
+            make(CommandName.OPEN_LAST_PLACEHOLDER, control.open_latest_placeholder),
         )
         help_menu = (
-          make(15001, 
-               control.open_help),
-          make(15002, 
-               control.open_feedback),
-          make(wx.ID_ABOUT, 
-               control.open_about_dialog)
+            make(CommandName.HELP, control.open_help),
+            make(CommandName.FEEDBACK, control.open_feedback),
+            make(CommandName.ABOUT, control.open_about_dialog)
         )
         hidden_menu = (
-          make(16001, 
-               partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL)),
-          make(16002, 
-               partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL)),
-          make(16003, 
-               partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL)),
-          make(16004, 
-               partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL)),
-          make(16005, 
-               partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE)),
-          make(16006, 
-               partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE)),
-          make(16007, 
-               partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE)),
-          make(16008, 
-               partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE)),
-          make(16009, 
-               partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL)),
-          make(16010, 
-               partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL)),
-          make(16011, 
-               partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL)),
-          make(16012, 
-               partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL)),
-          make(16100, 
-               control.canvas.image_drag_end, down_function=control.canvas.image_drag_start),
+            make(CommandName.MOVE_SMALL_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_SMALL_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_SMALL_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_SMALL_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL)),
+            make(CommandName.MOVE_LARGE_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_LARGE_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_LARGE_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_LARGE_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE)),
+            make(CommandName.MOVE_FULL_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL)),
+            make(CommandName.MOVE_FULL_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL)),
+            make(CommandName.MOVE_FULL_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL)),
+            make(CommandName.MOVE_FULL_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL)),
+            make(CommandName.DRAG_IMAGE, control.canvas.image_drag_end, down_function=control.canvas.image_drag_start),
         )
         fit_menu = (
-          make(17001, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_NONE, save=True)),
-          make(17002, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH, save=True)),
-          make(17003, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT, save=True)),
-          make(17004, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH, save=True)),
-          make(17005, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH_OVERSIZE, save=True)),
-          make(17006, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT_OVERSIZE, save=True)),
-          make(17007, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH_OVERSIZE, save=True)),
-          #TODO: (2,2) Add: ask for the custom width?
-          make(17008, 
-               partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True)),
+            make(CommandName.ZOOM_NONE, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_NONE, save=True)),
+            make(CommandName.ZOOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH, save=True)),
+            make(CommandName.ZOOM_HEIGHT, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT, save=True)),
+            make(CommandName.ZOOM_WINDOW, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH, save=True)),
+            make(CommandName.ZOOM_WIDTH_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH_OVERSIZE, save=True)),
+            make(CommandName.ZOOM_HEIGHT_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT_OVERSIZE, save=True)),
+            make(CommandName.ZOOM_WINDOW_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH_OVERSIZE, save=True)),
+            #TODO: (2,2) Add: ask for the custom width?
+            make(CommandName.ZOOM_CUSTOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True)),
         )
         main_menu = (
-         make_category(0, 'file', _('&File'), file_menu),
-         make_category(1, 'fold', _('F&older'), folder_menu),
-         make_category(2, 'view', _('&View'), view_menu),
-         make_category(3, 'fav' , _('F&avorites'), favorites_menu),
-         make_category(4, 'help', _('&Help'), help_menu),
-         make_category(6, '_fit', _('Fit'), fit_menu, True),
+            make_category(0, 'file', _('&File'), file_menu),
+            make_category(1, 'fold', _('F&older'), folder_menu),
+            make_category(2, 'view', _('&View'), view_menu),
+            make_category(3, 'fav' , _('F&avorites'), favorites_menu),
+            make_category(4, 'help', _('&Help'), help_menu),
+            make_category(6, '_fit', _('Fit'), fit_menu, True),
         )
         #The fit menu doesn't appear in the top, but can open via right click, so it needs to be created.
         #The other menus here exist to provide commands in the options, but aren't otherwise menus
@@ -274,10 +235,8 @@ class MenuController(object):
         )
         if __debug__:
             #Debug options. Disable when built as an application.
-            #Nothing here will be translated, and won't be available as shortcuts.
             debug_menu = (
-                make(29900,
-                     control.debugController.open_debug_cache_dialog),
+                make(CommandName.CACHE_INFO, control.debugController.open_debug_cache_dialog),
                 #Maybe an option to change the log level?
                 #I can't find any kind of built-in wxpython diagnostics that would be trivial to include.
             )
@@ -290,8 +249,13 @@ class MenuController(object):
     @staticmethod
     def _get_toolbar_commands(commands):
         cmd_dict = dict((cmd.ide, cmd) for cmd in commands)
-        #TODO: (2,2) Refactor: use constants
-        cmd_ids = (12008, 14001, 14002, 12004, 13011)
+        cmd_ids = (
+            CommandName.OPEN_DIRECTORY,
+            CommandName.ADD_FAVORITES,
+            CommandName.REMOVE_FAVORITES,
+            CommandName.OPEN_PARENT,
+            CommandName.SHOW_THUMBNAILS
+        )
         return tuple(cmd_dict[id] for id in cmd_ids)
     
     @staticmethod

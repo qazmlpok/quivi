@@ -2,6 +2,7 @@ import os
 from configparser import RawConfigParser, ParsingError
 from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
+from quivilib.model.commandlist import CommandName
 
 
 class Settings(RawConfigParser):
@@ -68,9 +69,9 @@ class Settings(RawConfigParser):
           ('Window', 'MainWindowMaximized', '0'),
           ('Window', 'MainWindowFullscreen', '0'),
           ('Window', 'FileListColumnsWidth', ''),
-          ('Mouse', 'LeftClickCmd', 16100),
-          ('Mouse', 'MiddleClickCmd', 12001),
-          ('Mouse', 'RightClickCmd', 13007),
+          ('Mouse', 'LeftClickCmd', CommandName.DRAG_IMAGE),
+          ('Mouse', 'MiddleClickCmd', CommandName.SELECT_NEXT),
+          ('Mouse', 'RightClickCmd', CommandName.SHOW_FILE_LIST),
           ('Mouse', 'Aux1ClickCmd', -1),
           ('Mouse', 'Aux2ClickCmd', -1),
           ('Mouse', 'AlwaysLeftMouseDrag', 1),
