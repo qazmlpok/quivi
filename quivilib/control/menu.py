@@ -6,7 +6,7 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.model.command import CommandName, Command, CommandCategory, CommandDefinitionList
+from quivilib.model.command import CommandName, Command, SubCommand, CommandCategory, CommandDefinitionList
 from quivilib.model.shortcut import Shortcut
 from quivilib.control import canvas
 from quivilib.control.canvas import MovementType
@@ -21,8 +21,14 @@ class MenuController(object):
         self.control = control
         self.commands = []
         self.command_definitions = CommandDefinitionList()
+        
+        #TODO: Do more refactoring to split this stuff into separate functions.
+        #Additionally, remove the hidden menus from main_menu and track them separately.
         self.main_menu, self.command_cats, self.commands = self._make_commands(self.control)
-        self.main_menu_dict = {x.idx: x for x in self.main_menu}
+        self.command_dict = {x.ide: x for x in self.commands}
+        self.context_menu = self.create_img_context_menu(self.command_dict)
+        self.main_menu = self.main_menu + (self.context_menu,)    #Not ideal but try it for now.
+        
         self._load_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
         #These must be sent in this order
@@ -79,8 +85,7 @@ class MenuController(object):
         for cmd in self.commands:
             cmd.update_translation()
         #Update menu categories
-        for idx in self.main_menu_dict:
-            category = self.main_menu_dict[idx]
+        for category in self.main_menu:
             category.update_translation()
     def _make_commands(self, control):
         """Make all commands.
@@ -176,6 +181,7 @@ class MenuController(object):
         )
         favorites_hidden_menu = (
             make(CommandName.OPEN_LAST_PLACEHOLDER, control.open_latest_placeholder),
+            make(CommandName.OPEN_CONTEXT_MENU, control.open_context_menu),
         )
         help_menu = (
             make(CommandName.HELP, control.open_help),
@@ -236,6 +242,53 @@ class MenuController(object):
             )
         
         return main_menu, command_cats, commands
+    
+    def create_img_context_menu(self, commands: dict[int, Command]):
+        """ Create a new context menu that can be opened by a binding command (e.g. right or middle click)
+        Unlike other menus, this entirely uses pre-existing commands.
+        """
+        def make(ide):
+            if ide is None:
+                return None
+            if type(ide) is tuple:
+                name, command_list = ide
+                lst = [make(x) for x in command_list]
+                return SubCommand(name, lst)
+            return commands[ide]
+        zoomsub_def = ('Zoom', (
+            CommandName.ZOOM_IN,   
+            CommandName.ZOOM_OUT,  
+            CommandName.ZOOM_FULL, 
+            CommandName.FIT_WIDTH,
+            CommandName.FIT_HEIGHT,
+        ))
+        rotatesub_def = ('Rotate', (
+            CommandName.ROTATE_CLOCKWISE,        
+            CommandName.ROTATE_COUNTER_CLOCKWISE,
+        ))
+        menuitems_def = (
+            CommandName.OPEN_DIRECTORY,
+            CommandName.SELECT_NEXT,
+            CommandName.SELECT_PREVIOUS,
+            CommandName.MOVE,
+            None,
+            zoomsub_def,
+            rotatesub_def,
+            CommandName.SHOW_SPREAD,
+            None,
+            CommandName.FULL_SCREEN,
+            CommandName.SHOW_FILE_LIST,
+            None,
+            #favorites,
+            #None,
+            CommandName.OPTIONS,
+            CommandName.HELP,
+            CommandName.ABOUT,
+            None,
+            CommandName.QUIT,
+        )
+        menuitems = [make(id) for id in menuitems_def]
+        return CommandCategory(8, '_ctx', 'Context', menuitems, True)
     
     @staticmethod
     def _get_toolbar_commands(commands):

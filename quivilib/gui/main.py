@@ -6,7 +6,7 @@ import wx
 import wx.aui
 from pubsub import pub as Publisher
 
-from quivilib.model.command import Command, CommandCategory
+from quivilib.model.command import Command, SubCommand, CommandCategory
 from quivilib.model.canvas import PaintedRegion
 from quivilib.model.container.base import BaseContainer
 from quivilib.control.options import get_fit_choices
@@ -96,6 +96,7 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_canvas_zoom_changed, 'canvas.zoom.changed')
         Publisher.subscribe(self.on_menu_built, 'menu.built')
         Publisher.subscribe(self.on_menu_labels_changed, 'menu.labels.changed')
+        Publisher.subscribe(self.on_cmd_context_menu, 'menu.context_menu')
         Publisher.subscribe(self.on_favorites_changed, 'favorites.changed')
         Publisher.subscribe(self.on_settings_loaded, 'settings.loaded')
         Publisher.subscribe(self.on_open_wallpaper_dialog, 'wallpaper.open_dialog')
@@ -254,6 +255,12 @@ class MainWindow(wx.Frame):
         self.PopupMenu(self.menus['_fit'])
         menu.Destroy()
         
+    def on_cmd_context_menu(self):
+        """Appears on executing the bindable 'open context menu' command, e.g. middle/right clicking. """
+        menu = wx.Menu()
+        self.PopupMenu(self.menus['_ctx'])
+        menu.Destroy()
+        
     def on_busy(self, *, busy):
         if self._busy == busy:
             return
@@ -320,8 +327,8 @@ class MainWindow(wx.Frame):
         self._favorite_menu_count = self.menus['fav'].GetMenuItemCount()
 
     def _make_menu(self, commands):
-        menu = wx.Menu()
-        for command in commands:
+        _menu = wx.Menu()
+        def append_item(menu, command):
             if command:
                 style = wx.ITEM_CHECK if command.checkable else wx.ITEM_NORMAL
                 menu.Append(command.ide, command.name_and_shortcut, command.description, style)
@@ -329,7 +336,15 @@ class MainWindow(wx.Frame):
                     wx.GetApp().Bind(wx.EVT_UPDATE_UI, command.update_function, id=command.ide)
             else:
                 menu.AppendSeparator()
-        return menu
+        for cmd in commands:
+            if type(cmd) is SubCommand:
+                submenu = wx.Menu()
+                for subcmd in cmd.items:
+                    append_item(submenu, subcmd)
+                _menu.AppendSubMenu(submenu, cmd.description)
+            else: 
+                append_item(_menu, cmd)
+        return _menu
     
     def on_favorites_changed(self, *, favorites):
         favorites_menu = self.menus['fav']

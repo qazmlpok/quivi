@@ -63,6 +63,8 @@ class CommandName(IntEnum):
 
     #favorites_hidden_menu
     OPEN_LAST_PLACEHOLDER = 14005
+    #This doesn't belong here but I'm thinking this "menu group" crap needs to go.
+    OPEN_CONTEXT_MENU = 18001
 
     #help_menu
     HELP = 15001
@@ -161,6 +163,7 @@ class CommandDefinitionList():
             
             #favorites_hidden_menu
             CommandDefinition(CommandName.OPEN_LAST_PLACEHOLDER    , 'Open last placeholder', 'Open the most recently created placeholder',[(wx.ACCEL_CTRL, ord('L'))]),
+            CommandDefinition(CommandName.OPEN_CONTEXT_MENU        , 'Open context menu', 'Open the context menu', [], flags=CommandFlags.MOUSE),
             
             #help_menu
             CommandDefinition(CommandName.HELP                     , '&Help (online)...', 'Open the online help',[(wx.ACCEL_NORMAL, wx.WXK_F1)], flags=CommandFlags.KB),

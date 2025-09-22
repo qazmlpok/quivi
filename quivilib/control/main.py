@@ -250,6 +250,9 @@ class MainController(object):
         import webbrowser
         webbrowser.open(url)
         
+    def open_context_menu(self):
+        Publisher.sendMessage('menu.context_menu')
+        
     def on_program_closed(self, *, settings_lst=None):
         for section, option, value in settings_lst:
             self.settings.set(section, option, value)
