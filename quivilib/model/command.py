@@ -3,7 +3,8 @@ import wx
 
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
-from quivilib.model.commandlist import *
+from quivilib.model.commandlist import CommandDefinition
+from quivilib.model.commandenum import CommandName, CommandFlags
 
 from typing import Protocol
 

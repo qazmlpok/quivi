@@ -4,7 +4,7 @@ import math
 from functools import partial
 from pubsub import pub as Publisher
 
-from quivilib.model.command import FitSettings
+from quivilib.model.commandenum import FitSettings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 

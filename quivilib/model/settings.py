@@ -2,7 +2,7 @@ import os
 from configparser import RawConfigParser, ParsingError
 from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
-from quivilib.model.commandlist import CommandName, FitSettings
+from quivilib.model.commandenum import CommandName, FitSettings
 
 
 class Settings(RawConfigParser):

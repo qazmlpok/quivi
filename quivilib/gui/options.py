@@ -7,7 +7,7 @@ from wx.lib import langlistctrl
 
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
-from quivilib.model.command import CommandFlags, FitSettings
+from quivilib.model.commandenum import CommandFlags, FitSettings
 import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
 

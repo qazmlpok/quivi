@@ -3,7 +3,7 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib import meta
-from quivilib.model.command import MovementType, FitSettings
+from quivilib.model.commandenum import MovementType, FitSettings
 from quivilib.model.canvas import Canvas, PaintedRegion
 from quivilib.model.settings import Settings
 from quivilib.resources import images

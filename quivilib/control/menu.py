@@ -4,7 +4,8 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.model.command import CommandName, Command, SubCommand, CommandCategory, CommandDefinitionList
+from quivilib.model.command import Command, CommandCategory, SubCommand
+from quivilib.model.commandlist import *
 from quivilib.model.shortcut import Shortcut
 from quivilib.control import canvas
 from quivilib.model.settings import Settings
@@ -33,10 +34,11 @@ class MenuController(object):
         Publisher.sendMessage('toolbar.built', commands=self._get_toolbar_commands(self.commands))
         #TODO: (2,2) Refactor: change this message name. This also notifies that
         #    shortcuts have changed.
-        Publisher.sendMessage('menu.labels.changed', 
-                                main_menu=self.main_menu, 
-                                commands=self.commands, 
-                                accel_table=self.shortcuts
+        Publisher.sendMessage(
+            'menu.labels.changed', 
+            main_menu=self.main_menu, 
+            commands=self.commands, 
+            accel_table=self.shortcuts
         )
         
         Publisher.subscribe(self.on_language_changed, 'language.changed')
@@ -54,18 +56,20 @@ class MenuController(object):
             cmd.shortcuts = shortcuts
         self._save_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
-        Publisher.sendMessage('menu.labels.changed', 
-                                main_menu=self.main_menu,
-                                commands=self.commands,
-                                accel_table=self.shortcuts
+        Publisher.sendMessage(
+            'menu.labels.changed', 
+            main_menu=self.main_menu,
+            commands=self.commands,
+            accel_table=self.shortcuts
         )
         
     def on_language_changed(self):
         self._update_menu_translations()
-        Publisher.sendMessage('menu.labels.changed', 
-                                main_menu=self.main_menu,
-                                commands=self.commands,
-                                accel_table=self.shortcuts
+        Publisher.sendMessage(
+            'menu.labels.changed', 
+            main_menu=self.main_menu,
+            commands=self.commands,
+            accel_table=self.shortcuts
         )
         Publisher.sendMessage('toolbar.labels.changed', commands=self._get_toolbar_commands(self.commands))
         
@@ -96,6 +100,9 @@ class MenuController(object):
             command = Command(definition, **kwparams)
             commands.append(command)
             return command
+        
+        #Placeholder; not implemented or defined.
+        #use_submenus = self.settings.getboolean('Options', 'FavoriteSubMenus')
         
         file_menu = (
             make(CommandName.SET_WALLPAPER),

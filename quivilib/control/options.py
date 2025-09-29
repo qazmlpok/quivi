@@ -1,7 +1,7 @@
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.model.command import FitSettings
+from quivilib.model.commandenum import FitSettings
 
 #TODO: (1,2) Improve: when setting start dir, check if it is a special folder
 #    and if it is, save a reference (e.g. %DocumentsDir%) to it instead of the

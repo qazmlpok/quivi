@@ -12,7 +12,7 @@ from pubsub import pub as Publisher
 
 from quivilib.i18n import _
 from quivilib.model.canvas import WallpaperCanvas
-from quivilib.model.command import FitSettings
+from quivilib.model.commandenum import FitSettings
 from quivilib.control.canvas import WallpaperCanvasController
 from quivilib.model import image
 
