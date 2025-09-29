@@ -1,7 +1,7 @@
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.model.settings import Settings
+from quivilib.model.command import FitSettings
 
 #TODO: (1,2) Improve: when setting start dir, check if it is a special folder
 #    and if it is, save a reference (e.g. %DocumentsDir%) to it instead of the
@@ -9,14 +9,14 @@ from quivilib.model.settings import Settings
 
 
 def get_fit_choices():
-    fit_choices = [(_("None"), Settings.FIT_NONE),
-                       (_("Width"), Settings.FIT_WIDTH),
-                       (_("Height"), Settings.FIT_HEIGHT),
-                       (_("Window"), Settings.FIT_BOTH),
-                       (_("Width if larger"), Settings.FIT_WIDTH_OVERSIZE),
-                       (_("Height if larger"), Settings.FIT_HEIGHT_OVERSIZE),
-                       (_("Window if larger"), Settings.FIT_BOTH_OVERSIZE),
-                       (_("Custom width"), Settings.FIT_CUSTOM_WIDTH),
+    fit_choices = [(_("None"), FitSettings.FIT_NONE),
+                       (_("Width"), FitSettings.FIT_WIDTH),
+                       (_("Height"), FitSettings.FIT_HEIGHT),
+                       (_("Window"), FitSettings.FIT_BOTH),
+                       (_("Width if larger"), FitSettings.FIT_WIDTH_OVERSIZE),
+                       (_("Height if larger"), FitSettings.FIT_HEIGHT_OVERSIZE),
+                       (_("Window if larger"), FitSettings.FIT_BOTH_OVERSIZE),
+                       (_("Custom width"), FitSettings.FIT_CUSTOM_WIDTH),
                        ]
     return fit_choices
 

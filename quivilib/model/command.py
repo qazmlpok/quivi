@@ -17,7 +17,7 @@ class MenuItem(Protocol):
     ide: int
 
 class Command(MenuItem):
-    def __init__(self, definition: CommandDefinition, function, down_function=None, update_function=None):
+    def __init__(self, definition: CommandDefinition):
         """
             Create a new command category.
             
@@ -34,16 +34,9 @@ class Command(MenuItem):
         self.flags = definition.flags
         self.update_translation()
         
-        self._function = function
-        self.update_function = update_function
-        self._down_function = down_function
-        
-        need_update = (definition.flags & CommandFlags.NEED_UPDATE) != 0
-        #Some consistency checks
-        if (need_update and update_function is None):
-            raise Exception(f"Menu item {self.clean_name} requires an update function but doesn't have one")
-        if (not need_update and update_function is not None):
-            raise Exception(f"Menu item {self.clean_name} was given an update function but can't use one")
+        self._function = definition.function
+        self.update_function = definition.update_function
+        self._down_function = definition.down_function
         
     def update_translation(self):
         #dumb hack to avoid translating the debug menu option stuff.

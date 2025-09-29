@@ -7,8 +7,7 @@ from wx.lib import langlistctrl
 
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
-from quivilib.model.command import CommandFlags
-from quivilib.model.settings import Settings
+from quivilib.model.command import CommandFlags, FitSettings
 import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
 
@@ -408,7 +407,7 @@ class OptionsDialog(wx.Dialog):
         self._set_selected(self.shorcuts_cbo, selected_shortcut)
             
     def _update_custom_fit_display(self, fit_type):
-        show = (fit_type == Settings.FIT_CUSTOM_WIDTH)
+        show = (fit_type == FitSettings.FIT_CUSTOM_WIDTH)
         self.width_label.Enable(show)
         self.width_txt.Enable(show)
     

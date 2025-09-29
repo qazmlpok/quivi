@@ -1,7 +1,5 @@
 #TODO: (2,3) Refactor: this module and classes were poorly named.
 #    this is actually about commands, and not the menu.
-from functools import partial
-
 import wx
 from pubsub import pub as Publisher
 
@@ -9,7 +7,6 @@ from quivilib.i18n import _
 from quivilib.model.command import CommandName, Command, SubCommand, CommandCategory, CommandDefinitionList
 from quivilib.model.shortcut import Shortcut
 from quivilib.control import canvas
-from quivilib.control.canvas import MovementType
 from quivilib.model.settings import Settings
 
 SHORTCUTS_KEY = 'Shortcuts'
@@ -20,7 +17,7 @@ class MenuController(object):
         self.settings = settings
         self.control = control
         self.commands = []
-        self.command_definitions = CommandDefinitionList()
+        self.command_definitions = CommandDefinitionList(control)
         
         #TODO: Do more refactoring to split this stuff into separate functions.
         #Additionally, remove the hidden menus from main_menu and track them separately.
@@ -94,125 +91,91 @@ class MenuController(object):
         """
         commands = []
         
-        def make(ide, function, **kwparams):
+        def make(ide, **kwparams):
             definition = self.command_definitions.commands[ide]
-            command = Command(definition, function, **kwparams)
+            command = Command(definition, **kwparams)
             commands.append(command)
             return command
         
         file_menu = (
-            make(CommandName.SET_WALLPAPER, 
-                control.wallpaper.open_dialog,
-                update_function=control.on_update_image_available_menu_item),
-            make(CommandName.COPY, 
-                control.copy_to_clipboard,
-                update_function=control.on_update_image_available_menu_item),
-            make(CommandName.COPY_PATH, 
-                control.copy_path_to_clipboard,
-                update_function=control.on_update_image_available_menu_item),
-            make(CommandName.DELETE, 
-                control.delete,
-                update_function=control.file_list.on_update_delete_menu_item),
-            make(CommandName.MOVE,
-                control.open_move_dialog,
-                update_function=control.file_list.on_update_move_menu_item),
+            make(CommandName.SET_WALLPAPER),
+            make(CommandName.COPY),
+            make(CommandName.COPY_PATH),
+            make(CommandName.DELETE),
+            make(CommandName.MOVE),
             None,
-            make(CommandName.OPTIONS, control.options.open_dialog),
+            make(CommandName.OPTIONS),
             None,
-            make(CommandName.QUIT, control.quit)
+            make(CommandName.QUIT)
         )
         folder_menu = (
-            make(CommandName.SELECT_NEXT, partial(control.file_list.select_next, 1)),
-            make(CommandName.SELECT_PREVIOUS, partial(control.file_list.select_next, -1)),
-            make(CommandName.OPEN_SELECTED_DIRECTORY, control.file_list.open_selected_container),
-            make(CommandName.OPEN_PARENT, control.file_list.open_parent),
-            make(CommandName.OPEN_NEXT, partial(control.file_list.open_sibling, 1)),
-            make(CommandName.OPEN_PREVIOUS,  partial(control.file_list.open_sibling, -1)),
-            make(CommandName.REFRESH, control.file_list.refresh),
-            make(CommandName.OPEN_DIRECTORY, control.file_list.open_directory)
+            make(CommandName.SELECT_NEXT),
+            make(CommandName.SELECT_PREVIOUS),
+            make(CommandName.OPEN_SELECTED_DIRECTORY),
+            make(CommandName.OPEN_PARENT),
+            make(CommandName.OPEN_NEXT),
+            make(CommandName.OPEN_PREVIOUS),
+            make(CommandName.REFRESH),
+            make(CommandName.OPEN_DIRECTORY, )
         )
         view_menu = (
-            make(CommandName.ZOOM_IN, 
-                control.canvas.zoom_in,
-                update_function=control.on_update_image_available_menu_item),
-            make(CommandName.ZOOM_OUT, 
-                control.canvas.zoom_out,
-                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.ZOOM_IN),
+            make(CommandName.ZOOM_OUT),
             #TODO: Add mouse-specific version that zooms in on mouse position. Also give it NOMENU.
             #When NOMENU is implemented, also remove the hidden menus.
-            make(CommandName.ZOOM_FULL, 
-                control.canvas.zoom_reset,
-                update_function=control.on_update_image_available_menu_item),
-            make(CommandName.FIT_WIDTH, 
-                control.canvas.zoom_fit_width,
-                update_function=control.on_update_image_available_menu_item),
-            make(CommandName.FIT_HEIGHT, 
-                control.canvas.zoom_fit_height,
-                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.ZOOM_FULL),
+            make(CommandName.FIT_WIDTH),
+            make(CommandName.FIT_HEIGHT),
             #TODO: All the messaging around this feature is awful but I don't know how to better word it.
-            make(CommandName.SHOW_SPREAD, 
-                control.toggle_spread,
-                update_function=control.on_update_spread_toggle_menu_item),
-            make(CommandName.ROTATE_CLOCKWISE, 
-                partial(control.canvas.rotate_image, 1),
-                update_function=control.on_update_image_available_menu_item),
-            make(CommandName.ROTATE_COUNTER_CLOCKWISE, 
-                partial(control.canvas.rotate_image, 0),
-                update_function=control.on_update_image_available_menu_item),
+            make(CommandName.SHOW_SPREAD),
+            make(CommandName.ROTATE_CLOCKWISE),
+            make(CommandName.ROTATE_COUNTER_CLOCKWISE),
             None,
-            make(CommandName.FULL_SCREEN, 
-                control.toggle_fullscreen,
-                update_function=control.on_update_fullscreen_menu_item),
-            make(CommandName.SHOW_FILE_LIST, 
-                control.toggle_file_list,
-                update_function=control.on_update_file_list_menu_item),
-            make(CommandName.SHOW_THUMBNAILS, 
-                control.toggle_thumbnails,
-                update_function=control.on_update_thumbnail_menu_item),
-            make(CommandName.SHOW_HIDDEN_FILES, 
-                control.file_list.toggle_show_hidden,
-                update_function=control.file_list.on_update_hidden_menu_item)
+            make(CommandName.FULL_SCREEN),
+            make(CommandName.SHOW_FILE_LIST),
+            make(CommandName.SHOW_THUMBNAILS),
+            make(CommandName.SHOW_HIDDEN_FILES)
         )
         favorites_menu = (
-            make(CommandName.ADD_FAVORITES, control.add_favorite),
-            make(CommandName.ADD_PLACEHOLDER, control.add_placeholder),
-            make(CommandName.REMOVE_FAVORITES, control.remove_favorite),
-            make(CommandName.REMOVE_PLACEHOLDER, control.remove_placeholder),
+            make(CommandName.ADD_FAVORITES),
+            make(CommandName.ADD_PLACEHOLDER),
+            make(CommandName.REMOVE_FAVORITES),
+            make(CommandName.REMOVE_PLACEHOLDER),
         )
         favorites_hidden_menu = (
-            make(CommandName.OPEN_LAST_PLACEHOLDER, control.open_latest_placeholder),
-            make(CommandName.OPEN_CONTEXT_MENU, control.open_context_menu),
+            make(CommandName.OPEN_LAST_PLACEHOLDER),
+            make(CommandName.OPEN_CONTEXT_MENU),
         )
         help_menu = (
-            make(CommandName.HELP, control.open_help),
-            make(CommandName.FEEDBACK, control.open_feedback),
-            make(CommandName.ABOUT, control.open_about_dialog)
+            make(CommandName.HELP),
+            make(CommandName.FEEDBACK),
+            make(CommandName.ABOUT, )
         )
         hidden_menu = (
-            make(CommandName.MOVE_SMALL_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL)),
-            make(CommandName.MOVE_SMALL_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL)),
-            make(CommandName.MOVE_SMALL_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL)),
-            make(CommandName.MOVE_SMALL_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL)),
-            make(CommandName.MOVE_LARGE_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE)),
-            make(CommandName.MOVE_LARGE_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE)),
-            make(CommandName.MOVE_LARGE_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE)),
-            make(CommandName.MOVE_LARGE_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE)),
-            make(CommandName.MOVE_FULL_UP, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL)),
-            make(CommandName.MOVE_FULL_DOWN, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL)),
-            make(CommandName.MOVE_FULL_LEFT, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL)),
-            make(CommandName.MOVE_FULL_RIGHT, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL)),
-            make(CommandName.DRAG_IMAGE, control.canvas.image_drag_end, down_function=control.canvas.image_drag_start),
+            make(CommandName.MOVE_SMALL_UP),
+            make(CommandName.MOVE_SMALL_DOWN),
+            make(CommandName.MOVE_SMALL_LEFT),
+            make(CommandName.MOVE_SMALL_RIGHT),
+            make(CommandName.MOVE_LARGE_UP),
+            make(CommandName.MOVE_LARGE_DOWN),
+            make(CommandName.MOVE_LARGE_LEFT),
+            make(CommandName.MOVE_LARGE_RIGHT),
+            make(CommandName.MOVE_FULL_UP),
+            make(CommandName.MOVE_FULL_DOWN),
+            make(CommandName.MOVE_FULL_LEFT),
+            make(CommandName.MOVE_FULL_RIGHT),
+            make(CommandName.DRAG_IMAGE)
         )
         fit_menu = (
-            make(CommandName.ZOOM_NONE, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_NONE, save=True)),
-            make(CommandName.ZOOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH, save=True)),
-            make(CommandName.ZOOM_HEIGHT, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT, save=True)),
-            make(CommandName.ZOOM_WINDOW, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH, save=True)),
-            make(CommandName.ZOOM_WIDTH_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_WIDTH_OVERSIZE, save=True)),
-            make(CommandName.ZOOM_HEIGHT_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_HEIGHT_OVERSIZE, save=True)),
-            make(CommandName.ZOOM_WINDOW_LARGER, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_BOTH_OVERSIZE, save=True)),
+            make(CommandName.ZOOM_NONE),
+            make(CommandName.ZOOM_WIDTH),
+            make(CommandName.ZOOM_HEIGHT),
+            make(CommandName.ZOOM_WINDOW),
+            make(CommandName.ZOOM_WIDTH_LARGER),
+            make(CommandName.ZOOM_HEIGHT_LARGER),
+            make(CommandName.ZOOM_WINDOW_LARGER),
             #TODO: (2,2) Add: ask for the custom width?
-            make(CommandName.ZOOM_CUSTOM_WIDTH, partial(control.canvas.set_zoom_by_fit_type, Settings.FIT_CUSTOM_WIDTH, save=True)),
+            make(CommandName.ZOOM_CUSTOM_WIDTH),
         )
         main_menu = (
             CommandCategory(0, 'file', '&File', file_menu),
@@ -233,7 +196,7 @@ class MenuController(object):
         if __debug__:
             #Debug options. Disable when built as an application.
             debug_menu = (
-                make(CommandName.CACHE_INFO, control.debugController.open_debug_cache_dialog),
+                make(CommandName.CACHE_INFO),
                 #Maybe an option to change the log level?
                 #I can't find any kind of built-in wxpython diagnostics that would be trivial to include.
             )
