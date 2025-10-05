@@ -30,6 +30,7 @@ class Command(MenuItem):
         self.ide = definition.uid
         self.name = self.nameKey = definition.nameKey
         self.description = self.descrKey = definition.descrKey
+        self.category = self.categoryKey = definition.categoryKey
         self.default_shortcuts = definition.shortcuts
         self.shortcuts: list[Shortcut] = []
         self.flags = definition.flags
@@ -44,6 +45,7 @@ class Command(MenuItem):
         if self.ide < CommandName.CACHE_INFO:
             self.name = _(self.nameKey)
             self.description = _(self.descrKey)
+            self.category = _(self.categoryKey)
 
     def load_default_shortcut(self):
         if self.default_shortcuts:
@@ -58,7 +60,11 @@ class Command(MenuItem):
         
     def __repr__(self):
         return f'{self.clean_name}: {self.description}'
-        
+    
+    @staticmethod
+    def clean_str(s):
+        return s.replace('&', '').replace('...', '')
+    
     @property
     def name_and_shortcut(self):
         if self.shortcuts:
@@ -67,8 +73,12 @@ class Command(MenuItem):
             return self.name
     
     @property
+    def name_and_category(self):
+        return f'{self.clean_str(self.category)} | {self.clean_str(self.name)}'
+    
+    @property
     def clean_name(self):
-        return self.name.replace('&', '').replace('...', '')
+        return self.clean_str(self.name)
     
     @property
     def checkable(self) -> bool:

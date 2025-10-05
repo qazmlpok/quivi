@@ -1,4 +1,4 @@
-from enum import IntEnum, IntFlag, Flag, auto
+from enum import IntEnum, StrEnum, IntFlag, Flag, auto
 import wx
 
 # Assorted enums associated with menu items. Also settings (which are closely related...)
@@ -128,4 +128,25 @@ class CommandName(IntEnum):
     
     #debug
     CACHE_INFO = 29900
+#
+
+class MenuName(StrEnum):
+    """ Unique identifiers for menus - both top-level (i.e. menubar) menus, 
+    popup context menus, and sub-menus that can appear within another menu.
+    """
+    #Top level (menubar) menus
+    File = 'file'
+    Folder = 'fold'
+    View = 'view'
+    Favorites = 'fav'   #TODO: Ensure this can be a sub as well.
+    Help = 'help'
+    Debug = 'debug'     #Debug mode only
+    #Top-level context menus
+    FitCtx = '_fit'
+    ImgCtx = '_ctx'
+    #Sub menus
+    ZoomSub = '_zoomSub'
+    RotateSub = '_rotateSub'
+    FavoritesSub = '_favoriteSub'       #Future; not implemented.
+    PlaceholderSub = '_placeholderSub'  #Future; not implemented.
 #

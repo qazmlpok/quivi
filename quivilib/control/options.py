@@ -29,12 +29,12 @@ class OptionsController(object):
         
     def open_dialog(self):
         fit_choices = get_fit_choices()
-        categories = self.control.menu.command_cats
+        commands = self.control.menu.commands
 
         Publisher.sendMessage('options.open_dialog',
                                 fit_choices=fit_choices, 
                                 settings=self.model.settings, 
-                                categories=categories,
+                                commands=commands,
                                 available_languages=self.control.i18n.available_languages,
                                 active_language=self.control.i18n.language,
                                 save_locally=self.control.can_save_settings_locally()

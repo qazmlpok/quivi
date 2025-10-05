@@ -14,15 +14,12 @@ from quivilib.model.options import Options
 WINDOW_SIZE = (400, 480)
 
 class OptionsDialog(wx.Dialog):
-    def __init__(self, parent, fit_choices, settings, categories,
+    def __init__(self, parent, fit_choices, settings, commands,
                  available_languages, active_language, save_locally):
         self.fit_choices = fit_choices
         self.save_locally = save_locally
         self.settings = settings
-        self.commands = []
-        self.categories = categories
-        for category in categories:
-            self.commands += category.commands
+        self.commands = commands
         # begin wxGlade: OptionsDialog.__init__
         wx.Dialog.__init__(self, parent=parent, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.main_notebook = wx.Notebook(self, -1, style=wx.NB_TOP)
@@ -127,18 +124,18 @@ class OptionsDialog(wx.Dialog):
         
         for m in self._mouse_cbos:
             m.Append(_("None"), -1)
-        #TODO: A lot of these commands don't make sense for the mouse. Filter some of them out.
-        #Conversely, some things that could be useful for mouse viewing don't exist. Like scroll to bottom.
-        for category in sorted(self.categories, key=lambda x: x.order):
-            for cmd in category.commands:
-                if cmd is None:
-                    continue
-                text = f'{category.clean_name} | {cmd.clean_name}'
-                if cmd.flags & CommandFlags.KB:
-                    self.commands_lst.Append(text, cmd)
-                if cmd.flags & CommandFlags.MOUSE:
-                    for m in self._mouse_cbos:
-                        m.Append(text, cmd.ide)
+        #TODO: Need to replicate order somehow. Preferably without actually involving categories...
+        #...what if I just don't reorder it?
+        #for category in sorted(self.categories, key=lambda x: x.order):
+        for cmd in self.commands:
+            #if cmd is None:
+            #    continue
+            text = cmd.name_and_category
+            if cmd.flags & CommandFlags.KB:
+                self.commands_lst.Append(text, cmd)
+            if cmd.flags & CommandFlags.MOUSE:
+                for m in self._mouse_cbos:
+                    m.Append(text, cmd.ide)
 
         self._set_selected(self.mouse_left_cbo, self.settings.getint('Mouse', 'LeftClickCmd'))
         self._set_selected(self.mouse_middle_cbo, self.settings.getint('Mouse', 'MiddleClickCmd'))

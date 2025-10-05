@@ -17,15 +17,24 @@ class MenuController(object):
     def __init__(self, control, settings):
         self.settings = settings
         self.control = control
-        self.commands = []
         self.command_definitions = CommandDefinitionList(control)
+        #TODO: This needs to be converted to CommandCategory objects - or similar
+        #It also needs to combine submenu and full menu.
+        #Figure out what else needs to go into both the definition (in commandenum/list)
+        #and into the "live" object.
+        #Then find a way to re-build the actual menu bar.
+        #TODO: Remember, the plan is to move the command "category" name into the command itself.
+        #That will remove the need for those dumb hidden menus.
+        self.menu_definitions = MenuDefinitionList()
+        self.commands = [Command(x) for x in self.command_definitions.cmd_list]
         
         #TODO: Do more refactoring to split this stuff into separate functions.
         #Additionally, remove the hidden menus from main_menu and track them separately.
-        self.main_menu, self.command_cats, self.commands = self._make_commands(self.control)
+        #Rather, just remove this entirely. Use menu_defs.
+        self.main_menu = self._make_commands()
         self.command_dict = {x.ide: x for x in self.commands}
-        self.context_menu = self.create_img_context_menu(self.command_dict)
-        self.main_menu = self.main_menu + (self.context_menu,)    #Not ideal but try it for now.
+        self.context_menu = self.create_img_context_menu(self.command_dict) #Should be unnecessary.
+        self.main_menu = self.main_menu + (self.context_menu,)    #Remove this.
         
         self._load_shortcuts(self.settings, self.commands)
         self.shortcuts = self._get_accelerator_table(self.commands)
@@ -88,17 +97,14 @@ class MenuController(object):
         #Update menu categories
         for category in self.main_menu:
             category.update_translation()
-    def _make_commands(self, control):
+    def _make_commands(self):
         """Make all commands.
-        
-        @param control: reference to the main controller instance
         """
-        commands = []
-        
-        def make(ide, **kwparams):
-            definition = self.command_definitions.commands[ide]
-            command = Command(definition, **kwparams)
-            commands.append(command)
+        cmd_lookup = {x.ide: x for x in self.commands}
+        def make(ide):
+            #Input should either be an id (a single, specific previously-defined command),
+            #or a thingy that denotes a submenu.
+            command = cmd_lookup[ide]
             return command
         
         #Placeholder; not implemented or defined.
@@ -211,7 +217,7 @@ class MenuController(object):
                 CommandCategory(7, 'debug', 'Debug', debug_menu),
             )
         
-        return main_menu, command_cats, commands
+        return main_menu
     
     def create_img_context_menu(self, commands: dict[int, Command]):
         """ Create a new context menu that can be opened by a binding command (e.g. right or middle click)
