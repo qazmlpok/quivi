@@ -12,10 +12,11 @@ class I18NController(object):
     def __init__(self, control, settings):
         self.control = control
         self.settings = settings
-        
-        if sys.platform == 'win32':
+
+        # I do not understand localization. Or Linux. The folder is `localization`. Should it be, or is `locale` correct?
+        if sys.platform == 'win32' or __debug__:
             wx.Locale.AddCatalogLookupPathPrefix(str(self.control.localization_path))
-        
+
         lang_code = settings.get('Language', 'ID')
         if lang_code == 'default':
             lang_code = wx.LANGUAGE_DEFAULT
@@ -24,19 +25,19 @@ class I18NController(object):
             if wx.Locale.GetLanguageInfo(ide).CanonicalName == lang_code:
                 language = ide
                 break
-        
+
         self.locale = None
         self.language = language
-        
+
     def set_language(self, lang_id):
         info = wx.Locale.GetLanguageInfo(lang_id)
         if not info:
             return
- 
+
         if self.locale:
             assert sys.getrefcount(self.locale) <= 2
             del self.locale
-        
+
         #There's a bug with wx and/or Python3 where the locale is being set to "en-US",
         #which is invalid. Need to explicitly re-set the locale or it'll explode when it
         #next calls strptime or anything else involving locale.
@@ -52,32 +53,35 @@ class I18NController(object):
             self._language = wx.LANGUAGE_ENGLISH_US
             info = wx.Locale.GetLanguageInfo(self._language)
             self.settings.set('Language', 'ID', info.CanonicalName)
-        
+
         Publisher.sendMessage('language.changed')
 
     def get_laguage(self):
         return self._language
-    
+
     language = property(get_laguage, set_language)
 
     @property
     def available_languages(self):
         langs = []
+
+        def try_add_lang(path: Path, language_id):
+            try:
+                if path.exists():
+                    langs.append(language_id)
+            except IOError:
+                log.error(traceback.format_exc())
+
         for name in wx.__dict__:
             if name.startswith('LANGUAGE_'):
                 lang_id = wx.__dict__[name]
                 lang_info = wx.Locale.GetLanguageInfo(lang_id)
                 if lang_info is not None and lang_id != wx.LANGUAGE_DEFAULT:
                     lang_code = lang_info.CanonicalName
-                    if sys.platform == 'win32':
-                        path = self.control.localization_path / lang_code / 'LC_MESSAGES' / 'quivi.mo' 
-                    else:
-                        path = Path('/usr') / 'share' / 'locale' / lang_code / 'LC_MESSAGES' / 'quivi.mo' 
-                    try:
-                        if path.exists():
-                            langs.append(lang_id)
-                    except IOError:
-                        log.error(traceback.format_exc())
+                    if sys.platform == 'win32' or __debug__:
+                        try_add_lang(self.control.localization_path / lang_code / 'LC_MESSAGES' / 'quivi.mo', lang_id)
+                    if sys.platform != 'win32':
+                        try_add_lang(Path('/usr') / 'share' / 'locale' / lang_code / 'LC_MESSAGES' / 'quivi.mo', lang_id)
         if wx.LANGUAGE_ENGLISH_US not in langs:
             langs.append(wx.LANGUAGE_ENGLISH_US)
         return langs

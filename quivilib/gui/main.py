@@ -6,7 +6,8 @@ import wx
 import wx.aui
 from pubsub import pub as Publisher
 
-from quivilib.model.command import Command, SubCommand, CommandCategory
+from quivilib.model.command import Command, CommandCategory
+from quivilib.model.commandenum import MenuName, CommandName
 from quivilib.model.canvas import PaintedRegion
 from quivilib.model.container.base import BaseContainer
 from quivilib.control.options import get_fit_choices
@@ -96,6 +97,7 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_canvas_zoom_changed, 'canvas.zoom.changed')
         Publisher.subscribe(self.on_menu_built, 'menu.built')
         Publisher.subscribe(self.on_menu_labels_changed, 'menu.labels.changed')
+        Publisher.subscribe(self.on_shortcuts_changed, 'menu.shortcuts.changed')
         Publisher.subscribe(self.on_cmd_context_menu, 'menu.context_menu')
         Publisher.subscribe(self.on_favorites_changed, 'favorites.changed')
         Publisher.subscribe(self.on_settings_loaded, 'settings.loaded')
@@ -127,8 +129,10 @@ class MainWindow(wx.Frame):
         self.update_menu_item = None
         self.accel_table = None
         #Track as a dictionary
-        self.menus = {}
-        
+        self.menus: dict[MenuName, wx.Menu] = {}
+        #Used for updating translations dynamically. Pair the actual wx objects and the local definitions.
+        self.all_cmd_pairs: list[tuple[Command, wx.MenuItem]] = []
+
     def _bind_panel_mouse_events(self):
         def make_fn(button_idx, event_idx):
             def fn(event):
@@ -229,13 +233,13 @@ class MainWindow(wx.Frame):
         #when the panel is smaller than the image
         
         if not meta.DOUBLE_BUFFERING:
-            iter = wx.RegionIterator(clip_region)
-            while (iter.HaveRects()):
-                rect = iter.GetRect()
+            itr = wx.RegionIterator(clip_region)
+            while (itr.HaveRects()):
+                rect = itr.GetRect()
                 dc.DestroyClippingRegion()
                 dc.SetClippingRegion(rect)
                 dc.Clear()
-                iter.Next()
+                itr.Next()
         
     def on_mouse_wheel(self, event: wx.MouseEvent):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
@@ -257,6 +261,7 @@ class MainWindow(wx.Frame):
         
     def on_cmd_context_menu(self):
         """Appears on executing the bindable 'open context menu' command, e.g. middle/right clicking. """
+        #uh... is this `menu` doing anything?
         menu = wx.Menu()
         self.PopupMenu(self.menus['_ctx'])
         menu.Destroy()
@@ -302,18 +307,32 @@ class MainWindow(wx.Frame):
         text = util.get_formatted_zoom(zoom)
         self.status_bar.SetStatusText(text, ZOOM_FIELD)
         
-    def on_menu_built(self, *, main_menu: tuple[CommandCategory, ...], commands: list[Command]):
+    def on_menu_built(self, *, main_menu: list[MenuName], all_menus: list[CommandCategory], commands: list[Command]):
+        """ Turn the model objects into actual wx menu objects and store them locally.
+        These will be used to populate the menu bar (immediately) and context menus (on demand)
+        :param main_menu: The menus that should appear in the menubar. The associated category object will be modified to include the index.
+        :param all_menus: All CommandCategory objects (derived from the MenuDefinition). Order matters as menus may reference previous menus.
+        :param commands: All command objects
+        """
+        menu_lookup = {x.idx: x for x in all_menus}
+        #This function should only be called once. But if it is called multiple times, reset state.
+        self.all_cmd_pairs = []
+        #First, create the wx.Menu objects. This is done for everything. Populate self.menus
+        for item in all_menus:
+            #_new_make_menu will also modify all_cmd_pairs
+            wx_menu = self._new_make_menu(item, menu_lookup, commands)
+            self.menus[item.idx] = wx_menu
+        
+        #Add the appropriate items to self.menu_bar (use Append). Set indices
         i = 0
-        for category in main_menu:
-            menu = self._make_menu(category.commands)
-            self.menus[category.idx] = menu
-            #Don't actually add the menu to the bar if it's hidden (it can still be opened via PopupMenu)
-            if not category.hidden:
-                self.menu_bar.Append(menu, category.name)
-                #Need to manually track the id. Searching by name doesn't work if the name can change (translations)
-                #Just counting up is fine as long as there aren't existing menu items, and there shouldn't be.
-                category.menu_idx = i
-                i += 1
+        for idx in main_menu:
+            menu = self.menus[idx]
+            category = menu_lookup[idx]
+            self.menu_bar.Append(menu, category.name)
+            #Need to manually track the id. Searching by name doesn't work if the name can change (translations)
+            #Just counting up is fine as long as there aren't existing menu items, and there shouldn't be.
+            category.menu_idx = i
+            i += 1
 
         #Create actual bindings for the commands
         for command in commands:
@@ -323,29 +342,38 @@ class MainWindow(wx.Frame):
                 except Exception as e:
                     self.handle_error(e)
             self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
-        #Track as a class variable to avoid a magic number.
+        #This is the number of pre-defined menu items in favorites; everything past this is a favorite.
         self._favorite_menu_count = self.menus['fav'].GetMenuItemCount()
 
-    def _make_menu(self, commands):
+    def _new_make_menu(self, menu: CommandCategory, all_menus: dict[MenuName, CommandCategory], commands: list[Command]) -> wx.Menu:
+        """ Creates the actual wx.Menu for a given CommandCategory.
+        Still requires references to all data, since this may include submenus.
+        """
         _menu = wx.Menu()
-        def append_item(menu, command):
-            if command:
+        #Move to caller.
+        cmd_lookup = {x.ide: x for x in commands if type(x) is Command}
+        for cmd in menu.commands:
+            if cmd is None:
+                _menu.AppendSeparator()
+            # Submenu
+            elif type(cmd) is MenuName:
+                if cmd not in self.menus:
+                    raise Exception(f"Menu {cmd} referenced before it was created.")
+                submenu = self.menus[cmd]
+                data = all_menus[cmd]
+                _menu.AppendSubMenu(submenu, data.name)
+            # Command
+            elif type(cmd) is CommandName:
+                command = cmd_lookup[cmd]
                 style = wx.ITEM_CHECK if command.checkable else wx.ITEM_NORMAL
-                menu.Append(command.ide, command.name_and_shortcut, command.description, style)
+                wx_menuitem = _menu.Append(command.ide, command.name_and_shortcut, command.description, style)
+                #Track for later (translation) updates.
+                self.all_cmd_pairs.append((command, wx_menuitem))
+                #If a cmd is in multiple menus, it will bind multiple times. Is this a problem?
                 if command.update_function:
                     wx.GetApp().Bind(wx.EVT_UPDATE_UI, command.update_function, id=command.ide)
-            else:
-                menu.AppendSeparator()
-        for cmd in commands:
-            if type(cmd) is SubCommand:
-                submenu = wx.Menu()
-                for subcmd in cmd.items:
-                    append_item(submenu, subcmd)
-                _menu.AppendSubMenu(submenu, cmd.description)
-            else: 
-                append_item(_menu, cmd)
         return _menu
-    
+
     def on_favorites_changed(self, *, favorites):
         favorites_menu = self.menus['fav']
         self.menu_bar.Freeze()
@@ -379,19 +407,21 @@ class MainWindow(wx.Frame):
             self.menu_bar.Thaw()
             pass
 
-    def on_menu_labels_changed(self, *, main_menu, commands, accel_table):
+    def on_shortcuts_changed(self, *, accel_table: wx.AcceleratorTable):
         self.accel_table = accel_table
         self.SetAcceleratorTable(self.accel_table)
-        for cmd in commands:
-            menu_item = self.menu_bar.FindItemById(cmd.ide)
-            if menu_item is not None:
-                menu_item.SetItemLabel(cmd.name_and_shortcut)
-                menu_item.SetHelp(cmd.description)
-        for idx, category in enumerate(main_menu):
-            if not category.hidden:
-                #Need to use the idx stored in the category (when the bar is created)
-                #Finding by name isn't reliable if the name can change.
-                midx = category.menu_idx
+
+    def on_menu_labels_changed(self, *, categories: list[CommandCategory]):
+        #Commands (i.e. wx.MenuItem s) use stored data. The menu_bar requires indices; wx.Menu references will not work.
+        for (cmd, wx_item) in self.all_cmd_pairs:
+            #cmd.update_translation()       # - Should already be called by caller.
+            wx_item.SetItemLabel(cmd.name)
+            wx_item.SetHelp(cmd.description)
+        for category in categories:
+            #Need to use the idx stored in the category (when the bar is created)
+            #Finding by name isn't reliable if the name can change.
+            midx = category.menu_idx
+            if midx != -1:
                 self.menu_bar.SetMenuLabel(midx, category.name)
     
     def on_container_opened(self, *, container: BaseContainer):
@@ -463,6 +493,7 @@ class MainWindow(wx.Frame):
         dialog.Destroy()
         
     def on_update_available(self, *, down_url, check_time, version):
+        #TODO Hell I completely forgot about this.
         menu = wx.Menu()
         ide = wx.NewId()
         self.update_menu_item = menu.Append(ide, _('&Download'), _('Go to the download site'))

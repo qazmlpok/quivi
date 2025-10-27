@@ -148,22 +148,22 @@ class MainController(object):
         pane.Show(show)
         self.view.aui_mgr.Update()
         
-    def on_update_file_list_menu_item(self, event):
+    def on_update_file_list_menu_item(self, event: wx.UpdateUIEvent):
         pane = self.view.aui_mgr.GetPane('file_list')
         event.Check(pane.IsShown())
         
-    def on_update_spread_toggle_menu_item(self, event):
+    def on_update_spread_toggle_menu_item(self, event: wx.UpdateUIEvent):
         using_feature = self.settings.get('Options', 'DetectSpreads') == '1'
         event.Check(using_feature)
         
-    def on_update_image_available_menu_item(self, event):
+    def on_update_image_available_menu_item(self, event: wx.UpdateUIEvent):
         event.Enable(self.canvas.has_image())
         
     def toggle_thumbnails(self):
         pane = self.view.file_list_panel
         pane.toggle_thumbnails()
     
-    def on_update_thumbnail_menu_item(self, event):
+    def on_update_thumbnail_menu_item(self, event: wx.UpdateUIEvent):
         pane = self.view.file_list_panel
         event.Check(pane.is_thumbnails())
         

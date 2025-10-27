@@ -3,21 +3,21 @@ import wx
 
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
-from quivilib.model.commandlist import CommandDefinition
+from quivilib.model.commandlist import CommandDefinition, MenuDefinition
 from quivilib.model.commandenum import CommandName, CommandFlags
 
 from typing import Protocol
 
-class MenuItem(Protocol):
+class QuiviMenuItem(Protocol):
     """ Something that can appear within a menu. Either a single menu item (with executable command(s)),
-    or a list of other MenuItems that will appear as a submenu.. 
+    or a list of other QuiviMenuItems that will appear as a submenu.. 
     """
     def update_translation(self):
         pass
     name: str
     ide: int
 
-class Command(MenuItem):
+class Command(QuiviMenuItem):
     def __init__(self, definition: CommandDefinition):
         """
             Create a new command category.
@@ -59,7 +59,7 @@ class Command(MenuItem):
             self._down_function()
         
     def __repr__(self):
-        return f'{self.clean_name}: {self.description}'
+        return f"{self.ide}: '{self.clean_name}' - {self.description}"
     
     @staticmethod
     def clean_str(s):
@@ -85,45 +85,13 @@ class Command(MenuItem):
         return (self.flags & CommandFlags.CHECKABLE) != 0
 #
 
-class SubCommand(MenuItem):
-    """ A submenu that contains other menu items.
-    Not to be confused with a CommandCategory, which is a top-level menubar item.
-    That has other fields, rightly or wrongly, and shouldn't be nested within another menu.
-    """
-    def __init__(self, descrKey: str, items: list[MenuItem]):
-        self.description = self.descrKey = descrKey
-        self.items = items
-        self.ide = 0
-        
-        self.update_translation()
-        
-    def update_translation(self):
-        self.description = _(self.descrKey)
-        #This isn't actually necessary because everything should already have been updated.
-        #As a result, this should be reworked to be applied to a flat list of everything, not here.
-        for i in self.items:
-            i.update_translation()
-
-    @property
-    def name_and_shortcut(self):
-        return self.description
-
-class CommandCategory():
-    def __init__(self, order: int, idx: str, nameKey: str, commands: list[MenuItem], hidden=False):
+class CommandCategory(QuiviMenuItem):
+    def __init__(self, definition: MenuDefinition):
+        """ Create a new command category from the provided definition
         """
-            Create a new command category.
-            
-            @param order: The order within the Options menu (not used elsewhere)
-            @param idx: string key to use as a unique identifier for this menu. Needed for updates.
-            @param commands: Collection of commands (e.g. menu items) associated with this category.
-            @param nameKey: Display name for the menu - will be translated to the target language
-            @param hidden: If true, the menu will be created but not added to the menu bar.
-        """
-        self.order = order
-        self.idx = idx
-        self.commands = commands
-        self.name = self.nameKey = nameKey
-        self.hidden = hidden
+        self.idx = definition.menu_id
+        self.commands = definition.commands
+        self.name = self.nameKey = definition.nameKey
         
         #From what I'm seeing, the only way to find a menu is by the position or by the title.
         #Title poses problems when trying to update translations.

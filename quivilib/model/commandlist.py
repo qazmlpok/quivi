@@ -1,5 +1,6 @@
 from enum import IntEnum, IntFlag, Flag, auto
 from functools import partial
+from typing import Sequence
 import wx
 
 from quivilib.i18n import _
@@ -12,10 +13,10 @@ class CommandDefinition():
     The name and description are the translation key, but are not translated. This is to allow language switching.
     """
     def __init__(self, 
-            uid: int, catNameKey: str, function,
+            uid: CommandName, catNameKey: str, function,
             nameKey: str, descrKey: str, 
             shortcuts: list[tuple[wx.AcceleratorEntryFlags, wx.KeyCode|int]], 
-            flags=CommandFlags.NONE, down_function=None, update_function=None):
+            flags: CommandFlags = CommandFlags.NONE, down_function=None, update_function=None):
         """ Creates a new command definition.
         
         @param uid: Unique identifier, a declared enum value
@@ -48,11 +49,12 @@ class CommandDefinition():
             raise Exception(f"Menu item {self.clean_name} was given an update function but can't use one")
     #
     @staticmethod
-    def clean_str(str):
-        return str.replace('&', '').replace('...', '')
+    def clean_str(s):
+        return s.replace('&', '').replace('...', '')
     @property
     def clean_name(self):
-        return clean_str(self.name)
+        #Might not be called?
+        return self.clean_str(self.name)
     def __repr__(self):
         return f"CommandDef: {self.nameKey}"
 #
@@ -142,11 +144,10 @@ class CommandDefinitionList():
         #
         self.cmd_list = [x for x in list_items()]
         self.commands = {x.uid: x for x in self.cmd_list}
-        
 #
 
 class MenuDefinition():
-    def __init__(self, ide: MenuName, nameKey: str, commands: list[None|MenuName|CommandName]):
+    def __init__(self, ide: MenuName, nameKey: str, commands: Sequence[None|MenuName|CommandName]):
         self.menu_id = ide
         self.nameKey = nameKey
         self.commands = commands
@@ -214,39 +215,6 @@ class MenuDefinitionList():
         debug_menu = MenuDefinition(MenuName.Debug, 'Debug', (
             CommandName.CACHE_INFO,
         ))
-        #Context menus
-        fit_menu = MenuDefinition(MenuName.FitCtx, empty, (
-            CommandName.ZOOM_NONE,
-            CommandName.ZOOM_WIDTH,
-            CommandName.ZOOM_HEIGHT,
-            CommandName.ZOOM_WINDOW,
-            CommandName.ZOOM_WIDTH_LARGER,
-            CommandName.ZOOM_HEIGHT_LARGER,
-            CommandName.ZOOM_WINDOW_LARGER,
-            #TODO: (2,2) Add: ask for the custom width?
-            CommandName.ZOOM_CUSTOM_WIDTH,
-        ))
-        img_context = MenuDefinition(MenuName.ImgCtx, empty, (
-            CommandName.OPEN_DIRECTORY,
-            CommandName.SELECT_NEXT,
-            CommandName.SELECT_PREVIOUS,
-            CommandName.MOVE,
-            None,
-            MenuName.ZoomSub,
-            MenuName.RotateSub,
-            CommandName.SHOW_SPREAD,
-            None,
-            CommandName.FULL_SCREEN,
-            CommandName.SHOW_FILE_LIST,
-            None,
-            #favorites, #MenuName.Favorites
-            #None,
-            CommandName.OPTIONS,
-            CommandName.HELP,
-            CommandName.ABOUT,
-            None,
-            CommandName.QUIT,
-        ))
         #Sub menus
         zoom_sub = MenuDefinition(MenuName.ZoomSub, 'Zoom', (
             CommandName.ZOOM_IN,   
@@ -265,15 +233,47 @@ class MenuDefinitionList():
         placeholder_sub = MenuDefinition(MenuName.PlaceholderSub, 'Placeholders', (
             #Deliberately empty
         ))
-        
+        # Context menus
+        fit_menu = MenuDefinition(MenuName.FitCtx, empty, (
+            CommandName.ZOOM_NONE,
+            CommandName.ZOOM_WIDTH,
+            CommandName.ZOOM_HEIGHT,
+            CommandName.ZOOM_WINDOW,
+            CommandName.ZOOM_WIDTH_LARGER,
+            CommandName.ZOOM_HEIGHT_LARGER,
+            CommandName.ZOOM_WINDOW_LARGER,
+            # TODO: (2,2) Add: ask for the custom width?
+            CommandName.ZOOM_CUSTOM_WIDTH,
+        ))
+        img_context = MenuDefinition(MenuName.ImgCtx, empty, (
+            CommandName.OPEN_DIRECTORY,
+            CommandName.SELECT_NEXT,
+            CommandName.SELECT_PREVIOUS,
+            CommandName.MOVE,
+            None,
+            MenuName.ZoomSub,
+            MenuName.RotateSub,
+            CommandName.SHOW_SPREAD,
+            None,
+            CommandName.FULL_SCREEN,
+            CommandName.SHOW_FILE_LIST,
+            None,
+            # favorites, #MenuName.Favorites
+            # None,
+            CommandName.OPTIONS,
+            CommandName.HELP,
+            CommandName.ABOUT,
+            None,
+            CommandName.QUIT,
+        ))
+
         self.menubar_menus = (file_menu, folder_menu, view_menu, favorites_menu, help_menu)
         if __debug__:
             self.menubar_menus = self.menubar_menus + (debug_menu,)
-        all = (
-            file_menu, folder_menu, view_menu, favorites_menu, help_menu, 
-            fit_menu, img_context,
+        self.menu_list = (
+            file_menu, folder_menu, view_menu, favorites_menu, help_menu,
             zoom_sub, rotate_sub, fav_sub, placeholder_sub,
+            fit_menu, img_context,
             debug_menu,
         )
-        self.menu_dict = {x.menu_id: x for x in all}
     #
