@@ -94,7 +94,7 @@ class CommandName(IntEnum):
     #favorites_hidden_menu
     OPEN_LAST_PLACEHOLDER = 14005
     #This doesn't belong here but I'm thinking this "menu group" crap needs to go.
-    OPEN_CONTEXT_MENU = 18001
+    OPEN_CONTEXT_MENU = 14006
 
     #help_menu
     HELP = 15001
@@ -125,9 +125,13 @@ class CommandName(IntEnum):
     ZOOM_HEIGHT_LARGER = 17006
     ZOOM_WINDOW_LARGER = 17007
     ZOOM_CUSTOM_WIDTH = 17008
+
+    #download_menu
+    DOWNLOAD_NEW = 18001
     
     #debug
     CACHE_INFO = 29900
+    CHECK_UPDATE = 29901
 #
 
 class MenuName(StrEnum):
@@ -140,6 +144,7 @@ class MenuName(StrEnum):
     View = 'view'
     Favorites = 'fav'   #TODO: Ensure this can be a sub as well.
     Help = 'help'
+    Downloads = 'download'      #Conditionally in the menu bar
     Debug = 'debug'     #Debug mode only
     #Top-level context menus
     FitCtx = '_fit'

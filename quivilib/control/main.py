@@ -248,7 +248,14 @@ class MainController(object):
         
     def on_open_update_site(self, *, url):
         import webbrowser
-        webbrowser.open(url)
+        if url is not None:
+            webbrowser.open(url)
+
+    def check_updates(self):
+        #Debug method - clear the saved timestamp. An actual command to "Check for updates" would be more useful.
+        #But it's not like this program gets updated...
+        if __debug__:
+            self.settings.set('Update', 'LastCheck', '')
         
     def open_context_menu(self):
         Publisher.sendMessage('menu.context_menu')

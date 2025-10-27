@@ -62,7 +62,7 @@ class MainWindow(wx.Frame):
         self.aui_mgr.AddPane(self.file_list_panel, wx.aui.AuiPaneInfo().
                              Name('file_list').Caption(_('Files')).Left().
                              Layer(1).Position(0).CloseButton(True).
-                             DestroyOnClose(False).BestSize((300, 400)))
+                             DestroyOnClose(False).BestSize(300, 400))
         
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundStyle(wx.BG_STYLE_PAINT)
@@ -70,7 +70,29 @@ class MainWindow(wx.Frame):
                              CenterPane())
         
         self.aui_mgr.Update()
+        self.bindings_and_subscriptions()
+
+        if __debug__:
+            #This is created immediately because it listens for messages.
+            self.dbg_dialog = DebugDialog(self)
         
+        self._last_size = self.GetSize() 
+        self._last_pos = self.GetPosition()
+        self._busy = False
+        #List of (id, name) tuples. Filled on the favorites.changed event,
+        #used in the file list popup menu
+        self.favorites_menu_items = []
+        self._favorite_menu_count = 0
+        self.update_menu_item = None
+        self.accel_table = None
+        #Track as a dictionary
+        self.menus: dict[MenuName, wx.Menu] = {}
+        #Used for updating translations dynamically. Pair the actual wx objects and the local definitions.
+        self.all_cmd_pairs: list[tuple[Command, wx.MenuItem]] = []
+        #Set by a background task if there is an update available.
+        self.down_url: str|None = None
+
+    def bindings_and_subscriptions(self):
         self.panel.Bind(wx.EVT_PAINT, self.on_panel_paint)
         self.panel.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
         self.panel.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
@@ -80,7 +102,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_MOVE, self.on_move)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.status_bar.Bind(wx.EVT_CONTEXT_MENU, self.on_fit_context_menu)
-        
+
         Publisher.subscribe(self.on_busy, 'busy')
         Publisher.subscribe(self.on_error, 'error')
         Publisher.subscribe(self.on_freeze, 'gui.freeze')
@@ -114,24 +136,6 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.loaded')
         Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitType')
         Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitWidthCustomSize')
-        
-        if __debug__:
-            #This is created immediately because it listens for messages.
-            self.dbg_dialog = DebugDialog(self)
-        
-        self._last_size = self.GetSize() 
-        self._last_pos = self.GetPosition()
-        self._busy = False
-        #List of (id, name) tuples. Filled on the favorites.changed event,
-        #used in the file list popup menu
-        self.favorites_menu_items = []
-        self._favorite_menu_count = 0
-        self.update_menu_item = None
-        self.accel_table = None
-        #Track as a dictionary
-        self.menus: dict[MenuName, wx.Menu] = {}
-        #Used for updating translations dynamically. Pair the actual wx objects and the local definitions.
-        self.all_cmd_pairs: list[tuple[Command, wx.MenuItem]] = []
 
     def _bind_panel_mouse_events(self):
         def make_fn(button_idx, event_idx):
@@ -256,14 +260,14 @@ class MainWindow(wx.Frame):
     def on_fit_context_menu(self, event: wx.ContextMenuEvent):
         """Appears on right-clicking the status bar"""
         menu = wx.Menu()
-        self.PopupMenu(self.menus['_fit'])
+        self.PopupMenu(self.menus[MenuName.FitCtx])
         menu.Destroy()
         
     def on_cmd_context_menu(self):
         """Appears on executing the bindable 'open context menu' command, e.g. middle/right clicking. """
         #uh... is this `menu` doing anything?
         menu = wx.Menu()
-        self.PopupMenu(self.menus['_ctx'])
+        self.PopupMenu(self.menus[MenuName.ImgCtx])
         menu.Destroy()
         
     def on_busy(self, *, busy):
@@ -343,13 +347,14 @@ class MainWindow(wx.Frame):
                     self.handle_error(e)
             self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
         #This is the number of pre-defined menu items in favorites; everything past this is a favorite.
-        self._favorite_menu_count = self.menus['fav'].GetMenuItemCount()
+        self._favorite_menu_count = self.menus[MenuName.Favorites].GetMenuItemCount()
 
     def _new_make_menu(self, menu: CommandCategory, all_menus: dict[MenuName, CommandCategory], commands: list[Command]) -> wx.Menu:
         """ Creates the actual wx.Menu for a given CommandCategory.
         Still requires references to all data, since this may include submenus.
         """
         _menu = wx.Menu()
+        _menu.SetTitle(menu.name)
         #Move to caller.
         cmd_lookup = {x.ide: x for x in commands if type(x) is Command}
         for cmd in menu.commands:
@@ -375,7 +380,7 @@ class MainWindow(wx.Frame):
         return _menu
 
     def on_favorites_changed(self, *, favorites):
-        favorites_menu = self.menus['fav']
+        favorites_menu = self.menus[MenuName.Favorites]
         self.menu_bar.Freeze()
         try:
             #self._favorite_menu_count is the number of submenus in the favorites menu;
@@ -414,7 +419,6 @@ class MainWindow(wx.Frame):
     def on_menu_labels_changed(self, *, categories: list[CommandCategory]):
         #Commands (i.e. wx.MenuItem s) use stored data. The menu_bar requires indices; wx.Menu references will not work.
         for (cmd, wx_item) in self.all_cmd_pairs:
-            #cmd.update_translation()       # - Should already be called by caller.
             wx_item.SetItemLabel(cmd.name)
             wx_item.SetHelp(cmd.description)
         for category in categories:
@@ -493,14 +497,13 @@ class MainWindow(wx.Frame):
         dialog.Destroy()
         
     def on_update_available(self, *, down_url, check_time, version):
-        #TODO Hell I completely forgot about this.
-        menu = wx.Menu()
-        ide = wx.NewId()
-        self.update_menu_item = menu.Append(ide, _('&Download'), _('Go to the download site'))
-        self.menu_bar.Append(menu, _('&New version available!'))
-        def event_fn(event):
-            Publisher.sendMessage('program.open_update_site', url=down_url)
-        self.Bind(wx.EVT_MENU, event_fn, id=ide)
+        self.down_url = down_url
+        menu = self.menus[MenuName.Downloads]
+        #self.menu_bar.Append(menu, _('&New version available!'))
+        self.menu_bar.Append(menu, menu.GetTitle())
+
+    def on_download_update(self):
+        Publisher.sendMessage('program.open_update_site', url=self.down_url)
 
     def on_bg_color_changed(self, *, settings):
         if settings.get('Options', 'CustomBackground') == '1':

@@ -53,8 +53,7 @@ class CommandDefinition():
         return s.replace('&', '').replace('...', '')
     @property
     def clean_name(self):
-        #Might not be called?
-        return self.clean_str(self.name)
+        return self.clean_str(self.nameKey)
     def __repr__(self):
         return f"CommandDef: {self.nameKey}"
 #
@@ -139,8 +138,12 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.ZOOM_WINDOW_LARGER       ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH_OVERSIZE, save=True)  , 'Window if larger', 'Window if larger',[])
             yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH        ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_CUSTOM_WIDTH, save=True), 'Custom width', 'Custom width',[])
 
+            cat_name = 'Download'
+            yield CommandDefinition(CommandName.DOWNLOAD_NEW             ,cat_name,control.view.on_download_update, '&Download', 'Go to the download site',[], flags=CommandFlags.NOMENU)
+
             cat_name = 'Debug'
             yield CommandDefinition(CommandName.CACHE_INFO               ,cat_name,control.debugController.open_debug_cache_dialog, 'Cache', 'Show Cache information',[], flags=CommandFlags.NOMENU)
+            yield CommandDefinition(CommandName.CHECK_UPDATE             ,cat_name,control.check_updates, 'Check for Updates', 'Reset check-for-updates timestamp',[], flags=CommandFlags.NOMENU)
         #
         self.cmd_list = [x for x in list_items()]
         self.commands = {x.uid: x for x in self.cmd_list}
@@ -211,9 +214,13 @@ class MenuDefinitionList():
             CommandName.FEEDBACK,
             CommandName.ABOUT,
         ))
+        download_menu = MenuDefinition(MenuName.Downloads, '&New version available!', (
+            CommandName.DOWNLOAD_NEW,
+        ))
         #Debug mode only
         debug_menu = MenuDefinition(MenuName.Debug, 'Debug', (
             CommandName.CACHE_INFO,
+            CommandName.CHECK_UPDATE,
         ))
         #Sub menus
         zoom_sub = MenuDefinition(MenuName.ZoomSub, 'Zoom', (
@@ -271,7 +278,7 @@ class MenuDefinitionList():
         if __debug__:
             self.menubar_menus = self.menubar_menus + (debug_menu,)
         self.menu_list = (
-            file_menu, folder_menu, view_menu, favorites_menu, help_menu,
+            file_menu, folder_menu, view_menu, favorites_menu, help_menu, download_menu,
             zoom_sub, rotate_sub, fav_sub, placeholder_sub,
             fit_menu, img_context,
             debug_menu,
