@@ -2,7 +2,7 @@ from functools import partial
 from typing import Sequence
 import wx
 
-from quivilib.i18n import _
+from quivilib.i18n import __
 from quivilib.model.shortcut import Shortcut
 from quivilib.model.commandenum import *
 
@@ -64,81 +64,81 @@ class CommandDefinitionList():
     #TODO: Break these up into multiple lines. Check the cmddef ctor. Try to follow that.
     def __init__(self, control):
         def list_items():
-            cat_name = '&File'
-            yield CommandDefinition(CommandName.SET_WALLPAPER            ,cat_name,control.wallpaper.open_dialog, 'Set as &wallpaper...', 'Set the opened image as wallpaper', [(wx.ACCEL_NORMAL, wx.WXK_F3)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.COPY                     ,cat_name,control.copy_to_clipboard, '&Copy', 'Copy the opened image to the clipboard',[(wx.ACCEL_CTRL, ord('C'))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.COPY_PATH                ,cat_name,control.copy_path_to_clipboard, '&Copy path', 'Copy the path of the current container to the clipboard',[(wx.ACCEL_CTRL, ord('B'))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.DELETE                   ,cat_name,control.delete, '&Delete', 'Delete the opened image',[(wx.ACCEL_CTRL, wx.WXK_DELETE)], flags=CommandFlags.DISABLEABLE, update_function=control.file_list.on_update_delete_menu_item)
-            yield CommandDefinition(CommandName.MOVE                     ,cat_name,control.open_move_dialog, '&Move...', 'Move the opened zip file to a new location',[(wx.ACCEL_CTRL, ord('N'))], flags=CommandFlags.DISABLEABLE, update_function=control.file_list.on_update_move_menu_item)
-            yield CommandDefinition(CommandName.OPTIONS                  ,cat_name,control.options.open_dialog, '&Options...', 'Open the options dialog',[(wx.ACCEL_NORMAL, wx.WXK_F4)])
-            yield CommandDefinition(CommandName.QUIT                     ,cat_name,control.quit, '&Quit', 'Close the application',[], flags=CommandFlags.KB)
-            
-            cat_name = 'F&older'
-            yield CommandDefinition(CommandName.SELECT_NEXT              ,cat_name,partial(control.file_list.select_next, 1), 'Select/Open &next', 'Select the next item; if it is an image, show it',[(wx.ACCEL_NORMAL, wx.WXK_END), (wx.ACCEL_NORMAL, wx.WXK_SPACE)])
-            yield CommandDefinition(CommandName.SELECT_PREVIOUS          ,cat_name,partial(control.file_list.select_next, -1), 'Select/Open &previous', 'Select the previous item; if it is an image, show it',[(wx.ACCEL_NORMAL, wx.WXK_HOME)])
-            yield CommandDefinition(CommandName.OPEN_SELECTED_DIRECTORY  ,cat_name,control.file_list.open_selected_container, 'Open selected &directory', 'If a directory or a compressed file is selected, open it',[(wx.ACCEL_NORMAL, wx.WXK_INSERT)])
-            yield CommandDefinition(CommandName.OPEN_PARENT              ,cat_name,control.file_list.open_parent, 'Open p&arent', 'Open the parent directory or compressed file',[(wx.ACCEL_NORMAL, wx.WXK_DELETE)])
-            yield CommandDefinition(CommandName.OPEN_NEXT                ,cat_name,partial(control.file_list.open_sibling, 1), 'Open ne&xt sibling', 'Open the next directory or compressed file inside the parent',[(wx.ACCEL_CTRL, wx.WXK_END)])
-            yield CommandDefinition(CommandName.OPEN_PREVIOUS            ,cat_name,partial(control.file_list.open_sibling, -1), 'Open previou&s sibling', 'Open the previous directory or compressed file inside the parent',[(wx.ACCEL_CTRL, wx.WXK_HOME)])
-            yield CommandDefinition(CommandName.REFRESH                  ,cat_name,control.file_list.refresh, '&Refresh', 'Refresh the current directory or compressed file; reload the image shown if any',[(wx.ACCEL_NORMAL, wx.WXK_F5)])
-            yield CommandDefinition(CommandName.OPEN_DIRECTORY           ,cat_name,control.file_list.open_directory, 'Open direc&tory...', 'Browse for a directory to open',[(wx.ACCEL_CTRL, ord('O'))])
+            cat_name = __('&File')
+            yield CommandDefinition(CommandName.SET_WALLPAPER, cat_name, control.wallpaper.open_dialog, __('Set as &wallpaper...'), __('Set the opened image as wallpaper'), [(wx.ACCEL_NORMAL, wx.WXK_F3)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.COPY, cat_name, control.copy_to_clipboard, __('&Copy'), __('Copy the opened image to the clipboard'), [(wx.ACCEL_CTRL, ord(__('C')))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.COPY_PATH, cat_name, control.copy_path_to_clipboard, __('&Copy path'), __('Copy the path of the current container to the clipboard'), [(wx.ACCEL_CTRL, ord(__('B')))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.DELETE, cat_name, control.delete, __('&Delete'), __('Delete the opened image'), [(wx.ACCEL_CTRL, wx.WXK_DELETE)], flags=CommandFlags.DISABLEABLE, update_function=control.file_list.on_update_delete_menu_item)
+            yield CommandDefinition(CommandName.MOVE, cat_name, control.open_move_dialog, __('&Move...'), __('Move the opened zip file to a new location'), [(wx.ACCEL_CTRL, ord(__('N')))], flags=CommandFlags.DISABLEABLE, update_function=control.file_list.on_update_move_menu_item)
+            yield CommandDefinition(CommandName.OPTIONS, cat_name, control.options.open_dialog, __('&Options...'), __('Open the options dialog'), [(wx.ACCEL_NORMAL, wx.WXK_F4)])
+            yield CommandDefinition(CommandName.QUIT, cat_name, control.quit, __('&Quit'), __('Close the application'), [], flags=CommandFlags.KB)
 
-            cat_name = '&View'
-            yield CommandDefinition(CommandName.ZOOM_IN                  ,cat_name,control.canvas.zoom_in, 'Zoom &in', 'Zoom in',[(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_ADD)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.ZOOM_OUT                 ,cat_name,control.canvas.zoom_out, 'Zoom &out', 'Zoom out',[(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_SUBTRACT)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.ZOOM_FULL                ,cat_name,control.canvas.zoom_reset, '&Zoom 100%', 'Show the image in its real size',[(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_MULTIPLY)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.FIT_WIDTH                ,cat_name,control.canvas.zoom_fit_width, 'Fit &width', 'Zooms the image in order to make its width fit the window',[(wx.ACCEL_CTRL, ord('W'))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.FIT_HEIGHT               ,cat_name,control.canvas.zoom_fit_height, 'Fit &height', 'Zooms the image in order to make its height fit the window',[(wx.ACCEL_CTRL, ord('H'))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.SHOW_SPREAD              ,cat_name,control.toggle_spread, 'Show &spread', 'Attempt to show combined pages at regular zoom',[(wx.ACCEL_CTRL, ord('E'))], flags=CommandFlags.CHECKABLE|CommandFlags.DISABLEABLE, update_function=control.on_update_spread_toggle_menu_item)
-            yield CommandDefinition(CommandName.ROTATE_CLOCKWISE         ,cat_name,partial(control.canvas.rotate_image, 1), 'Rotate &clockwise', 'Rotate the image clockwise',[(wx.ACCEL_CTRL, ord('L'))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.ROTATE_COUNTER_CLOCKWISE ,cat_name,partial(control.canvas.rotate_image, 0), 'Rotate coun&ter clockwise', 'Rotate the image counter clockwise',[(wx.ACCEL_CTRL, ord('K'))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
-            yield CommandDefinition(CommandName.FULL_SCREEN              ,cat_name,control.toggle_fullscreen, '&Full screen', 'Go to/leave full screen mode',[(wx.ACCEL_ALT, wx.WXK_RETURN)], flags=CommandFlags.CHECKABLE|CommandFlags.DISABLEABLE, update_function=control.on_update_fullscreen_menu_item)
-            yield CommandDefinition(CommandName.SHOW_FILE_LIST           ,cat_name,control.toggle_file_list, 'File &list', 'Show/hide the file list',[(wx.ACCEL_NORMAL, wx.WXK_TAB)], flags=CommandFlags.CHECKABLE|CommandFlags.DISABLEABLE, update_function=control.on_update_file_list_menu_item)
-            yield CommandDefinition(CommandName.SHOW_THUMBNAILS          ,cat_name,control.toggle_thumbnails, 'Thumb&nails', 'Show/hide the thumbnails',[(wx.ACCEL_NORMAL, wx.WXK_F6)], flags=CommandFlags.CHECKABLE|CommandFlags.DISABLEABLE, update_function=control.on_update_thumbnail_menu_item)
-            yield CommandDefinition(CommandName.SHOW_HIDDEN_FILES        ,cat_name,control.file_list.toggle_show_hidden, 'Hi&dden files', 'Show/hide hidden files in the file list',[(wx.ACCEL_CTRL, ord('A'))], flags=CommandFlags.CHECKABLE|CommandFlags.DISABLEABLE, update_function=control.file_list.on_update_hidden_menu_item)
-            
-            cat_name = 'F&avorites'
-            yield CommandDefinition(CommandName.ADD_FAVORITES            ,cat_name,control.add_favorite, 'Add to &favorites', 'Add the current directory or compressed file to the favorites', [(wx.ACCEL_CTRL, ord('D'))])
-            yield CommandDefinition(CommandName.ADD_PLACEHOLDER          ,cat_name,control.add_placeholder, 'Add &placeholder', 'Add the current directory or compressed file to the favorites on the current image',[(wx.ACCEL_CTRL, ord('F'))])
-            yield CommandDefinition(CommandName.REMOVE_FAVORITES         ,cat_name,control.remove_favorite, 'R&emove from favorites', 'Remove the current directory or compressed file from the favorites',[(wx.ACCEL_CTRL, ord('R'))])
-            yield CommandDefinition(CommandName.REMOVE_PLACEHOLDER       ,cat_name,control.remove_placeholder, 'Remove p&laceholder', 'Remove the saved page for the current directory or compressed file from the favorites',[(wx.ACCEL_CTRL, ord('V'))])
-            
-            cat_name = 'F&avorites'
-            yield CommandDefinition(CommandName.OPEN_LAST_PLACEHOLDER    ,cat_name, control.open_latest_placeholder, 'Open last placeholder', 'Open the most recently created placeholder',[(wx.ACCEL_CTRL, ord('L'))])
-            yield CommandDefinition(CommandName.OPEN_CONTEXT_MENU        ,cat_name, control.open_context_menu, 'Open context menu', 'Open the context menu', [], flags=CommandFlags.MOUSE)
-            
-            cat_name = '&Help'
-            yield CommandDefinition(CommandName.HELP                     ,cat_name,control.open_help, '&Help (online)...', 'Open the online help',[(wx.ACCEL_NORMAL, wx.WXK_F1)], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.FEEDBACK                 ,cat_name,control.open_feedback, '&Feedback / Support (online)...', 'Open the feedback / support online form',[], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.ABOUT                    ,cat_name,control.open_about_dialog, '&About...', 'Show information about the application',[], flags=CommandFlags.KB)
-            
-            cat_name = 'Move'
-            yield CommandDefinition(CommandName.MOVE_SMALL_UP            ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL), 'Small move up', 'Small move up',[(wx.ACCEL_NORMAL, wx.WXK_UP)], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_SMALL_DOWN          ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL), 'Small move down', 'Small move down',[(wx.ACCEL_NORMAL, wx.WXK_DOWN)], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_SMALL_LEFT          ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL), 'Small move left', 'Small move left',[(wx.ACCEL_NORMAL, wx.WXK_LEFT)], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_SMALL_RIGHT         ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL), 'Small move right', 'Small move right',[(wx.ACCEL_NORMAL, wx.WXK_RIGHT)], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_UP            ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE), 'Large move up', 'Large move up',[(wx.ACCEL_NORMAL, wx.WXK_PAGEUP)], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_DOWN          ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE) , 'Large move down', 'Large move down',[(wx.ACCEL_NORMAL, wx.WXK_PAGEDOWN)], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_LEFT          ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE) , 'Large move left', 'Large move left', [], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_RIGHT         ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE), 'Large move right', 'Large move right',[], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_UP             ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL)    , 'Full move up', 'Full move up',[], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_DOWN           ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL)  , 'Full move down', 'Full move down',[], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_LEFT           ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL)  , 'Full move left', 'Full move left',[], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_RIGHT          ,cat_name,partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL) , 'Full move right', 'Full move right',[], flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.DRAG_IMAGE               ,cat_name,control.canvas.image_drag_end, 'Drag image', 'Drag image',[], flags=CommandFlags.MOUSE, down_function=control.canvas.image_drag_start)
-            
-            cat_name = 'Fit'
-            yield CommandDefinition(CommandName.ZOOM_NONE                ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_NONE, save=True)           , 'None', 'None',[])
-            yield CommandDefinition(CommandName.ZOOM_WIDTH               ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH, save=True)          , 'Width', 'Width',[])
-            yield CommandDefinition(CommandName.ZOOM_HEIGHT              ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT, save=True)         , 'Height', 'Height',[])
-            yield CommandDefinition(CommandName.ZOOM_WINDOW              ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH , save=True)          , 'Window', 'Window',[])
-            yield CommandDefinition(CommandName.ZOOM_WIDTH_LARGER        ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH_OVERSIZE, save=True) , 'Width if larger', 'Width if larger',[])
-            yield CommandDefinition(CommandName.ZOOM_HEIGHT_LARGER       ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT_OVERSIZE, save=True), 'Height if larger', 'Height if larger',[])
-            yield CommandDefinition(CommandName.ZOOM_WINDOW_LARGER       ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH_OVERSIZE, save=True)  , 'Window if larger', 'Window if larger',[])
-            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH        ,cat_name,partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_CUSTOM_WIDTH, save=True), 'Custom width', 'Custom width',[])
+            cat_name = __('F&older')
+            yield CommandDefinition(CommandName.SELECT_NEXT, cat_name, partial(control.file_list.select_next, 1), __('Select/Open &next'), __('Select the next item; if it is an image, show it'), [(wx.ACCEL_NORMAL, wx.WXK_END), (wx.ACCEL_NORMAL, wx.WXK_SPACE)])
+            yield CommandDefinition(CommandName.SELECT_PREVIOUS, cat_name, partial(control.file_list.select_next, -1), __('Select/Open &previous'), __('Select the previous item; if it is an image, show it'), [(wx.ACCEL_NORMAL, wx.WXK_HOME)])
+            yield CommandDefinition(CommandName.OPEN_SELECTED_DIRECTORY, cat_name, control.file_list.open_selected_container, __('Open selected &directory'), __('If a directory or a compressed file is selected, open it'), [(wx.ACCEL_NORMAL, wx.WXK_INSERT)])
+            yield CommandDefinition(CommandName.OPEN_PARENT, cat_name, control.file_list.open_parent, __('Open p&arent'), __('Open the parent directory or compressed file'), [(wx.ACCEL_NORMAL, wx.WXK_DELETE)])
+            yield CommandDefinition(CommandName.OPEN_NEXT, cat_name, partial(control.file_list.open_sibling, 1), __('Open ne&xt sibling'), __('Open the next directory or compressed file inside the parent'), [(wx.ACCEL_CTRL, wx.WXK_END)])
+            yield CommandDefinition(CommandName.OPEN_PREVIOUS, cat_name, partial(control.file_list.open_sibling, -1), __('Open previou&s sibling'), __('Open the previous directory or compressed file inside the parent'), [(wx.ACCEL_CTRL, wx.WXK_HOME)])
+            yield CommandDefinition(CommandName.REFRESH, cat_name, control.file_list.refresh, __('&Refresh'), __('Refresh the current directory or compressed file; reload the image shown if any'), [(wx.ACCEL_NORMAL, wx.WXK_F5)])
+            yield CommandDefinition(CommandName.OPEN_DIRECTORY, cat_name, control.file_list.open_directory, __('Open direc&tory...'), __('Browse for a directory to open'), [(wx.ACCEL_CTRL, ord(__('O')))])
 
-            cat_name = 'Download'
-            yield CommandDefinition(CommandName.DOWNLOAD_NEW             ,cat_name,control.view.on_download_update, '&Download', 'Go to the download site',[], flags=CommandFlags.NOMENU)
+            cat_name = __('&View')
+            yield CommandDefinition(CommandName.ZOOM_IN, cat_name, control.canvas.zoom_in, __('Zoom &in'), __('Zoom in'), [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_ADD)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.ZOOM_OUT, cat_name, control.canvas.zoom_out, __('Zoom &out'), __('Zoom out'), [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_SUBTRACT)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.ZOOM_FULL, cat_name, control.canvas.zoom_reset, __('&Zoom 100%'), __('Show the image in its real size'), [(wx.ACCEL_NORMAL, wx.WXK_NUMPAD_MULTIPLY)], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.FIT_WIDTH, cat_name, control.canvas.zoom_fit_width, __('Fit &width'), __('Zooms the image in order to make its width fit the window'), [(wx.ACCEL_CTRL, ord(__('W')))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.FIT_HEIGHT, cat_name, control.canvas.zoom_fit_height, __('Fit &height'), __('Zooms the image in order to make its height fit the window'), [(wx.ACCEL_CTRL, ord(__('H')))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.SHOW_SPREAD, cat_name, control.toggle_spread, __('Show &spread'), __('Attempt to show combined pages at regular zoom'), [(wx.ACCEL_CTRL, ord(__('E')))], flags=CommandFlags.CHECKABLE | CommandFlags.DISABLEABLE, update_function=control.on_update_spread_toggle_menu_item)
+            yield CommandDefinition(CommandName.ROTATE_CLOCKWISE, cat_name, partial(control.canvas.rotate_image, 1), __('Rotate &clockwise'), __('Rotate the image clockwise'), [(wx.ACCEL_CTRL, ord(__('L')))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.ROTATE_COUNTER_CLOCKWISE, cat_name, partial(control.canvas.rotate_image, 0), __('Rotate coun&ter clockwise'), __('Rotate the image counter clockwise'), [(wx.ACCEL_CTRL, ord(__('K')))], flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.FULL_SCREEN, cat_name, control.toggle_fullscreen, __('&Full screen'), __('Go to/leave full screen mode'), [(wx.ACCEL_ALT, wx.WXK_RETURN)], flags=CommandFlags.CHECKABLE | CommandFlags.DISABLEABLE, update_function=control.on_update_fullscreen_menu_item)
+            yield CommandDefinition(CommandName.SHOW_FILE_LIST, cat_name, control.toggle_file_list, __('File &list'), __('Show/hide the file list'), [(wx.ACCEL_NORMAL, wx.WXK_TAB)], flags=CommandFlags.CHECKABLE | CommandFlags.DISABLEABLE, update_function=control.on_update_file_list_menu_item)
+            yield CommandDefinition(CommandName.SHOW_THUMBNAILS, cat_name, control.toggle_thumbnails, __('Thumb&nails'), __('Show/hide the thumbnails'), [(wx.ACCEL_NORMAL, wx.WXK_F6)], flags=CommandFlags.CHECKABLE | CommandFlags.DISABLEABLE, update_function=control.on_update_thumbnail_menu_item)
+            yield CommandDefinition(CommandName.SHOW_HIDDEN_FILES, cat_name, control.file_list.toggle_show_hidden, __('Hi&dden files'), __('Show/hide hidden files in the file list'), [(wx.ACCEL_CTRL, ord(__('A')))], flags=CommandFlags.CHECKABLE | CommandFlags.DISABLEABLE, update_function=control.file_list.on_update_hidden_menu_item)
+
+            cat_name = __('F&avorites')
+            yield CommandDefinition(CommandName.ADD_FAVORITES, cat_name, control.add_favorite, __('Add to &favorites'), __('Add the current directory or compressed file to the favorites'), [(wx.ACCEL_CTRL, ord(__('D')))])
+            yield CommandDefinition(CommandName.ADD_PLACEHOLDER, cat_name, control.add_placeholder, __('Add &placeholder'), __('Add the current directory or compressed file to the favorites on the current image'), [(wx.ACCEL_CTRL, ord(__('F')))])
+            yield CommandDefinition(CommandName.REMOVE_FAVORITES, cat_name, control.remove_favorite, __('R&emove from favorites'), __('Remove the current directory or compressed file from the favorites'), [(wx.ACCEL_CTRL, ord(__('R')))])
+            yield CommandDefinition(CommandName.REMOVE_PLACEHOLDER, cat_name, control.remove_placeholder, __('Remove p&laceholder'), __('Remove the saved page for the current directory or compressed file from the favorites'), [(wx.ACCEL_CTRL, ord(__('V')))])
+
+            cat_name = __('F&avorites')
+            yield CommandDefinition(CommandName.OPEN_LAST_PLACEHOLDER, cat_name, control.open_latest_placeholder, __('Open last placeholder'), __('Open the most recently created placeholder'), [(wx.ACCEL_CTRL, ord(__('L')))])
+            yield CommandDefinition(CommandName.OPEN_CONTEXT_MENU, cat_name, control.open_context_menu, __('Open context menu'), __('Open the context menu'), [], flags=CommandFlags.MOUSE)
+
+            cat_name = __('&Help')
+            yield CommandDefinition(CommandName.HELP, cat_name, control.open_help, __('&Help (online)...'), __('Open the online help'), [(wx.ACCEL_NORMAL, wx.WXK_F1)], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.FEEDBACK, cat_name, control.open_feedback, __('&Feedback / Support (online)...'), __('Open the feedback / support online form'), [], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.ABOUT, cat_name, control.open_about_dialog, __('&About...'), __('Show information about the application'), [], flags=CommandFlags.KB)
+
+            cat_name = __('Move')
+            yield CommandDefinition(CommandName.MOVE_SMALL_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL), __('Small move up'), __('Small move up'), [(wx.ACCEL_NORMAL, wx.WXK_UP)], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_SMALL_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL), __('Small move down'), __('Small move down'), [(wx.ACCEL_NORMAL, wx.WXK_DOWN)], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_SMALL_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL), __('Small move left'), __('Small move left'), [(wx.ACCEL_NORMAL, wx.WXK_LEFT)], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_SMALL_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL), __('Small move right'), __('Small move right'), [(wx.ACCEL_NORMAL, wx.WXK_RIGHT)], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_LARGE_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE), __('Large move up'), __('Large move up'), [(wx.ACCEL_NORMAL, wx.WXK_PAGEUP)], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_LARGE_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE), __('Large move down'), __('Large move down'), [(wx.ACCEL_NORMAL, wx.WXK_PAGEDOWN)], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_LARGE_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE), __('Large move left'), __('Large move left'), [], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_LARGE_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE), __('Large move right'), __('Large move right'), [], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_FULL_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL), __('Full move up'), __('Full move up'), [], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_FULL_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL), __('Full move down'), __('Full move down'), [], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_FULL_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL), __('Full move left'), __('Full move left'), [], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.MOVE_FULL_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL), __('Full move right'), __('Full move right'), [], flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.DRAG_IMAGE, cat_name, control.canvas.image_drag_end, __('Drag image'), __('Drag image'), [], flags=CommandFlags.MOUSE, down_function=control.canvas.image_drag_start)
+
+            cat_name = __('Fit')
+            yield CommandDefinition(CommandName.ZOOM_NONE, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_NONE, save=True), __('None'), __('None'), [])
+            yield CommandDefinition(CommandName.ZOOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH, save=True), __('Width'), __('Width'), [])
+            yield CommandDefinition(CommandName.ZOOM_HEIGHT, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT, save=True), __('Height'), __('Height'), [])
+            yield CommandDefinition(CommandName.ZOOM_WINDOW, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH, save=True), __('Window'), __('Window'), [])
+            yield CommandDefinition(CommandName.ZOOM_WIDTH_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH_OVERSIZE, save=True), __('Width if larger'), __('Width if larger'), [])
+            yield CommandDefinition(CommandName.ZOOM_HEIGHT_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT_OVERSIZE, save=True), __('Height if larger'), __('Height if larger'), [])
+            yield CommandDefinition(CommandName.ZOOM_WINDOW_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH_OVERSIZE, save=True), __('Window if larger'), __('Window if larger'), [])
+            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_CUSTOM_WIDTH, save=True), __('Custom width'), __('Custom width'), [])
+
+            cat_name = __('Download')
+            yield CommandDefinition(CommandName.DOWNLOAD_NEW, cat_name, control.view.on_download_update, __('&Download'), __('Go to the download site'), [], flags=CommandFlags.NOMENU)
 
             cat_name = 'Debug'
             yield CommandDefinition(CommandName.CACHE_INFO               ,cat_name,control.debugController.open_debug_cache_dialog, 'Cache', 'Show Cache information',[], flags=CommandFlags.NOMENU)

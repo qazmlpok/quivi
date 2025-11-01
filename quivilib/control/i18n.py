@@ -20,16 +20,20 @@ class I18NController(object):
         lang_code = settings.get('Language', 'ID')
         if lang_code == 'default':
             lang_code = wx.LANGUAGE_DEFAULT
-        language = wx.LANGUAGE_ENGLISH_US
+        lang = wx.LANGUAGE_ENGLISH_US
         for ide in self.available_languages:
             if wx.Locale.GetLanguageInfo(ide).CanonicalName == lang_code:
-                language = ide
+                lang = ide
                 break
 
         self.locale = None
-        self.language = language
+        self.language = lang
 
-    def set_language(self, lang_id):
+    @property
+    def language(self):
+        return self._language
+    @language.setter
+    def language(self, lang_id):
         info = wx.Locale.GetLanguageInfo(lang_id)
         if not info:
             return
@@ -56,15 +60,12 @@ class I18NController(object):
 
         Publisher.sendMessage('language.changed')
 
-    def get_laguage(self):
-        return self._language
-
-    language = property(get_laguage, set_language)
-
     @property
     def available_languages(self):
         langs = []
 
+        # Note - This will add the language to the list even if it isn't installed.
+        # It won't be possible to switch to the language even though it's in the list. There's probably a way to fix this...
         def try_add_lang(path: Path, language_id):
             try:
                 if path.exists():
