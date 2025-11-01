@@ -64,7 +64,7 @@ class WallpaperDialog(wx.Dialog):
         screen = wx.Display(0)
         screen_width = screen.GetGeometry().width
         screen_height = screen.GetGeometry().height
-        preview_panel_size = (int(screen_width * 200.0 / screen_height), 200) 
+        preview_panel_size = wx.Size(int(screen_width * 200.0 / screen_height), 200)
         self.preview_panel.SetMinSize(preview_panel_size)
         self.preview_panel.SetMaxSize(preview_panel_size)
         self.position_radio.SetSelection(0)
@@ -196,13 +196,13 @@ class WallpaperDialog(wx.Dialog):
             clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
                                      painted_region.width, painted_region.height))
             region_box = clip_region.GetBox()
-            iter = wx.RegionIterator(clip_region)
-            while (iter.HaveRects()):
-                rect = iter.GetRect()
+            itr = wx.RegionIterator(clip_region)
+            while (itr.HaveRects()):
+                rect = itr.GetRect()
                 dc.DestroyClippingRegion()
                 dc.SetClippingRegion(rect)
                 dc.Clear()
-                iter.Next()
+                itr.Next()
         
     def on_preview_changed(self, *, bmp, tiled):
         self.bmp = bmp

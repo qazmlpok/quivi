@@ -2,23 +2,10 @@ import os
 from configparser import RawConfigParser, ParsingError
 from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
-from quivilib.model.commandlist import CommandName
+from quivilib.model.commandenum import CommandName, FitSettings
 
 
 class Settings(RawConfigParser):
-    (FIT_NONE,
-     FIT_WIDTH_OVERSIZE,
-     FIT_HEIGHT_OVERSIZE,
-     FIT_BOTH_OVERSIZE,
-     FIT_CUSTOM_WIDTH,
-     FIT_SCREEN_CROP_EXCESS,
-     FIT_SCREEN_SHOW_ALL,
-     FIT_SCREEN_NONE,
-     FIT_TILED,
-     FIT_WIDTH,
-     FIT_HEIGHT,
-     FIT_BOTH) = list(range(12))
-
     def __init__(self, path):
         RawConfigParser.__init__(self)
         self.path = path
@@ -47,7 +34,7 @@ class Settings(RawConfigParser):
         
     def _load_defaults(self):
         defaults = (
-          ('Options', 'FitType', self.FIT_WIDTH_OVERSIZE),
+          ('Options', 'FitType', FitSettings.FIT_WIDTH_OVERSIZE),
           ('Options', 'FitWidthCustomSize', 800),
           ('Options', 'StartDir', ''),
           ('Options', 'CustomBackground', 0),

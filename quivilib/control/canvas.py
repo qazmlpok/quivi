@@ -1,9 +1,9 @@
-from enum import Flag, auto
 import logging
 import wx
 from pubsub import pub as Publisher
 
 from quivilib import meta
+from quivilib.model.commandenum import MovementType, FitSettings
 from quivilib.model.canvas import Canvas, PaintedRegion
 from quivilib.model.settings import Settings
 from quivilib.resources import images
@@ -13,22 +13,6 @@ from quivilib.control.cache import ImageCacheLoadRequest, ImageCacheLoaded
 ZOOM_FACTOR = 25
 
 log = logging.getLogger('control.canvas')
-
-class MovementType(Flag):
-    MOVE = auto()
-    MOVE_HORI = auto()
-    MOVE_NEG = auto()
-    
-    MOVETYPE_SMALL = auto()
-    MOVETYPE_LARGE = auto()
-    MOVETYPE_FULL = auto()
-    
-    #Composite directions
-    MOVE_LEFT = MOVE | MOVE_HORI
-    MOVE_RIGHT = MOVE | MOVE_HORI | MOVE_NEG
-    MOVE_UP = MOVE
-    MOVE_DOWN = MOVE | MOVE_NEG
-
 
 class CanvasController(object):
     #TODO: (1,4) Refactor: all canvas.changed should be sent by the model, but it would
@@ -230,10 +214,10 @@ class CanvasController(object):
         Publisher.sendMessage(f'{self.name}.changed')
         
     def zoom_fit_width(self):
-        self.set_zoom_by_fit_type(Settings.FIT_WIDTH)
+        self.set_zoom_by_fit_type(FitSettings.FIT_WIDTH)
         
     def zoom_fit_height(self):
-        self.set_zoom_by_fit_type(Settings.FIT_HEIGHT)
+        self.set_zoom_by_fit_type(FitSettings.FIT_HEIGHT)
         
     def set_zoom_by_fit_type(self, fit_type, scr_w = -1, save=False):
         self.canvas.set_zoom_by_fit_type(fit_type, scr_w)

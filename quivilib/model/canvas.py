@@ -4,7 +4,7 @@ import math
 from functools import partial
 from pubsub import pub as Publisher
 
-from quivilib.model.settings import Settings
+from quivilib.model.commandenum import FitSettings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 
@@ -86,33 +86,33 @@ class Canvas(object):
             #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
             is_spread = True
 
-        if fit_type == Settings.FIT_WIDTH:
+        if fit_type == FitSettings.FIT_WIDTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
             self.zoom = factor
-        elif fit_type == Settings.FIT_HEIGHT:
+        elif fit_type == FitSettings.FIT_HEIGHT:
             factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
             self.zoom = factor
-        elif fit_type == Settings.FIT_WIDTH_OVERSIZE:
+        elif fit_type == FitSettings.FIT_WIDTH_OVERSIZE:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == Settings.FIT_HEIGHT_OVERSIZE:
+        elif fit_type == FitSettings.FIT_HEIGHT_OVERSIZE:
             factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == Settings.FIT_BOTH_OVERSIZE:
+        elif fit_type == FitSettings.FIT_BOTH_OVERSIZE:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == Settings.FIT_BOTH:
+        elif fit_type == FitSettings.FIT_BOTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
             self.zoom = factor
-        elif fit_type == Settings.FIT_CUSTOM_WIDTH:
+        elif fit_type == FitSettings.FIT_CUSTOM_WIDTH:
             custom_w = self._get_int_setting('FitWidthCustomSize')
             factor = rescale_by_size_factor(img_w, img_h, custom_w, 0)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == Settings.FIT_NONE:
+        elif fit_type == FitSettings.FIT_NONE:
             self.zoom = 1
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
@@ -127,7 +127,7 @@ class Canvas(object):
         """
         assert self.img is not None
         
-        if zoom >= 0.01 and zoom <= 16 and not math.isclose(zoom, self._zoom, rel_tol=1e-05):
+        if 0.01 <= zoom <= 16 and not math.isclose(zoom, self._zoom, rel_tol=1e-05):
             original_zoom = self._zoom
             if math.isclose(zoom, 1, rel_tol=1e-03):
                 #Done to clear potential floating point inaccuracies. In practice even 1e-07 should be enough.
@@ -348,20 +348,20 @@ class WallpaperCanvas(Canvas):
         img_h = self.img.original_height
         self.tiled = False
 
-        if fit_type == Settings.FIT_SCREEN_CROP_EXCESS:
+        if fit_type == FitSettings.FIT_SCREEN_CROP_EXCESS:
             if img_w / float(img_h) > view_w / float(view_h):
                 factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
             else:
                 factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
             self.zoom = factor
-        elif fit_type == Settings.FIT_SCREEN_SHOW_ALL:
+        elif fit_type == FitSettings.FIT_SCREEN_SHOW_ALL:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
             self.zoom = factor
-        elif fit_type == Settings.FIT_SCREEN_NONE:
+        elif fit_type == FitSettings.FIT_SCREEN_NONE:
             assert scr_w != -1, 'Screen width not specified'
             factor = view_w / float(scr_w)
             self.zoom = factor
-        elif fit_type == Settings.FIT_TILED:
+        elif fit_type == FitSettings.FIT_TILED:
             assert scr_w != -1, 'Screen width not specified'
             factor = view_w / float(scr_w)
             self.zoom = factor

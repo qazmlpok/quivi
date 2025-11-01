@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from pubsub import pub as Publisher
-
 CONFIG_KEY = 'SavedPaths'
 
 #(Much of this is copied from favorites)
@@ -62,15 +60,15 @@ class SavedPath:
         return f'[{self.name}|{self.path}]'
 
     @staticmethod
-    def deserialize(input):
+    def deserialize(inp):
         """Opposite of serialize. Returns a new instance from a string.
         """
-        name = None
-        path = None
+        name: str
+        path: str|Path
         #| is used as a separator because it shouldn't appear in a path. It can, but it shouldn't.
         #The GUI will reject names/paths that contain a | as an additional protection.
-        if (input[0] == '[' and '|' in input):
-            (name, path) = input.strip("[]").split('|')
+        if (inp[0] == '[' and '|' in inp):
+            (name, path) = inp.strip("[]").split('|')
         else:
             #Throw? Silently drop the invalid record?
             return None

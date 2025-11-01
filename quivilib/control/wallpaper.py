@@ -12,15 +12,15 @@ from pubsub import pub as Publisher
 
 from quivilib.i18n import _
 from quivilib.model.canvas import WallpaperCanvas
-from quivilib.model.settings import Settings
+from quivilib.model.commandenum import FitSettings
 from quivilib.control.canvas import WallpaperCanvasController
 from quivilib.model import image
 
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
 #This list should reflect the list in open_dialog (same order)
-positions = (Settings.FIT_SCREEN_NONE, Settings.FIT_TILED,
-             Settings.FIT_SCREEN_CROP_EXCESS,
-             Settings.FIT_SCREEN_SHOW_ALL)
+positions = (FitSettings.FIT_SCREEN_NONE, FitSettings.FIT_TILED,
+             FitSettings.FIT_SCREEN_CROP_EXCESS,
+             FitSettings.FIT_SCREEN_SHOW_ALL)
 
 
 class WallpaperController(object):
@@ -100,7 +100,7 @@ class WallpaperController(object):
     def move_image(self, img, position, color):
         left = int(self.canvas.left * self.preview_scale)
         top = int(self.canvas.top * self.preview_scale)
-        if position == Settings.FIT_TILED:
+        if position == FitSettings.FIT_TILED:
             if left == 0 and top == 0:
                 #If the img is at the top-left (i.e. the user did not move it) let the Desktop handle the tiling.
                 return img
@@ -191,7 +191,7 @@ def _set_linux_wallpaper(filename, position, color):
     call('gsettings set org.gnome.desktop.background picture-uri'.split() + [f"'{filename}'"],
           stdout=PIPE, stderr=PIPE)
     #Change to tiled/centered
-    option = 'wallpaper' if position == Settings.FIT_TILED else 'centered'
+    option = 'wallpaper' if position == FitSettings.FIT_TILED else 'centered'
     call('gsettings set org.gnome.desktop.background picture-options'.split() + [f"'{option}'"],
          stdout=PIPE, stderr=PIPE)
     color = [hex(color[0])[2:], hex(color[1])[2:], hex(color[2])[2:]]
@@ -214,7 +214,7 @@ def _get_windows_bg_color():
 
 def _set_windows_wallpaper(filename, position, color):
     import win32gui, win32con, win32api, winreg
-    tile_wallpaper = '1' if position == Settings.FIT_TILED else '0'
+    tile_wallpaper = '1' if position == FitSettings.FIT_TILED else '0'
     wallpaper_style = '0'
     desktopKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
                                  'Control Panel\\Desktop', 0,

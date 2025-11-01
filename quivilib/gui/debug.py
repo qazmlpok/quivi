@@ -18,7 +18,7 @@ class DebugDialog(wx.Dialog):
     Probably a bad idea but this is a debug thing, so I'm not too concerned.
     """
     def __init__(self, parent):
-        # begin wxGlade: OptionsDialog.__init__
+        # begin wxGlade: DebugDialog.__init__
         wx.Dialog.__init__(self, parent=parent, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.DIALOG_NO_PARENT|wx.STAY_ON_TOP)
         
         #Information on loaded/cached images.
@@ -37,14 +37,14 @@ class DebugDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.on_ok_click, self.ok_button)
 
     def __set_properties(self):
-        # begin wxGlade: OptionsDialog.__set_properties
+        # begin wxGlade: DebugDialog.__set_properties
         self.SetTitle("Debug information")
         # end wxGlade
         
         self.ok_button.SetDefault()
 
     def __do_layout(self):
-        # begin wxGlade: OptionsDialog.__do_layout
+        # begin wxGlade: DebugDialog.__do_layout
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.cache_list, wx.EXPAND)
         sizer.Add(self.ok_button)
@@ -54,7 +54,7 @@ class DebugDialog(wx.Dialog):
         # end wxGlade
 
 
-    def on_ok_click(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_ok_click(self, event): # wxGlade: DebugDialog.<event_handler>
         #This window needs to always be alive; don't destroy it.
         self.Hide()
 
