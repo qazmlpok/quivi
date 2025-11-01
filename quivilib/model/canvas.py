@@ -127,7 +127,7 @@ class Canvas(object):
         """
         assert self.img is not None
         
-        if zoom >= 0.01 and zoom <= 16 and not math.isclose(zoom, self._zoom, rel_tol=1e-05):
+        if 0.01 <= zoom <= 16 and not math.isclose(zoom, self._zoom, rel_tol=1e-05):
             original_zoom = self._zoom
             if math.isclose(zoom, 1, rel_tol=1e-03):
                 #Done to clear potential floating point inaccuracies. In practice even 1e-07 should be enough.

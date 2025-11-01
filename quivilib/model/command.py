@@ -1,6 +1,3 @@
-from enum import IntEnum, Flag
-import wx
-
 from quivilib.i18n import _
 from quivilib.model.shortcut import Shortcut
 from quivilib.model.commandlist import CommandDefinition, MenuDefinition
@@ -10,12 +7,12 @@ from typing import Protocol
 
 class QuiviMenuItem(Protocol):
     """ Something that can appear within a menu. Either a single menu item (with executable command(s)),
-    or a list of other QuiviMenuItems that will appear as a submenu.. 
+    or a list of other QuiviMenuItems that will appear as a submenu.
     """
     def update_translation(self):
         pass
     name: str
-    ide: int
+    ide: int    #CommandName|MenuName
 
 class Command(QuiviMenuItem):
     def __init__(self, definition: CommandDefinition):

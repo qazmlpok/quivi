@@ -1,4 +1,3 @@
-from enum import IntEnum, IntFlag, Flag, auto
 from functools import partial
 from typing import Sequence
 import wx

@@ -106,7 +106,7 @@ class OptionsDialog(wx.Dialog):
         self._mouse_cbos = (self.mouse_left_cbo, self.mouse_middle_cbo, self.mouse_right_cbo, self.mouse_aux1_cbo, self.mouse_aux2_cbo)
         
         #This looks worse than I hoped, but I think it's still better than nothing.
-        self.mouse_separator = wx.StaticLine(self.mouse_pane, size=(100, 1), style=wx.LI_HORIZONTAL)
+        self.mouse_separator = wx.StaticLine(self.mouse_pane, size=wx.Size(100, 1), style=wx.LI_HORIZONTAL)
         
         self.always_drag_chk = wx.CheckBox(self.mouse_pane, -1, _("Always drag image with left mouse"))
         self.threshold_lbl = wx.StaticText(self.mouse_pane, -1, _("Threshold:"))    #TODO: Better text.
@@ -124,12 +124,8 @@ class OptionsDialog(wx.Dialog):
         
         for m in self._mouse_cbos:
             m.Append(_("None"), -1)
-        #TODO: Need to replicate order somehow. Preferably without actually involving categories...
-        #...what if I just don't reorder it?
-        #for category in sorted(self.categories, key=lambda x: x.order):
+        #Commands will be in the same order they are defined in MenuDefinitionList. Same-groups are inherently together.
         for cmd in self.commands:
-            #if cmd is None:
-            #    continue
             text = cmd.name_and_category
             if cmd.flags & CommandFlags.KB:
                 self.commands_lst.Append(text, cmd)

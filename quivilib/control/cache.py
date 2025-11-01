@@ -1,12 +1,11 @@
 import logging
 import traceback
 from threading import Thread, Lock, Semaphore
-from queue import Queue
 from pubsub import pub as Publisher
 import wx
 from quivilib import meta
 from quivilib.model.canvas import TempCanvas
-from quivilib.util import synchronized_method, DebugTimer
+from quivilib.util import DebugTimer
 
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.image.interface import ImageHandler
@@ -33,7 +32,7 @@ class ImageCacheLoadRequest(object):
         item_eq = (self.item == other.item)
         return cont_eq and item_eq
     def __hash__(self):
-        return hash(self.container, self.item)
+        return hash((self.container, self.item,))
     def __ne__(self, other):
         return not self == other 
     def __repr__(self):

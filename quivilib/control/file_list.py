@@ -90,8 +90,8 @@ class FileListController(object):
         self.open_item(index)
 
     def on_favorite_open(self, *, favorite, window=None):
+        is_placeholder = favorite.page is not None
         try:
-            is_placeholder = favorite.page is not None
             self._open_path(favorite.path, is_placeholder)
             if is_placeholder:
                 #Bypass the default page open and manually select the saved index.
@@ -126,7 +126,7 @@ class FileListController(object):
                     self._direction = -1
                 for i in range(meta.PREFETCH_COUNT):
                     idx = item_index + ((i + 1) * self._direction)
-                    if idx > 0 and idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
+                    if 0 < idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
                         log.debug(f"fl: requesting cache preload of {idx}")
                         Publisher.sendMessage('canvas.load.img', container=container, item=container.items[idx], preload=True)
                 log.debug("fl: done")

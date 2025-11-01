@@ -103,7 +103,7 @@ class Favorite:
         return f'[{self.page}|{self.path}|{self.display}]'
     
     @staticmethod
-    def deserialize(input):
+    def deserialize(inp):
         """
         Opposite of serialize. Returns a new instance from a string.
         """
@@ -112,10 +112,10 @@ class Favorite:
         #Probably not the best approach, but config doesn't appear to support lists.
         #If the first character is [, treat it as a list containing 3 values for Placeholders.
         #| is used as a separator because it shouldn't appear in a path. It can, but it shouldn't.
-        if (input[0] == '['):
-            (page, path, display, *_) = input.strip("[]").split('|') + [None] * 3
+        if (inp[0] == '['):
+            (page, path, display, *_) = inp.strip("[]").split('|') + [None] * 3
         else:
-            path = input
+            path = inp
         path = Path(path)
         
         return Favorite(path, page, display)

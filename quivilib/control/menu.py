@@ -3,12 +3,9 @@
 import wx
 from pubsub import pub as Publisher
 
-from quivilib.i18n import _
 from quivilib.model.command import Command, CommandCategory
 from quivilib.model.commandlist import *
 from quivilib.model.shortcut import Shortcut
-from quivilib.control import canvas
-from quivilib.model.settings import Settings
 
 SHORTCUTS_KEY = 'Shortcuts'
 
@@ -18,19 +15,15 @@ class MenuController(object):
         self.settings = settings
         self.control = control
         self.command_definitions = CommandDefinitionList(control)
-        #TODO: This needs to be converted to CommandCategory objects - or similar
-        #It also needs to combine submenu and full menu.
-        #Figure out what else needs to go into both the definition (in commandenum/list)
-        #and into the "live" object.
-        #Then find a way to re-build the actual menu bar.
-        #TODO: Remember, the plan is to move the command "category" name into the command itself.
-        #That will remove the need for those dumb hidden menus.
         self.menu_definitions = MenuDefinitionList()
+
         #Convert the definitions to actual menu items.
         self.commands = [Command(x) for x in self.command_definitions.cmd_list]
         menus = [CommandCategory(x) for x in self.menu_definitions.menu_list]
+
         #Lookup for all menus - needed for submenus and context menus.
         self.menu_dict = {x.idx: x for x in menus}
+
         #Items that appear on the main menu. ID only.
         self.main_menu = [x.menu_id for x in self.menu_definitions.menubar_menus]
 
@@ -41,7 +34,6 @@ class MenuController(object):
         Publisher.sendMessage('toolbar.built', commands=self._get_toolbar_commands(self.commands))
         #TODO: (2,2) Refactor: change this message name. This also notifies that
         #    shortcuts have changed.
-        #---This needs to include the actual menu items, not the definitions.
         Publisher.sendMessage('menu.shortcuts.changed', accel_table=self.shortcuts)
         Publisher.sendMessage('menu.labels.changed', categories=menus)
         
@@ -94,7 +86,7 @@ class MenuController(object):
             CommandName.OPEN_PARENT,
             CommandName.SHOW_THUMBNAILS
         )
-        return tuple(cmd_dict[id] for id in cmd_ids)
+        return tuple(cmd_dict[ide] for ide in cmd_ids)
     
     @staticmethod
     def _load_shortcuts(settings, commands):

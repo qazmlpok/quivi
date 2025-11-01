@@ -7,8 +7,7 @@ _dic = {}
 
 def _setup():
     #There are synonymous with better names (Pagedown/up)
-    ignore = set(['WXK_PRIOR', 'WXK_NEXT', 'WXK_NUMPAD_NEXT',
-                  'WXK_NUMPAD_PRIOR'])
+    ignore = {'WXK_PRIOR', 'WXK_NEXT', 'WXK_NUMPAD_NEXT', 'WXK_NUMPAD_PRIOR'}
     for name in wx.__dict__:
         if name.startswith('WXK_'):
             key_code = wx.__dict__[name]

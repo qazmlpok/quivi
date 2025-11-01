@@ -259,16 +259,11 @@ class MainWindow(wx.Frame):
         
     def on_fit_context_menu(self, event: wx.ContextMenuEvent):
         """Appears on right-clicking the status bar"""
-        menu = wx.Menu()
         self.PopupMenu(self.menus[MenuName.FitCtx])
-        menu.Destroy()
         
     def on_cmd_context_menu(self):
         """Appears on executing the bindable 'open context menu' command, e.g. middle/right clicking. """
-        #uh... is this `menu` doing anything?
-        menu = wx.Menu()
         self.PopupMenu(self.menus[MenuName.ImgCtx])
-        menu.Destroy()
         
     def on_busy(self, *, busy):
         if self._busy == busy:
@@ -319,12 +314,13 @@ class MainWindow(wx.Frame):
         :param commands: All command objects
         """
         menu_lookup = {x.idx: x for x in all_menus}
+        cmd_lookup = {x.ide: x for x in commands if type(x) is Command}
         #This function should only be called once. But if it is called multiple times, reset state.
         self.all_cmd_pairs = []
         #First, create the wx.Menu objects. This is done for everything. Populate self.menus
         for item in all_menus:
             #_new_make_menu will also modify all_cmd_pairs
-            wx_menu = self._new_make_menu(item, menu_lookup, commands)
+            wx_menu = self._new_make_menu(item, menu_lookup, cmd_lookup)
             self.menus[item.idx] = wx_menu
         
         #Add the appropriate items to self.menu_bar (use Append). Set indices
@@ -349,14 +345,12 @@ class MainWindow(wx.Frame):
         #This is the number of pre-defined menu items in favorites; everything past this is a favorite.
         self._favorite_menu_count = self.menus[MenuName.Favorites].GetMenuItemCount()
 
-    def _new_make_menu(self, menu: CommandCategory, all_menus: dict[MenuName, CommandCategory], commands: list[Command]) -> wx.Menu:
+    def _new_make_menu(self, menu: CommandCategory, all_menus: dict[MenuName, CommandCategory], cmd_lookup: dict[int, Command]) -> wx.Menu:
         """ Creates the actual wx.Menu for a given CommandCategory.
         Still requires references to all data, since this may include submenus.
         """
         _menu = wx.Menu()
         _menu.SetTitle(menu.name)
-        #Move to caller.
-        cmd_lookup = {x.ide: x for x in commands if type(x) is Command}
         for cmd in menu.commands:
             if cmd is None:
                 _menu.AppendSeparator()
@@ -372,7 +366,7 @@ class MainWindow(wx.Frame):
                 command = cmd_lookup[cmd]
                 style = wx.ITEM_CHECK if command.checkable else wx.ITEM_NORMAL
                 wx_menuitem = _menu.Append(command.ide, command.name_and_shortcut, command.description, style)
-                #Track for later (translation) updates.
+                #Track for later updates (i.e. translations).
                 self.all_cmd_pairs.append((command, wx_menuitem))
                 #If a cmd is in multiple menus, it will bind multiple times. Is this a problem?
                 if command.update_function:
@@ -499,7 +493,7 @@ class MainWindow(wx.Frame):
     def on_update_available(self, *, down_url, check_time, version):
         self.down_url = down_url
         menu = self.menus[MenuName.Downloads]
-        #self.menu_bar.Append(menu, _('&New version available!'))
+        # GetTitle here is a little bit of a hack because top-level menus don't normally have a title. The menubar controls the display text.
         self.menu_bar.Append(menu, menu.GetTitle())
 
     def on_download_update(self):
