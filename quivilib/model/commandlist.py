@@ -1,6 +1,5 @@
 from functools import partial
 from typing import Sequence
-import wx
 
 from quivilib.i18n import __
 from quivilib.model.shortcut import Shortcut
@@ -79,7 +78,7 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.DELETE, cat_name, control.delete,
                                     __('&Delete'), __('Delete the opened image'),
                                     [(wx.ACCEL_CTRL, wx.WXK_DELETE)],
-                                    flags=CommandFlags.DISABLEABLE, update_function=control.file_list.on_update_delete_menu_item)
+                                    flags=CommandFlags.DISABLEABLE, update_function=control.on_update_delete_menu_item)
             yield CommandDefinition(CommandName.MOVE, cat_name, control.open_move_dialog,
                                     __('&Move...'), __('Move the opened zip file to a new location'),
                                     [(wx.ACCEL_CTRL, ord(__('N')))],

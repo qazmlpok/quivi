@@ -11,6 +11,7 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
+from quivilib.model import App
 from quivilib.model.canvas import WallpaperCanvas
 from quivilib.model.commandenum import FitSettings
 from quivilib.control.canvas import WallpaperCanvasController
@@ -24,7 +25,7 @@ positions = (FitSettings.FIT_SCREEN_NONE, FitSettings.FIT_TILED,
 
 
 class WallpaperController(object):
-    def __init__(self, model):
+    def __init__(self, model: App):
         self.model = model
         self.img = None
         self.canvas = WallpaperCanvas('wpcanvas', None)
@@ -139,10 +140,7 @@ class WallpaperController(object):
 
 def _set_wallpaper(img, position, color):
     path = Path(wx.StandardPaths.Get().GetUserLocalDataDir())
-    try:
-        path.mkdir(parents=True, exist_ok=True)
-    except Exception as e:
-        pass
+    path.mkdir(parents=True, exist_ok=True)
     filename = path / WALLPAPER_FILE_NAME
     img.save_bitmap(str(filename))
     

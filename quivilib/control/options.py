@@ -1,6 +1,7 @@
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
+from quivilib.model import App
 from quivilib.model.commandenum import FitSettings
 
 #TODO: (1,2) Improve: when setting start dir, check if it is a special folder
@@ -22,7 +23,7 @@ def get_fit_choices():
 
 
 class OptionsController(object):
-    def __init__(self, control, model):
+    def __init__(self, control, model: App):
         self.control = control
         self.model = model
         Publisher.subscribe(self.on_update, 'options.update')

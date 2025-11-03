@@ -1,4 +1,4 @@
-import os, sys
+import os
 from pathlib import Path
 import logging
 
@@ -7,8 +7,9 @@ import wx
 
 from quivilib.i18n import _
 from quivilib import meta
-from quivilib.model.container import Item, ItemType
-from quivilib.model.container import get_supported_extensions as get_supported_container_extensions
+from quivilib.model import App
+from quivilib.model.container import ItemType, get_supported_extensions as get_supported_container_extensions
+from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
 from quivilib.model.container.compressed import CompressedContainer
 from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
@@ -19,27 +20,6 @@ from quivilib.util import DebugTimer
 log = logging.getLogger('control.file_list')
 
 
-def _need_delete_confirmation():
-    #No confirmation on win32 because it uses the recycle bin.
-    return (sys.platform != 'win32')
-
-def _ask_delete_confirmation(window, path):
-    if not _need_delete_confirmation():
-        return True
-    dlg = wx.MessageDialog(window, _('Are you sure you want to delete "%s"?') % path.name,
-                           _("Confirm file deletion"), wx.YES_NO | wx.ICON_QUESTION)
-    res = dlg.ShowModal()
-    dlg.Destroy()
-    return res == wx.ID_YES
-
-def _delete_file(path, window=None):
-    if sys.platform == 'win32':
-        #Use win32com.shell to send the file to the recycle bin, rather than outright deleting it.
-        from quivilib.windows.util import delete_file
-        delete_file(str(path), window)
-    else:
-        path.unlink()
-
 def _ask_delete_favorite(window, path):
     dlg = wx.MessageDialog(window, _('''The file or directory "%s" couldn't be found. Remove the favorite?''') % path.name,
                            _("Favorite not found"), wx.YES_NO | wx.ICON_QUESTION)
@@ -48,7 +28,7 @@ def _ask_delete_favorite(window, path):
     return res
 
 class FileListController(object):
-    def __init__(self, model, start_container):
+    def __init__(self, model: App, start_container: BaseContainer):
         self.model = model
         Publisher.subscribe(self.on_file_list_activated, 'file_list.activated')
         Publisher.subscribe(self.on_file_list_selected, 'file_list.selected')
@@ -193,43 +173,14 @@ class FileListController(object):
         Publisher.sendMessage('cache.flush')
         self.model.container.refresh(self.show_hidden)
         
-    def _refresh_after_delete(self, deleted_index):
+    def refresh_after_delete(self, deleted_index: int):
         container = self.model.container
         self.refresh()
         nindex = deleted_index if self._direction == 1 else deleted_index - 1
-        nindex = max(nindex, 0)
-        nindex = min(nindex, len(container.items) - 1)
+        nindex = max(1, min(nindex, len(container.items) - 1))
         container.selected_item = nindex 
         if container.items[nindex].typ == ItemType.IMAGE:
             self.open_item(nindex)
-        
-    def delete(self, window=None):
-        img = self.canvas.get_img()
-        if not self._can_delete():
-            return
-        index = self.model.container.selected_item_index
-        path = self.model.container.items[index].path
-        filetype = self.model.container.items[index].typ
-        if not _ask_delete_confirmation(window, path):
-            return
-        #Release any handle on the file...
-        if filetype == ItemType.IMAGE and img:
-            img.close()
-        _delete_file(path, window)
-        self._refresh_after_delete(index)
-    
-    def on_update_delete_menu_item(self, event):
-        event.Enable(self._can_delete())
-        
-    def _can_delete(self):
-        can_delete = False
-        container = self.model.container
-        if container.can_delete():
-            index = container.selected_item_index
-            if index != -1:
-                if container.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
-                    can_delete = True
-        return can_delete
 
     def on_move_file(self, *, new_dir: Path):
         """ If the opened container is a zipfile, prompt to move it to a new location.
@@ -278,9 +229,8 @@ class FileListController(object):
         #Tell the cache to update references to avoid this issue
         Publisher.sendMessage('cache.move_file', old_cont=old_cont, new_cont=cont)
         
-    def on_update_move_menu_item(self, event):
+    def on_update_move_menu_item(self, event: wx.UpdateUIEvent):
         event.Enable(self._can_move())
-
     def _can_move(self):
         if not self.model.container:
             return False
@@ -332,10 +282,10 @@ class FileListController(object):
         self.show_hidden = not self.show_hidden
         self.refresh()
         
-    def on_update_hidden_menu_item(self, event):
+    def on_update_hidden_menu_item(self, event: wx.UpdateUIEvent):
         event.Check(self.show_hidden)
         
-    def _open_virtual_path(self, container, paths):
+    def _open_virtual_path(self, container: BaseContainer, paths: list[str]):
         if not paths:
             return container
         path = Path(paths[0])
@@ -349,7 +299,7 @@ class FileListController(object):
                 container = container.open_container(container.selected_item_index)
                 return self._open_virtual_path(container, paths[1:])
         
-    def _set_container(self, container, skip_open=False):
+    def _set_container(self, container: BaseContainer, skip_open=False):
         if self.model.container is not None:
             self.model.container.close_container()
         self.model.container = container

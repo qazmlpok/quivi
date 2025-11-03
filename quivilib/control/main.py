@@ -7,7 +7,9 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib import meta
+from quivilib.i18n import _
 from quivilib.model import App
+from quivilib.model.container import ItemType
 from quivilib.model.settings import Settings
 from quivilib.gui.main import MainWindow
 from quivilib.gui.art import QuiviArtProvider 
@@ -23,6 +25,15 @@ from quivilib.control.i18n import I18NController
 from quivilib.model.favorites import Favorite
 from quivilib import util
 from quivilib import tempdir
+
+
+def _delete_file(path, window=None):
+    if sys.platform == 'win32':
+        #Use win32com.shell to send the file to the recycle bin, rather than outright deleting it.
+        from quivilib.windows.util import delete_file
+        delete_file(str(path), window)
+    else:
+        path.unlink()
 
 
 class MainController(object):
@@ -119,7 +130,7 @@ class MainController(object):
         
     def toggle_spread(self):
         using_feature = self.settings.get('Options', 'DetectSpreads') == '1'
-        #invert
+        #Invert the boolean and convert to str
         self.settings.set('Options', 'DetectSpreads', '0' if using_feature else '1')
         #This will reset zoom even if it isn't a spread - worth checking?
         self.canvas.set_zoom_by_current_fit()
@@ -222,8 +233,46 @@ class MainController(object):
             wx.TheClipboard.Close()
         
     def delete(self):
-        #TODO: Delete is broken. Try to move it out of the filelist.
-        self.file_list.delete(self.view)
+        img = self.canvas.get_img()
+        if not self._can_delete():
+            return
+        index = self.model.container.selected_item_index
+        path = self.model.container.items[index].path
+        filetype = self.model.container.items[index].typ
+        if not self._ask_delete_confirmation(self.view, path):
+            return
+        #Release any handle on the file...
+        if filetype == ItemType.IMAGE and img:
+            img.close()
+        _delete_file(path, self.view)
+        self.file_list.refresh_after_delete(index)
+    def _need_delete_confirmation(self):
+        # No confirmation on win32 because it uses the recycle bin.
+        # TODO: Linux can trash items via `gio trash`. If the command is available, use it.
+        return (sys.platform != 'win32')
+    def _ask_delete_confirmation(self, window, path):
+        if not self._need_delete_confirmation():
+            return True
+        dlg = wx.MessageDialog(window, _('Are you sure you want to delete "%s"?') % path.name,
+                               _("Confirm file deletion"), wx.YES_NO | wx.ICON_QUESTION)
+        res = dlg.ShowModal()
+        dlg.Destroy()
+        return res == wx.ID_YES
+
+    def on_update_delete_menu_item(self, event):
+        """ Enables/Disables the "delete" menu item. """
+        event.Enable(self._can_delete())
+
+    def _can_delete(self):
+        can_delete = False
+        container = self.model.container
+        if container.can_delete():
+            index = container.selected_item_index
+            if index != -1:
+                if container.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
+                    can_delete = True
+        return can_delete
+
     def open_move_dialog(self):
         if not self.model.container.can_move:
             return
@@ -283,7 +332,6 @@ class MainController(object):
             self.settings.set('Update', 'LastCheck', check_time)
 
     def on_settings_corrupt(self, *, backupFilename):
-        from quivilib.i18n import _
         if backupFilename is not None:
             msg = _('The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s.') % backupFilename
         else:
