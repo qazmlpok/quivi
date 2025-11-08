@@ -18,11 +18,13 @@ class BaseContainer(object):
         self._sort_order = sort_order
         self.show_hidden = show_hidden
         self.refresh(show_hidden)
-        
-    def get_sort_order(self) -> SortOrder:
+
+    @property
+    def sort_order(self) -> SortOrder:
         return self._sort_order
-    
-    def set_sort_order(self, order: SortOrder) -> None:
+
+    @sort_order.setter
+    def sort_order(self, order: SortOrder) -> None:
         if order == SortOrder.NAME:
             def keyfn(elem):
                 return str(elem.path)
@@ -45,9 +47,7 @@ class BaseContainer(object):
             self.items.insert(0, parent)
         self._sort_order = order
         Publisher.sendMessage('container.changed', container=self)
-        
-    sort_order = property(get_sort_order, set_sort_order)
-    
+
     def open_container(self, item_index: int) -> 'BaseContainer':
         #Import here to avoid circular import
         from quivilib.model.container.directory import DirectoryContainer
@@ -87,7 +87,7 @@ class BaseContainer(object):
         for idx, item in enumerate(self.items):
             item.full_path = self.get_item_path(idx)
         
-        self.set_sort_order(self._sort_order)
+        self.sort_order = self._sort_order
         if selected_item:
             #TODO: (1,4) Improve: check if item has really changed before sending message?
             #i.e., file has been modified (but it's probably overkill)
@@ -98,7 +98,7 @@ class BaseContainer(object):
     @property
     def item_count(self):
         return len(self.items)
-        
+
     @property
     def name(self):
         pass
@@ -120,8 +120,13 @@ class BaseContainer(object):
     
     def get_item_last_modified(self, item_index):
         return self.items[item_index].last_modified
-    
-    def set_selected_item(self, item: int|Path|Item) -> None:
+
+    @property
+    def selected_item(self):
+        return self._selected_item
+
+    @selected_item.setter
+    def selected_item(self, item: int|Path|Item) -> None:
         old_selected_item = self._selected_item
         if isinstance(item, int):
             self._selected_item = self.items[item]
@@ -138,9 +143,6 @@ class BaseContainer(object):
             idx = self.items.index(self._selected_item)
             Publisher.sendMessage('container.selection_changed', idx=idx, item=self._selected_item)
 
-    def get_selected_item(self):
-        return self._selected_item
-
     @property
     def selected_item_index(self):
         if self._selected_item is None:
@@ -149,9 +151,7 @@ class BaseContainer(object):
             return self.items.index(self._selected_item)
         except ValueError:
             return -1 
-    
-    selected_item = property(get_selected_item, set_selected_item)
-    
+
     @property
     def virtual_files(self) -> bool:
         return False
