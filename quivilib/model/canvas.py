@@ -70,6 +70,7 @@ class Canvas(object):
         if self.img:
             self.img = None
             self._sendMessage(f'{self.name}.changed')
+            self._sendMessage(f'{self.name}.image.loaded', img=None)
 
     def adjust(self):
         fit_type = self._get_int_setting('FitType')

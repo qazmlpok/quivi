@@ -21,8 +21,10 @@ from quivilib import util
 
 from typing import Any
 
-ZOOM_FIELD = 2
+# The status bar is split into four fields.
+NAME_FIELD = 0
 SIZE_FIELD = 1
+ZOOM_FIELD = 2
 FIT_FIELD = 3
 
 def _handle_error(exception, args, kwargs):
@@ -107,7 +109,6 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_error, 'error')
         Publisher.subscribe(self.on_freeze, 'gui.freeze')
         Publisher.subscribe(self.on_thaw, 'gui.thaw')
-        Publisher.subscribe(self.on_selection_changed, 'container.selection_changed')
         Publisher.subscribe(self.on_container_opened, 'container.opened')
         Publisher.subscribe(self.on_image_opened, 'container.image.opened')
         Publisher.subscribe(self.on_image_loading, 'container.image.loading')
@@ -425,29 +426,24 @@ class MainWindow(wx.Frame):
     
     def on_container_opened(self, *, container: BaseContainer):
         self.SetTitle(f'{container.name} - {meta.APPNAME}')
-        self.status_bar.SetStatusText(container.name)
+        self.status_bar.SetStatusText(container.name, NAME_FIELD)
     
     def on_image_opened(self, *, item):
         self.SetTitle(f'{item.name} - {meta.APPNAME}')
-        self.status_bar.SetStatusText(str(item.full_path))
+        self.status_bar.SetStatusText(str(item.full_path), NAME_FIELD)
         
     def on_image_loading(self, *, item):
-        self.status_bar.SetStatusText(_('Loading...'))
+        self.status_bar.SetStatusText(_('Loading...'), NAME_FIELD)
         
     def on_image_loaded(self, *, img):
         if img is None:
-            self.status_bar.SetStatusText('')
+            self.status_bar.SetStatusText('', SIZE_FIELD)
+            self.status_bar.SetStatusText('', ZOOM_FIELD)
         else:
             width = img.original_width
             height = img.original_height
             self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
-    
-    def on_selection_changed(self, *, idx, item):
-        if item is None:
-            self.status_bar.SetStatusText("")
-        else:
-            self.status_bar.SetStatusText(str(item.full_path))
-    
+
     def on_language_changed(self):
         self.aui_mgr.GetPane('file_list').Caption(_('Files'))
         self.aui_mgr.Update()

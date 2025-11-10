@@ -298,6 +298,9 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.CHECK_UPDATE, cat_name, control.check_updates,
                                     'Check for Updates', 'Reset check-for-updates timestamp', [],
                                     flags=CommandFlags.NOMENU)
+            yield CommandDefinition(CommandName.CLOSE_IMG, cat_name, control.canvas.close_img,
+                                    'Close Image', 'Close the current image', [],
+                                    flags=CommandFlags.NOMENU)
 
         #
         self.cmd_list = [x for x in list_items()]
@@ -376,6 +379,7 @@ class MenuDefinitionList():
         debug_menu = MenuDefinition(MenuName.Debug, 'Debug', (
             CommandName.CACHE_INFO,
             CommandName.CHECK_UPDATE,
+            CommandName.CLOSE_IMG,
         ))
         #Sub menus
         zoom_sub = MenuDefinition(MenuName.ZoomSub, 'Zoom', (

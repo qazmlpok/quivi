@@ -132,6 +132,7 @@ class CommandName(IntEnum):
     #debug
     CACHE_INFO = 29900
     CHECK_UPDATE = 29901
+    CLOSE_IMG = 29902
 #
 
 class MenuName(StrEnum):
