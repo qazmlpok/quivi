@@ -66,6 +66,11 @@ class Canvas(object):
         self._sendMessage(f'{self.name}.image.loaded', img=self.img)
         self._sendMessage(f'{self.name}.changed')
 
+    def close_img(self):
+        if self.img:
+            self.img = None
+            self._sendMessage(f'{self.name}.changed')
+
     def adjust(self):
         fit_type = self._get_int_setting('FitType')
         self.set_zoom_by_fit_type(fit_type)

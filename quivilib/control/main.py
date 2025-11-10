@@ -27,19 +27,9 @@ from quivilib import util
 from quivilib import tempdir
 
 
-def _delete_file(path, window=None):
-    if sys.platform == 'win32':
-        #Use win32com.shell to send the file to the recycle bin, rather than outright deleting it.
-        from quivilib.windows.util import delete_file
-        delete_file(str(path), window)
-    else:
-        path.unlink()
-
-
 class MainController(object):
     #TODO: (1,3) Refactor: move 'favorites.changed' events to the model?
-    
-    
+
     INI_FILE_NAME = 'pyquivi.ini'
     LOG_FILE_NAME = 'quivi.log' 
     STDIO_FILE_NAME = 'error.log' 
@@ -233,27 +223,50 @@ class MainController(object):
             wx.TheClipboard.Close()
         
     def delete(self):
-        img = self.canvas.get_img()
-        if not self._can_delete():
+        """ Calls either delete_container or delete_image depends on whether a zip file or directory is open."""
+        container = self.model.container
+        if container.can_delete_self():
+            self.delete_container()
+        elif container.can_delete_contents():
+            self.delete_image()
+        #Else, do nothing. _can_delete should have returned false.
+
+    def delete_container(self):
+        """ Delete the currently opened archive file. """
+        container = self.model.container
+        if not container.can_delete_self():
             return
+        if not self._ask_delete_confirmation(self.view, container.name):
+            return
+        self.canvas.close_img()
+        container.delete_self(self.view)
+        self.file_list.open_parent()
+
+    def delete_image(self):
+        """ Deletes the currently opened image. Only works when viewing a directory of images - there's no attempt to modify zip archives. """
+        container = self.model.container
+        if not container.can_delete_contents():
+            return
+
         index = self.model.container.selected_item_index
-        path = self.model.container.items[index].path
         filetype = self.model.container.items[index].typ
-        if not self._ask_delete_confirmation(self.view, path):
+        if not self._ask_delete_confirmation(self.view, container.get_item_name(index)):
             return
         #Release any handle on the file...
+        img = self.canvas.get_img()
         if filetype == ItemType.IMAGE and img:
             img.close()
-        _delete_file(path, self.view)
+        container.delete_image(index, self.view)
         self.file_list.refresh_after_delete(index)
+
     def _need_delete_confirmation(self):
         # No confirmation on win32 because it uses the recycle bin.
         # TODO: Linux can trash items via `gio trash`. If the command is available, use it.
         return (sys.platform != 'win32')
-    def _ask_delete_confirmation(self, window, path):
+    def _ask_delete_confirmation(self, window, path: str):
         if not self._need_delete_confirmation():
             return True
-        dlg = wx.MessageDialog(window, _('Are you sure you want to delete "%s"?') % path.name,
+        dlg = wx.MessageDialog(window, _('Are you sure you want to delete "%s"?') % path,
                                _("Confirm file deletion"), wx.YES_NO | wx.ICON_QUESTION)
         res = dlg.ShowModal()
         dlg.Destroy()
@@ -264,14 +277,8 @@ class MainController(object):
         event.Enable(self._can_delete())
 
     def _can_delete(self):
-        can_delete = False
         container = self.model.container
-        if container.can_delete():
-            index = container.selected_item_index
-            if index != -1:
-                if container.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
-                    can_delete = True
-        return can_delete
+        return container.can_delete_self() or container.can_delete_contents()
 
     def open_move_dialog(self):
         if not self.model.container.can_move:

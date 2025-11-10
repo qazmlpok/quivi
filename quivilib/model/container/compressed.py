@@ -1,6 +1,5 @@
 import sys, os
 import io
-import zipfile
 from pathlib import Path
 from zipfile import ZipFile as PyZipFile, ZipInfo
 from datetime import datetime
@@ -104,7 +103,7 @@ class RarFileExternal(CompressedFileFormat):
 class CompressedContainer(BaseContainer):
     def __init__(self, path: Path, sort_order: SortOrder, show_hidden: bool) -> None:
         self._path = path.resolve()
-        classes: list[type[CompressedFileFormat]] = []
+        classes: list[type[CompressedFileFormat]]
         if ZipFile.is_valid_extension(self._path.suffix):
             classes = [ZipFile, RarFileExternal]
         elif RarFileExternal.is_valid_extension(self._path.suffix):
@@ -112,19 +111,20 @@ class CompressedContainer(BaseContainer):
         else:
             assert False, 'Invalid compressed file extension'
         firstExcep: Exception|None = None
+        archive: CompressedFileFormat|None = None
         for zipclass in classes:
             try:
-                zipfile = zipclass(self, self._path)
+                archive = zipclass(self, self._path)
                 #this will force an exception if it's not the right type of file
-                zipfile.list_files()
+                archive.list_files()
                 break
             except Exception as e:
                 if firstExcep is None:
                     firstExcep = e
-        if zipfile is None:
+        if archive is None:
             #Report the first error raised (e.g. "Not a zip file"), not the last.
             raise firstExcep
-        self.file: CompressedFileFormat = zipfile
+        self.file: CompressedFileFormat = archive
 
         super().__init__(sort_order, show_hidden)
         Publisher.sendMessage('container.opened', container=self)
@@ -184,9 +184,14 @@ class CompressedContainer(BaseContainer):
     def universal_path(self) -> Path|None:
         return self.path
     
-    def can_delete(self) -> bool:
+    def can_delete_contents(self) -> bool:
         return False
-    
+    def can_delete_self(self) -> bool:
+        return True
+
+    def delete_self(self, window):
+        BaseContainer._delete_file(self._path, window)
+
     def get_item_path(self, item_index: int) -> Path:
         if item_index == 0:
             return super().get_item_path(item_index)
@@ -280,7 +285,9 @@ class VirtualCompressedContainer(CompressedContainer):
     def name(self):
         return self._name
     
-    def can_delete(self) -> bool:
+    def can_delete_contents(self) -> bool:
+        return False
+    def can_delete_self(self) -> bool:
         return False
     
     @property

@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from pathlib import Path
 import operator
@@ -156,7 +157,18 @@ class BaseContainer(object):
     def virtual_files(self) -> bool:
         return False
     
-    def can_delete(self) -> bool:
+    def can_delete_contents(self) -> bool:
+        """ Return true if this container allows deleting contents (zip files could but don't, for example). """
+        raise NotImplementedError()
+
+    def delete_image(self, index: int, window):
+        raise NotImplementedError()
+
+    def can_delete_self(self) -> bool:
+        """ Return true if this container can be deleted while open. Deleting directories is not allowed. """
+        raise NotImplementedError()
+
+    def delete_self(self, window):
         raise NotImplementedError()
         
     @property
@@ -176,3 +188,12 @@ class BaseContainer(object):
     
     def _list_paths(self) -> list[tuple[Path, datetime|None]]:
         raise NotImplementedError()
+
+    @staticmethod
+    def _delete_file(path, window=None):
+        if sys.platform == 'win32':
+            #Use win32com.shell to send the file to the recycle bin, rather than outright deleting it.
+            from quivilib.windows.util import delete_file
+            delete_file(str(path), window)
+        else:
+            path.unlink()

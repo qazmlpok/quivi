@@ -19,7 +19,7 @@ class CanvasController(object):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name, view, canvas=None, settings=None):
+    def __init__(self, name, view, canvas: Canvas = None, settings: Settings = None):
         self.name = name
         if canvas is None:
             self.canvas = Canvas('canvas', settings)
@@ -52,10 +52,13 @@ class CanvasController(object):
     #Passthru methods to the model Canvas
     def copy_to_clipboard(self):
         return self.canvas.copy_to_clipboard()
-    def has_image(self):
+    def has_image(self) -> bool:
         return self.canvas.has_image()
     def get_img(self):
         return self.canvas.img
+
+    def close_img(self):
+        self.canvas.close_img()
 
     #Image loading (moved from file list)
     def on_request_open_image(self, *, container, item, preload=False):
@@ -100,7 +103,7 @@ class CanvasController(object):
             self.pending_request = None
 
     #Drawing
-    def on_canvas_painted(self, *, dc, painted_region: PaintedRegion):
+    def on_canvas_painted(self, *, dc: wx.DC, painted_region: PaintedRegion):
         self.canvas.paint(dc)
         painted_region.top = self.canvas.top
         painted_region.left = self.canvas.left
@@ -256,7 +259,7 @@ class CanvasController(object):
         self.canvas.rotate(clockwise)
 
 class WallpaperCanvasController(CanvasController):
-    def __init__(self, name, canvas, view, settings=None):
+    def __init__(self, name, canvas: Canvas, view, settings: Settings = None):
         #It should be possible to remove some of the event subscriptions
         #but that would require a base class instead of direct inheritence.
         super().__init__(name, view, canvas=canvas)

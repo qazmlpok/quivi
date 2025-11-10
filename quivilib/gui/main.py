@@ -219,6 +219,7 @@ class MainWindow(wx.Frame):
         self.file_list_panel.load(settings)
     
     def on_panel_paint(self, event: wx.PaintEvent):
+        dc: wx.DC
         if meta.DOUBLE_BUFFERING:
             dc = wx.BufferedPaintDC(self.panel)
             dc.Clear()
@@ -229,8 +230,8 @@ class MainWindow(wx.Frame):
         painted_region = PaintedRegion()
         #The recipient will update the painted_region fields.
         Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
-        clip_region = wx.Region(0, 0, self.panel.GetSize()[0],
-                                self.panel.GetSize()[1])
+        size = self.panel.GetSize()
+        clip_region = wx.Region(0, 0, size[0], size[1])
         clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
                                      painted_region.width, painted_region.height))
         #Fix for bug in Linux (without this it would clear the entire image
@@ -434,12 +435,18 @@ class MainWindow(wx.Frame):
         self.status_bar.SetStatusText(_('Loading...'))
         
     def on_image_loaded(self, *, img):
-        width = img.original_width
-        height = img.original_height
-        self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
+        if img is None:
+            self.status_bar.SetStatusText('')
+        else:
+            width = img.original_width
+            height = img.original_height
+            self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
     
     def on_selection_changed(self, *, idx, item):
-        self.status_bar.SetStatusText(str(item.full_path))
+        if item is None:
+            self.status_bar.SetStatusText("")
+        else:
+            self.status_bar.SetStatusText(str(item.full_path))
     
     def on_language_changed(self):
         self.aui_mgr.GetPane('file_list').Caption(_('Files'))

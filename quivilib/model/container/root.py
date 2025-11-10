@@ -3,10 +3,7 @@ from pathlib import Path
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
-
-from typing import IO
 
 
 try:
@@ -36,7 +33,9 @@ class RootContainer(BaseContainer):
     def open_parent(self) -> BaseContainer:
         return self
     
-    def can_delete(self) -> bool:
+    def can_delete_contents(self) -> bool:
+        return False
+    def can_delete_self(self) -> bool:
         return False
     
     @property
