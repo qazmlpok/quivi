@@ -1,5 +1,5 @@
 import os
-from configparser import RawConfigParser, ParsingError
+from configparser import RawConfigParser
 from pubsub import pub as Publisher
 from quivilib.model.container import SortOrder
 from quivilib.model.commandenum import CommandName, FitSettings
@@ -77,7 +77,7 @@ class Settings(RawConfigParser):
                 self.set(section, option, value)
         return defaults
     
-    def set(self, section, option, value):
+    def set(self, section: str, option: str, value: str|None = None):
         RawConfigParser.set(self, section, option, str(value))
         try:
             Publisher.sendMessage(f'settings.changed.{section}.{option}', settings=self)

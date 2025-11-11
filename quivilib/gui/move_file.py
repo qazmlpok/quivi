@@ -1,10 +1,10 @@
 import os, sys
+import logging as log
 import wx
 from pubsub import pub as Publisher
 from pathlib import Path
 
 from quivilib.i18n import _
-from quivilib import util
 from quivilib.model.savedpath import SavedPaths
 
 #The height will potentially need to expand to cover more saved items. The dialog is not static.
@@ -72,7 +72,7 @@ class MoveFileDialog(wx.Dialog):
         # begin wxGlade: MoveFileDialog.__do_layout
         if (self.container_name):
             name_lbl = wx.StaticText(self, wx.ID_ANY, self.container_name, style=wx.ST_ELLIPSIZE_END)
-            name_lbl.SetMaxSize((360, -1))
+            name_lbl.SetMaxSize(wx.Size(360, -1))
             self.MainSizer.Add(name_lbl, 0, wx.EXPAND | wx.ALL, 4)
         
         split_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -87,7 +87,7 @@ class MoveFileDialog(wx.Dialog):
         select_dir_sizer = wx.BoxSizer(wx.HORIZONTAL)
         left_side_sizer.Add(select_dir_sizer, 0, wx.ALL, 5)
 
-        self.CurrentPathTxt.SetMinSize((200, 23))
+        self.CurrentPathTxt.SetMinSize(wx.Size(200, 23))
         select_dir_sizer.Add(self.CurrentPathTxt, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
 
         select_dir_sizer.Add(self.BrowseBtn, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 2)
@@ -101,7 +101,7 @@ class MoveFileDialog(wx.Dialog):
         save_path_sizer.Add(self.SavedPathNameTxt, 1, wx.ALIGN_CENTER_VERTICAL, 0)
         if sys.platform == 'win32':
             #This works in Win fine but breaks GTK.
-            self.SavePathBtn.SetMinSize((24, 24))
+            self.SavePathBtn.SetMinSize(wx.Size(24, 24))
         self.SavePathBtn.SetToolTip(_("Save"))
         save_path_sizer.Add(self.SavePathBtn, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 4)
 
@@ -139,7 +139,7 @@ class MoveFileDialog(wx.Dialog):
             self.RightSideSizer.Add(btn, 0, 0)
             self.Bind(wx.EVT_BUTTON, _event_handler, btn)
     
-    def on_open_browse_folder(self, event):  # wxGlade: MoveFileDialog.<event_handler>
+    def on_open_browse_folder(self, event: wx.CommandEvent):  # wxGlade: MoveFileDialog.<event_handler>
         """ Open a standard directory browse dialog. This will be the location the file is moved to
         (this control only sets the text field; the actual move occurs later)
         If a path is currently filled in, the dialog will open there; otherwise it's the current location
@@ -155,7 +155,7 @@ class MoveFileDialog(wx.Dialog):
         if dialog.ShowModal() == wx.ID_OK:
             self.CurrentPathTxt.SetValue(dialog.GetPath())
     #
-    def on_save_path(self, event):  # wxGlade: MoveFileDialog.<event_handler>
+    def on_save_path(self, event: wx.CommandEvent):  # wxGlade: MoveFileDialog.<event_handler>
         """ Save the currently entered path to the settings.
         This will be a combination of the path and a "friendly name", so it likely needs another dialog.
         Or, at minimum, another text field.
@@ -194,21 +194,21 @@ class MoveFileDialog(wx.Dialog):
         self.SavedPathNameTxt.SetValue('')
         self.ValidationMessage.SetLabel('')
 
-    def on_ok(self, event):  # wxGlade: MoveFileDialog.<event_handler>
+    def on_ok(self, event: wx.CommandEvent):  # wxGlade: MoveFileDialog.<event_handler>
         newpath = self.CurrentPathTxt.GetValue()
         if not newpath or not os.path.isdir(newpath):
             self.ValidationMessage.SetLabel(_("The path must be a valid directory"))
             #It also needs to be writable, but I'd rather just let the move throw.
-            return False
+            return
         if self.current_path and self.current_path == newpath:
             self.ValidationMessage.SetLabel(_("The target path is the same as the file's current location"))
-            return False
+            return
         #Anything else to check here?
 
         self._save_settings()
         event.Skip()
 
-    def on_cancel(self, event):  # wxGlade: MoveFileDialog.<event_handler>
+    def on_cancel(self, event: wx.CommandEvent):  # wxGlade: MoveFileDialog.<event_handler>
         self._save_settings()
         event.Skip()
         # end wxGlade

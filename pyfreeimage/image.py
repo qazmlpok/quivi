@@ -260,7 +260,7 @@ class Image(object):
         (r, g, b) = color
         assert self.bpp == 24, 'Unsupported BPP for fill'
         buf = ctypes.create_string_buffer(self.width_bytes)
-        buf[0:(3 * (len(buf) / 3))] = [chr(b), chr(g), chr(r)] * (len(buf) / 3)
+        buf[0:(3 * (len(buf) / 3))] = [chr(b), chr(g), chr(r)] * (len(buf) // 3)
         buf_idx = ctypes.addressof(buf)
         for line_idx in range(self.height-1, -1, -1):
             line_buf = self._lib.GetScanLine(self._dib, line_idx)

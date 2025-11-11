@@ -1,8 +1,10 @@
+import wx
+
 from quivilib.gui.hotkeyctrl import GetAcceleratorName
 
 
 class Shortcut(object):
-    def __init__(self, flags, key_code):
+    def __init__(self, flags: wx.KeyModifier, key_code: int):
         self.flags = flags
         self.key_code = key_code
         
@@ -14,7 +16,7 @@ class Shortcut(object):
         return other and self.flags == other.flags and self.key_code == other.key_code
         
     def __hash__(self):
-        return hash(self.key_code, self.flags)
+        return hash((self.key_code, self.flags))
     
     def __ne__(self, other):
         return not self == other

@@ -221,9 +221,8 @@ class FileListController(object):
         #I think _open_path could do everything, including the img re-open but I don't trust that block of code.
         cont = CompressedContainer(new_path, sort_order, show_hidden)
         #This will send an event but it should be harmless.
-        cont.set_selected_item(selection)
+        cont.selected_item = selection
         self._set_container(cont, True)
-        #There _should_ be no need to send messages or open anything.
         
         #The cache is _effectively_ invalidated. This is because a request is the container plus path.
         #Tell the cache to update references to avoid this issue

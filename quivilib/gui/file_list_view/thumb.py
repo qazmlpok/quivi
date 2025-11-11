@@ -99,31 +99,6 @@ class QuiviThumb(tc.Thumb):
         """ Breaks the caption in several lines of text (if needed). """
         self._captionbreaks = [0, None]
         return
-        
-        self._captionbreaks = []
-        self._captionbreaks.append(0)
-        if len(self._caption) == 0:
-            return
-        pos = width/16
-        beg = 0
-        dc = wx.MemoryDC()
-        bmp = wx.Bitmap(10,10)
-        dc.SelectObject(bmp)
-        dc.SetFont(self._parent.GetCaptionFont())
-        
-        while True:
-            if pos >= len(self._caption):
-                self._captionbreaks.append(len(self._caption))
-                break
-            line = self._caption[beg:pos]
-            sw = dc.GetTextExtent(line)[0]
-            if  sw > width:
-                self._captionbreaks.append(pos)
-                beg = pos
-                pos = beg + width/16
-            pos += 1
-
-        dc.SelectObject(wx.NullBitmap)
 
     def GetBitmap(self, width, height):
         self.DelayLoad()
@@ -168,7 +143,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
                 try:
                     self.LoadImageContainer(container, item, count)
                 except:
-                    log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=1)
+                    log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=True)
             if count < 4 or count%4 == 0:
                 wx.CallAfter(self.Refresh)
                 log.debug('Refresh requested')
