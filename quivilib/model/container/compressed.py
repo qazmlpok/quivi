@@ -11,10 +11,11 @@ from quivilib.model.container.directory import DirectoryContainer
 from quivilib.meta import PATH_SEP
 from quivilib import tempdir
 
-from typing import Any, Protocol, IO
+from typing import Protocol, IO
+
 
 class CompressedFileFormat(Protocol):
-    def __init__(self, container, path: Path) -> None:
+    def __init__(self, path: Path) -> None:
         pass
     @staticmethod
     def is_valid_extension(ext) -> bool:
@@ -38,7 +39,7 @@ def _is_hidden(path) -> bool:
 class ZipFile(CompressedFileFormat):
     #TODO: (3,4) Improve: how to deal with password protected files?
     
-    def __init__(self, container, path: Path) -> None:
+    def __init__(self, path: Path) -> None:
         self.path = path
         self.file = PyZipFile(path, 'r')
         self.mapping = {}
@@ -71,7 +72,7 @@ class RarFileExternal(CompressedFileFormat):
     def is_valid_extension(ext):
         return ext.lower() in ['.rar', '.cbr']
 
-    def __init__(self, container, path: Path) -> None:
+    def __init__(self, path: Path) -> None:
         #Import here to delay creation of the temp dir until it's needed.
         import rarfile
         rarfile.HACK_TMP_DIR = tempdir.get_temp_dir()
@@ -114,7 +115,7 @@ class CompressedContainer(BaseContainer):
         archive: CompressedFileFormat|None = None
         for zipclass in classes:
             try:
-                archive = zipclass(self, self._path)
+                archive = zipclass(self._path)
                 #this will force an exception if it's not the right type of file
                 archive.list_files()
                 break

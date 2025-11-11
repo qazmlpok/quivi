@@ -10,7 +10,7 @@ from quivilib.model.commandenum import FitSettings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 
-from quivilib.model.image.interface import ImageHandler
+from quivilib.interface.imagehandler import ImageHandler
 
 
 #Number of scrolls at the top/bottom of the image needed to switch to horizontal scroll.
