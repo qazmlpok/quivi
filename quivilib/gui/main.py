@@ -6,6 +6,7 @@ import wx
 import wx.aui
 from pubsub import pub as Publisher
 
+from quivilib.interface.canvasadapter import CanvasAdapter
 from quivilib.model.command import Command, CommandCategory
 from quivilib.model.commandenum import MenuName, CommandName
 from quivilib.model.canvas import PaintedRegion
@@ -134,9 +135,6 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_bg_color_changed, 'settings.loaded')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackground')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
-        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.loaded')
-        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitType')
-        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitWidthCustomSize')
 
     def _bind_panel_mouse_events(self):
         def make_fn(button_idx, event_idx):
@@ -151,18 +149,6 @@ class MainWindow(wx.Frame):
     
     @property
     def canvas_view(self):
-        class CanvasAdapter(object):
-            def __init__(self, panel):
-                self.panel = panel
-            
-            @property
-            def width(self):
-                return self.panel.GetSize()[0]
-            
-            @property
-            def height(self):
-                return self.panel.GetSize()[1]
-
         return CanvasAdapter(self.panel)
     
     def save(self, settings_lst):
@@ -288,11 +274,7 @@ class MainWindow(wx.Frame):
         
     def on_canvas_changed(self):
         self.panel.Refresh(eraseBackground=False)
-    
-    def on_canvas_fit_setting_changed(self, *, settings):
-        fit_type = settings.getint('Options', 'FitType')
-        self.on_canvas_fit_changed(FitType = fit_type)
-    
+
     def on_canvas_fit_changed(self, *, FitType, IsSpread=False):
         fit_choices = get_fit_choices()
         name = [name for name, typ in fit_choices if typ == FitType][0]

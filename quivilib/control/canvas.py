@@ -3,8 +3,9 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib import meta
+from quivilib.interface.canvasadapter import CanvasLike
 from quivilib.model.commandenum import MovementType, FitSettings
-from quivilib.model.canvas import Canvas, PaintedRegion
+from quivilib.model.canvas import Canvas, PaintedRegion, WallpaperCanvas
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.util import DebugTimer
@@ -19,7 +20,7 @@ class CanvasController(object):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name, view, canvas: Canvas = None, settings: Settings = None):
+    def __init__(self, name, view: CanvasLike, canvas: Canvas = None, settings: Settings = None):
         self.name = name
         if canvas is None:
             self.canvas = Canvas('canvas', settings)
@@ -259,7 +260,7 @@ class CanvasController(object):
         self.canvas.rotate(clockwise)
 
 class WallpaperCanvasController(CanvasController):
-    def __init__(self, name, canvas: Canvas, view, settings: Settings = None):
+    def __init__(self, name, canvas: WallpaperCanvas, view, settings: Settings = None):
         #It should be possible to remove some of the event subscriptions
         #but that would require a base class instead of direct inheritence.
         super().__init__(name, view, canvas=canvas)

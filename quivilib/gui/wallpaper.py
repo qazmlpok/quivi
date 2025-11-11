@@ -2,6 +2,7 @@ import wx
 import wx.lib.colourselect as csel
 from pubsub import pub as Publisher
 
+from quivilib.interface.canvasadapter import CanvasAdapter
 from quivilib.model.canvas import PaintedRegion
 from quivilib.i18n import _
 from quivilib import util
@@ -78,37 +79,37 @@ class WallpaperDialog(wx.Dialog):
         grid_sizer_3 = wx.FlexGridSizer(rows=6, cols=3, vgap=5, hgap=5)
         btnsizer = wx.StdDialogButtonSizer()
         sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         grid_sizer_3.Add(self.preview_panel, 1, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         sizer_1.Add(self.zoom_text_label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_1.Add((10, 20), 0, 0, 0)
+        sizer_1.Add(wx.Size(10, 20), 0, 0, 0)
         sizer_1.Add(self.zoom_label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_1.Add((10, 20), 0, 0, 0)
+        sizer_1.Add(wx.Size(10, 20), 0, 0, 0)
         sizer_1.Add(self.zoom_in_button, 0, 0, 0)
         sizer_1.Add(self.zoom_out_button, 0, 0, 0)
-        sizer_1.Add((30, 20), 0, wx.EXPAND, 0)
+        sizer_1.Add(wx.Size(30, 20), 0, wx.EXPAND, 0)
         sizer_1.Add(self.color_text_label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_1.Add((10, 20), 0, 0, 0)
+        sizer_1.Add(wx.Size(10, 20), 0, 0, 0)
         sizer_1.Add(self.color_button, 0, 0, 0)
         grid_sizer_3.Add(sizer_1, 1, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         grid_sizer_3.Add(self.position_radio, 0, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         btnsizer.AddButton(self.ok_button)
         btnsizer.AddButton(self.cancel_button)
         btnsizer.Realize()
         grid_sizer_3.Add(btnsizer, 1, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         self.SetSizer(grid_sizer_3)
         grid_sizer_3.Fit(self)
         self.Layout()
@@ -117,18 +118,6 @@ class WallpaperDialog(wx.Dialog):
         
     @property
     def canvas_view(self):
-        class CanvasAdapter(object):
-            def __init__(self, panel):
-                self.panel = panel
-            
-            @property
-            def width(self):
-                return self.panel.GetSize()[0]
-            
-            @property
-            def height(self):
-                return self.panel.GetSize()[1]
-
         return CanvasAdapter(self.preview_panel)
     
     def on_mouse_wheel(self, event):
