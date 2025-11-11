@@ -91,7 +91,7 @@ class OptionsDialog(wx.Dialog):
         self.new_shortcut_lbl = wx.StaticText(self.keys_pane, -1, _("New shortcut"))
         self.new_shortcut_key = hk.HotkeyCtrl(self.keys_pane, -1, _("Press key"))
         self.shortcut_assign_btn = wx.Button(self.keys_pane, -1, _("Assign"))
-        self.assigned_comamnd_lbl = wx.StaticText(self.keys_pane, -1, "")
+        self.assigned_command_lbl = wx.StaticText(self.keys_pane, -1, "")
         self.reset_btn = wx.Button(self.keys_pane, -1, _("Reset all to defaults"))
     def _init_mouse(self):
         def _make_mouse_cbo(text):
@@ -243,7 +243,7 @@ class OptionsDialog(wx.Dialog):
         new_shortcut_sizer.Add(self.new_shortcut_key, 1, wx.RIGHT|wx.EXPAND, 5)
         new_shortcut_sizer.Add(self.shortcut_assign_btn, 0, 0, 0)
         keys_sizer.Add(new_shortcut_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
-        keys_sizer.Add(self.assigned_comamnd_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        keys_sizer.Add(self.assigned_command_lbl, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 5)
         keys_sizer.Add(self.reset_btn, 0, wx.ALL, 5)
         self.keys_pane.SetSizer(keys_sizer)
     def __do_layout_viewing(self):
@@ -292,7 +292,7 @@ class OptionsDialog(wx.Dialog):
         self._load_shortcuts(cmd)
         event.Skip()
 
-    def on_remove_shorcut(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_remove_shorcut(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         sel = self.shorcuts_cbo.GetSelection()
         if sel != -1:
             shortcut = self.shorcuts_cbo.GetClientData(sel)
@@ -301,7 +301,7 @@ class OptionsDialog(wx.Dialog):
             self._load_shortcuts(cmd)
         event.Skip()
 
-    def on_assign_shortcut(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_assign_shortcut(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         sel = self.commands_lst.GetSelection()
         if sel != -1 and self.new_shortcut_key.IsOk():
             cmd = self.commands_lst.GetClientData(sel)
@@ -315,11 +315,11 @@ class OptionsDialog(wx.Dialog):
                     pass
             self.shortcuts[cmd].append(shortcut)
             self._load_shortcuts(cmd, shortcut)
-            self.assigned_comamnd_lbl.SetLabel('')
+            self.assigned_command_lbl.SetLabel('')
             self.new_shortcut_key.Clear()
         event.Skip()
 
-    def on_reset_all(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_reset_all(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         self.shortcuts = {}
         for cmd in self.commands:
             if cmd.default_shortcuts:
@@ -332,7 +332,7 @@ class OptionsDialog(wx.Dialog):
             self._load_shortcuts(cmd)
         event.Skip()
 
-    def on_ok(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_ok(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         opt = Options()
         sel = self.fit_cbo.GetSelection()
         opt.fit_type = self.fit_cbo.GetClientData(sel)
@@ -370,18 +370,18 @@ class OptionsDialog(wx.Dialog):
         Publisher.sendMessage('options.update', opt=opt)
         event.Skip()
 
-    def on_cancel(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_cancel(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         event.Skip()
         
-    def on_hotkey_pressed(self, event):
+    def on_hotkey_pressed(self, event: hk.HotkeyUpdatedEvent):
         new_shortcut = Shortcut(event.GetAcceleratorFlags(), event.GetKeyCode())
-        self.assigned_comamnd_lbl.SetLabel('')
+        self.assigned_command_lbl.SetLabel('')
         sel_cmd = self._get_selected_command()
         for cmd, shortcut_lst in list(self.shortcuts.items()):
             for shortcut in shortcut_lst:
                 if new_shortcut == shortcut and cmd is not sel_cmd:
-                    text = _('Assigned for "%s"') % (cmd.name)
-                    self.assigned_comamnd_lbl.SetLabel(text)
+                    text = _('Already Assigned to "%s"') % (cmd.name)
+                    self.assigned_command_lbl.SetLabel(text)
                     return
                 
     def _get_selected_command(self):
