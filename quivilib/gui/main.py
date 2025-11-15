@@ -79,8 +79,8 @@ class MainWindow(wx.Frame):
             #This is created immediately because it listens for messages.
             self.dbg_dialog = DebugDialog(self)
         
-        self._last_size = self.GetSize() 
-        self._last_pos = self.GetPosition()
+        self._last_size = self.GetClientSize()
+        self._last_pos = self.GetPosition()     # NOTE - This has no effect on Wayland
         self._busy = False
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
@@ -169,7 +169,8 @@ class MainWindow(wx.Frame):
         height = max(settings.getint('Window', 'MainWindowHeight'), 200)
         x = max(settings.getint('Window', 'MainWindowX'), 0)
         y = max(settings.getint('Window', 'MainWindowY'), 0)
-        self.SetSize(x, y, width, height)
+        self.SetClientSize(width, height)
+        self.SetPosition(wx.Point(x, y))
         self.Maximize(settings.getboolean('Window', 'MainWindowMaximized'))
         if wx.Display.GetFromWindow(self) == wx.NOT_FOUND:
             self.SetSize(0, 0, width, height)
@@ -177,7 +178,7 @@ class MainWindow(wx.Frame):
     def on_resize(self, event: wx.SizeEvent):
         Publisher.sendMessage('canvas.resized')
         if not self.IsMaximized():
-            self._last_size = self.GetSize()
+            self._last_size = self.GetClientSize()
             
     def on_move(self, event: wx.MoveEvent):
         if not self.IsMaximized():
