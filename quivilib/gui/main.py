@@ -1,3 +1,4 @@
+import sys
 import traceback
 import logging as log
 from pathlib import Path
@@ -79,7 +80,7 @@ class MainWindow(wx.Frame):
             #This is created immediately because it listens for messages.
             self.dbg_dialog = DebugDialog(self)
         
-        self._last_size = self.GetClientSize()
+        self._last_size = self.get_window_size()
         self._last_pos = self.GetPosition()     # NOTE - This has no effect on Wayland
         self._busy = False
         #List of (id, name) tuples. Filled on the favorites.changed event,
@@ -137,10 +138,10 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
 
     def _bind_panel_mouse_events(self):
-        def make_fn(button_idx, event_idx):
-            def fn(event):
-                Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx, x=event.x, y=event.y)
-                event.Skip()
+        def make_fn(btn_idx, evt_idx):
+            def fn(evt):
+                Publisher.sendMessage('canvas.mouse.event', button=btn_idx, event=evt_idx, x=evt.x, y=evt.y)
+                evt.Skip()
             return fn
         for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT', 'MOUSE_AUX1', 'MOUSE_AUX2')):
             for event_idx, event in enumerate(('DOWN', 'UP')):
@@ -177,13 +178,22 @@ class MainWindow(wx.Frame):
 
     def on_resize(self, event: wx.SizeEvent):
         Publisher.sendMessage('canvas.resized')
-        if not self.IsMaximized():
-            self._last_size = self.GetClientSize()
+        if not self.IsMaximized() and not self.IsFullScreen():
+            self._last_size = self.get_window_size()
             
     def on_move(self, event: wx.MoveEvent):
-        if not self.IsMaximized():
+        if not self.IsMaximized() and not self.IsFullScreen():
             self._last_pos = self.GetPosition()
-        
+
+    def get_window_size(self):
+        """Calls either wx.GetSize or wx.GetClientSize. GetSize has better results on Windows, Client on Linux
+        (or at least Wayland; maybe X11 works differently). If the wrong function is used the save&restore logic
+        may end up growing the window each time the application is opened and closed."""
+        if sys.platform == 'win32':
+            return self.GetSize()
+        else:
+            return self.GetClientSize()
+
     @error_handler(_handle_error)
     def on_close(self, event: wx.CloseEvent):
         settings_lst: Any = []
