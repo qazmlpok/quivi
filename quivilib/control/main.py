@@ -247,8 +247,8 @@ class MainController(object):
         if not self._ask_delete_confirmation(self.view, container.name):
             return
         self.canvas.close_img()
-        container.delete_self(self.view)
         self.file_list.open_parent()
+        container.delete_self(self.view)
 
     def delete_image(self, direct=True):
         """ Deletes the currently opened image. Only works when viewing a directory of images - there's no attempt to modify zip archives.
