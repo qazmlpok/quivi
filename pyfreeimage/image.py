@@ -167,10 +167,10 @@ class Image(object):
     
     def convert_to_cairo_surface(self, cairo):
         img = self
-        img_format = cairo.Format.ARGB32
+        img_format = cairo.FORMAT_ARGB32
         if self.bpp == 8:
             #In theory this can be done to avoid a conversion... but it's not working. It inverts the colors.
-            #img_format = cairo.Format.A8
+            #img_format = cairo.FORMAT_A8
             img = self.convert_to_32_bits()
         elif self.bpp != 32:
             img = self.convert_to_32_bits()

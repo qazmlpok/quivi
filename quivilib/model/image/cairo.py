@@ -3,7 +3,7 @@ import math
 import logging
 
 from wx.lib import wxcairo
-import cairo
+import cairocffi
 import wx
 from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 
@@ -67,9 +67,9 @@ class CairoImage(SecondaryImageHandler):
         Loads that data in as a cairo surface. Should work with either image loader.
         """
         srcImage = img
-        img_format = cairo.Format.ARGB32
+        img_format = cairocffi.FORMAT_ARGB32
         width, height = img.width, img.height
-        stride = img_format.stride_for_width(width)
+        stride = cairocffi.ImageSurface.format_stride_for_width(img_format, width)
         #Make sure PIL and FreeImage both have this.
         #TODO: I can't get other cairo formats to work. But if I could, this would need to report
         #the format, e.g. to allow changing to RGB24. See https://afrantzis.com/pixel-format-guide/cairo.html
@@ -77,7 +77,7 @@ class CairoImage(SecondaryImageHandler):
         img = img.maybeConvert32bit()
         #Make sure PIL and FreeImage both have this.
         b = img.convert_to_raw_bits(width_bytes=stride)
-        surface = cairo.ImageSurface.create_for_data(b, img_format, width, height)
+        surface = cairocffi.ImageSurface.create_for_data(b, img_format, width, height)
         
         if img is not srcImage:
             del img
@@ -152,7 +152,7 @@ class CairoImage(SecondaryImageHandler):
     def paint(self, dc, x: int, y: int) -> None:
         img = self.zoomed_bmp if self.zoomed_bmp else self.img
         ctx = wxcairo.ContextFromDC(dc)
-        imgpat = cairo.SurfacePattern(img)
+        imgpat = cairocffi.SurfacePattern(img)
         
         wscale = self._original_width  / self._width 
         hscale = self._original_height / self._height
@@ -160,20 +160,20 @@ class CairoImage(SecondaryImageHandler):
         #Set quality for the scale. There are a few tricks that can be done with this.
         if (self.last_zoom != wscale or self.last_rot != self.rotation):
             #This is a zoom change - panning needs to be fast, but scaling doesn't.
-            quality = cairo.Filter.GOOD
+            quality = cairocffi.FILTER_GOOD
         elif self._width > self._original_width:
             #Zooming in on a large image is faster than zooming out
             #This is kinda annoying, because the artifacts are a lot worse when zooming out.
-            quality = cairo.Filter.GOOD
+            quality = cairocffi.FILTER_GOOD
         else:
-            quality = cairo.Filter.FAST
+            quality = cairocffi.FILTER_FAST
         self.last_zoom = wscale    #No real need to track both.
         self.last_rot = self.rotation
         #FAST - A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST.
         #GOOD - A reasonable-performance filter, with quality similar to Cairo::BILINEAR.
         #BEST - The highest-quality available, performance may not be suitable for interactive use.
 
-        matrix = cairo.Matrix()
+        matrix = cairocffi.Matrix()
         if img == self.img:
             matrix.scale(wscale, hscale)
             #I believe this has no effect if the scale isn't done. Rotation is always 90 degrees, which I assume is optimized.
@@ -188,7 +188,7 @@ class CairoImage(SecondaryImageHandler):
                 matrix.translate(-self._height / 2, -self._width / 2)
 
         imgpat.set_matrix(matrix)
-        ctx_matrix = cairo.Matrix()
+        ctx_matrix = cairocffi.Matrix()
         ctx_matrix.translate(x, y)
         ctx.set_matrix(ctx_matrix)
         
