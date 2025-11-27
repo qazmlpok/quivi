@@ -170,8 +170,7 @@ class MainWindow(wx.Frame):
         height = max(settings.getint('Window', 'MainWindowHeight'), 200)
         x = max(settings.getint('Window', 'MainWindowX'), 0)
         y = max(settings.getint('Window', 'MainWindowY'), 0)
-        self.SetClientSize(width, height)
-        self.SetPosition(wx.Point(x, y))
+        self.set_window_size(x, y, width, height)
         self.Maximize(settings.getboolean('Window', 'MainWindowMaximized'))
         if wx.Display.GetFromWindow(self) == wx.NOT_FOUND:
             self.SetSize(0, 0, width, height)
@@ -193,6 +192,13 @@ class MainWindow(wx.Frame):
             return self.GetSize()
         else:
             return self.GetClientSize()
+    def set_window_size(self, x:int, y: int, w: int, h: int):
+        """As with get. The parameters are different so this is two calls on Linux."""
+        if sys.platform == 'win32':
+            self.SetSize(x, y, w, h)
+        else:
+            self.SetClientSize(w, h)
+            self.SetPosition(wx.Point(x, y))
 
     @error_handler(_handle_error)
     def on_close(self, event: wx.CloseEvent):
