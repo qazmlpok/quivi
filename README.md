@@ -13,8 +13,8 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - Quivi will now remember if you closed the application while in fullscreen mode and automatically re-open in fullscreen mode. This can be disabled in the configuration ("Remember full screen on close").
 - Added support for mouse auxiliary buttons (Aux1 and Aux2). These can be assigned behavior in the settings menu. By default they do nothing.
 - Internal change to how the Config file (pyquivi.ini) is written to should reduce the chances of it becoming corrupted.
-- If the config file does become corrupt, it will re-create a new file from scratch instead of making the application inoperable.
-- The config file is now stored as UTF-8 instead of the system default. It will attempt to open the file both as UTF-8 and the system default, but always write as UTF-8.
+    - If the config file does become corrupt, it will re-create a new file from scratch instead of making the application inoperable.
+    - The config file is now stored as UTF-8 instead of the system default. It will attempt to open the file both as UTF-8 and the system default, but always write as UTF-8.
 - New feature: Placeholders. These act like Favorites, but with some changes. The behavior can be tweaked in Settings.
     - Placeholders save a path and a specific page. They are intended to quickly resume reading something you're in the middle of.
     - Only one placeholder can exist for an item; saving a new placeholder will replace the existing one.
@@ -35,7 +35,7 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
     - This can be toggled in the options. There's no effect if the image is resized to fit the screen.
     - This is intended mostly for mousewheel scrolling, but it will work for other scrolling as well. It will not do anything for dragging an image.
     - To prevent accidental horizontal scrolling, there's a small "buffer" that needs to be overcome; scroll while at the bottom 3+ times and it should start.
-- New feature: Spread page viewing. If enabled and the current image is taller than it is long (height > width), fit-to-width will be calculating using half of the image width instead of the full width.
+- New feature: Spread page viewing. If enabled and the current image is wider than it is tall (width > height), fit-to-width will be calculating using half of the image width instead of the full width.
     - The intent is for when viewing standard page images that includes image files that are two physical pages joined together, i.e. full-page spreads. This _should_ keep the zoom level roughly consistent with the rest of the book.
     - This will lead to false positives if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
     - There's no indication that this is being done while in fullscreen, so if two pages are joined together but don't have shared art and contain ample margins, it will be easy to accidentally skip pages.
@@ -43,6 +43,9 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - New feature: Move the currently opened archive to another folder.
     - Folders can be saved to settings to quickly move zip archives to a specific "archive" folder
     - There is currently no way to reorder or delete these saved folders, only add.
+- New feature: Bindable context menu. This can be assigned as any other shortcut to a mouse key, e.g. right click or middle click.
+    - The menu itself is not customizable, but will include most navigation/display options that may be useful when in full screen mode.
+    - This resulted in a significant backend rework of the menu system to enable nested menus. For now, the main menu bar is still exclusively "flat".
 
 
 # Removed features
@@ -69,47 +72,4 @@ Type hints have been added to some methods. This is mostly added to subclasses t
 - 16-bit precision images do not work with FreeImage. PIL support is hackish.
 
 # Missing translations
-The following text strings are new and have not been added to any of the translation files.
-
-- Remember full screen on close
-- Delete placeholders when opening
-- Only allow a single placeholder
-- Automatically jump to placeholder page on open
-- Aux1 click
-- Aux2 click
-- Open last placeholder
-- Open the most recently created placeholder
-- Add &placeholder
-- Remove p&laceholder
-- Add the current directory or compressed file to the favorites on the current image
-- Remove the saved page for the current directory or compressed file from the favorites
-- The file or directory "%s" couldn't be found. Remove the favorite?
-- Favorite not found
-- The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s.
-- The settings file is corrupt and cannot be opened. Settings will return to their default values.
-- &Copy path
-- Copy the path of the current container to the clipboard
-- Always drag image with left mouse
-- Drag image
-- Full move up
-- Full move down
-- Full move left
-- Full move right
-- View images right-to-left
-- Show &spread
-- Attempt to show combined pages at regular zoom
-- (Spread)
-- Move the opened zip file to a new location
-- Browse
-- Saved paths
-- Move zip file to another folder
-- Select folder
-- Save path
-- Name:
-- Save
-- A name is required for the path to save
-- A path must be entered to save
-- The '|' character cannot appear in the name or path
-- The entered path is already saved
-- The path must be a valid directory
-- The target path is the same as the file's current location
+A large number of text strings have been added or modified. The existing translations have not been updated. All of the supported languages are only partially translated as a result.

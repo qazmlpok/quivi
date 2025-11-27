@@ -5,7 +5,7 @@ import wx
 import pyfreeimage as fi
 from pyfreeimage import Image
 from quivilib.i18n import _
-from quivilib.model.image.interface import ImageHandler
+from quivilib.interface.imagehandler import ImageHandler
 from quivilib.util import add_exception_custom_msg
 from quivilib.util import rescale_by_size_factor
 
@@ -152,8 +152,8 @@ class FreeImage(ImageHandler):
         height = int(self.original_height * factor)
         img = self.img.rescale(width, height, fi.FILTER_BILINEAR)
         if delay:
-            def delayed_fn(img=img, wx=wx):
-                return img.convert_to_wx_bitmap(wx)
+            def delayed_fn(_img=img, _wx=wx):
+                return _img.convert_to_wx_bitmap(_wx)
             return delayed_fn
         else:
             bmp = img.convert_to_wx_bitmap(wx)

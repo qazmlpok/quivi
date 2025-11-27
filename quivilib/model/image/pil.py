@@ -2,7 +2,7 @@ import logging
 import wx
 from PIL import Image
 from quivilib.util import rescale_by_size_factor
-from quivilib.model.image.interface import ImageHandler
+from quivilib.interface.imagehandler import ImageHandler
 
 from typing import Any, TypeVar, IO
 
@@ -209,4 +209,3 @@ class PilImage(ImageHandler):
 
     def close(self) -> None:
         pass
-

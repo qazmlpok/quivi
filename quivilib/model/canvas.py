@@ -1,14 +1,17 @@
 import traceback
 import logging as log
 import math
+from collections.abc import Callable
 from functools import partial
 from pubsub import pub as Publisher
 
+from quivilib.interface.canvasadapter import CanvasLike
 from quivilib.model.commandenum import FitSettings
 from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 
-from quivilib.model.image.interface import ImageHandler
+from quivilib.interface.imagehandler import ImageHandler
+
 
 #Number of scrolls at the top/bottom of the image needed to switch to horizontal scroll.
 #Maybe a timestamp is more appropriate?
@@ -17,20 +20,20 @@ class Canvas(object):
     def __init__(self, name, settings) -> None:
         self.name = name
         if settings:
-            self._get_int_setting = partial(settings.getint, 'Options')
-            self._get_bool_setting = partial(settings.getboolean, 'Options')
+            self._get_int_setting: Callable[str, int] = partial(settings.getint, 'Options')
+            self._get_bool_setting: Callable[str, bool] = partial(settings.getboolean, 'Options')
         self.img: ImageHandler|None = None
         self._zoom = 1.0
         self._left = 0
         self._top = 0
         self.sticky = 0
-        self.view = None
+        self.view: CanvasLike = None
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
 
     def _sendMessage(self, topic, **kwargs):
         Publisher.sendMessage(topic, **kwargs)
         
-    def set_view(self, view):
+    def set_view(self, view: CanvasLike):
         """Set the physical canvas view being used.
         
         Model components should not know anything about the view, but
@@ -65,6 +68,12 @@ class Canvas(object):
             self.adjust()
         self._sendMessage(f'{self.name}.image.loaded', img=self.img)
         self._sendMessage(f'{self.name}.changed')
+
+    def close_img(self):
+        if self.img:
+            self.img = None
+            self._sendMessage(f'{self.name}.changed')
+            self._sendMessage(f'{self.name}.image.loaded', img=None)
 
     def adjust(self):
         fit_type = self._get_int_setting('FitType')
@@ -153,7 +162,12 @@ class Canvas(object):
             self.left += int((old_w - self.width) * ((x-self.left) / old_w))
             self.top  += int((old_h - self.height) * ((y-self.top) / old_h))
             self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
-    def _set_zoom(self, zoom:float) -> None:
+
+    @property
+    def zoom(self) -> float:
+        return self._zoom
+    @zoom.setter
+    def zoom(self, zoom:float) -> None:
         #TODO: (1,3) Refactor: maybe this should be another method;
         #    like this, there are several places in this file where
         #    self._zoom is set and a message must be sent.
@@ -165,12 +179,7 @@ class Canvas(object):
             self.left += old_w // 2 - self.width // 2
             self.top += old_h // 2 - self.height // 2
             self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
-            
-    def _get_zoom(self) -> float:
-        return self._zoom
-    
-    zoom = property(_get_zoom, _set_zoom)
-    
+
     @property
     def width(self):
         if self.img:
@@ -184,7 +193,11 @@ class Canvas(object):
         else:
             return 0
 
-    def _set_left(self, left):
+    @property
+    def left(self):
+        return self._left
+    @left.setter
+    def left(self, left):
         img_w = self.width
         scr_w = self.view.width
         if scr_w:
@@ -199,11 +212,12 @@ class Canvas(object):
                 elif left > scr_w - img_w:
                     left = scr_w - img_w
         self._left = left
-    def _get_left(self):
-        return self._left
-    left = property(_get_left, _set_left)
-    
-    def _set_top(self, top):
+
+    @property
+    def top(self):
+        return self._top
+    @top.setter
+    def top(self, top):
         img_h = self.height
         scr_h = self.view.height
         if scr_h:
@@ -218,10 +232,7 @@ class Canvas(object):
                 elif top > scr_h - img_h:
                     top = scr_h - img_h
         self._top = top
-    def _get_top(self):
-        return self._top
-    top = property(_get_top, _set_top)
-    
+
     def scroll_hori(self, amount, reverse_direction = False):
         """ Scrolls the canvas. Just calls _set_left.
         """
@@ -241,7 +252,7 @@ class Canvas(object):
         #If the scroll didn't move at all, scroll to the left/right instead (if possible)
         #To avoid accidental left/right scrolling, a counter is used to "delay" the scroll.
         side_scroll = self._get_bool_setting('HorizontalScrollAtBottom')
-        if (old_top == self.top and self.width > self.view.width):
+        if (side_scroll and old_top == self.top and self.width > self.view.width):
             self.sticky += 1
             if self.sticky > STICKY_LIMIT:
                 rtl = self._get_bool_setting('UseRightToLeft')
@@ -298,8 +309,7 @@ class Canvas(object):
     def paint(self, dc):
         if not self.img:
             return
-        else:
-            self.img.paint(dc, self.left, self.top)
+        self.img.paint(dc, self.left, self.top)
     
     def rotate(self, clockwise):
         if not self.img:
@@ -343,7 +353,6 @@ class WallpaperCanvas(Canvas):
             return
         view_w = self.view.width
         view_h = self.view.height
-        spread = self._get_bool_setting('DetectSpreads')
         img_w = self.img.original_width
         img_h = self.img.original_height
         self.tiled = False

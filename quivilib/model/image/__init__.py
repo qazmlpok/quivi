@@ -1,10 +1,9 @@
 import logging as log
 import traceback
-import sys
 
 from quivilib import meta
 
-from quivilib.model.image.interface import ImageHandler, SecondaryImageHandler
+from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 
 IMG_CLASSES: list[type[SecondaryImageHandler]] = []
 IMG_LOAD_CLASSES: list[type[ImageHandler]] = []

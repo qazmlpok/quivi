@@ -16,7 +16,7 @@ def _setup():
 
 _setup()
 
-def GetHotkeyName(key_code, modifiers):
+def GetHotkeyName(key_code: int, modifiers: wx.KeyModifier) -> str:
     name = GetKeyName(key_code)
     mod_name = GetModifiersName(modifiers)
     if key_code in (wx.WXK_CONTROL, wx.WXK_SHIFT, wx.WXK_ALT, wx.WXK_COMMAND):
@@ -26,7 +26,7 @@ def GetHotkeyName(key_code, modifiers):
     else:
         return name
     
-def GetAcceleratorName(accelerator):
+def GetAcceleratorName(accelerator: wx.AcceleratorEntry|tuple[int, int]) -> str:
     if isinstance(accelerator, wx.AcceleratorEntry):
         key_code = accelerator.GetKeyCode()
         flags = accelerator.GetFlags()
@@ -35,7 +35,7 @@ def GetAcceleratorName(accelerator):
         flags = accelerator[0]
     return GetHotkeyName(key_code, ConvertFlagsToModifiers(flags))
     
-def GetKeyName(key_code):
+def GetKeyName(key_code: int) -> str:
     #TODO: (1,2) Improve: call Windows GetKeyNameText?
     try:
         return _dic[key_code]
@@ -45,7 +45,7 @@ def GetKeyName(key_code):
         except ValueError:
             return '[Unknown]'
         
-def GetModifiersName(modifiers):
+def GetModifiersName(modifiers: wx.KeyModifier) -> str:
     lst = []
     if modifiers & wx.MOD_CMD and wx.MOD_CMD == wx.MOD_META:
         lst.append('Cmd')
@@ -57,7 +57,7 @@ def GetModifiersName(modifiers):
         lst.append('Alt')
     return '+'.join(lst)
 
-def ConvertFlagsToModifiers(flags):
+def ConvertFlagsToModifiers(flags: wx.AcceleratorEntryFlags) -> wx.KeyModifier:
     modifiers = 0
     if flags & wx.ACCEL_CTRL:
         modifiers |= wx.MOD_CONTROL
@@ -69,7 +69,7 @@ def ConvertFlagsToModifiers(flags):
         modifiers |= wx.MOD_CMD
     return modifiers
 
-def ConvertModifiersToFlags(modifiers):
+def ConvertModifiersToFlags(modifiers: wx.KeyModifier) -> wx.AcceleratorEntryFlags:
     flags = 0
     if modifiers & wx.MOD_CONTROL:
         flags |= wx.ACCEL_CTRL
@@ -83,8 +83,9 @@ def ConvertModifiersToFlags(modifiers):
 
 
 class HotkeyUpdatedEvent(wx.PyCommandEvent):
-    def __init__(self, id, name, key_code, modifiers, obj=None):
-        wx.PyCommandEvent.__init__(self, wxEVT_COMMAND_HOTKEY_UPDATED, id)
+    """Custom wx event. Will be fired by the HotkeyCtrl onkeydown"""
+    def __init__(self, ide: int, name: str, key_code: int, modifiers: wx.KeyModifier, obj=None):
+        wx.PyCommandEvent.__init__(self, wxEVT_COMMAND_HOTKEY_UPDATED, ide)
 
         self._name = name
         self._key_code = key_code
@@ -105,15 +106,16 @@ class HotkeyUpdatedEvent(wx.PyCommandEvent):
     
 
 class HotkeyCtrl(wx.TextCtrl):
-    def __init__(self, parent, id=-1, default_value='', pos=wx.DefaultPosition,
+    """Custom control. Variant of TextCtrl that displays the inputted key (combination) instead of normal text."""
+    def __init__(self, parent, ide=-1, default_value='', pos=wx.DefaultPosition,
                  size=wx.DefaultSize, style=0, name='hotkey'):
+        #There appears to be no way to disable highlighting the text.
         style |= wx.TE_PROCESS_TAB | wx.TE_PROCESS_ENTER
-        wx.TextCtrl.__init__(self, parent, id, default_value, pos, size, style,
-                             name=name)
+        wx.TextCtrl.__init__(self, parent, ide, default_value, pos, size, style, name=name)
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.Bind(wx.EVT_CHAR, self.OnChar)
-        self._key_code = None
-        self._modifiers = None
+        self._key_code: int|None = None
+        self._modifiers: wx.KeyModifier|None = None
         self._default_value = default_value
         self._name = ''
         
@@ -122,7 +124,7 @@ class HotkeyCtrl(wx.TextCtrl):
         self._name = ''
         self.SetValue(self._default_value)
     
-    def OnKeyDown(self, event):
+    def OnKeyDown(self, event: wx.KeyEvent):
         name = GetHotkeyName(event.GetKeyCode(), event.GetModifiers())
         self.SetValue(name)
         self._name = name
@@ -134,10 +136,10 @@ class HotkeyCtrl(wx.TextCtrl):
                                    self._modifiers, self))
         event.Skip(False)
         
-    def OnChar(self, event):
+    def OnChar(self, event: wx.KeyEvent):
         event.Skip(False)
         
-    def IsOk(self):
+    def IsOk(self) -> bool:
         return self._key_code is not None
 
     def GetKeyCode(self):

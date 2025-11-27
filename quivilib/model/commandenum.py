@@ -51,12 +51,15 @@ class CommandFlags(IntFlag):
 
 class CommandName(IntEnum):
     """ Unique identifiers for all menu commands.
+    wx.ID_HIGHEST = 5999. Don't use any value lower than this. Make sure everything is unique.
     """
     #file_menu
     SET_WALLPAPER = 11001
     COPY = 11002
     COPY_PATH = 11005
     DELETE = 11004
+    DELETE_IMG = 11014
+    DELETE_ZIP = 11024
     MOVE = 11006
     OPTIONS = 11003
     QUIT = wx.ID_EXIT
@@ -132,6 +135,7 @@ class CommandName(IntEnum):
     #debug
     CACHE_INFO = 29900
     CHECK_UPDATE = 29901
+    CLOSE_IMG = 29902
 #
 
 class MenuName(StrEnum):

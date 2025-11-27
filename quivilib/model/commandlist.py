@@ -76,8 +76,16 @@ class CommandDefinitionList():
                                     [(wx.ACCEL_CTRL, ord(__('B')))],
                                     flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
             yield CommandDefinition(CommandName.DELETE, cat_name, control.delete,
-                                    __('&Delete'), __('Delete the opened image'),
+                                    __('&Delete'), __('Delete the current file'),
                                     [(wx.ACCEL_CTRL, wx.WXK_DELETE)],
+                                    flags=CommandFlags.DISABLEABLE, update_function=control.on_update_delete_menu_item)
+            yield CommandDefinition(CommandName.DELETE_IMG, cat_name, control.delete_image,
+                                    __('Delete Image'), __('Delete the current file if it is an image'),
+                                    [],
+                                    flags=CommandFlags.DISABLEABLE, update_function=control.on_update_delete_menu_item)
+            yield CommandDefinition(CommandName.DELETE_ZIP, cat_name, control.delete_container,
+                                    __('&Delete Container'), __('Delete the current file if it is a zip archive'),
+                                    [],
                                     flags=CommandFlags.DISABLEABLE, update_function=control.on_update_delete_menu_item)
             yield CommandDefinition(CommandName.MOVE, cat_name, control.open_move_dialog,
                                     __('&Move...'), __('Move the opened zip file to a new location'),
@@ -298,6 +306,9 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.CHECK_UPDATE, cat_name, control.check_updates,
                                     'Check for Updates', 'Reset check-for-updates timestamp', [],
                                     flags=CommandFlags.NOMENU)
+            yield CommandDefinition(CommandName.CLOSE_IMG, cat_name, control.canvas.close_img,
+                                    'Close Image', 'Close the current image', [],
+                                    flags=CommandFlags.NOMENU)
 
         #
         self.cmd_list = [x for x in list_items()]
@@ -376,6 +387,7 @@ class MenuDefinitionList():
         debug_menu = MenuDefinition(MenuName.Debug, 'Debug', (
             CommandName.CACHE_INFO,
             CommandName.CHECK_UPDATE,
+            CommandName.CLOSE_IMG,
         ))
         #Sub menus
         zoom_sub = MenuDefinition(MenuName.ZoomSub, 'Zoom', (

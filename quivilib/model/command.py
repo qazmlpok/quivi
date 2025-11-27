@@ -5,6 +5,7 @@ from quivilib.model.commandenum import CommandName, CommandFlags
 
 from typing import Protocol
 
+
 class QuiviMenuItem(Protocol):
     """ Something that can appear within a menu. Either a single menu item (with executable command(s)),
     or a list of other QuiviMenuItems that will appear as a submenu.

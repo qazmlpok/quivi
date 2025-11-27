@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from pathlib import Path
 import operator
@@ -18,11 +19,13 @@ class BaseContainer(object):
         self._sort_order = sort_order
         self.show_hidden = show_hidden
         self.refresh(show_hidden)
-        
-    def get_sort_order(self) -> SortOrder:
+
+    @property
+    def sort_order(self) -> SortOrder:
         return self._sort_order
-    
-    def set_sort_order(self, order: SortOrder) -> None:
+
+    @sort_order.setter
+    def sort_order(self, order: SortOrder) -> None:
         if order == SortOrder.NAME:
             def keyfn(elem):
                 return str(elem.path)
@@ -45,9 +48,7 @@ class BaseContainer(object):
             self.items.insert(0, parent)
         self._sort_order = order
         Publisher.sendMessage('container.changed', container=self)
-        
-    sort_order = property(get_sort_order, set_sort_order)
-    
+
     def open_container(self, item_index: int) -> 'BaseContainer':
         #Import here to avoid circular import
         from quivilib.model.container.directory import DirectoryContainer
@@ -87,7 +88,7 @@ class BaseContainer(object):
         for idx, item in enumerate(self.items):
             item.full_path = self.get_item_path(idx)
         
-        self.set_sort_order(self._sort_order)
+        self.sort_order = self._sort_order
         if selected_item:
             #TODO: (1,4) Improve: check if item has really changed before sending message?
             #i.e., file has been modified (but it's probably overkill)
@@ -98,7 +99,7 @@ class BaseContainer(object):
     @property
     def item_count(self):
         return len(self.items)
-        
+
     @property
     def name(self):
         pass
@@ -120,8 +121,13 @@ class BaseContainer(object):
     
     def get_item_last_modified(self, item_index):
         return self.items[item_index].last_modified
-    
-    def set_selected_item(self, item: int|Path|Item) -> None:
+
+    @property
+    def selected_item(self):
+        return self._selected_item
+
+    @selected_item.setter
+    def selected_item(self, item: int|Path|Item) -> None:
         old_selected_item = self._selected_item
         if isinstance(item, int):
             self._selected_item = self.items[item]
@@ -138,9 +144,6 @@ class BaseContainer(object):
             idx = self.items.index(self._selected_item)
             Publisher.sendMessage('container.selection_changed', idx=idx, item=self._selected_item)
 
-    def get_selected_item(self):
-        return self._selected_item
-
     @property
     def selected_item_index(self):
         if self._selected_item is None:
@@ -149,14 +152,23 @@ class BaseContainer(object):
             return self.items.index(self._selected_item)
         except ValueError:
             return -1 
-    
-    selected_item = property(get_selected_item, set_selected_item)
-    
+
     @property
     def virtual_files(self) -> bool:
         return False
     
-    def can_delete(self) -> bool:
+    def can_delete_contents(self) -> bool:
+        """ Return true if this container allows deleting contents (zip files could but don't, for example). """
+        raise NotImplementedError()
+
+    def delete_image(self, index: int, window):
+        raise NotImplementedError()
+
+    def can_delete_self(self) -> bool:
+        """ Return true if this container can be deleted while open. Deleting directories is not allowed. """
+        raise NotImplementedError()
+
+    def delete_self(self, window):
         raise NotImplementedError()
         
     @property
@@ -176,3 +188,12 @@ class BaseContainer(object):
     
     def _list_paths(self) -> list[tuple[Path, datetime|None]]:
         raise NotImplementedError()
+
+    @staticmethod
+    def _delete_file(path, window=None):
+        if sys.platform == 'win32':
+            #Use win32com.shell to send the file to the recycle bin, rather than outright deleting it.
+            from quivilib.windows.util import delete_file
+            delete_file(str(path), window)
+        else:
+            path.unlink()

@@ -5,8 +5,7 @@ import logging
 from wx.lib import wxcairo
 import cairo
 import wx
-from quivilib.model.image.interface import ImageHandler, SecondaryImageHandler
-from quivilib.util import rescale_by_size_factor
+from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 
 log = logging.getLogger('cairo')
 

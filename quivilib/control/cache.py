@@ -8,7 +8,7 @@ from quivilib.model.canvas import TempCanvas
 from quivilib.util import DebugTimer
 
 from quivilib.model.container.base import BaseContainer
-from quivilib.model.image.interface import ImageHandler
+from quivilib.interface.imagehandler import ImageHandler
 
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)

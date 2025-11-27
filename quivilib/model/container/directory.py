@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from pubsub import pub as Publisher
 
+from quivilib.model.container import ItemType
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.root import RootContainer
 
@@ -71,8 +72,19 @@ class DirectoryContainer(BaseContainer):
         img = self.items[item_index].path.open('rb')
         return img
     
-    def can_delete(self) -> bool:
-        return True
+    def can_delete_contents(self) -> bool:
+        can_delete = False
+        index = self.selected_item_index
+        if index != -1:
+            if self.items[index].typ in (ItemType.IMAGE, ItemType.COMPRESSED):
+                can_delete = True
+        return can_delete
+    def can_delete_self(self) -> bool:
+        return False
+
+    def delete_image(self, index: int, window):
+        path = self.items[index].path
+        BaseContainer._delete_file(path, window)
     
     @property
     def universal_path(self) -> Path|None:

@@ -1,3 +1,4 @@
+import sys
 import traceback
 import logging as log
 from pathlib import Path
@@ -6,6 +7,7 @@ import wx
 import wx.aui
 from pubsub import pub as Publisher
 
+from quivilib.interface.canvasadapter import CanvasAdapter
 from quivilib.model.command import Command, CommandCategory
 from quivilib.model.commandenum import MenuName, CommandName
 from quivilib.model.canvas import PaintedRegion
@@ -21,8 +23,10 @@ from quivilib import util
 
 from typing import Any
 
-ZOOM_FIELD = 2
+# The status bar is split into four fields.
+NAME_FIELD = 0
 SIZE_FIELD = 1
+ZOOM_FIELD = 2
 FIT_FIELD = 3
 
 def _handle_error(exception, args, kwargs):
@@ -76,8 +80,8 @@ class MainWindow(wx.Frame):
             #This is created immediately because it listens for messages.
             self.dbg_dialog = DebugDialog(self)
         
-        self._last_size = self.GetSize() 
-        self._last_pos = self.GetPosition()
+        self._last_size = self.get_window_size()
+        self._last_pos = self.GetPosition()     # NOTE - This has no effect on Wayland
         self._busy = False
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
@@ -107,7 +111,6 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_error, 'error')
         Publisher.subscribe(self.on_freeze, 'gui.freeze')
         Publisher.subscribe(self.on_thaw, 'gui.thaw')
-        Publisher.subscribe(self.on_selection_changed, 'container.selection_changed')
         Publisher.subscribe(self.on_container_opened, 'container.opened')
         Publisher.subscribe(self.on_image_opened, 'container.image.opened')
         Publisher.subscribe(self.on_image_loading, 'container.image.loading')
@@ -133,15 +136,12 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_bg_color_changed, 'settings.loaded')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackground')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
-        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.loaded')
-        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitType')
-        Publisher.subscribe(self.on_canvas_fit_setting_changed, 'settings.changed.Options.FitWidthCustomSize')
 
     def _bind_panel_mouse_events(self):
-        def make_fn(button_idx, event_idx):
-            def fn(event):
-                Publisher.sendMessage('canvas.mouse.event', button=button_idx, event=event_idx, x=event.x, y=event.y)
-                event.Skip()
+        def make_fn(btn_idx, evt_idx):
+            def fn(evt):
+                Publisher.sendMessage('canvas.mouse.event', button=btn_idx, event=evt_idx, x=evt.x, y=evt.y)
+                evt.Skip()
             return fn
         for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT', 'MOUSE_AUX1', 'MOUSE_AUX2')):
             for event_idx, event in enumerate(('DOWN', 'UP')):
@@ -150,18 +150,6 @@ class MainWindow(wx.Frame):
     
     @property
     def canvas_view(self):
-        class CanvasAdapter(object):
-            def __init__(self, panel):
-                self.panel = panel
-            
-            @property
-            def width(self):
-                return self.panel.GetSize()[0]
-            
-            @property
-            def height(self):
-                return self.panel.GetSize()[1]
-
         return CanvasAdapter(self.panel)
     
     def save(self, settings_lst):
@@ -182,20 +170,36 @@ class MainWindow(wx.Frame):
         height = max(settings.getint('Window', 'MainWindowHeight'), 200)
         x = max(settings.getint('Window', 'MainWindowX'), 0)
         y = max(settings.getint('Window', 'MainWindowY'), 0)
-        self.SetSize(x, y, width, height)
+        self.set_window_size(x, y, width, height)
         self.Maximize(settings.getboolean('Window', 'MainWindowMaximized'))
         if wx.Display.GetFromWindow(self) == wx.NOT_FOUND:
             self.SetSize(0, 0, width, height)
 
     def on_resize(self, event: wx.SizeEvent):
         Publisher.sendMessage('canvas.resized')
-        if not self.IsMaximized():
-            self._last_size = self.GetSize()
+        if not self.IsMaximized() and not self.IsFullScreen():
+            self._last_size = self.get_window_size()
             
     def on_move(self, event: wx.MoveEvent):
-        if not self.IsMaximized():
+        if not self.IsMaximized() and not self.IsFullScreen():
             self._last_pos = self.GetPosition()
-        
+
+    def get_window_size(self):
+        """Calls either wx.GetSize or wx.GetClientSize. GetSize has better results on Windows, Client on Linux
+        (or at least Wayland; maybe X11 works differently). If the wrong function is used the save&restore logic
+        may end up growing the window each time the application is opened and closed."""
+        if sys.platform == 'win32':
+            return self.GetSize()
+        else:
+            return self.GetClientSize()
+    def set_window_size(self, x:int, y: int, w: int, h: int):
+        """As with get. The parameters are different so this is two calls on Linux."""
+        if sys.platform == 'win32':
+            self.SetSize(x, y, w, h)
+        else:
+            self.SetClientSize(w, h)
+            self.SetPosition(wx.Point(x, y))
+
     @error_handler(_handle_error)
     def on_close(self, event: wx.CloseEvent):
         settings_lst: Any = []
@@ -219,6 +223,7 @@ class MainWindow(wx.Frame):
         self.file_list_panel.load(settings)
     
     def on_panel_paint(self, event: wx.PaintEvent):
+        dc: wx.DC
         if meta.DOUBLE_BUFFERING:
             dc = wx.BufferedPaintDC(self.panel)
             dc.Clear()
@@ -229,8 +234,8 @@ class MainWindow(wx.Frame):
         painted_region = PaintedRegion()
         #The recipient will update the painted_region fields.
         Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
-        clip_region = wx.Region(0, 0, self.panel.GetSize()[0],
-                                self.panel.GetSize()[1])
+        size = self.panel.GetSize()
+        clip_region = wx.Region(0, 0, size[0], size[1])
         clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
                                      painted_region.width, painted_region.height))
         #Fix for bug in Linux (without this it would clear the entire image
@@ -286,11 +291,7 @@ class MainWindow(wx.Frame):
         
     def on_canvas_changed(self):
         self.panel.Refresh(eraseBackground=False)
-    
-    def on_canvas_fit_setting_changed(self, *, settings):
-        fit_type = settings.getint('Options', 'FitType')
-        self.on_canvas_fit_changed(FitType = fit_type)
-    
+
     def on_canvas_fit_changed(self, *, FitType, IsSpread=False):
         fit_choices = get_fit_choices()
         name = [name for name, typ in fit_choices if typ == FitType][0]
@@ -424,23 +425,24 @@ class MainWindow(wx.Frame):
     
     def on_container_opened(self, *, container: BaseContainer):
         self.SetTitle(f'{container.name} - {meta.APPNAME}')
-        self.status_bar.SetStatusText(container.name)
+        self.status_bar.SetStatusText(container.name, NAME_FIELD)
     
     def on_image_opened(self, *, item):
         self.SetTitle(f'{item.name} - {meta.APPNAME}')
-        self.status_bar.SetStatusText(str(item.full_path))
+        self.status_bar.SetStatusText(str(item.full_path), NAME_FIELD)
         
     def on_image_loading(self, *, item):
-        self.status_bar.SetStatusText(_('Loading...'))
+        self.status_bar.SetStatusText(_('Loading...'), NAME_FIELD)
         
     def on_image_loaded(self, *, img):
-        width = img.original_width
-        height = img.original_height
-        self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
-    
-    def on_selection_changed(self, *, idx, item):
-        self.status_bar.SetStatusText(str(item.full_path))
-    
+        if img is None:
+            self.status_bar.SetStatusText('', SIZE_FIELD)
+            self.status_bar.SetStatusText('', ZOOM_FIELD)
+        else:
+            width = img.original_width
+            height = img.original_height
+            self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
+
     def on_language_changed(self):
         self.aui_mgr.GetPane('file_list').Caption(_('Files'))
         self.aui_mgr.Update()
