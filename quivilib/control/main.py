@@ -226,15 +226,23 @@ class MainController(object):
         """ Calls either delete_container or delete_image depends on whether a zip file or directory is open."""
         container = self.model.container
         if container.can_delete_self():
-            self.delete_container()
+            self.delete_container(False)
         elif container.can_delete_contents():
-            self.delete_image()
+            self.delete_image(False)
         #Else, do nothing. _can_delete should have returned false.
 
-    def delete_container(self):
-        """ Delete the currently opened archive file. """
+    def delete_container(self, direct=True):
+        """ Delete the currently opened archive file.
+         The `direct` parameter is true if this was called directly via command, false if called by `delete`. This only affects messaging.
+         """
         container = self.model.container
         if not container.can_delete_self():
+            if direct:
+                #Only show a message if this is a direct command invocation.
+                dlg = wx.MessageDialog(self.view, _('The file was not deleted as this is not supported for directories'),
+                                       _("File not deleted"), wx.OK)
+                dlg.ShowModal()
+                dlg.Destroy()
             return
         if not self._ask_delete_confirmation(self.view, container.name):
             return
@@ -242,10 +250,18 @@ class MainController(object):
         container.delete_self(self.view)
         self.file_list.open_parent()
 
-    def delete_image(self):
-        """ Deletes the currently opened image. Only works when viewing a directory of images - there's no attempt to modify zip archives. """
+    def delete_image(self, direct=True):
+        """ Deletes the currently opened image. Only works when viewing a directory of images - there's no attempt to modify zip archives.
+        The `direct` parameter is true if this was called directly via command, false if called by `delete`. This only affects messaging.
+        """
         container = self.model.container
         if not container.can_delete_contents():
+            if direct:
+                #Only show a message if this is a direct command invocation.
+                dlg = wx.MessageDialog(self.view, _('The file was not deleted as this is not supported for zip archives'),
+                                       _("File not deleted"), wx.OK)
+                dlg.ShowModal()
+                dlg.Destroy()
             return
 
         index = self.model.container.selected_item_index
