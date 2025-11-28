@@ -91,6 +91,7 @@ class MainWindow(wx.Frame):
         self.accel_table = None
         #Track as a dictionary
         self.menus: dict[MenuName, wx.Menu] = {}
+        self.menu_names: dict[MenuName, str] = {}
         #Used for updating translations dynamically. Pair the actual wx objects and the local definitions.
         self.all_cmd_pairs: list[tuple[Command, wx.MenuItem]] = []
         #Set by a background task if there is an update available.
@@ -320,9 +321,10 @@ class MainWindow(wx.Frame):
         self.all_cmd_pairs = []
         #First, create the wx.Menu objects. This is done for everything. Populate self.menus
         for item in all_menus:
-            #_new_make_menu will also modify all_cmd_pairs
-            wx_menu = self._new_make_menu(item, menu_lookup, cmd_lookup)
+            #make_menu will also modify all_cmd_pairs
+            wx_menu = self.make_menu(item, menu_lookup, cmd_lookup)
             self.menus[item.idx] = wx_menu
+            self.menu_names[item.idx] = item.name
         
         #Add the appropriate items to self.menu_bar (use Append). Set indices
         i = 0
@@ -346,12 +348,11 @@ class MainWindow(wx.Frame):
         #This is the number of pre-defined menu items in favorites; everything past this is a favorite.
         self._favorite_menu_count = self.menus[MenuName.Favorites].GetMenuItemCount()
 
-    def _new_make_menu(self, menu: CommandCategory, all_menus: dict[MenuName, CommandCategory], cmd_lookup: dict[int, Command]) -> wx.Menu:
+    def make_menu(self, menu: CommandCategory, all_menus: dict[MenuName, CommandCategory], cmd_lookup: dict[int, Command]) -> wx.Menu:
         """ Creates the actual wx.Menu for a given CommandCategory.
         Still requires references to all data, since this may include submenus.
         """
         _menu = wx.Menu()
-        _menu.SetTitle(menu.name)
         for cmd in menu.commands:
             if cmd is None:
                 _menu.AppendSeparator()
@@ -495,8 +496,7 @@ class MainWindow(wx.Frame):
     def on_update_available(self, *, down_url, check_time, version):
         self.down_url = down_url
         menu = self.menus[MenuName.Downloads]
-        # GetTitle here is a little bit of a hack because top-level menus don't normally have a title. The menubar controls the display text.
-        self.menu_bar.Append(menu, menu.GetTitle())
+        self.menu_bar.Append(menu, self.menu_names[MenuName.Downloads])
 
     def on_download_update(self):
         Publisher.sendMessage('program.open_update_site', url=self.down_url)
