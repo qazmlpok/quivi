@@ -70,8 +70,7 @@ class MainWindow(wx.Frame):
         
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundStyle(wx.BG_STYLE_PAINT)
-        self.aui_mgr.AddPane(self.panel, wx.aui.AuiPaneInfo().Name("content").
-                             CenterPane())
+        self.aui_mgr.AddPane(self.panel, wx.aui.AuiPaneInfo().Name("content").CenterPane())
         
         self.aui_mgr.Update()
         self.bindings_and_subscriptions()
@@ -496,7 +495,9 @@ class MainWindow(wx.Frame):
     def on_update_available(self, *, down_url, check_time, version):
         self.down_url = down_url
         menu = self.menus[MenuName.Downloads]
+        menu_idx = self.menu_bar.GetMenuCount()
         self.menu_bar.Append(menu, self.menu_names[MenuName.Downloads])
+        Publisher.sendMessage('menu.item_added', cmd=MenuName.Downloads, idx=menu_idx)
 
     def on_download_update(self):
         Publisher.sendMessage('program.open_update_site', url=self.down_url)
