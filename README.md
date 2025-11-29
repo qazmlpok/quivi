@@ -4,12 +4,11 @@ Quivi is an image viewer (specialized for comic/manga reading) which supports ma
 The home page for the original distribution of Quivi is http://quivi.sourceforge.net/
 
 # Quivi-64
-This fork was made with the primary purpose of adding 64-bit compatibility. The original Python code has been ported to Python 3.
+This fork was made with the primary purpose of adding 64-bit compatibility. The original Python code has been ported to Python 3. Most of the original functionality is unchanged, and some additional features have been added.
+
+The 64-bit executable prevents issues with loading large files. The upgrade to Python 3 fixes some Unicode issues that could prevent opening files depending on the name. Upgrading the image libraries used for displaying images adds support for webp images.
 
 # Added features
-- Upgrading Python to version 3 fixed some Unicode issues.
-- Upgrading the image rendering libraries added support for webp.
-- Upgrading to 64-bit enables viewing very large images without crashing due to running out of memory.
 - Quivi will now remember if you closed the application while in fullscreen mode and automatically re-open in fullscreen mode. This can be disabled in the configuration ("Remember full screen on close").
 - Added support for mouse auxiliary buttons (Aux1 and Aux2). These can be assigned behavior in the settings menu. By default they do nothing.
 - Internal change to how the Config file (pyquivi.ini) is written to should reduce the chances of it becoming corrupted.
@@ -46,6 +45,7 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 - New feature: Bindable context menu. This can be assigned as any other shortcut to a mouse key, e.g. right click or middle click.
     - The menu itself is not customizable, but will include most navigation/display options that may be useful when in full screen mode.
     - This resulted in a significant backend rework of the menu system to enable nested menus. For now, the main menu bar is still exclusively "flat".
+- The delete option in the menu can now delete zip (or rar) archive files. The delete option in the menu will either delete individual images (when viewing a folder) or the entire archive (when viewing an archive). Separate bindable commands exist that will only attempt to delete one type, e.g. for backwards compatibility. 
 
 
 # Removed features
@@ -65,7 +65,6 @@ Type hints have been added to some methods. This is mostly added to subclasses t
 - Image display supports FreeImage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
 - Removed third party path utlity; pathlib (core Python module) is used instead.
-- Only minimal testing has been done in Linux. The console logs numerous warnings about key accelerators, but for the most part the app works (tested in an Ubuntu VM)
 - Tests haven't been modified, except for the automated conversion.
 
 # Known Issues
