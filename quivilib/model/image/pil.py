@@ -200,7 +200,7 @@ class PilImage(ImageHandler):
 
     @staticmethod
     def _get_extensions() -> list[str]:
-        return list(Image.registered_extensions().keys())
+        return [x.casefold() for x in Image.registered_extensions().keys()]
     ext_list: Any = _get_extensions()
     
     @staticmethod

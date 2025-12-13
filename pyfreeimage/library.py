@@ -72,32 +72,32 @@ class Library(object):
         if restype:
             function.restype = restype
     
-    def _error_handler(self, fif, message):
+    def _error_handler(self, fif, message) -> None:
         self.last_error = message
         log.error(message)
         
-    def reset_last_error(self):
+    def reset_last_error(self) -> None:
         self.last_error = ''
         
     def get_readable_fifs(self):
         return [i for i in range(1, self.GetFIFCount()) if self.FIFSupportsReading(i)]
     
-    def get_fif_extensions(self, fif):
+    def get_fif_extensions(self, fif) -> list[str]:
         #GetFIFExtensionList returns bytes now, which needs to be turned into a string.
         #Everything returned by this should be in latin-1...
-        resp = self.GetFIFExtensionList(fif).decode('latin-1')
-        return ['.' + ext.lower() for ext in resp.split(',')]
+        resp: str = self.GetFIFExtensionList(fif).decode('latin-1')
+        return ['.' + ext.casefold() for ext in resp.split(',')]
     
-    def get_readable_extensions(self):
+    def get_readable_extensions(self) -> list[str]:
         lst = []
         for fif in self.get_readable_fifs():
             lst += self.get_fif_extensions(fif)
         return lst
     
-    def get_fif_description(self, fif):
+    def get_fif_description(self, fif) -> str:
         return self.GetFIFDescription(fif)
     
-    def get_readable_extensions_descriptions(self):
+    def get_readable_extensions_descriptions(self) -> dict[str, str]:
         dic = {}
         for fif in self.get_readable_fifs():
             for ext in self.get_fif_extensions(fif):
