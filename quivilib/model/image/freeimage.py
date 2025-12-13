@@ -160,8 +160,8 @@ class FreeImage(ImageHandler):
             return bmp
 
     @staticmethod
-    def _get_extensions():
-        return fi.library.load().get_readable_extensions()
+    def _get_extensions() -> list[str]:
+        return [x.casefold() for x in fi.library.load().get_readable_extensions()]
     ext_list = _get_extensions()
     
     @staticmethod

@@ -1,5 +1,6 @@
 import logging as log
 import traceback
+from pathlib import Path
 
 from quivilib import meta
 
@@ -53,15 +54,15 @@ def open(f, path, delay=False) -> ImageHandler:
             img2 = cls(src=img, delay=delay)
             img = img2
             break
-        except Exception as e:
+        except Exception:
             log.debug(traceback.format_exc())
     return img
 
-def open_direct(f, path, delay=False) -> ImageHandler:
+def open_direct(f, path: Path, delay=False) -> ImageHandler:
     """ Open the provided filehandle/path as an image.
     PIL/Freeimage is used to open the image, depending on configuration.
     """
-    ext = path.suffix
+    ext = path.suffix.casefold()
     img = None
     for cls in IMG_LOAD_CLASSES:
         if not ext in cls.extensions():
@@ -70,7 +71,7 @@ def open_direct(f, path, delay=False) -> ImageHandler:
         try:
             img = cls(f, str(path), delay=delay)
             break
-        except Exception as e:
+        except Exception:
             if IMG_LOAD_CLASSES[-1] is cls:
                 raise
             else:
