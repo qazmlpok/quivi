@@ -103,7 +103,7 @@ class PilImage(ImageHandler):
 
         if img is None and f is not None:
             img = Image.open(f)
-            if img.mode == 'I':    #16-bit precision
+            if img.mode[0] == 'I':    #16-bit precision
                 #return img.point(PilImage.PixelLookup, 'RGB')
                 img = img.point(lookup, 'RGB')
             elif img.mode != 'RGB':
