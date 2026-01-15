@@ -49,6 +49,11 @@ def open(f, path, delay=False) -> ImageHandler:
     """
     ext = path.suffix
     img = open_direct(f, path, delay)
+
+    # Skip Cairo wrapping for animated images (Cairo doesn't support animation)
+    if hasattr(img, 'is_animated') and img.is_animated:
+        return img
+
     for cls in IMG_CLASSES:
         try:
             img2 = cls(src=img, delay=delay)
