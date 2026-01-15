@@ -96,6 +96,10 @@ class MainWindow(wx.Frame):
         #Set by a background task if there is an update available.
         self.down_url: str|None = None
 
+        # Animation timer for animated GIFs
+        self.animation_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_animation_timer, self.animation_timer)
+
     def bindings_and_subscriptions(self):
         self.panel.Bind(wx.EVT_PAINT, self.on_panel_paint)
         self.panel.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
@@ -136,6 +140,8 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_bg_color_changed, 'settings.loaded')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackground')
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
+        Publisher.subscribe(self.on_animation_start, 'canvas.animation.start')
+        Publisher.subscribe(self.on_animation_stop, 'canvas.animation.stop')
 
     def _bind_panel_mouse_events(self):
         def make_fn(btn_idx, evt_idx):
@@ -526,7 +532,21 @@ class MainWindow(wx.Frame):
         #This is a workaround for a bizarre bug in wx.
         wx.CallLater(400, fn)
 
-    
+    def on_animation_timer(self, event: wx.TimerEvent):
+        """Called by the animation timer to advance to the next frame."""
+        Publisher.sendMessage('canvas.animation.next_frame')
+
+    def on_animation_start(self, *, interval):
+        """Start the animation timer with the specified interval in milliseconds."""
+        if interval > 0:
+            self.animation_timer.Start(interval, oneShot=True)
+
+    def on_animation_stop(self):
+        """Stop the animation timer."""
+        if self.animation_timer.IsRunning():
+            self.animation_timer.Stop()
+
+
     class QuiviFileDropTarget(wx.FileDropTarget):
         def __init__(self, window):
             self.Window = window

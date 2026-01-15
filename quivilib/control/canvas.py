@@ -40,6 +40,7 @@ class CanvasController(object):
         Publisher.subscribe(self.on_canvas_zoom_point, f'{self.name}.zoom_at')
         Publisher.subscribe(self.on_canvas_mouse_event, f'{self.name}.mouse.event')
         Publisher.subscribe(self.on_canvas_mouse_motion, f'{self.name}.mouse.motion')
+        Publisher.subscribe(self.on_animation_next_frame, f'{self.name}.animation.next_frame')
         #Indicates that the user is moving the image
         self._moving_image = False
         #Indicates that the user has moved the image significantly 
@@ -59,6 +60,8 @@ class CanvasController(object):
         return self.canvas.img
 
     def close_img(self):
+        # Stop animation if running
+        Publisher.sendMessage(f'{self.name}.animation.stop')
         self.canvas.close_img()
 
     #Image loading (moved from file list)
@@ -89,13 +92,24 @@ class CanvasController(object):
             Publisher.sendMessage('busy', busy=False)
             Publisher.sendMessage('container.image.opened', item=item)
 
+            # Start animation if this is an animated image
+            if hasattr(img, 'is_animated') and img.is_animated:
+                duration = img.frame_durations[0] if img.frame_durations else 100
+                Publisher.sendMessage(f'{self.name}.animation.start', interval=duration)
+
     def on_cache_image_loaded(self, *, request: ImageCacheLoaded):
         if request == self.pending_request:
             self.pending_request = None
-            self.canvas.load_img(request.img)
+            img = request.img
+            self.canvas.load_img(img)
             Publisher.sendMessage('busy', busy=False)
             item = request.item
             Publisher.sendMessage('container.image.opened', item=item)
+
+            # Start animation if this is an animated image
+            if hasattr(img, 'is_animated') and img.is_animated:
+                duration = img.frame_durations[0] if img.frame_durations else 100
+                Publisher.sendMessage(f'{self.name}.animation.start', interval=duration)
     def on_cache_image_load_error(self, *, request: ImageCacheLoadRequest, exception, tb):
         if request == self.pending_request:
             Publisher.sendMessage('busy', busy=False)
@@ -194,6 +208,15 @@ class CanvasController(object):
             canvas.top += int(dy * scale_y)
             Publisher.sendMessage(f'{self.name}.changed')
         self._old_mouse_pos = x, y
+
+    def on_animation_next_frame(self):
+        """Advance to the next animation frame and schedule the next timer."""
+        img = self.canvas.img
+        if img and hasattr(img, 'next_frame'):
+            duration = img.next_frame()
+            if duration > 0:
+                Publisher.sendMessage(f'{self.name}.changed')
+                Publisher.sendMessage(f'{self.name}.animation.start', interval=duration)
 
     def _zoom(self, zoom_in, zoom_scale=ZOOM_FACTOR):
         zoom = 1 + zoom_scale / 100.0

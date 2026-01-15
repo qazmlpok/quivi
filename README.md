@@ -9,6 +9,14 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
 The 64-bit executable prevents issues with loading large files. The upgrade to Python 3 fixes some Unicode issues that could prevent opening files depending on the name. Upgrading the image libraries used for displaying images adds support for webp images.
 
 # Added features
+- **Animated GIF support**: Quivi now supports animated GIF files with automatic playback.
+    - Animated GIFs are detected automatically when loaded and play immediately
+    - Animation respects the original GIF frame timing and durations
+    - Animation continues during zoom and pan operations
+    - All frames are pre-rendered for smooth, flicker-free playback
+    - Rotation support for all animation frames
+    - Animation stops automatically when switching to a different image
+    - No UI controls - animations autoplay without user interaction
 - Quivi will now remember if you closed the application while in fullscreen mode and automatically re-open in fullscreen mode. This can be disabled in the configuration ("Remember full screen on close").
 - Added support for mouse auxiliary buttons (Aux1 and Aux2). These can be assigned behavior in the settings menu. By default they do nothing.
 - Internal change to how the Config file (pyquivi.ini) is written to should reduce the chances of it becoming corrupted.
@@ -63,6 +71,7 @@ Type hints have been added to some methods. This is mostly added to subclasses t
 - wx updated to 4.2.4
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
 - Image display supports FreeImage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
+- Animated GIF support implemented using Pillow's multi-frame capabilities and wx.Timer for frame scheduling. Cairo acceleration is bypassed for animated images to preserve animation metadata.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
 - Removed third party path utlity; pathlib (core Python module) is used instead.
 - Tests haven't been modified, except for the automated conversion.
