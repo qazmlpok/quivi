@@ -118,6 +118,8 @@ class PilImage(ImageHandler):
         self.zoomed_frames = []
 
         # Check if this is an animated GIF
+        n_frames = getattr(img, 'n_frames', 1)
+        log.debug(f"Image has {n_frames} frame(s), format: {img.format}")
         if hasattr(img, 'n_frames') and img.n_frames > 1:
             self.is_animated = True
             log.debug(f"Detected animated GIF with {img.n_frames} frames")
