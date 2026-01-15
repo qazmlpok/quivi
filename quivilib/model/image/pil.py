@@ -108,13 +108,59 @@ class PilImage(ImageHandler):
                 img = img.point(lookup, 'RGB')
             elif img.mode != 'RGB':
                 img = img.convert('RGB')
-        
-        self.bmp = self._img_to_bmp(img)
-        
+
+        # Animation support: detect if this is an animated GIF
+        self.is_animated = False
+        self.frames = []  # List of wx.Bitmap objects (or bytes if delay=True)
+        self.frame_wrappers = []  # List of PilWrapper objects for zooming
+        self.frame_durations = []  # List of durations in milliseconds
+        self.current_frame_idx = 0
+        self.zoomed_frames = []
+
+        # Check if this is an animated GIF
+        if hasattr(img, 'n_frames') and img.n_frames > 1:
+            self.is_animated = True
+            log.debug(f"Detected animated GIF with {img.n_frames} frames")
+
+            # Extract all frames and their durations
+            for i in range(img.n_frames):
+                img.seek(i)
+                # Get frame duration (default to 100ms if not specified)
+                duration = img.info.get('duration', 100)
+                self.frame_durations.append(duration)
+
+                # Convert frame to RGB and create bitmap
+                frame = img.copy()
+                if frame.mode[0] == 'I':
+                    frame = frame.point(lookup, 'RGB')
+                elif frame.mode != 'RGB':
+                    frame = frame.convert('RGB')
+
+                # Store the frame wrapper for future zooming
+                frame_wrapper = PilWrapper(frame)
+                self.frame_wrappers.append(frame_wrapper)
+
+                # Create bitmap for this frame
+                frame_bmp = self._img_to_bmp(frame)
+                self.frames.append(frame_bmp)
+
+            # Reset to first frame
+            img.seek(0)
+            frame = img.copy()
+            if frame.mode[0] == 'I':
+                frame = frame.point(lookup, 'RGB')
+            elif frame.mode != 'RGB':
+                frame = frame.convert('RGB')
+            self.img = PilWrapper(frame)
+            self.bmp = self.frames[0]
+        else:
+            # Static image - original behavior
+            self.bmp = self._img_to_bmp(img)
+            self.img = PilWrapper(img)
+
         self.original_width = self.width = img.size[0]
         self.original_height = self.height = img.size[1]
-        
-        self.img = PilWrapper(img)
+
         self.zoomed_bmp: tuple[int, int, int]|None = None
         self.rotation = 0
         
@@ -122,10 +168,29 @@ class PilImage(ImageHandler):
         if not self.delay:
             log.debug("delayed_load was called but delay was off")
             return
-        self.bmp = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.bmp)
-        if self.zoomed_bmp:
-            w, h, s = self.zoomed_bmp
-            self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
+
+        if self.is_animated:
+            # Convert all frame bytes to bitmaps
+            for i in range(len(self.frames)):
+                if isinstance(self.frames[i], bytes):
+                    w, h = self.frame_wrappers[i].width, self.frame_wrappers[i].height
+                    self.frames[i] = wx.Bitmap.FromBuffer(w, h, self.frames[i])
+
+            # Convert zoomed frames if they exist
+            if self.zoomed_frames:
+                for i in range(len(self.zoomed_frames)):
+                    if isinstance(self.zoomed_frames[i], tuple):
+                        w, h, s = self.zoomed_frames[i]
+                        self.zoomed_frames[i] = wx.Bitmap.FromBuffer(w, h, s)
+
+            self.bmp = self.frames[0]
+        else:
+            # Static image - original behavior
+            self.bmp = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.bmp)
+            if self.zoomed_bmp:
+                w, h, s = self.zoomed_bmp
+                self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
+
         self.delay = False
     
     def _img_to_bmp(self, img):
@@ -141,14 +206,28 @@ class PilImage(ImageHandler):
     def resize(self, width: int, height: int) -> None:
         if self.original_width == width and self.original_height == height:
             self.zoomed_bmp = None
+            self.zoomed_frames = []
         else:
-            wrapper = self.img.rescale(width, height)
-            (w, h, s) = wrapper.getData()
-            if self.delay:
-                #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
-                self.zoomed_bmp = (w, h, s)
+            if self.is_animated:
+                # Resize all animation frames
+                self.zoomed_frames = []
+                for frame_wrapper in self.frame_wrappers:
+                    wrapper = frame_wrapper.rescale(width, height)
+                    (w, h, s) = wrapper.getData()
+                    if self.delay:
+                        self.zoomed_frames.append((w, h, s))
+                    else:
+                        zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
+                        self.zoomed_frames.append(zoomed_bmp)
             else:
-                self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
+                # Static image - original behavior
+                wrapper = self.img.rescale(width, height)
+                (w, h, s) = wrapper.getData()
+                if self.delay:
+                    #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
+                    self.zoomed_bmp = (w, h, s)
+                else:
+                    self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
         self.width = width
         self.height = height
 
@@ -160,14 +239,31 @@ class PilImage(ImageHandler):
     def rotate(self, clockwise: int) -> None:
         self.rotation += (1 if clockwise else -1)
         self.rotation %= 4
-        self.img = self.img.transpose(Image.Transpose.ROTATE_90 if clockwise else Image.Transpose.ROTATE_270)
-        #Update the bmp
-        self.bmp = self._img_to_bmp(self.img)
+
+        if self.is_animated:
+            # Rotate all animation frames
+            transpose_method = Image.Transpose.ROTATE_90 if clockwise else Image.Transpose.ROTATE_270
+            for i, frame_wrapper in enumerate(self.frame_wrappers):
+                frame_wrapper.img = frame_wrapper.img.transpose(transpose_method)
+                frame_wrapper.width, frame_wrapper.height = frame_wrapper.height, frame_wrapper.width
+                # Update the frame bitmap
+                self.frames[i] = self._img_to_bmp(frame_wrapper.img)
+
+            # Rotate the current img reference
+            self.img = self.img.transpose(transpose_method)
+            self.bmp = self.frames[self.current_frame_idx]
+        else:
+            # Static image - original behavior
+            self.img = self.img.transpose(Image.Transpose.ROTATE_90 if clockwise else Image.Transpose.ROTATE_270)
+            #Update the bmp
+            self.bmp = self._img_to_bmp(self.img)
+
         #Rotate the stored dimensions for any future/current zoom operations
         self.width, self.height = (self.height, self.width)
         self.original_width, self.original_height = (self.original_height, self.original_width)
-        if self.zoomed_bmp:
-            #Update the zoomed bmp
+
+        if self.zoomed_bmp or self.zoomed_frames:
+            #Update the zoomed bmp/frames
             #TODO: the calling function may call resize_by_factor as part of the adjust,
             #which makes this unnecessary. But this would need to be predicted.
             self.resize(self.width, self.height)
@@ -176,8 +272,26 @@ class PilImage(ImageHandler):
         if self.delay:
             log.error("paint called but image was not loaded")
             return
-        bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
+
+        if self.is_animated:
+            # Use current frame from animation
+            if self.zoomed_frames:
+                bmp = self.zoomed_frames[self.current_frame_idx]
+            else:
+                bmp = self.frames[self.current_frame_idx]
+        else:
+            # Static image - original behavior
+            bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
+
         dc.DrawBitmap(bmp, x, y)
+
+    def next_frame(self) -> int:
+        """Advance to next animation frame and return its duration in milliseconds."""
+        if not self.is_animated:
+            return 0
+
+        self.current_frame_idx = (self.current_frame_idx + 1) % len(self.frames)
+        return self.frame_durations[self.current_frame_idx]
 
     def copy(self) -> ImageHandler:
         return PilImage(img=self.img.img)
