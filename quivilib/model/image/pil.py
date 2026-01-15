@@ -103,13 +103,9 @@ class PilImage(ImageHandler):
 
         if img is None and f is not None:
             img = Image.open(f)
-            if img.mode[0] == 'I':    #16-bit precision
-                #return img.point(PilImage.PixelLookup, 'RGB')
-                img = img.point(lookup, 'RGB')
-            elif img.mode != 'RGB':
-                img = img.convert('RGB')
 
         # Animation support: detect if this is an animated GIF
+        # IMPORTANT: Check for animation BEFORE any mode conversion, as conversion destroys animation metadata
         self.is_animated = False
         self.frames = []  # List of wx.Bitmap objects (or bytes if delay=True)
         self.frame_wrappers = []  # List of PilWrapper objects for zooming
@@ -117,7 +113,7 @@ class PilImage(ImageHandler):
         self.current_frame_idx = 0
         self.zoomed_frames = []
 
-        # Check if this is an animated GIF
+        # Check if this is an animated GIF BEFORE any conversion
         n_frames = getattr(img, 'n_frames', 1)
         log.debug(f"Image has {n_frames} frame(s), format: {img.format}")
         if hasattr(img, 'n_frames') and img.n_frames > 1:
@@ -156,7 +152,11 @@ class PilImage(ImageHandler):
             self.img = PilWrapper(frame)
             self.bmp = self.frames[0]
         else:
-            # Static image - original behavior
+            # Static image - original behavior with mode conversion
+            if img.mode[0] == 'I':    #16-bit precision
+                img = img.point(lookup, 'RGB')
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
             self.bmp = self._img_to_bmp(img)
             self.img = PilWrapper(img)
 
