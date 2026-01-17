@@ -300,7 +300,7 @@ class CommandDefinitionList():
                                     flags=CommandFlags.NOMENU)
 
             cat_name = 'Debug'
-            yield CommandDefinition(CommandName.CACHE_INFO, cat_name, control.debugController.open_debug_cache_dialog,
+            yield CommandDefinition(CommandName.CACHE_INFO, cat_name, control.open_debug_cache_dialog,
                                     'Cache', 'Show Cache information', [],
                                     flags=CommandFlags.NOMENU)
             yield CommandDefinition(CommandName.CHECK_UPDATE, cat_name, control.check_updates,

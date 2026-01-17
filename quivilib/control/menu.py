@@ -39,6 +39,7 @@ class MenuController(object):
         
         Publisher.subscribe(self.on_language_changed, 'language.changed')
         Publisher.subscribe(self.on_command_execute, 'command.execute')
+        Publisher.subscribe(self.on_menu_added, 'menu.item_added')
         #TODO: Better name; for function and message.
         #This is for a (mouse) command with two events; key down and key release.
         Publisher.subscribe(self.on_command_down_execute, 'command.down_execute')
@@ -59,6 +60,15 @@ class MenuController(object):
         menus = list(self.menu_dict.values())
         Publisher.sendMessage('menu.labels.changed', categories=menus)
         Publisher.sendMessage('toolbar.labels.changed', commands=self._get_toolbar_commands(self.commands))
+        
+    def on_menu_added(self, *, cmd: MenuName, idx: int):
+        """ Called when a new item is added to the menu bar (i.e. the downloads menu).
+        This class has no access to the actual menubar; the main gui has no access to these definitions
+        """
+        if cmd in self.menu_dict:
+            self.menu_dict[cmd].menu_idx = idx
+        elif __debug__:
+            raise Error('Unknown menu item ' + cmd)
         
     def on_command_execute(self, *, ide):
         [cmd() for cmd in self.commands if cmd.ide == ide]

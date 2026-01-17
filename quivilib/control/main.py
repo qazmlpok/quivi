@@ -318,6 +318,10 @@ class MainController(object):
         import webbrowser
         webbrowser.open(meta.REPORT_URL)
         
+    def open_debug_cache_dialog(self):
+        if __debug__:
+            self.debugController.open_debug_cache_dialog()
+        
     def on_open_update_site(self, *, url):
         import webbrowser
         if url is not None:
