@@ -3,7 +3,15 @@ import math
 import logging
 
 from wx.lib import wxcairo
-import cairo
+try:
+    # noinspection PyUnusedImports
+    import cairocffi
+    cairocffi.install_as_pycairo()
+    import cairo
+    cairo_stride_for_width = cairo.ImageSurface.format_stride_for_width
+except ImportError:
+    import cairo
+    cairo_stride_for_width = cairo.Format.stride_for_width
 import wx
 from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 
@@ -67,9 +75,9 @@ class CairoImage(SecondaryImageHandler):
         Loads that data in as a cairo surface. Should work with either image loader.
         """
         srcImage = img
-        img_format = cairo.Format.ARGB32
+        img_format = cairo.FORMAT_ARGB32
         width, height = img.width, img.height
-        stride = img_format.stride_for_width(width)
+        stride = cairo_stride_for_width(img_format, width)
         #Make sure PIL and FreeImage both have this.
         #TODO: I can't get other cairo formats to work. But if I could, this would need to report
         #the format, e.g. to allow changing to RGB24. See https://afrantzis.com/pixel-format-guide/cairo.html
@@ -160,13 +168,13 @@ class CairoImage(SecondaryImageHandler):
         #Set quality for the scale. There are a few tricks that can be done with this.
         if (self.last_zoom != wscale or self.last_rot != self.rotation):
             #This is a zoom change - panning needs to be fast, but scaling doesn't.
-            quality = cairo.Filter.GOOD
+            quality = cairo.FILTER_GOOD
         elif self._width > self._original_width:
             #Zooming in on a large image is faster than zooming out
             #This is kinda annoying, because the artifacts are a lot worse when zooming out.
-            quality = cairo.Filter.GOOD
+            quality = cairo.FILTER_GOOD
         else:
-            quality = cairo.Filter.FAST
+            quality = cairo.FILTER_FAST
         self.last_zoom = wscale    #No real need to track both.
         self.last_rot = self.rotation
         #FAST - A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST.

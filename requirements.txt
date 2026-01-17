@@ -4,6 +4,6 @@ wxPython>=4.1.0
 PyPubSub>=4.0.0
 pywin32>=304;platform_system == "Windows"
 rarfile>=4.0
-pycairo>=1.21.0
+cairocffi>=1.7.1
 configparser>=3.2
 natsort>=8
