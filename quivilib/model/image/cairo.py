@@ -6,14 +6,12 @@ from wx.lib import wxcairo
 try:
     # noinspection PyUnusedImports
     import cairocffi
-    cairocffi.install_as_cairo()
+    cairocffi.install_as_pycairo()
     import cairo
     cairo_stride_for_width = cairo.ImageSurface.format_stride_for_width
-    print("Using cairocffi")
 except ImportError:
     import cairo
     cairo_stride_for_width = cairo.Format.stride_for_width
-    print("Using pycairo")
 import wx
 from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 
