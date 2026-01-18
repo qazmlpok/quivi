@@ -18,3 +18,7 @@ class DebugController(object):
     def open_debug_cache_dialog(self):
         #Currently no parameters.
         Publisher.sendMessage('debug.open_cache_dialog', params=None)
+
+    def open_debug_memory_dialog(self):
+        #Currently no parameters.
+        Publisher.sendMessage('debug.open_memory_dialog', params=None)
