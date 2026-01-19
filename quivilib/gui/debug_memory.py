@@ -10,7 +10,6 @@ import re
 import sys
 from threading import Thread
 
-import psutil
 import wx
 from pubsub import pub as Publisher
 
@@ -31,12 +30,12 @@ class DebugMemoryDialog(wx.Dialog):
         try:
             import psutil
             self.psutil_avail = True
-        except AttributeError:
+        except ImportError:
             self.psutil_avail = False
             psutil = None
 
         # begin wxGlade: DebugMemoryDialog.__init__
-        kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE
+        kwds["style"] = kwds.get("style", 0) | wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT | wx.STAY_ON_TOP
         wx.Dialog.__init__(self, *args, **kwds)
         self.SetTitle("Memory")
 
@@ -127,6 +126,7 @@ class DebugMemoryDialog(wx.Dialog):
             self.memory_list.SetItem(index, i, str(entry[key]))
 
     def get_memory_details(self):
+        import psutil
         pid = os.getpid()
         proc = psutil.Process(pid)
         cpu_times = proc.cpu_times()
