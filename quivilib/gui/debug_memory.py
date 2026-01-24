@@ -5,10 +5,9 @@
 #
 
 import datetime
+import gc
 import os
 import re
-import sys
-from threading import Thread
 
 import wx
 from pubsub import pub as Publisher
@@ -23,9 +22,9 @@ from pubsub import pub as Publisher
 WINDOW_SIZE = (700, 480)
 
 class DebugMemoryDialog(wx.Dialog):
-    column_order = ['id', 'timestamp', 'cpu', 'mem', 'file', 'resolution']
-    column_headers = ['', 'Timestamp', 'CPU Time', 'Memory', 'Current file', 'Resolution']
-    column_widths = [25, 100, 80, 80, 100, 90]
+    column_order = ['id', 'timestamp', 'cpu', 'mem', 'file', 'resolution', 'image_count']
+    column_headers = ['', 'Timestamp', 'CPU Time', 'Memory', 'Current file', 'Resolution', 'Images in GC']
+    column_widths = [25, 100, 80, 80, 100, 90, 80]
     def __init__(self, *args, **kwds):
         try:
             import psutil
@@ -59,6 +58,7 @@ class DebugMemoryDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.on_close_click, self.button_CLOSE)
         self.Bind(wx.EVT_BUTTON, self.on_snapshot_click, self.snapshot_btn)
         self.Bind(wx.EVT_BUTTON, self.on_gc_click, self.gc_btn)
+        self.Bind(wx.EVT_SHOW, self.on_show)
 
         #Image loading events. Listen to these to scrape some data for the currently displayed image
         #(Which is what's going to eat up most memory...)
@@ -76,6 +76,7 @@ class DebugMemoryDialog(wx.Dialog):
             'mem': '',
             'file': '',
             'resolution': '',
+            'image_count': '',
         }
         if not self.psutil_avail:
             #Not worth trying to do this properly.
@@ -89,7 +90,6 @@ class DebugMemoryDialog(wx.Dialog):
         if self.psutil_avail:
             self.timer = wx.Timer(self)
             self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-            self.timer.Start(1000)
 
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
@@ -134,6 +134,11 @@ class DebugMemoryDialog(wx.Dialog):
         mem_info = proc.memory_full_info()
         mem = round(mem_info.rss / (1024*1024), 1)
 
+        #hasattr is a hack to work around needing to mess with Protocols.
+        #I don't know that there's anything useful to do with the images (or anything else in gc) besides counting them.
+        #count is also effectively doubled because both Cairo and PIL/FreeImage count
+        imgs = [x for x in gc.get_objects() if hasattr(x, 'original_height')]
+
         return {
             'id': 0,
             'timestamp': datetime.datetime.now().strftime('%H:%M:%S'),
@@ -141,6 +146,7 @@ class DebugMemoryDialog(wx.Dialog):
             'mem': f'{mem}mb',
             'file': self.img_filename,
             'resolution': self.img_resolution,
+            'image_count': len(imgs),
         }
 
     @staticmethod
@@ -164,6 +170,15 @@ class DebugMemoryDialog(wx.Dialog):
     def on_gc_click(self, event):
         import gc
         gc.collect()
+
+    def on_show(self, event: wx.ShowEvent):
+        #Timer won't exist if psutil isn't available.
+        if self.timer:
+            if event.Show:
+                self.timer.Start(1000)
+            else:
+                self.timer.Stop()
+        return super()
 
     def on_close_click(self, event): # wxGlade: DebugDialog.<event_handler>
         #This window needs to always be alive; don't destroy it.
