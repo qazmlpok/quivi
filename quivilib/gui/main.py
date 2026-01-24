@@ -7,19 +7,21 @@ import wx
 import wx.aui
 from pubsub import pub as Publisher
 
+from quivilib import meta
+from quivilib import util
+from quivilib.control.options import get_fit_choices
+from quivilib.gui.debug import DebugDialog
+from quivilib.gui.file_list import FileListPanel
+from quivilib.i18n import _
 from quivilib.interface.canvasadapter import CanvasAdapter
+from quivilib.model import Favorites
+from quivilib.model.canvas import PaintedRegion
 from quivilib.model.command import Command, CommandCategory
 from quivilib.model.commandenum import MenuName, CommandName
-from quivilib.model.canvas import PaintedRegion
 from quivilib.model.container.base import BaseContainer
-from quivilib.control.options import get_fit_choices
-from quivilib.i18n import _
-from quivilib import meta
-from quivilib.util import error_handler
-from quivilib.gui.file_list import FileListPanel
-from quivilib.gui.debug import DebugDialog
+from quivilib.model.settings import Settings
 from quivilib.resources import images
-from quivilib import util
+from quivilib.util import error_handler
 
 from typing import Any
 
@@ -84,7 +86,7 @@ class MainWindow(wx.Frame):
         self._busy = False
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
-        self.favorites_menu_items = []
+        self.favorites_menu_items: list[tuple[int, str]] = []
         self._favorite_menu_count = 0
         self.update_menu_item = None
         self.accel_table = None
@@ -162,7 +164,7 @@ class MainWindow(wx.Frame):
         settings_lst.append(('Window', 'MainWindowMaximized', '1' if self.IsMaximized() else '0'))
         settings_lst.append(('Window', 'MainWindowFullscreen', '1' if self.IsFullScreen() else '0'))
     
-    def load(self, settings):
+    def load(self, settings: Settings):
         perspective = settings.get('Window', 'Perspective')
         if perspective:
             self.aui_mgr.LoadPerspective(perspective)
@@ -218,7 +220,7 @@ class MainWindow(wx.Frame):
         Publisher.sendMessage('canvas.mouse.motion', x=event.GetX(), y=event.GetY())
         event.Skip()
         
-    def on_settings_loaded(self, *, settings):
+    def on_settings_loaded(self, *, settings: Settings):
         self.load(settings)
         self.file_list_panel.load(settings)
     
@@ -374,15 +376,33 @@ class MainWindow(wx.Frame):
                     wx.GetApp().Bind(wx.EVT_UPDATE_UI, command.update_function, id=command.ide)
         return _menu
 
-    def on_favorites_changed(self, *, favorites):
+    def _reset_menus(self):
+        """The favorites menus are always updated by wiping them out and re-building from scratch."""
         favorites_menu = self.menus[MenuName.Favorites]
+        fav_only = self.menus[MenuName.FavoritesSub]
+        place_only = self.menus[MenuName.PlaceholderSub]
+
+        while fav_only.GetMenuItemCount() > 0:
+            menu = fav_only.FindItemByPosition(0)
+            fav_only.Delete(menu)
+        while place_only.GetMenuItemCount() > 0:
+            menu = place_only.FindItemByPosition(0)
+            place_only.Delete(menu)
+        # self._favorite_menu_count is the number of submenus in the favorites menu;
+        #      entries bigger than this are the favorites themselves.
+        while favorites_menu.GetMenuItemCount() > self._favorite_menu_count:
+            menu = favorites_menu.FindItemByPosition(self._favorite_menu_count)
+            if menu.IsSubMenu():
+                favorites_menu.Remove(menu)
+            else:
+                favorites_menu.Delete(menu)
+    def on_favorites_changed(self, *, favorites: Favorites):
+        favorites_menu = self.menus[MenuName.Favorites]
+        fav_only = self.menus[MenuName.FavoritesSub]
+        place_only = self.menus[MenuName.PlaceholderSub]
         self.menu_bar.Freeze()
         try:
-            #self._favorite_menu_count is the number of submenus in the favorites menu;
-            #      entries bigger than this are the favorites themselves.
-            while favorites_menu.GetMenuItemCount() > self._favorite_menu_count:
-                menu = favorites_menu.FindItemByPosition(self._favorite_menu_count)
-                favorites_menu.Delete(menu)
+            self._reset_menus()
             items = favorites.getitems()
             if items:
                 favorites_menu.AppendSeparator()
@@ -400,6 +420,11 @@ class MainWindow(wx.Frame):
                 if not name:
                     continue
                 favorites_menu.Append(ide, name)
+                if fav.is_placeholder():
+                    place_only.Append(ide, name)
+                else:
+                    fav_only.Append(ide, name)
+
                 self.favorites_menu_items.append((ide, name))
                 self.Bind(wx.EVT_MENU, event_fn, id=ide)
                 i += 1
@@ -464,7 +489,7 @@ class MainWindow(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
     
-    def on_open_movefile_dialog(self, *, settings, name='', start_path=''):
+    def on_open_movefile_dialog(self, *, settings: Settings, name='', start_path=''):
         from quivilib.gui.move_file import MoveFileDialog
         dialog = MoveFileDialog(self, settings, name=name, start_path=start_path)
         if dialog.ShowModal() == wx.ID_OK:
@@ -502,7 +527,7 @@ class MainWindow(wx.Frame):
     def on_download_update(self):
         Publisher.sendMessage('program.open_update_site', url=self.down_url)
 
-    def on_bg_color_changed(self, *, settings):
+    def on_bg_color_changed(self, *, settings: Settings):
         if settings.get('Options', 'CustomBackground') == '1':
             color = settings.get('Options', 'CustomBackgroundColor').split(',')
             color = wx.Colour(*[int(c) for c in color])

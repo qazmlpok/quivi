@@ -156,6 +156,6 @@ class MenuName(StrEnum):
     #Sub menus
     ZoomSub = '_zoomSub'
     RotateSub = '_rotateSub'
-    FavoritesSub = '_favoriteSub'       #Future; not implemented.
-    PlaceholderSub = '_placeholderSub'  #Future; not implemented.
+    FavoritesSub = '_favoriteSub'
+    PlaceholderSub = '_placeholderSub'
 #

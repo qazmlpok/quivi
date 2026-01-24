@@ -432,8 +432,9 @@ class MenuDefinitionList():
             CommandName.FULL_SCREEN,
             CommandName.SHOW_FILE_LIST,
             None,
-            # favorites, #MenuName.Favorites
-            # None,
+            MenuName.FavoritesSub,
+            MenuName.PlaceholderSub,
+            None,
             CommandName.OPTIONS,
             CommandName.HELP,
             CommandName.ABOUT,

@@ -1,8 +1,10 @@
 import os
 from configparser import RawConfigParser
+
 from pubsub import pub as Publisher
-from quivilib.model.container import SortOrder
+
 from quivilib.model.commandenum import CommandName, FitSettings
+from quivilib.model.container import SortOrder
 
 
 class Settings(RawConfigParser):
@@ -47,6 +49,7 @@ class Settings(RawConfigParser):
           ('Options', 'PlaceholderDelete', 1),
           ('Options', 'PlaceholderSingle', 0),
           ('Options', 'PlaceholderAutoOpen', 1),
+          ('Options', 'PlaceholderSeparateMenu', 0),
           ('Options', 'OpenFirst', 0),
           ('Window', 'Perspective', ''),
           ('Window', 'MainWindowX', 50),
