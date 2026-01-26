@@ -291,7 +291,7 @@ class OptionsDialog(wx.Dialog):
         self._update_custom_fit_display(fit_type)
         event.Skip()
 
-    def on_command_select(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_command_select(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         cmd = event.GetClientData()
         self._load_shortcuts(cmd)
         event.Skip()
@@ -404,13 +404,13 @@ class OptionsDialog(wx.Dialog):
             self.shorcuts_cbo.SetSelection(0)
         self._set_selected(self.shorcuts_cbo, selected_shortcut)
             
-    def _update_custom_fit_display(self, fit_type):
+    def _update_custom_fit_display(self, fit_type: FitSettings):
         show = (fit_type == FitSettings.FIT_CUSTOM_WIDTH)
         self.width_label.Enable(show)
         self.width_txt.Enable(show)
     
     @staticmethod
-    def _set_selected(control, item):
+    def _set_selected(control: wx.ComboBox, item):
         for i in range(control.GetCount()):
             if control.GetClientData(i) == item:
                 control.SetSelection(i)

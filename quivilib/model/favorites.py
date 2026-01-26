@@ -140,3 +140,11 @@ class Favorites():
     def on_container_opened(self, *, container) -> None:
         favorite = self.contains(container.path)
         Publisher.sendMessage('favorite.opened', favorite=favorite)
+
+
+class FavoriteMenuItem():
+    """Data class for creating/representing the wx.MenuItem objs for favorites. Just a replacement for tuples."""
+    def __init__(self, ide: int, name: str, fav: Favorite):
+        self.ide = ide
+        self.name = name
+        self.fav = fav

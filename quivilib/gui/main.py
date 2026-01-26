@@ -19,6 +19,7 @@ from quivilib.model.canvas import PaintedRegion
 from quivilib.model.command import Command, CommandCategory
 from quivilib.model.commandenum import MenuName, CommandName
 from quivilib.model.container.base import BaseContainer
+from quivilib.model.favorites import FavoriteMenuItem
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.util import error_handler
@@ -86,7 +87,7 @@ class MainWindow(wx.Frame):
         self._busy = False
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
-        self.favorites_menu_items: list[tuple[int, str]] = []
+        self.favorites_menu_items: list[FavoriteMenuItem] = []
         self._favorite_menu_count = 0
         self.update_menu_item = None
         self.accel_table = None
@@ -127,6 +128,7 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_shortcuts_changed, 'menu.shortcuts.changed')
         Publisher.subscribe(self.on_cmd_context_menu, 'menu.context_menu')
         Publisher.subscribe(self.on_favorites_changed, 'favorites.changed')
+        #Publisher.subscribe(self.on_favorite_settings_changed, 'settings.changed.Options.PlaceholderSeparateMenu')
         Publisher.subscribe(self.on_settings_loaded, 'settings.loaded')
         Publisher.subscribe(self.on_open_wallpaper_dialog, 'wallpaper.open_dialog')
         Publisher.subscribe(self.on_open_options_dialog, 'options.open_dialog')
@@ -376,61 +378,68 @@ class MainWindow(wx.Frame):
                     wx.GetApp().Bind(wx.EVT_UPDATE_UI, command.update_function, id=command.ide)
         return _menu
 
-    def _reset_menus(self):
-        """The favorites menus are always updated by wiping them out and re-building from scratch."""
+    def _reset_favorite_menus(self):
+        """The favorites menus are always updated by wiping them out and re-building from scratch.
+        Call this within a 'freeze' block. """
         favorites_menu = self.menus[MenuName.Favorites]
-        fav_only = self.menus[MenuName.FavoritesSub]
-        place_only = self.menus[MenuName.PlaceholderSub]
 
-        while fav_only.GetMenuItemCount() > 0:
-            menu = fav_only.FindItemByPosition(0)
-            fav_only.Delete(menu)
-        while place_only.GetMenuItemCount() > 0:
-            menu = place_only.FindItemByPosition(0)
-            place_only.Delete(menu)
+        reset_submenus = (self.menus[MenuName.FavoritesSub], self.menus[MenuName.PlaceholderSub], self.menus[MenuName.FavoritesCtx], self.menus[MenuName.PlaceholderCtx])
+        for menu in reset_submenus:
+            while menu.GetMenuItemCount() > 0:
+                item = menu.FindItemByPosition(0)
+                menu.Delete(item)
         # self._favorite_menu_count is the number of submenus in the favorites menu;
         #      entries bigger than this are the favorites themselves.
         while favorites_menu.GetMenuItemCount() > self._favorite_menu_count:
-            menu = favorites_menu.FindItemByPosition(self._favorite_menu_count)
-            if menu.IsSubMenu():
-                favorites_menu.Remove(menu)
-            else:
-                favorites_menu.Delete(menu)
-    def on_favorites_changed(self, *, favorites: Favorites):
+            item = favorites_menu.FindItemByPosition(self._favorite_menu_count)
+            favorites_menu.Delete(item)
+    def on_favorite_settings_changed(self, settings: Settings):
+        """Updates the various menus that display favorites. Called when settings change or when the favorites change."""
+        pass
+    def _create_favorites(self, favorites: Favorites):
+        """Resets and populates self.favorites_menu_items"""
+        items = favorites.getitems()
+        self.favorites_menu_items = []
+        i = 0
+        for path_key, fav in items:
+            ide = wx.NewId()
+            def event_fn(event: wx.CommandEvent, favorite=fav):
+                try:
+                    Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
+                except Exception as e:
+                    self.handle_error(e)
+
+            name = fav.displayText()
+            if not name:
+                continue
+
+            self.favorites_menu_items.append(FavoriteMenuItem(ide, name, fav))
+            self.Bind(wx.EVT_MENU, event_fn, id=ide)
+            i += 1
+    def on_favorites_changed(self, *, favorites: Favorites, settings: Settings):
         favorites_menu = self.menus[MenuName.Favorites]
         fav_only = self.menus[MenuName.FavoritesSub]
+        fav_ctx = self.menus[MenuName.FavoritesCtx]
         place_only = self.menus[MenuName.PlaceholderSub]
+        place_ctx = self.menus[MenuName.PlaceholderCtx]
+        self._create_favorites(favorites)
         self.menu_bar.Freeze()
         try:
-            self._reset_menus()
-            items = favorites.getitems()
-            if items:
+            self._reset_favorite_menus()
+            #Rebuild
+            if self.favorites_menu_items:
                 favorites_menu.AppendSeparator()
-            self.favorites_menu_items = []
-            i = 0
-            for path_key, fav in items:
-                ide = wx.NewId()
-                def event_fn(event, favorite=fav):
-                    try:
-                        Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
-                    except Exception as e:
-                        self.handle_error(e)
-                
-                name = fav.displayText()
-                if not name:
-                    continue
-                favorites_menu.Append(ide, name)
-                if fav.is_placeholder():
-                    place_only.Append(ide, name)
+            for item in self.favorites_menu_items:
+                favorites_menu.Append(item.ide, item.name)
+                if item.fav.is_placeholder():
+                    place_only.Append(item.ide, item.name)
+                    place_ctx.Append(item.ide, item.name)
                 else:
-                    fav_only.Append(ide, name)
-
-                self.favorites_menu_items.append((ide, name))
-                self.Bind(wx.EVT_MENU, event_fn, id=ide)
-                i += 1
+                    fav_only.Append(item.ide, item.name)
+                    fav_ctx.Append(item.ide, item.name)
         finally:
             self.menu_bar.Thaw()
-            pass
+        pass
 
     def on_shortcuts_changed(self, *, accel_table: wx.AcceleratorTable):
         self.accel_table = accel_table
