@@ -68,7 +68,7 @@ class MenuController(object):
         if cmd in self.menu_dict:
             self.menu_dict[cmd].menu_idx = idx
         elif __debug__:
-            raise Error('Unknown menu item ' + cmd)
+            raise Exception('Unknown menu item ' + cmd)
         
     def on_command_execute(self, *, ide):
         [cmd() for cmd in self.commands if cmd.ide == ide]

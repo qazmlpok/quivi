@@ -93,7 +93,7 @@ class MainController(object):
         
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         Publisher.subscribe(self.on_open_update_site, 'program.open_update_site')
-        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
         Publisher.sendMessage('settings.loaded', settings=self.model.settings)
         
         #Receive messages for Settings from the Daemon thread
@@ -173,7 +173,7 @@ class MainController(object):
         if path:
             favorite = Favorite(path, None, None)
             self.model.favorites.insert(favorite)
-            Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+            Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
             Publisher.sendMessage('favorite.opened', favorite=True)
     def add_placeholder(self):
         """
@@ -196,16 +196,16 @@ class MainController(object):
                     if fav.is_placeholder() and fav.path != path:
                         log.debug(f"Remove existing placeholder: {fav.path}")
                         self.model.favorites.remove(fav.path, True)
-            Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+            Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
 
     def remove_favorite(self):
         self.model.favorites.remove(self.model.container.path, False)
-        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
         Publisher.sendMessage('favorite.opened', favorite=False)
     
     def remove_placeholder(self):
         self.model.favorites.remove(self.model.container.path, True)
-        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+        Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
     
     def open_latest_placeholder(self):
         for fav in reversed(self.model.favorites.ordered_items()):

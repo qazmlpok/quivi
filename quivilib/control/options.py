@@ -3,6 +3,8 @@ from pubsub import pub as Publisher
 from quivilib.i18n import _
 from quivilib.model import App
 from quivilib.model.commandenum import FitSettings
+from quivilib.model.options import Options
+
 
 #TODO: (1,2) Improve: when setting start dir, check if it is a special folder
 #    and if it is, save a reference (e.g. %DocumentsDir%) to it instead of the
@@ -41,7 +43,7 @@ class OptionsController(object):
                                 save_locally=self.control.can_save_settings_locally()
         )
         
-    def on_update(self, *, opt):
+    def on_update(self, *, opt: Options):
         try:
             fit_width = int(opt.fit_width_str)
         except ValueError:
@@ -63,6 +65,7 @@ class OptionsController(object):
         placeholder_delete = '1' if opt.placeholder_delete else '0'
         placeholder_single = '1' if opt.placeholder_single else '0'
         placeholder_autoopen = '1' if opt.placeholder_autoopen else '0'
+        placeholder_separate = '1' if opt.placeholder_separate else '0'
         always_drag = '1' if opt.always_drag else '0'
         open_first = '1' if opt.open_first else '0'
         
@@ -78,6 +81,7 @@ class OptionsController(object):
         self.model.settings.set('Options', 'PlaceholderDelete', placeholder_delete)
         self.model.settings.set('Options', 'PlaceholderSingle', placeholder_single)
         self.model.settings.set('Options', 'PlaceholderAutoOpen', placeholder_autoopen)
+        self.model.settings.set('Options', 'PlaceholderSeparateMenu', placeholder_separate)
         self.model.settings.set('Options', 'OpenFirst', open_first)
         self.model.settings.set('Mouse', 'LeftClickCmd', opt.left_click_cmd)
         self.model.settings.set('Mouse', 'MiddleClickCmd', opt.middle_click_cmd)
@@ -85,7 +89,7 @@ class OptionsController(object):
         self.model.settings.set('Mouse', 'Aux1ClickCmd', opt.aux1_click_cmd)
         self.model.settings.set('Mouse', 'Aux2ClickCmd', opt.aux2_click_cmd)
         self.model.settings.set('Mouse', 'AlwaysLeftMouseDrag', always_drag)
-        self.model.settings.set('Mouse', 'DragThreshold', drag_threshold)
+        self.model.settings.set('Mouse', 'DragThreshold', str(drag_threshold))
         self.control.i18n.language = opt.language
         self.control.menu.set_shortcuts(opt.shortcuts)
         self.control.set_settings_location(opt.save_locally)

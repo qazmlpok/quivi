@@ -147,7 +147,7 @@ class MenuName(StrEnum):
     File = 'file'
     Folder = 'fold'
     View = 'view'
-    Favorites = 'fav'   #TODO: Ensure this can be a sub as well.
+    Favorites = 'fav'
     Help = 'help'
     Downloads = 'download'      #Conditionally in the menu bar
     Debug = 'debug'     #Debug mode only
@@ -157,6 +157,8 @@ class MenuName(StrEnum):
     #Sub menus
     ZoomSub = '_zoomSub'
     RotateSub = '_rotateSub'
-    FavoritesSub = '_favoriteSub'       #Future; not implemented.
-    PlaceholderSub = '_placeholderSub'  #Future; not implemented.
+    FavoritesSub = '_favoriteSub'
+    FavoritesCtx = '_favoriteCtx'
+    PlaceholderSub = '_placeholderSub'
+    PlaceholderCtx = '_placeholderCtx'
 #
