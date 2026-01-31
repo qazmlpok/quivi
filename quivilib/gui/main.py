@@ -395,6 +395,8 @@ class MainWindow(wx.Frame):
             favorites_menu.Delete(item)
     def on_favorite_settings_changed(self, settings: Settings):
         """Updates the various menus that display favorites. Called when settings change or when the favorites change."""
+        #The best way to handle this is likely to alternate between adding favorites directly to the menu and the two sub menus.
+        #Trying to do this is giving me wx free errors.
         pass
     def _create_favorites(self, favorites: Favorites):
         """Resets and populates self.favorites_menu_items"""
