@@ -11,7 +11,7 @@ QUEUED = 'Queued'
 LOADED = 'Loaded'
 
 
-class DebugDialog(wx.Dialog):
+class DebugCacheDialog(wx.Dialog):
     """Debug window for showing some application information.
     Unlike most windows, this will always exist and is shown/hidden.
     This is because the cache list form listens to events directly.
@@ -222,5 +222,5 @@ class DebugListCtrl(wx.ListCtrl):
 
 if __name__ == '__main__':
     app = wx.App(False)
-    dlg = DebugDialog(None)
+    dlg = DebugCacheDialog(None)
     dlg.ShowModal()

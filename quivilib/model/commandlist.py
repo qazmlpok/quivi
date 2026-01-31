@@ -303,6 +303,9 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.CACHE_INFO, cat_name, control.open_debug_cache_dialog,
                                     'Cache', 'Show Cache information', [],
                                     flags=CommandFlags.NOMENU)
+            yield CommandDefinition(CommandName.MEMORY_INFO, cat_name, control.open_debug_memory_dialog,
+                                    'Memory', 'Show Memory information', [],
+                                    flags=CommandFlags.NOMENU)
             yield CommandDefinition(CommandName.CHECK_UPDATE, cat_name, control.check_updates,
                                     'Check for Updates', 'Reset check-for-updates timestamp', [],
                                     flags=CommandFlags.NOMENU)
@@ -392,6 +395,7 @@ class MenuDefinitionList():
         #Debug mode only
         debug_menu = MenuDefinition(MenuName.Debug, 'Debug', (
             CommandName.CACHE_INFO,
+            CommandName.MEMORY_INFO,
             CommandName.CHECK_UPDATE,
             CommandName.CLOSE_IMG,
         ))

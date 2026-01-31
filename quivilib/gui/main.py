@@ -10,7 +10,8 @@ from pubsub import pub as Publisher
 from quivilib import meta
 from quivilib import util
 from quivilib.control.options import get_fit_choices
-from quivilib.gui.debug import DebugDialog
+from quivilib.gui.debug_cache import DebugCacheDialog
+from quivilib.gui.debug_memory import DebugMemoryDialog
 from quivilib.gui.file_list import FileListPanel
 from quivilib.i18n import _
 from quivilib.interface.canvasadapter import CanvasAdapter
@@ -80,8 +81,9 @@ class MainWindow(wx.Frame):
 
         if __debug__:
             #This is created immediately because it listens for messages.
-            self.dbg_dialog = DebugDialog(self)
-        
+            self.dbg_cache_dialog = DebugCacheDialog(self)
+            self.dbg_memory_dialog = DebugMemoryDialog(self)
+
         self._last_size = self.get_window_size()
         self._last_pos = self.GetPosition()     # NOTE - This has no effect on Wayland
         self._busy = False
@@ -134,6 +136,7 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_open_options_dialog, 'options.open_dialog')
         Publisher.subscribe(self.on_open_movefile_dialog, 'movefile.open_dialog')
         Publisher.subscribe(self.on_open_debug_cache_dialog, 'debug.open_cache_dialog')
+        Publisher.subscribe(self.on_open_debug_memory_dialog, 'debug.open_memory_dialog')
         Publisher.subscribe(self.on_open_about_dialog, 'about.open_dialog')
         Publisher.subscribe(self.on_open_directory_dialog, 'file_list.open_directory_dialog')
         Publisher.subscribe(self.on_update_available, 'program.update_available')
@@ -510,10 +513,15 @@ class MainWindow(wx.Frame):
         
     def on_open_debug_cache_dialog(self, *, params):
         if __debug__:
-            self.dbg_dialog.Show()       #Modeless
+            self.dbg_cache_dialog.Show()       #Modeless
             #dialog.Destroy()
         #Do nothing in a release build
-        
+    def on_open_debug_memory_dialog(self, *, params):
+        if __debug__:
+            self.dbg_memory_dialog.Show()  # Modeless
+            # dialog.Destroy()
+        # Do nothing in a release build
+
     def on_open_directory_dialog(self, *, req):
         dialog = wx.DirDialog(self, _('Choose a directory:'),
                               style=wx.DD_DEFAULT_STYLE|wx.DD_DIR_MUST_EXIST)

@@ -321,6 +321,9 @@ class MainController(object):
     def open_debug_cache_dialog(self):
         if __debug__:
             self.debugController.open_debug_cache_dialog()
+    def open_debug_memory_dialog(self):
+        if __debug__:
+            self.debugController.open_debug_memory_dialog()
         
     def on_open_update_site(self, *, url):
         import webbrowser
