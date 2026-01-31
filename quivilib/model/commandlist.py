@@ -375,6 +375,12 @@ class MenuDefinitionList():
             CommandName.REMOVE_FAVORITES,
             CommandName.REMOVE_PLACEHOLDER,
         ))
+        placeholder_sub = MenuDefinition(MenuName.PlaceholderSub, 'Placeholders', (
+            # Deliberately empty
+        ))
+        fav_sub = MenuDefinition(MenuName.FavoritesSub, 'Favorites', (
+            # Deliberately empty
+        ))
         help_menu = MenuDefinition(MenuName.Help, '&Help', (
             CommandName.HELP,
             CommandName.FEEDBACK,
@@ -401,13 +407,13 @@ class MenuDefinitionList():
             CommandName.ROTATE_CLOCKWISE,        
             CommandName.ROTATE_COUNTER_CLOCKWISE,
         ))
-        fav_sub = MenuDefinition(MenuName.FavoritesSub, 'Favorites', (
-            #Deliberately empty
-        ))
-        placeholder_sub = MenuDefinition(MenuName.PlaceholderSub, 'Placeholders', (
-            #Deliberately empty
-        ))
         # Context menus
+        fav_ctx = MenuDefinition(MenuName.FavoritesCtx, 'Favorites', (
+            #Deliberately empty
+        ))
+        placeholder_ctx = MenuDefinition(MenuName.PlaceholderCtx, 'Placeholders', (
+            #Deliberately empty
+        ))
         fit_menu = MenuDefinition(MenuName.FitCtx, empty, (
             CommandName.ZOOM_NONE,
             CommandName.ZOOM_WIDTH,
@@ -432,8 +438,9 @@ class MenuDefinitionList():
             CommandName.FULL_SCREEN,
             CommandName.SHOW_FILE_LIST,
             None,
-            # favorites, #MenuName.Favorites
-            # None,
+            MenuName.FavoritesCtx,
+            MenuName.PlaceholderCtx,
+            None,
             CommandName.OPTIONS,
             CommandName.HELP,
             CommandName.ABOUT,
@@ -445,8 +452,9 @@ class MenuDefinitionList():
         if __debug__:
             self.menubar_menus = self.menubar_menus + (debug_menu,)
         self.menu_list = (
-            file_menu, folder_menu, view_menu, favorites_menu, help_menu, download_menu,
-            zoom_sub, rotate_sub, fav_sub, placeholder_sub,
+            file_menu, folder_menu, view_menu, help_menu, download_menu,
+            fav_sub, placeholder_sub, favorites_menu,
+            zoom_sub, rotate_sub, fav_ctx, placeholder_ctx,
             fit_menu, img_context,
             debug_menu,
         )

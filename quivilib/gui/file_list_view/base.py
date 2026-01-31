@@ -2,6 +2,8 @@ import wx
 from pubsub import pub as Publisher
 from wx import FileDataObject, DropSource
 
+from quivilib.model.favorites import FavoriteMenuItem
+
 
 class FileListViewBase(object):
     def __init__(self):
@@ -10,8 +12,9 @@ class FileListViewBase(object):
     def on_context_menu(self, event):
         menu = wx.Menu()
         #Kinda ugly reference to the MainWindow list of favorites...
-        for ide, name in self.Parent.Parent.favorites_menu_items:
-            menu.Append(ide, name)
+        fav_list: list[FavoriteMenuItem] = self.Parent.Parent.favorites_menu_items
+        for item in fav_list:
+            menu.Append(item.ide, item.name)
         #The event handlers were already set by the MainWindow.
         self.PopupMenu(menu)
         menu.Destroy()

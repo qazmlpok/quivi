@@ -82,6 +82,7 @@ class OptionsDialog(wx.Dialog):
         self.placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
         self.placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
         self.placeholder_autoopen_chk = wx.CheckBox(self.viewing_pane, -1, _("Automatically jump to placeholder page on open"))
+        #self.placeholder_separate_chk = wx.CheckBox(self.viewing_pane, -1, _("Use separate menus for favorites and placeholders"))
     def _init_commands(self):
         self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
         self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
@@ -176,6 +177,8 @@ class OptionsDialog(wx.Dialog):
         self.placeholder_single_chk.SetValue(placeholder_single)
         placeholder_autoopen = (self.settings.get('Options', 'PlaceholderAutoOpen') == '1')
         self.placeholder_autoopen_chk.SetValue(placeholder_autoopen)
+        #placeholder_separate = (self.settings.get('Options', 'PlaceholderSeparateMenu') == '1')
+        #self.placeholder_separate_chk.SetValue(placeholder_separate)
         
         self.settings_local_chk.SetValue(self.save_locally)
         
@@ -280,6 +283,7 @@ class OptionsDialog(wx.Dialog):
         viewing_sizer.Add(self.placeholder_autodelete_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.placeholder_single_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.placeholder_autoopen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        #viewing_sizer.Add(self.placeholder_separate_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.viewing_pane.SetSizer(viewing_sizer)
 
     def on_fit_select(self, event): # wxGlade: OptionsDialog.<event_handler>
@@ -287,7 +291,7 @@ class OptionsDialog(wx.Dialog):
         self._update_custom_fit_display(fit_type)
         event.Skip()
 
-    def on_command_select(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_command_select(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         cmd = event.GetClientData()
         self._load_shortcuts(cmd)
         event.Skip()
@@ -362,6 +366,7 @@ class OptionsDialog(wx.Dialog):
         opt.placeholder_delete = self.placeholder_autodelete_chk.GetValue()
         opt.placeholder_single = self.placeholder_single_chk.GetValue()
         opt.placeholder_autoopen = self.placeholder_autoopen_chk.GetValue()
+        #opt.placeholder_separate = self.placeholder_separate_chk.GetValue()
         opt.shortcuts = self.shortcuts
         opt.always_drag = self.always_drag_chk.GetValue()
         opt.drag_threshold = self.threshold_txt.GetValue()
@@ -399,13 +404,13 @@ class OptionsDialog(wx.Dialog):
             self.shorcuts_cbo.SetSelection(0)
         self._set_selected(self.shorcuts_cbo, selected_shortcut)
             
-    def _update_custom_fit_display(self, fit_type):
+    def _update_custom_fit_display(self, fit_type: FitSettings):
         show = (fit_type == FitSettings.FIT_CUSTOM_WIDTH)
         self.width_label.Enable(show)
         self.width_txt.Enable(show)
     
     @staticmethod
-    def _set_selected(control, item):
+    def _set_selected(control: wx.ComboBox, item):
         for i in range(control.GetCount()):
             if control.GetClientData(i) == item:
                 control.SetSelection(i)

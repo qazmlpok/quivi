@@ -81,16 +81,15 @@ class FileListController(object):
                 autodelete = self.model.settings.get('Options', 'PlaceholderDelete') == '1'
                 if autodelete:
                     self.model.favorites.remove(favorite.path, is_placeholder)
-                    Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+                    Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
                     log.debug(f'Removing placeholder on open: {favorite.path}')
         except FileNotFoundError as e:
             #Favorite invalid; probably deleted manually. Prompt user to remove.
             if _ask_delete_favorite(window, favorite.path) == wx.ID_YES:
                 #Duplicate of remove_favorite in main.
                 self.model.favorites.remove(favorite.path, is_placeholder)
-                Publisher.sendMessage('favorites.changed', favorites=self.model.favorites)
+                Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
                 Publisher.sendMessage('favorite.opened', favorite=False)
-
 
     def open_item(self, item_index: int) -> None:
         container = self.model.container
