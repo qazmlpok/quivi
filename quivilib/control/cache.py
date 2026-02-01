@@ -1,14 +1,15 @@
 import logging
 import traceback
 from threading import Thread, Lock, Semaphore
-from pubsub import pub as Publisher
-import wx
-from quivilib import meta
-from quivilib.model.canvas import TempCanvas
-from quivilib.util import DebugTimer
 
-from quivilib.model.container.base import BaseContainer
+import wx
+from pubsub import pub as Publisher
+
+from quivilib import meta
 from quivilib.interface.imagehandler import ImageHandler
+from quivilib.model.canvas import TempCanvas
+from quivilib.model.container.base import BaseContainer
+from quivilib.util import DebugTimer
 
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)

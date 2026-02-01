@@ -249,6 +249,7 @@ class MainController(object):
         self.canvas.close_img()
         self.file_list.open_parent()
         container.delete_self(self.view)
+        Publisher.sendMessage("cache.flush")
 
     def delete_image(self, direct=True):
         """ Deletes the currently opened image. Only works when viewing a directory of images - there's no attempt to modify zip archives.
