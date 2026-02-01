@@ -186,9 +186,12 @@ class DebugMemoryDialog(wx.Dialog):
 
     def on_image_loaded(self, *, img):
         """ This includes the img itself, and thus the resolution."""
-        width = img.original_width
-        height = img.original_height
-        self.img_resolution = f'{width}x{height}'
+        if img is not None:
+            width = img.original_width
+            height = img.original_height
+            self.img_resolution = f'{width}x{height}'
+        else:
+            self.img_resolution = ''
     def on_image_opened(self, *, item):
         """ This includes the filename. """
         self.img_filename = item.name

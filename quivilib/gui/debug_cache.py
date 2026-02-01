@@ -196,12 +196,12 @@ class DebugListCtrl(wx.ListCtrl):
                 self.update_list_item(entry)
         pass
     def on_flush(self):
-        print("on_flush called.")
-        #Presumably a new container was loaded, so all old cache entries are meaningless.
-        #self.cache_data.clear()
-        #self.cache_data_id.clear()
-        #self.cache_keys.clear()
-        #TODO: Update list items.
+        # Invoked on manual refresh (menu option) or deleting a container.
+        for x in self.cache_data:
+            entry = self.cache_data[x]
+            if entry['cache'] == LOADED:
+                entry['cache'] = 'Purged'
+                self.update_list_item(entry)
         pass
     def on_cache_image_loaded(self, *, request):
         """Sent by the cache when an image is loaded.
