@@ -9,7 +9,7 @@ URL = 'https://github.com/qazmlpok/quivi'
 UPDATE_URL = 'https://raw.githubusercontent.com/qazmlpok/quivi/master/VERSION.txt'
 #UPDATE_URL = 'https://raw.githubusercontent.com/qazmlpok/quivi/fake-update/VERSION.txt'
 REPORT_URL = 'https://github.com/qazmlpok/quivi/issues'
-HELP_URL = 'http://quivi.sourceforge.net/documentation'
+HELP_URL = 'https://quivi.sourceforge.net/documentation'
 AUTHOR = 'qazmlpok'
 AUTHOR_EMAIL = 'qazmlpok@gmail.com'
 ORIG_AUTHOR = 'Conrado Porto Lopes Gouvea'
@@ -27,18 +27,15 @@ else:
     LOG_LEVEL = logging.ERROR
 DOUBLE_BUFFERING = True
 
-#GDI is used to speed up image processing on Windows. Roughly 10% faster from my tests.
-#However, it only supports basic image types and does not support files within zip archives.
+#Cairo is used to speed up graphic operations, mostly zooming. At least one of freeimage or pil must be enabled.
 if sys.platform == 'win32':
     USE_FREEIMAGE = False
     USE_PIL = True
-    USE_GDI_PLUS = False
     USE_CAIRO = True
     PATH_SEP = ';'
 else:
     USE_FREEIMAGE = True
     USE_PIL = True
-    USE_GDI_PLUS = False
     USE_CAIRO = True
     PATH_SEP = ':'
 

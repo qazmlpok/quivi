@@ -15,9 +15,9 @@ log = logging.getLogger('freeimage')
 
 
 class FreeImage(ImageHandler):
-    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False) -> None:
-        self.delay = delay
-        
+    @classmethod
+    def CreateImage(cls, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False) -> ImageHandler:
+        img: Image|None
         try:
             if img is None:
                 fi.library.load().reset_last_error()
@@ -33,19 +33,7 @@ class FreeImage(ImageHandler):
                         img = img.convert_to_24_bits()
                 else:
                     img = img.convert_to_32_bits()
-            
-            if sys.platform != 'win32':
-                if self.delay:
-                    self.bmp = None
-                else:
-                    self.bmp = img.convert_to_wx_bitmap(wx)
-            
-            self.original_width = self.width = img.width
-            self.original_height = self.height = img.height
-            
-            self.img = img
-            self.zoomed_bmp = None 
-            self.rotation = 0
+            return FreeImage(img, delay)
         except Exception as e:
             error_msg = _('Error while loading image')
             fi_error_msg = fi.library.load().last_error
@@ -55,6 +43,21 @@ class FreeImage(ImageHandler):
                 error_msg += f'\n({str(e)})'
             add_exception_custom_msg(e, error_msg)
             raise
+    def __init__(self, img, delay=False) -> None:
+        self.delay = delay
+
+        if sys.platform != 'win32':
+            if self.delay:
+                self.bmp = None
+            else:
+                self.bmp = img.convert_to_wx_bitmap(wx)
+
+        self.original_width = self.width = img.width
+        self.original_height = self.height = img.height
+
+        self.img = img
+        self.zoomed_bmp = None
+        self.rotation = 0
         
     def delayed_load(self) -> None:
         if not self.delay:

@@ -42,7 +42,7 @@ class PilWrapper():
     def __getattr__(self, name):
         return getattr(self.img, name)
         
-    def getData(self) -> tuple[Any, Any, Any]:
+    def getData(self) -> tuple[int, int, bytes]:
         b = self.img.tobytes()
         return (self.width, self.height, b)
     def maybeConvert32bit(self) -> 'PilWrapper':
@@ -91,9 +91,8 @@ class PilWrapper():
             del self.img
 
 class PilImage(ImageHandler):
-    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False) -> None:
-        self.delay = delay
-
+    @classmethod
+    def CreateImage(cls, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False) -> ImageHandler:
         #Used to convert 16-bit int precision images to 8-bit.
         #PIL's behavior is to truncate, which is not useful.
         #Remove this if that ever changes. It's been reported, and it sounds like they
@@ -101,21 +100,26 @@ class PilImage(ImageHandler):
         def lookup(x):
             return x / 256
 
+        img: Image.Image|None
         if img is None and f is not None:
             img = Image.open(f)
             if img.mode[0] == 'I':    #16-bit precision
-                #return img.point(PilImage.PixelLookup, 'RGB')
                 img = img.point(lookup, 'RGB')
             elif img.mode != 'RGB':
                 img = img.convert('RGB')
-        
+
+        return PilImage(img, delay)
+    def __init__(self, img: Image.Image, delay=False) -> None:
+        self.delay = delay
+
         self.bmp = self._img_to_bmp(img)
         
         self.original_width = self.width = img.size[0]
         self.original_height = self.height = img.size[1]
         
         self.img = PilWrapper(img)
-        self.zoomed_bmp: tuple[int, int, int]|None = None
+        self.zoomed_bmp: wx.Bitmap|None = None
+        self.delayed_bmp: tuple[int, int, int]|None = None
         self.rotation = 0
         
     def delayed_load(self) -> None:
@@ -123,9 +127,10 @@ class PilImage(ImageHandler):
             log.debug("delayed_load was called but delay was off")
             return
         self.bmp = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.bmp)
-        if self.zoomed_bmp:
-            w, h, s = self.zoomed_bmp
+        if self.delayed_bmp:
+            w, h, s = self.delayed_bmp
             self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
+            self.delayed_bmp = None
         self.delay = False
     
     def _img_to_bmp(self, img):
@@ -146,7 +151,7 @@ class PilImage(ImageHandler):
             (w, h, s) = wrapper.getData()
             if self.delay:
                 #TODO: Consider always making the delayed load a tuple and always use _img_to_bmp
-                self.zoomed_bmp = (w, h, s)
+                self.delayed_bmp = (w, h, s)
             else:
                 self.zoomed_bmp = wx.Bitmap.FromBuffer(w, h, s)
         self.width = width

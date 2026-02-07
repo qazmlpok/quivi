@@ -46,7 +46,7 @@ class AboutDialog(wx.Dialog):
             txt += '\n'
             txt += lib.GetCopyrightMessage().decode("utf-8")
             txt += '\nFreeImage is used under the FreeImage Public License, version 1.0'
-            txt += '\n\nThis program uses source from FreeImagePy (http://freeimagepy.sourceforge.net/) under the FreeImage Public License, version 1.0' 
+            txt += '\n\nThis program uses source from FreeImagePy (https://freeimagepy.sourceforge.net/) under the FreeImage Public License, version 1.0'
             
         self.copyright_txt.SetValue(txt) 
 

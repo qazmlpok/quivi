@@ -1,10 +1,12 @@
-from typing import Protocol, Any, IO
+from typing import Protocol, Any, IO, Self
+
 
 class ImageHandler(Protocol):
     """ Interface for a generic image.
     The actual Image class for the appropriate handler (i.e. Freeimage or PIL) will expose a common set of operations.
     """
-    def __init__(self, f:IO[bytes]|None=None, path:str|None=None, delay=False) -> None:
+    @classmethod
+    def CreateImage(cls, f:IO[bytes]|None=None, path:str|None=None, img=None, delay=False) -> Self:
         pass
     def delayed_load(self) -> None:
         pass
@@ -37,7 +39,6 @@ class ImageHandler(Protocol):
         pass
 
 class SecondaryImageHandler(ImageHandler):
-    """ Wrapper around Cairo - cairo is used for image post-processing, primarily fast zooming.
-    In theory GDI could also do this on Windows, but it doesn't work. """
-    def __init__(self, src:ImageHandler|None=None, delay=False) -> None:
+    @classmethod
+    def CreateWrappedImage(cls, src: ImageHandler | None = None, delay=False) -> ImageHandler:
         pass

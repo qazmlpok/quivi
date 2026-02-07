@@ -2,6 +2,7 @@ import threading
 import math
 import logging
 
+#wxcairo must be imported before wx. Do not change the import order.
 from wx.lib import wxcairo
 try:
     # noinspection PyUnusedImports
@@ -19,12 +20,15 @@ log = logging.getLogger('cairo')
 
 
 class CairoImage(SecondaryImageHandler):
-    def __init__(self, src:ImageHandler|None=None, img=None, delay=False) -> None:
+    @classmethod
+    def CreateImage(cls, f=None, path=None, img=None, delay=False) -> ImageHandler:
+        raise Exception("Use another class to open the image first")
+    @classmethod
+    def CreateWrappedImage(cls, src:ImageHandler|None=None, delay=False) -> ImageHandler:
         if src is None:
             raise Exception("Cairo must have a separate image loader.")
-            #if img.transparent:
-            #    img = img.composite(True)
-            #img = img.convert_to_32_bits()
+        return CairoImage(src, delay)
+    def __init__(self, src:ImageHandler, delay=False) -> None:
         self.src = src
         img = self.convert_to_cairo_surface(src.img)
         width = img.get_width()
@@ -204,7 +208,7 @@ class CairoImage(SecondaryImageHandler):
         ctx.paint()
 
     def copy(self) -> ImageHandler:
-        return CairoImage(img=self.img, src=self.src)
+        return CairoImage(src=self.src)
     
     def copy_to_clipboard(self) -> None:
         bmp = wxcairo.BitmapFromImageSurface(self.img)

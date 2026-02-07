@@ -9,9 +9,6 @@ from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 IMG_CLASSES: list[type[SecondaryImageHandler]] = []
 IMG_LOAD_CLASSES: list[type[ImageHandler]] = []
 
-#if 'win' in sys.platform and meta.USE_GDI_PLUS:
-#    from quivilib.model.image.gdiplus import GdiPlusImage
-#    IMG_CLASSES.append(GdiPlusImage)
 if meta.USE_CAIRO:
     from quivilib.model.image.cairo import CairoImage
     IMG_CLASSES.append(CairoImage)
@@ -51,7 +48,7 @@ def open(f, path, delay=False) -> ImageHandler:
     img = open_direct(f, path, delay)
     for cls in IMG_CLASSES:
         try:
-            img2 = cls(src=img, delay=delay)
+            img2 = cls.CreateWrappedImage(src=img, delay=delay)
             img = img2
             break
         except Exception:
@@ -69,7 +66,7 @@ def open_direct(f, path: Path, delay=False) -> ImageHandler:
             log.debug(f"Skip {cls} - no support for {ext}")
             continue
         try:
-            img = cls(f, str(path), delay=delay)
+            img = cls.CreateImage(f, str(path), delay=delay)
             break
         except Exception:
             if IMG_LOAD_CLASSES[-1] is cls:
