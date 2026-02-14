@@ -11,6 +11,7 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
+from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model import App
 from quivilib.model.canvas import WallpaperCanvas
 from quivilib.model.commandenum import FitSettings
@@ -27,7 +28,7 @@ positions = (FitSettings.FIT_SCREEN_NONE, FitSettings.FIT_TILED,
 class WallpaperController(object):
     def __init__(self, model: App):
         self.model = model
-        self.img = None
+        self.img: ImageHandler|None = None
         self.canvas = WallpaperCanvas('wpcanvas', None)
         self.canvas_controller = None
         Publisher.subscribe(self.on_dialog_opened, 'wallpaper.dialog_opened')
@@ -46,7 +47,7 @@ class WallpaperController(object):
             color = _get_bg_color()
             Publisher.sendMessage('wallpaper.open_dialog', choices=choices_str, color=color)
 
-    def on_image_loaded(self, *, img):
+    def on_image_loaded(self, *, img: ImageHandler):
         self.img = img
 
     def on_dialog_opened(self, *, dialog):
@@ -66,7 +67,7 @@ class WallpaperController(object):
         try:
             #This does .img to get the lower-level interface (for FI, at least)
             #I'm not certain if it should be using that or the upper one.
-            img = image.open_direct(f, path, None).img
+            img = image.open_direct(f, path).getImg()
         finally:
             f.close()
         if not img:

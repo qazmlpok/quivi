@@ -12,6 +12,8 @@ import re
 import wx
 from pubsub import pub as Publisher
 
+from quivilib.interface.imagehandler import ImageHandler
+
 # begin wxGlade: dependencies
 # end wxGlade
 
@@ -184,11 +186,11 @@ class DebugMemoryDialog(wx.Dialog):
         #This window needs to always be alive; don't destroy it.
         self.Hide()
 
-    def on_image_loaded(self, *, img):
+    def on_image_loaded(self, *, img: ImageHandler):
         """ This includes the img itself, and thus the resolution."""
         if img is not None:
-            width = img.original_width
-            height = img.original_height
+            width = img.base_width
+            height = img.base_height
             self.img_resolution = f'{width}x{height}'
         else:
             self.img_resolution = ''

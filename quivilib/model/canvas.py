@@ -62,7 +62,7 @@ class Canvas(object):
         This is a separate function due to the cache: images can be load()ed before load_img()ed
         """
         self.img = img
-        self._zoom = float(img.width) / float(img.original_width)
+        self._zoom = float(img.width) / float(img.base_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         if adjust:
             self.adjust()
@@ -85,8 +85,8 @@ class Canvas(object):
         view_w = self.view.width
         view_h = self.view.height
         spread = self._get_bool_setting('DetectSpreads')
-        img_w = self.img.original_width
-        img_h = self.img.original_height
+        img_w = self.img.base_width
+        img_h = self.img.base_height
         is_spread = False
         if spread and img_w > (img_h * 1.3):
             #Normal page layout is taller than it is long. If this is not true,
@@ -311,7 +311,7 @@ class Canvas(object):
             return
         self.img.paint(dc, self.left, self.top)
     
-    def rotate(self, clockwise):
+    def rotate(self, clockwise: int):
         if not self.img:
             return
         self.img.rotate(clockwise)
@@ -353,8 +353,8 @@ class WallpaperCanvas(Canvas):
             return
         view_w = self.view.width
         view_h = self.view.height
-        img_w = self.img.original_width
-        img_h = self.img.original_height
+        img_w = self.img.base_width
+        img_h = self.img.base_height
         self.tiled = False
 
         if fit_type == FitSettings.FIT_SCREEN_CROP_EXCESS:

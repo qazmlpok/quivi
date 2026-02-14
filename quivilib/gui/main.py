@@ -15,6 +15,7 @@ from quivilib.gui.debug_memory import DebugMemoryDialog
 from quivilib.gui.file_list import FileListPanel
 from quivilib.i18n import _
 from quivilib.interface.canvasadapter import CanvasAdapter
+from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model import Favorites
 from quivilib.model.canvas import PaintedRegion
 from quivilib.model.command import Command, CommandCategory
@@ -473,13 +474,13 @@ class MainWindow(wx.Frame):
     def on_image_loading(self, *, item):
         self.status_bar.SetStatusText(_('Loading...'), NAME_FIELD)
         
-    def on_image_loaded(self, *, img):
+    def on_image_loaded(self, *, img: ImageHandler):
         if img is None:
             self.status_bar.SetStatusText('', SIZE_FIELD)
             self.status_bar.SetStatusText('', ZOOM_FIELD)
         else:
-            width = img.original_width
-            height = img.original_height
+            width = img.base_width
+            height = img.base_height
             self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
 
     def on_language_changed(self):

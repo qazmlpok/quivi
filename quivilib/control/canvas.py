@@ -256,7 +256,7 @@ class CanvasController(object):
         scr_fn(inc, scr_rev)
         Publisher.sendMessage(f'{self.name}.changed')
         
-    def rotate_image(self, clockwise):
+    def rotate_image(self, clockwise: int):
         self.canvas.rotate(clockwise)
 
 class WallpaperCanvasController(CanvasController):
