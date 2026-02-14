@@ -30,6 +30,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         return CairoImage(src, delay)
     def __init__(self, src:ImageHandler, delay=False) -> None:
         self.src = src
+        self.img_path = src.img_path
         img = self.convert_to_cairo_surface(src.getImg())
         
         self._original_width = self._width = img.get_width()

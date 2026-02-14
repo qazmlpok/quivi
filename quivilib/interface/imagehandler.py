@@ -40,6 +40,10 @@ class ImageHandler(Protocol):
     "The current width of the displayed image"
     height: int
     "The current height of the displayed image"
+
+    img_path: str
+    "Path to the image. Intended for debugging only. Not referenced."
+
     @property
     def base_width(self) -> int:
         """The width of the originally loaded image, _before_ rescaling, but _after_ rotation.

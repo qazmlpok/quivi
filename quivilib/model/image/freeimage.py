@@ -31,7 +31,7 @@ class FreeImage(ImageHandlerBase):
                     img = img.convert_to_24_bits()
             else:
                 img = img.convert_to_32_bits()
-            return FreeImage(img, delay=delay)
+            return FreeImage(img, path, delay=delay)
         except Exception as e:
             error_msg = _('Error while loading image')
             fi_error_msg = fi.library.load().last_error
@@ -41,8 +41,9 @@ class FreeImage(ImageHandlerBase):
                 error_msg += f'\n({str(e)})'
             add_exception_custom_msg(e, error_msg)
             raise
-    def __init__(self, img: Image, delay=False) -> None:
+    def __init__(self, img: Image, path: str, delay=False) -> None:
         self.delay = delay
+        self.img_path = path
 
         if sys.platform != 'win32':
             if self.delay:

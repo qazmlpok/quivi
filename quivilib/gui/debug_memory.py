@@ -89,6 +89,7 @@ class DebugMemoryDialog(wx.Dialog):
 
         #Continually check for memory usage on a timer and update the listctrl to show current stats
         #This shouldn't continually run while the dialog is closed, but figure that out later.
+        self.timer = None
         if self.psutil_avail:
             self.timer = wx.Timer(self)
             self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
@@ -137,9 +138,11 @@ class DebugMemoryDialog(wx.Dialog):
         mem = round(mem_info.rss / (1024*1024), 1)
 
         #hasattr is a hack to work around needing to mess with Protocols.
+        #img_path is necessary to avoid picking up the Protocol objects. img_path is added in every implementation but not the Protocol.
         #I don't know that there's anything useful to do with the images (or anything else in gc) besides counting them.
         #count is also effectively doubled because both Cairo and PIL/FreeImage count
-        imgs = [x for x in gc.get_objects() if hasattr(x, 'original_height')]
+        imgs = [x for x in gc.get_objects() if hasattr(x, 'base_height') and hasattr(x, 'img_path') ]
+        #paths = [x.img_path for x in imgs]
 
         return {
             'id': 0,

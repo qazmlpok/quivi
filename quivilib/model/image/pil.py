@@ -110,9 +110,10 @@ class PilImage(ImageHandlerBase):
         elif img.mode != 'RGB':
             img = img.convert('RGB')
 
-        return PilImage(img, delay=delay)
-    def __init__(self, img: Image.Image, delay=False) -> None:
+        return PilImage(img, path, delay=delay)
+    def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         self.delay = delay
+        self.img_path = path
 
         self.bmp: wx.Bitmap = self._img_to_bmp(img)
         
