@@ -198,6 +198,6 @@ class WallpaperDialog(wx.Dialog):
         self.tiled = tiled
         self.preview_panel.Refresh()
         
-    def on_canvas_zoom_changed(self, *, zoom):
+    def on_canvas_zoom_changed(self, *, zoom: float):
         text = util.get_formatted_zoom(zoom * self.adjust_factor)
         self.zoom_label.SetLabel(text)

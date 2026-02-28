@@ -62,7 +62,7 @@ class FreeImage(ImageHandlerBase):
         return self.img
 
     def copy(self) -> Self:
-        return FreeImage(img=self.img)
+        return FreeImage(self.img, self.img_path)
         
     def delayed_load(self) -> None:
         if not self.delay:

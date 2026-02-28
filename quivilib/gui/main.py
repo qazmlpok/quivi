@@ -231,6 +231,7 @@ class MainWindow(wx.Frame):
         self.file_list_panel.load(settings)
     
     def on_panel_paint(self, event: wx.PaintEvent):
+        #In theory it is possible to only update the "dirty" areas but `self.GetUpdateRegion().GetBox()` always gives me (0,0,0,0).
         dc: wx.DC
         if meta.DOUBLE_BUFFERING:
             dc = wx.BufferedPaintDC(self.panel)
@@ -242,21 +243,11 @@ class MainWindow(wx.Frame):
         painted_region = PaintedRegion()
         #The recipient will update the painted_region fields.
         Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
-        size = self.panel.GetSize()
-        clip_region = wx.Region(0, 0, size[0], size[1])
-        clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
-                                     painted_region.width, painted_region.height))
-        #Fix for bug in Linux (without this it would clear the entire image
-        #when the panel is smaller than the image
-        
-        if not meta.DOUBLE_BUFFERING:
-            itr = wx.RegionIterator(clip_region)
-            while (itr.HaveRects()):
-                rect = itr.GetRect()
-                dc.DestroyClippingRegion()
-                dc.SetClippingRegion(rect)
-                dc.Clear()
-                itr.Next()
+
+        #if meta.DOUBLE_BUFFERING is false, the image is slightly offset and it's possible to scroll the image outside the window on one side.
+        #This doesn't happen with double buffering. I have no idea why.
+        #The old code for a bug in linux did not work correctly and has no bearing on this issue.
+        pass
         
     def on_mouse_wheel(self, event: wx.MouseEvent):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
@@ -311,7 +302,7 @@ class MainWindow(wx.Frame):
     def on_canvas_cursor_changed(self, *, cursor):
         self.panel.SetCursor(cursor)
         
-    def on_canvas_zoom_changed(self, *, zoom):
+    def on_canvas_zoom_changed(self, *, zoom: float):
         text = util.get_formatted_zoom(zoom)
         self.status_bar.SetStatusText(text, ZOOM_FIELD)
         

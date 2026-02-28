@@ -19,7 +19,7 @@ class PilWrapper():
     some methods may create a temporary object, which can just be removed automatically.
     """
     @classmethod
-    def allocate(cls: type['PilWrapper'], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> 'PilWrapper':
+    def allocate(cls: type[Self], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> Self:
         #*_mask is for FI compatibility; they will be ignored.
         #Should be 8-bit monochrome
         #Note - this will only ever actually be called with 24
@@ -30,7 +30,7 @@ class PilWrapper():
             mode = 'RGB'
         img = Image.new(mode, size=(width, height))
         return PilWrapper(img)
-    def AllocateNew(self, *args, **kwargs) -> 'PilWrapper':
+    def AllocateNew(self, *args, **kwargs) -> Self:
         """ Forward to static implementation. Needed for polymorphism.
         """
         return PilWrapper.allocate(*args, **kwargs)
@@ -129,7 +129,7 @@ class PilImage(ImageHandlerBase):
         return self.img
 
     def copy(self) -> Self:
-        return PilImage(img=self.img.img)
+        return PilImage(self.img.img, self.img_path)
         
     def delayed_load(self) -> None:
         if not self.delay:
