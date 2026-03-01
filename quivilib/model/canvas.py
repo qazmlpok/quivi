@@ -48,20 +48,16 @@ class Canvas(object):
         @type view: an object with 'width' and 'height' attributes
         """
         self.view = view
-        
-    def load(self, f, path, delay=False) -> ImageHandler:
-        """ Load an image file (using either a file handle or a file path)
-        and returns that img.
-        For immediate display, call load_img with the return value.
-        """
-        img = image.open(f, path, delay)
-        return img
-        
+
     def load_img(self, img: ImageHandler, adjust=True) -> None:
-        """ Sets an already loaded image (by `load` or equivalent)
-        This is a separate function due to the cache: images can be load()ed before load_img()ed
+        """ Sets an already loaded image (by `image.open`) as the current image for display.
+        Due to the cache it is normal that images are opened well before they are actually displayed
         """
+        def load_cb(who: ImageHandler):
+            if who == self.img:
+                self._sendMessage(f'{self.name}.changed')
         self.img = img
+        img.set_callback(load_cb)
         self._zoom = float(img.width) / float(img.base_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         if adjust:
@@ -384,20 +380,6 @@ class WallpaperCanvas(Canvas):
             self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=False)
     #
-
-class TempCanvas(Canvas):
-    """ Used by the cache to load images. Suppresses most functionality
-    This never needs to render, for example. 
-    TODO: Which means, does it even need to be a canvas in the first place?
-    """
-    def __init__(self, name, settings):
-        super().__init__(name, settings)
-    def _sendMessage(self, topic, **kwargs):
-        #Do not send messages (equivalent to the old 'quiet' parameter)
-        pass
-    def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
-        #Explicitly do nothing. (the default implementation references the view to get screen width)
-        pass
 
 class PaintedRegion(object):
     def __init__(self):

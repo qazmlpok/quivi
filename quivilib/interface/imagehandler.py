@@ -35,7 +35,11 @@ class ImageHandler(Protocol):
         pass
     def create_thumbnail(self, width: int, height: int, delay: bool) -> wx.Bitmap|Callable[[],wx.Bitmap]:
         pass
-    
+    def set_callback(self, cb: Callable[[Self], None]):
+        """Set a callback to be fired if the underlying image changes. Used for the cairo "fast zoom" delayed load.
+        This doesn't use pubsub because the owning canvas needs to know if the event should be ignored or not."""
+        pass
+
     width: int
     "The current width of the displayed image"
     height: int
@@ -79,6 +83,8 @@ class ImageHandlerBase(ImageHandler):
     "Width of the originally loaded image, without modification"
     _original_height: int
     "Height of the originally loaded image, without modification"
+    img_change_cb: Callable[[ImageHandler], None] | None = None
+    "Callback function used to inform the owning canvas of a change to the image"
 
     @property
     def base_width(self):
@@ -129,3 +135,6 @@ class ImageHandlerBase(ImageHandler):
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
+
+    def set_callback(self, cb:Callable[[Self], None]):
+        self.img_change_cb = cb

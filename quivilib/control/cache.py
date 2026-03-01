@@ -7,7 +7,7 @@ from pubsub import pub as Publisher
 
 from quivilib import meta
 from quivilib.interface.imagehandler import ImageHandler
-from quivilib.model.canvas import TempCanvas
+from quivilib.model import image
 from quivilib.model.container.base import BaseContainer
 from quivilib.util import DebugTimer
 
@@ -44,15 +44,13 @@ class ImageCacheLoaded(ImageCacheLoadRequest):
     """
     def __init__(self, src, settings) -> None:
         super().__init__(src.container, src.item)
-        #TODO: This canvas honestly isn't needed because it just calls load img.
-        canvas = TempCanvas('tempcanvas', settings)
         item_index = self.container.items.index(self.item)
         f = self.container.open_image(item_index)
         assert f is not None, "Failed to open image from container"
         #can't use "with" because not every file-like object used here supports it
         try:
             with DebugTimer(f'Cache: {self.path.name}'):
-                img = canvas.load(f, self.path, delay=True)
+                img = image.open(f, self.path, delay=True)
         finally:
             f.close()
         self.img: ImageHandler = img

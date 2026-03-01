@@ -27,7 +27,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
     def CreateWrappedImage(cls, src:ImageHandler|None=None, delay=False) -> ImageHandler:
         if src is None:
             raise Exception("Cairo must have a separate image loader.")
-        return CairoImage(src, delay)
+        return CairoImage(src, delay=delay)
     def __init__(self, src:ImageHandler, delay=False) -> None:
         self.src = src
         self.img_path = src.img_path
@@ -99,6 +99,10 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
             #Make sure this isn't an out of order execution.
             self.zoomed_bmp = zoomed
             self.zoomed_width = width
+            log.debug(f"Cairo: Updated zoomed bitmap ({width}x{height})")
+            if self.img_change_cb:
+                self.img_change_cb(self)
+
     def _maybe_scale_image(self):
         #Always clear out the timer and previous scaled image, if set.
         self.zoomed_bmp = None
@@ -198,6 +202,15 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
 
     def create_thumbnail(self, width: int, height: int, delay: bool = False) -> wx.Bitmap|Callable[[],wx.Bitmap]:
         return self.src.create_thumbnail(width, height, delay)
+
+    def set_callback(self, cb: Callable[[Self], None]):
+        def wrapped_cb(who: ImageHandler):
+            #For cairo, if the underlying image changes, that should (potentially) trigger an update here
+            #and then pass on the update. But for now, nothing will do that.
+            if self.img_change_cb:
+                self.img_change_cb(self)
+        self.src.set_callback(wrapped_cb)
+        super().set_callback(cb)
 
     def close(self):
         pass

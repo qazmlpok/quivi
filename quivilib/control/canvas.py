@@ -4,6 +4,7 @@ from pubsub import pub as Publisher
 
 from quivilib import meta
 from quivilib.interface.canvasadapter import CanvasLike
+from quivilib.model import image
 from quivilib.model.commandenum import MovementType, FitSettings
 from quivilib.model.canvas import Canvas, PaintedRegion, WallpaperCanvas
 from quivilib.model.settings import Settings
@@ -82,7 +83,7 @@ class CanvasController(object):
             #can't use "with" because not every file-like object used here supports it
             try:
                 with DebugTimer(path.name):
-                    img = self.canvas.load(f, path)
+                    img = image.open(f, path)
                     self.canvas.load_img(img)
             finally:
                 f.close()
@@ -105,6 +106,8 @@ class CanvasController(object):
 
     #Drawing
     def on_canvas_painted(self, *, dc: wx.DC, painted_region: PaintedRegion):
+        #Reminder - this is updating the painted_region object. The caller will use these values.
+        #pubsub isn't supposed to be used this way.
         self.canvas.paint(dc)
         painted_region.top = self.canvas.top
         painted_region.left = self.canvas.left
