@@ -61,6 +61,9 @@ class FreeImage(ImageHandlerBase):
     def getImg(self) -> Any:
         return self.img
 
+    def get_display_bmp(self):
+        return self.zoomed_bmp if self.zoomed_bmp else self.bmp
+
     def copy(self) -> Self:
         return FreeImage(self.img, self.img_path)
         
@@ -117,13 +120,15 @@ class FreeImage(ImageHandlerBase):
             #hdc = dc.GetHDC()
             #https://discuss.wxpython.org/t/gethandle-example/30032/5 - GetHandle is not a drop-in replacement for GetHDC
             hdc = ctypes.c_ulong(dc.GetHandle()).value
+            #TODO: If animation is ever supported, this if will cause problems.
+            #Is this whole block even useful/necessary?
             img = self.zoomed_bmp if self.zoomed_bmp else self.img
             win32gui.SetStretchBltMode(hdc, win32con.COLORONCOLOR)
             gdi32.StretchDIBits(hdc, x, y, img.width, img.height,
                                 0, 0, img.width, img.height, img.bits, img.info,
                                 win32con.DIB_RGB_COLORS, win32con.SRCCOPY)
         else:
-            bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
+            bmp = self.get_display_bmp()
             dc.DrawBitmap(bmp, x, y)
 
     def copy_to_clipboard(self) -> None:
@@ -154,6 +159,3 @@ class FreeImage(ImageHandlerBase):
     @staticmethod
     def extensions():
         return FreeImage.ext_list
-
-    def close(self):
-        pass

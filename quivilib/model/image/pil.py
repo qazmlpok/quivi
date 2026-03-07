@@ -1,11 +1,11 @@
 import logging
 from collections.abc import Callable
-from typing import Any, IO, Self
+from typing import Any, IO, Self, List
 
 import wx
 from PIL import Image
 
-from quivilib.interface.imagehandler import ImageHandlerBase
+from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
@@ -105,6 +105,12 @@ class PilImage(ImageHandlerBase):
             return x / 256
 
         img = Image.open(f)
+
+        #get_attr is mandatory because is_animated is only defined for plugins that support animation.
+        animated = getattr(img, "is_animated", False)
+        if (animated):
+            return AnimatedPilImage(img, path, delay)
+
         if img.mode[0] == 'I':    #16-bit precision
             img = img.point(lookup, 'RGB')
         elif img.mode != 'RGB':
@@ -127,6 +133,9 @@ class PilImage(ImageHandlerBase):
 
     def getImg(self) -> Any:
         return self.img
+
+    def get_display_bmp(self):
+        return self.zoomed_bmp if self.zoomed_bmp else self.bmp
 
     def copy(self) -> Self:
         return PilImage(self.img.img, self.img_path)
@@ -177,7 +186,7 @@ class PilImage(ImageHandlerBase):
         if self.delay:
             log.error("paint called but image was not loaded")
             return
-        bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
+        bmp = self.get_display_bmp()
         dc.DrawBitmap(bmp, x, y)
 
     def create_thumbnail(self, width: int, height: int, delay: bool) -> wx.Bitmap|Callable[[],wx.Bitmap]:
@@ -196,5 +205,56 @@ class PilImage(ImageHandlerBase):
     def extensions():
         return PilImage.ext_list
 
-    def close(self) -> None:
+class AnimatedPilImage(PilImage, AnimatedImage):
+    def __init__(self, img: Image.Image, path: str, delay=False) -> None:
+        # This doesn't call PilImage init to avoid some double bmp use.
+        self.delay = delay
+        self.img_path = path
+        self._original_width = self.width = img.size[0]
+        self._original_height = self.height = img.size[1]
+        self.rotation = 0
+
+        #This is number of times it should loop, not a bool. Oops.
+        loop = img.info.get('loop', 0)
+        count = img.n_frames
+        frame_delays = [0] * count
+        frames: List[wx.Bitmap] = [None] * count
+        #Get the img and delay data. This requires using img.seek to select each individual frame.
+        for i in range(count):
+            img.seek(i)
+            frame_delays[i] = self.duration_to_time(img.info.get('duration', 100))
+            frame = img
+            if img.mode != 'RGB':
+                frame = frame.convert('RGB')
+            frames[i] = self._img_to_bmp(frame)
+        img.seek(0)
+        AnimatedImage.__init__(self, frames, frame_delays)
+        self.bmp: wx.Bitmap = frames[0]
+
+        self.img = PilWrapper(img)
+        self.zoomed_bmp: wx.Bitmap | None = None
+        self.delayed_bmp: tuple[int, int, bytes] | None = None
+
+    def delayed_load(self) -> None:
+        if not self.delay:
+            log.debug("delayed_load was called but delay was off")
+            return
+
+        #TODO: Don't re-use this. Split into two lists...
+        for i in range(len(self.frames)):
+            self.frames[i] = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.frames[i])
+
+        self.bmp = self.frames[0]
+        self.delay = False
+
+    def get_display_bmp(self):
+        #Animated images just won't support zooming, at least unless cairo can be used.
+        return AnimatedImage.get_display_bmp(self)
+
+    #Thumbnail - use frame[0].
+
+    #Disallow
+    def resize(self, width: int, height: int) -> None:
+        pass
+    def _do_rotate(self, clockwise: int) -> None:
         pass

@@ -56,8 +56,11 @@ class Canvas(object):
         def load_cb(who: ImageHandler):
             if who == self.img:
                 self._sendMessage(f'{self.name}.changed')
+        if self.img is not None:
+            self.img.close()
         self.img = img
         img.set_callback(load_cb)
+        img.start_animation()
         self._zoom = float(img.width) / float(img.base_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         if adjust:
@@ -67,6 +70,7 @@ class Canvas(object):
 
     def close_img(self):
         if self.img:
+            self.img.close()
             self.img = None
             self._sendMessage(f'{self.name}.changed')
             self._sendMessage(f'{self.name}.image.loaded', img=None)

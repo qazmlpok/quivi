@@ -46,6 +46,9 @@ def open(f, path, delay=False) -> ImageHandler:
     """
     ext = path.suffix
     img = open_direct(f, path, delay)
+    if img.is_animated():
+        #It may be possible to use cairo, but figure that out later.
+        return img
     for cls in IMG_CLASSES:
         try:
             img2 = cls.CreateWrappedImage(src=img, delay=delay)

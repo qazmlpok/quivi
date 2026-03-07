@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Protocol, Any, IO, Self, Tuple
+from typing import Protocol, Any, IO, Self, Tuple, List
 
 import wx
 
@@ -39,6 +39,12 @@ class ImageHandler(Protocol):
         """Set a callback to be fired if the underlying image changes. Used for the cairo "fast zoom" delayed load.
         This doesn't use pubsub because the owning canvas needs to know if the event should be ignored or not."""
         pass
+    def start_animation(self):
+        """(Animated images only) Start the animation. Must be called on the main thread."""
+        pass
+    def stop_animation(self):
+        """(Animated images only) Stop the animation."""
+        pass
 
     width: int
     "The current width of the displayed image"
@@ -47,6 +53,12 @@ class ImageHandler(Protocol):
 
     img_path: str
     "Path to the image. Intended for debugging only. Not referenced."
+
+    def is_animated(self) -> bool:
+        pass
+
+    def close(self) -> None:
+        pass
 
     @property
     def base_width(self) -> int:
@@ -136,5 +148,99 @@ class ImageHandlerBase(ImageHandler):
             wx.TheClipboard.SetData(data)
             wx.TheClipboard.Close()
 
+    def get_display_bmp(self) -> wx.Bitmap:
+        """Returns the bitmap that should be drawn.
+        Used to deal with logic around animations and zooming."""
+        pass
+
+    def is_animated(self):
+        return False
+
     def set_callback(self, cb:Callable[[Self], None]):
         self.img_change_cb = cb
+
+    def close(self) -> None:
+        pass
+
+class AnimatedImage(ImageHandlerBase):
+    """Base class for an animated image. Manages a timer to handle the animation, using the callback function to report changes.
+    delays should be a list of duration in ms (GIF stores the value in cs)
+    """
+    def __init__(self, frames: List[wx.Bitmap], delays: List[int], loops = 0):
+        if len(frames) != len(delays):
+            raise Exception("Frames and Delays must have the same number of entries.")
+        if len(frames) < 2:
+            #Caller should guard against this. I'm sure it's possible to create a 1-frame animated gif.
+            raise Exception("Animated image must have at least 2 frames.")
+        #Frames:
+        #For direct rendering, I need wx.Bitmaps.
+        #For cairo, I need something that implements convert_to_raw_bits (freeimage does this through the dll. PIL uses a wrapper)
+
+        self.frame = 0
+        self.frames = frames
+        self.delays = delays
+        self.max_loops = loops
+
+        self.all_same = all(x == delays[0] for x in delays)
+        self.handler = wx.EvtHandler()
+        self.timer = wx.Timer(self.handler)
+        self.handler.Bind(wx.EVT_TIMER, self._next_frame, self.timer)
+        if __debug__:
+            self.start = 0.0
+
+    def get_display_bmp(self):
+        #Animated images just won't support zooming, at least unless cairo can be used.
+        return self.frames[self.frame]
+
+    def start_animation(self):
+        """Start the animation. This must be called on the main thread for wx.Timer to work."""
+        self.frame = 0
+        if self.all_same:
+            #Assumption: a repeating timer will have less jitter than firing off multiple OneShot timers.
+            #-Jitter appears to be roughly 2% (with 20-30ms frame delays). The persistent timer is not actually performing better.
+            self.timer.Start(self.delays[0])
+        else:
+            self.timer.Start(self.delays[self.frame], True)
+        if __debug__:
+            total = sum(self.delays)
+            import time
+            self.start = time.perf_counter()
+            print(f"Expected loop duration: {total}ms.")
+
+    def stop_animation(self):
+        self.timer.Stop()
+
+    def _next_frame(self, event):
+        """Advance the image to the next frame, or back to the first one. Fire the callback."""
+        self.frame = (self.frame + 1) % len(self.frames)
+        if __debug__ and self.frame == 0:
+            import time
+            stop = time.perf_counter()
+            print(f"Loop complete. took: {(stop - self.start)*1000:0.1f}ms.")
+            self.start = time.perf_counter()
+
+        #changing self.frame will change the image paint() uses.
+        self.img_change_cb(self)
+        if not self.all_same:
+            #TODO: Should this attempt to compensate for jitter at all?
+            self.timer.Start(self.delays[self.frame], True)
+
+    def duration_to_time(self, value: int) -> int:
+        """
+        GIF encodes per-frame delays in increments of 0.01s (i.e. 10ms or 1cs). Browsers will not perfectly obey this.
+        In practice it looks like too-small values are moved up to 100ms, so a delay of "1" is slower than "2".
+        This is for GIF specifically; it's possible APNG/WEBM have different logic.
+        In theory this is browser-specific but every browser I tested had the same behavior.
+        Ref: https://www.tumblr.com/pharanpostsartndevtrivia/126581964275/how-is-an-animated-gifs-time-delay-between
+        NOTE - input time needs to be in ms. PIL at least standardizes this.
+        """
+        if value < 20:
+            return 100
+        return value
+
+    def is_animated(self):
+        return True
+
+    def close(self) -> None:
+        super().close()
+        self.stop_animation()

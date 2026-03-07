@@ -212,9 +212,6 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         self.src.set_callback(wrapped_cb)
         super().set_callback(cb)
 
-    def close(self):
-        pass
-
     @staticmethod
     def extensions():
         """ Extensions do not matter for Cairo.
