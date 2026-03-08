@@ -159,7 +159,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         if item.typ == ItemType.IMAGE:
             f = container.open_image(index)
             try:
-                img = image.open(f, item.path)
+                img = image.open_direct(f, item.path)
             finally:
                 f.close()
             originalsize = (img.base_width, img.base_height)

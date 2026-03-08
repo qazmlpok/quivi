@@ -83,7 +83,7 @@ class CanvasController(object):
             #can't use "with" because not every file-like object used here supports it
             try:
                 with DebugTimer(path.name):
-                    img = image.open(f, path)
+                    img = image.open_img(f, path)
                     self.canvas.load_img(img)
             finally:
                 f.close()

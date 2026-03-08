@@ -14,6 +14,11 @@ class ImageHandler(Protocol):
     def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
         """Static constructor. Create a new image object."""
         pass
+    @classmethod
+    def OpenImage(cls, f:IO[bytes], path:str, delay=False) -> Any:
+        """Create a new image of the appropriate type. This bypasses the ImageHandler stuff.
+        Used for direct access to the image data."""
+        pass
     def delayed_load(self) -> None:
         """Image loading can be deferred (i.e. for the cache). Calling this modifies local state to prepare the image data for actual display."""
         pass

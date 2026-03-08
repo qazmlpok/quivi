@@ -95,27 +95,39 @@ class PilWrapper():
             del self.img
 
 class PilImage(ImageHandlerBase):
-    @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
-        #Used to convert 16-bit int precision images to 8-bit.
-        #PIL's behavior is to truncate, which is not useful.
-        #Remove this if that ever changes. It's been reported, and it sounds like they
-        #stopped truncating, but it's still doing it.
-        def lookup(x):
-            return x / 256
+    # Used to convert 16-bit int precision images to 8-bit.
+    # PIL's behavior is to truncate, which is not useful.
+    # Remove this if that ever changes. It's been reported, and it sounds like they
+    # stopped truncating, but it's still doing it.
+    @staticmethod
+    def lookup(x):
+        return x / 256
 
+    @staticmethod
+    def to_32(img: Image.Image):
+        """Does the conversion steps to ensure img is 32 bit RGB. May return the input."""
+        if img.mode[0] == 'I':  # 16-bit precision
+            img = img.point(PilImage.lookup, 'RGB')
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        return img
+
+    @classmethod
+    def OpenImage(cls, f: IO[bytes], path: str, delay=False, convert_to_32=True) -> Any:
         img = Image.open(f)
 
+        if convert_to_32:
+            img = PilImage.to_32(img)
+        return img
+    @classmethod
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+        img = cls.OpenImage(f, path, delay, convert_to_32=False)
         #get_attr is mandatory because is_animated is only defined for plugins that support animation.
         animated = getattr(img, "is_animated", False)
         if (animated):
             return AnimatedPilImage(img, path, delay)
 
-        if img.mode[0] == 'I':    #16-bit precision
-            img = img.point(lookup, 'RGB')
-        elif img.mode != 'RGB':
-            img = img.convert('RGB')
-
+        img = PilImage.to_32(img)
         return PilImage(img, path, delay=delay)
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         self.delay = delay
@@ -151,7 +163,7 @@ class PilImage(ImageHandlerBase):
             self.delayed_bmp = None
         self.delay = False
     
-    def _img_to_bmp(self, img):
+    def _img_to_bmp(self, img: Image.Image|PilWrapper):
         s = img.tobytes()
         if self.delay:
             return s
@@ -231,7 +243,8 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         AnimatedImage.__init__(self, frames, frame_delays)
         self.bmp: wx.Bitmap = frames[0]
 
-        self.img = PilWrapper(img)
+        #Just the first frame.
+        self.img = PilWrapper(PilImage.to_32(img.copy()))
         self.zoomed_bmp: wx.Bitmap | None = None
         self.delayed_bmp: tuple[int, int, bytes] | None = None
 

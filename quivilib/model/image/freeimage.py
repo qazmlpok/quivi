@@ -16,7 +16,7 @@ log = logging.getLogger('freeimage')
 
 class FreeImage(ImageHandlerBase):
     @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+    def OpenImage(cls, f: IO[bytes], path: str, delay=False) -> Any:
         try:
             fi.library.load().reset_last_error()
             img = Image.load_from_file(f, path)
@@ -31,7 +31,7 @@ class FreeImage(ImageHandlerBase):
                     img = img.convert_to_24_bits()
             else:
                 img = img.convert_to_32_bits()
-            return FreeImage(img, path, delay=delay)
+            return img
         except Exception as e:
             error_msg = _('Error while loading image')
             fi_error_msg = fi.library.load().last_error
@@ -41,6 +41,10 @@ class FreeImage(ImageHandlerBase):
                 error_msg += f'\n({str(e)})'
             add_exception_custom_msg(e, error_msg)
             raise
+    @classmethod
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+        img = cls.OpenImage(f, path, delay)
+        return FreeImage(img, path, delay=delay)
     def __init__(self, img: Image, path: str, delay=False) -> None:
         self.delay = delay
         self.img_path = path

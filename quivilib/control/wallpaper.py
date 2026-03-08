@@ -65,9 +65,9 @@ class WallpaperController(object):
         #can't use "with" because not every file-like object used here supports it
         img = None
         try:
-            #This does .img to get the lower-level interface (for FI, at least)
-            #I'm not certain if it should be using that or the upper one.
-            img = image.open_direct(f, path).getImg()
+            #This uses a direct PIL/FreeImage image object, not the ImageHandler interface
+            #or associated logic.
+            img = image.open_base_image(f, path)
         finally:
             f.close()
         if not img:
