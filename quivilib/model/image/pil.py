@@ -5,14 +5,14 @@ from typing import Any, IO, Self, List
 import wx
 from PIL import Image
 
-from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage
+from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
 logging.getLogger("PIL").setLevel(logging.ERROR)
 
 
-class PilWrapper():
+class PilWrapper(BaseImageProt):
     """ Wrapper class; used to store image data.
     Adds a few functions to be consistent with FreeImage.
     TODO: Add With support. Add an IsTemp to allow automatic disposal.
@@ -46,7 +46,7 @@ class PilWrapper():
     def getData(self) -> tuple[int, int, bytes]:
         b = self.img.tobytes()
         return (self.width, self.height, b)
-    def maybeConvert32bit(self) -> 'PilWrapper':
+    def maybeConvert32bit(self) -> Self:
         if self.img.mode != 'RGB':
             return PilWrapper(self.img.convert('RGB'))
         return self
@@ -104,7 +104,7 @@ class PilImage(ImageHandlerBase):
         return x / 256
 
     @staticmethod
-    def to_32(img: Image.Image):
+    def _to_32(img: Image.Image):
         """Does the conversion steps to ensure img is 32 bit RGB. May return the input."""
         if img.mode[0] == 'I':  # 16-bit precision
             img = img.point(PilImage.lookup, 'RGB')
@@ -113,11 +113,11 @@ class PilImage(ImageHandlerBase):
         return img
 
     @classmethod
-    def OpenImage(cls, f: IO[bytes], path: str, delay=False, convert_to_32=True) -> Any:
+    def OpenImage(cls, f: IO[bytes], path: str, delay=False, convert_to_32=True) -> Image.Image:
         img = Image.open(f)
 
         if convert_to_32:
-            img = PilImage.to_32(img)
+            img = PilImage._to_32(img)
         return img
     @classmethod
     def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
@@ -127,7 +127,7 @@ class PilImage(ImageHandlerBase):
         if (animated):
             return AnimatedPilImage(img, path, delay)
 
-        img = PilImage.to_32(img)
+        img = PilImage._to_32(img)
         return PilImage(img, path, delay=delay)
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         self.delay = delay
@@ -143,7 +143,7 @@ class PilImage(ImageHandlerBase):
         self.delayed_bmp: tuple[int, int, bytes]|None = None
         self.rotation = 0
 
-    def getImg(self) -> Any:
+    def getImg(self) -> BaseImageProt:
         return self.img
 
     def get_display_bmp(self):
@@ -244,7 +244,7 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         self.bmp: wx.Bitmap = frames[0]
 
         #Just the first frame.
-        self.img = PilWrapper(PilImage.to_32(img.copy()))
+        self.img = PilWrapper(PilImage._to_32(img.copy()))
         self.zoomed_bmp: wx.Bitmap | None = None
         self.delayed_bmp: tuple[int, int, bytes] | None = None
 

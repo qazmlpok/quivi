@@ -6,17 +6,17 @@ import wx
 import pyfreeimage as fi
 from pyfreeimage import Image
 from quivilib.i18n import _
-from quivilib.interface.imagehandler import ImageHandlerBase
+from quivilib.interface.imagehandler import ImageHandlerBase, BaseImageProt
 from quivilib.util import add_exception_custom_msg
 
-from typing import IO, Any, Self
+from typing import IO, Self
 
 log = logging.getLogger('freeimage')
 
 
 class FreeImage(ImageHandlerBase):
     @classmethod
-    def OpenImage(cls, f: IO[bytes], path: str, delay=False) -> Any:
+    def OpenImage(cls, f: IO[bytes], path: str, delay=False) -> Image:
         try:
             fi.library.load().reset_last_error()
             img = Image.load_from_file(f, path)
@@ -62,7 +62,7 @@ class FreeImage(ImageHandlerBase):
         self.zoomed_bmp = None
         self.rotation = 0
 
-    def getImg(self) -> Any:
+    def getImg(self) -> BaseImageProt:
         return self.img
 
     def get_display_bmp(self):

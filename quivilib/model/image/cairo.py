@@ -64,7 +64,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
             return self._height
         return self._width
 
-    def convert_to_cairo_surface(self, img):
+    def convert_to_cairo_surface(self, img: BaseImageProt|ImageHandler):
         """ Requests img data as bytes from the loaded image
         Loads that data in as a cairo surface. Should work with either image loader.
         """
@@ -89,8 +89,6 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         #The actual delay load is unncessary, but the flag is needed to know if this is waiting for actual display or not.
         self.delay = False
 
-    #TODO: This should trigger a paint event (i.e. canvas.changed), but there's no existing way to do this here
-    #and I don't think it's worth it to try and work around this.
     def _delayed_resize(self, width: int, height: int):
         if self.zoomed_width == width or self._original_width == width:
             return

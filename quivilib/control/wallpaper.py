@@ -11,7 +11,7 @@ import wx
 from pubsub import pub as Publisher
 
 from quivilib.i18n import _
-from quivilib.interface.imagehandler import ImageHandler
+from quivilib.interface.imagehandler import ImageHandler, BaseImageProt
 from quivilib.model import App
 from quivilib.model.canvas import WallpaperCanvas
 from quivilib.model.commandenum import FitSettings
@@ -63,7 +63,7 @@ class WallpaperController(object):
         path = self.model.container.items[item_index].path
         f = self.model.container.open_image(item_index)
         #can't use "with" because not every file-like object used here supports it
-        img = None
+        img: BaseImageProt
         try:
             #This uses a direct PIL/FreeImage image object, not the ImageHandler interface
             #or associated logic.
@@ -88,7 +88,7 @@ class WallpaperController(object):
         else:
             self.canvas_controller.zoom_out()
         
-    def resize_image(self, img, position, screen_width, screen_height):
+    def resize_image(self, img: BaseImageProt, position, screen_width, screen_height):
         zoom = self.canvas.zoom
         zoom *= self.preview_scale
         if zoom != 1:
@@ -99,7 +99,7 @@ class WallpaperController(object):
             img = img.rescale(width, height)
         return img
     
-    def move_image(self, img, position, color):
+    def move_image(self, img: BaseImageProt, position, color):
         left = int(self.canvas.left * self.preview_scale)
         top = int(self.canvas.top * self.preview_scale)
         if position == FitSettings.FIT_TILED:

@@ -1,10 +1,40 @@
 from collections.abc import Callable
-from typing import Protocol, Any, IO, Self, Tuple, List
+from typing import Protocol, IO, Self, Tuple, List
 
 import wx
 
 from quivilib.util import rescale_by_size_factor
 
+
+class BaseImageProt(Protocol):
+    """Protocol for an image, direct from PIL/FreeImage.
+    Or, rather, the wrapper classes used to standardize the interface."""
+    width: int
+    height: int
+
+    def save_bitmap(self, path: str):
+        pass
+
+    def rescale(self, width: int, height: int) -> Self:
+        pass
+
+    def AllocateNew(self, *args, **kwargs) -> Self:
+        pass
+
+    def maybeConvert32bit(self) -> Self:
+        pass
+
+    def convert_to_raw_bits(self, width_bytes=None) -> bytearray:
+        pass
+
+    def copy_region(self, left: int, top: int, right: int, bottom: int) -> Self:
+        pass
+
+    def paste(self, src, left: int, top: int, alpha: int = 256) -> None:
+        pass
+
+    def fill(self, color) -> None:
+        pass
 
 class ImageHandler(Protocol):
     """ Interface for a generic image.
@@ -15,7 +45,7 @@ class ImageHandler(Protocol):
         """Static constructor. Create a new image object."""
         pass
     @classmethod
-    def OpenImage(cls, f:IO[bytes], path:str, delay=False) -> Any:
+    def OpenImage(cls, f:IO[bytes], path:str, delay=False) -> BaseImageProt:
         """Create a new image of the appropriate type. This bypasses the ImageHandler stuff.
         Used for direct access to the image data."""
         pass
@@ -80,7 +110,7 @@ class ImageHandler(Protocol):
     @staticmethod
     def extensions() -> list[str]:
         pass
-    def getImg(self) -> Any:
+    def getImg(self) -> BaseImageProt:
         """Direct access to the underlying Image, which is likely a mistake."""
         pass
 

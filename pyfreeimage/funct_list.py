@@ -15,7 +15,270 @@ the specific language governing rights and limitations under the License.
 #Functions list that now acutally wrap. The third value are the return
 #type, if it exists, or if I'm able to translate from C code :)
 import ctypes as C
+from typing import Protocol, Any
+
 from . import constants as CO
+
+class FreeImageLibrary(Protocol):
+    # Init / Error routines
+    def Initialise(self, load_local_plugins_only=False) -> None:
+        pass
+
+    def DeInitialise(self) -> None:
+        pass
+
+    # Message output functions
+    def SetOutputMessage(self, omf) -> None:
+        pass
+
+    def OutputMessageProc(self, fif, fmt, **kwargs) -> None:
+        pass
+
+    # Allocate / Clone / Unload routines
+    def Allocate(self, width, height, bpp, red_mask=0, green_mask=0, blue_mask=0):
+        pass
+
+    def Clone(self, dib):
+        pass
+
+    def Unload(self, dib) -> None:
+        pass
+
+    # Load / Save
+    def Load(self, fif, filename, flags=0):
+        pass
+
+    def LoadFromHandle(self, fif, io, handle, flags=0):
+        pass
+
+    def Save(self, fif, dib, filename, flags=0) -> bool:
+        pass
+
+    def GetFIFCount(self) -> int:
+        pass
+
+    def GetFIFFromFormat(self, fmt: bytes) -> int:
+        pass
+
+    def GetFormatFromFIF(self, fif) -> bytes:
+        pass
+
+    def GetFIFExtensionList(self, fif) -> bytes:
+        pass
+
+    def GetFIFDescription(self, fif) -> bytes:
+        pass
+
+    def GetFIFFromFilename(self, filename: bytes) -> int:
+        pass
+
+    def FIFSupportsReading(self, fif: int) -> bool:
+        pass
+
+    def FIFSupportsWriting(self, fif: int) -> bool:
+        pass
+
+    def FIFSupportsExportBPP(self, fif: int, bpp: int) -> bool:
+        pass
+
+    def FIFSupportsExportType(self, fif: int, typ) -> bool:
+        pass
+
+    # Multi-page
+    def OpenMultiBitmap(self, fif, filename, create_new, read_only, keep_cache_in_memory=False, flags=0):
+        pass
+
+    def OpenMultiBitmapFromHandle(self, fif, io, handle, flags=0):
+        pass
+
+    def CloseMultiBitmap(self, bitmap, flags=0):
+        pass
+
+    def GetPageCount(self, bitmap):
+        pass
+
+    def LockPage(self, bitmap, page):
+        pass
+
+    def UnlockPage(self, bitmap, data, changed: bool):
+        pass
+
+    #
+    def GetImageType(self, dib) -> int:
+        # ret: enum FREE_IMAGE_FORMAT
+        pass
+
+    def GetFileType(self, filename, size=0) -> int:
+        # ret: enum FREE_IMAGE_FORMAT
+        pass
+
+    def GetFileTypeFromHandle(self, io, handle, size=0) -> int:
+        # ret: enum FREE_IMAGE_FORMAT
+        pass
+
+    def GetFileTypeFromMemory(self, stream, size=0) -> int:
+        # ret: enum FREE_IMAGE_FORMAT
+        pass
+
+    # Pixel access routines
+    def GetBits(self, dib):
+        pass
+
+    def GetScanLine(self, dib, scanline):
+        pass
+
+    # DIB info routines
+    def GetColorsUsed(self, dib) -> int:
+        pass
+
+    def GetBPP(self, dib) -> int:
+        pass
+
+    def GetWidth(self, dib) -> int:
+        pass
+
+    def GetHeight(self, dib) -> int:
+        pass
+
+    def GetLine(self, dib) -> int:
+        """Returns the width of the bitmap in bytes."""
+        pass
+
+    def GetPitch(self, dib) -> int:
+        """Returns the width of the bitmap in bytes, rounded to the next 32-bit boundary"""
+        pass
+
+    def GetDIBSize(self, dib) -> int:
+        pass
+
+    def GetMemorySize(self, dib):
+        pass
+
+    def GetPalette(self, dib):
+        pass
+
+    def GetInfoHeader(self, dib):
+        pass
+
+    def GetInfo(self, dib):
+        pass
+
+    def GetColorType(self, dib):
+        pass
+
+    def GetRedMask(self, dib):
+        pass
+
+    def GetGreenMask(self, dib):
+        pass
+
+    def GetBlueMask(self, dib):
+        pass
+
+    def GetTransparencyCount(self, dib):
+        pass
+
+    def GetTransparencyTable(self, dib):
+        pass
+
+    def IsTransparent(self, dib):
+        pass
+
+    # Smart conversion routines
+    def ConvertTo4Bits(self, dib):
+        pass
+
+    def ConvertTo8Bits(self, dib):
+        pass
+
+    def ConvertToGreyscale(self, dib):
+        pass
+
+    def ConvertTo16Bits555(self, dib):
+        pass
+
+    def ConvertTo16Bits565(self, dib):
+        pass
+
+    def ConvertTo24Bits(self, dib):
+        pass
+
+    def ConvertTo32Bits(self, dib):
+        pass
+
+    def ColorQuantize(self, dib, quantize):
+        pass
+
+    # Tags
+    def GetTagKey(self, lp_tag) -> bytes:
+        pass
+
+    def GetTagDescription(self, lp_tag) -> bytes:
+        pass
+
+    def GetTagId(self, lp_tag) -> int:
+        pass
+
+    def GetTagType(self, lp_tag) -> CO.FreeImageMdModel:
+        pass
+
+    def GetTagCount(self, lp_tag) -> int:
+        pass
+
+    def GetTagLength(self, lp_tag) -> int:
+        pass
+
+    def GetTagValue(self, lp_tag) -> Any:
+        pass
+
+    # Metadata
+    def FindFirstMetadata(self, model: CO.FreeImageMdModel, dib, lp_lp_tag) -> CO.FIMETADATA:
+        pass
+
+    def FindNextMetadata(self, lp_mdhandle, lp_lp_tag) -> bool:
+        pass
+
+    def FindCloseMetadata(self, lp_mdhandle) -> None:
+        pass
+
+    def GetMetadata(self, model: CO.FreeImageMdModel, dib, key: bytes, lp_lp_tag) -> bool:
+        pass
+
+    def GetMetadataCount(self, model: CO.FreeImageMdModel, dib) -> int:
+        pass
+
+    def TagToString(self, model: CO.FreeImageMdModel, lp_tag) -> bytes:
+        pass
+
+    # rotation and flipping, upsampling / downsampling
+    def Rotate(self, dib, angle, bkcolor=None):
+        pass
+
+    def FlipHorizontal(self, dib) -> bool:
+        pass
+
+    def FlipVertical(self, dib) -> bool:
+        pass
+
+    def Rescale(self, dib, width, height, filt):
+        pass
+
+    def MakeThumbnail(self, dib, max_pixel_size):
+        pass
+
+    # copy / paste / composite routines
+    def Copy(self, dib, left, top, right, bottom):
+        pass
+
+    def Paste(self, dst, src, left, top, alpha) -> bool:
+        pass
+
+    def Composite(self, fg, useFileBkg=False, appBkColor=None, bg=None):
+        pass
+
+    def FillBackground(self, dib, color, options=0) -> bool:
+        pass
+
 
 FUNCTION_LIST = ( 
     
