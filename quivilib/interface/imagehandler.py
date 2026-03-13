@@ -6,6 +6,10 @@ import wx
 from quivilib.util import rescale_by_size_factor
 
 
+#
+import time
+
+
 class BaseImageProt(Protocol):
     """Protocol for an image, direct from PIL/FreeImage.
     Or, rather, the wrapper classes used to standardize the interface."""
@@ -220,8 +224,14 @@ class AnimatedImage(ImageHandlerBase):
         self.handler = wx.EvtHandler()
         self.timer = wx.Timer(self.handler)
         self.handler.Bind(wx.EVT_TIMER, self._next_frame, self.timer)
+
+        self.sleep_offset = 2
+
         if __debug__:
+            self.loop_total = sum(self.delays)
             self.start = 0.0
+            self.planned_delay = 0#
+            self.real_delay = time.perf_counter()#
 
     def get_display_bmp(self):
         #Animated images just won't support zooming, at least unless cairo can be used.
@@ -235,30 +245,40 @@ class AnimatedImage(ImageHandlerBase):
             #-Jitter appears to be roughly 2% (with 20-30ms frame delays). The persistent timer is not actually performing better.
             self.timer.Start(self.delays[0])
         else:
-            self.timer.Start(self.delays[self.frame], True)
+            self.planned_delay = self.delays[self.frame]
+            self.real_delay = time.perf_counter()
+            self.timer.Start(self.delays[self.frame] - self.sleep_offset, True)
         if __debug__:
-            total = sum(self.delays)
-            import time
             self.start = time.perf_counter()
-            print(f"Expected loop duration: {total}ms.")
+            print(f"Expected loop duration: {self.loop_total}ms.")
 
     def stop_animation(self):
         self.timer.Stop()
 
     def _next_frame(self, event):
         """Advance the image to the next frame, or back to the first one. Fire the callback."""
+        stop = time.perf_counter()
+        if (self.sleep_offset != 0 and (stop - self.real_delay) * 1000 < self.planned_delay):
+            delay = (self.planned_delay - ((stop - self.real_delay) * 1000)) / 1000.0
+            print(f"Sleep an additional {delay}s")
+            time.sleep(delay)
+
         self.frame = (self.frame + 1) % len(self.frames)
         if __debug__ and self.frame == 0:
-            import time
             stop = time.perf_counter()
-            print(f"Loop complete. took: {(stop - self.start)*1000:0.1f}ms.")
+            print(f" ---> Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.1f}%")
             self.start = time.perf_counter()
 
         #changing self.frame will change the image paint() uses.
         self.img_change_cb(self)
         if not self.all_same:
+            stop = time.perf_counter()
             #TODO: Should this attempt to compensate for jitter at all?
-            self.timer.Start(self.delays[self.frame], True)
+            print(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.1f}%.")
+
+            self.planned_delay = self.delays[self.frame]
+            self.timer.Start(self.delays[self.frame] - self.sleep_offset, True)
+            self.real_delay = time.perf_counter()
 
     def duration_to_time(self, value: int) -> int:
         """
