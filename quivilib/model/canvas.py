@@ -1,15 +1,15 @@
-import traceback
 import logging as log
 import math
+import traceback
 from collections.abc import Callable
 from functools import partial
+
 from pubsub import pub as Publisher
 
 from quivilib.interface.canvasadapter import CanvasLike
+from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model.commandenum import FitSettings
 from quivilib.util import rescale_by_size_factor
-
-from quivilib.interface.imagehandler import ImageHandler, AnimatedImage
 
 #Number of scrolls at the top/bottom of the image needed to switch to horizontal scroll.
 #Maybe a timestamp is more appropriate?

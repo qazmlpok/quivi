@@ -1,16 +1,13 @@
-import sys
 import logging
+import sys
+import threading
+import time
 from collections.abc import Callable
 from typing import Protocol, IO, Self, Tuple, List
 
 import wx
 
 from quivilib.util import rescale_by_size_factor
-
-
-#
-import time
-import threading
 
 log = logging.getLogger('IMG')
 
