@@ -41,6 +41,7 @@ class CanvasController(object):
         Publisher.subscribe(self.on_canvas_zoom_point, f'{self.name}.zoom_at')
         Publisher.subscribe(self.on_canvas_mouse_event, f'{self.name}.mouse.event')
         Publisher.subscribe(self.on_canvas_mouse_motion, f'{self.name}.mouse.motion')
+        Publisher.subscribe(self.on_program_closed, 'program.closed')
         #Indicates that the user is moving the image
         self._moving_image = False
         #Indicates that the user has moved the image significantly 
@@ -83,7 +84,7 @@ class CanvasController(object):
             #can't use "with" because not every file-like object used here supports it
             try:
                 with DebugTimer(path.name):
-                    img = image.open(f, path)
+                    img = image.open_img(f, path)
                     self.canvas.load_img(img)
             finally:
                 f.close()
@@ -261,6 +262,10 @@ class CanvasController(object):
         
     def rotate_image(self, clockwise: int):
         self.canvas.rotate(clockwise)
+
+    def on_program_closed(self, *, settings_lst=None):
+        if self.canvas is not None:
+            self.canvas.shutdown_received()
 
 class WallpaperCanvasController(CanvasController):
     def __init__(self, name, canvas: WallpaperCanvas, view, settings: Settings = None):

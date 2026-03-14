@@ -6,17 +6,17 @@ import wx
 import pyfreeimage as fi
 from pyfreeimage import Image
 from quivilib.i18n import _
-from quivilib.interface.imagehandler import ImageHandlerBase
+from quivilib.interface.imagehandler import ImageHandlerBase, BaseImageProt
 from quivilib.util import add_exception_custom_msg
 
-from typing import IO, Any, Self
+from typing import IO, Self
 
 log = logging.getLogger('freeimage')
 
 
 class FreeImage(ImageHandlerBase):
     @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+    def OpenImage(cls, f: IO[bytes], path: str, delay=False) -> Image:
         try:
             fi.library.load().reset_last_error()
             img = Image.load_from_file(f, path)
@@ -31,7 +31,7 @@ class FreeImage(ImageHandlerBase):
                     img = img.convert_to_24_bits()
             else:
                 img = img.convert_to_32_bits()
-            return FreeImage(img, path, delay=delay)
+            return img
         except Exception as e:
             error_msg = _('Error while loading image')
             fi_error_msg = fi.library.load().last_error
@@ -41,6 +41,10 @@ class FreeImage(ImageHandlerBase):
                 error_msg += f'\n({str(e)})'
             add_exception_custom_msg(e, error_msg)
             raise
+    @classmethod
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+        img = cls.OpenImage(f, path, delay)
+        return FreeImage(img, path, delay=delay)
     def __init__(self, img: Image, path: str, delay=False) -> None:
         self.delay = delay
         self.img_path = path
@@ -58,8 +62,11 @@ class FreeImage(ImageHandlerBase):
         self.zoomed_bmp = None
         self.rotation = 0
 
-    def getImg(self) -> Any:
+    def getImg(self) -> BaseImageProt:
         return self.img
+
+    def get_display_bmp(self):
+        return self.zoomed_bmp if self.zoomed_bmp else self.bmp
 
     def copy(self) -> Self:
         return FreeImage(self.img, self.img_path)
@@ -117,13 +124,15 @@ class FreeImage(ImageHandlerBase):
             #hdc = dc.GetHDC()
             #https://discuss.wxpython.org/t/gethandle-example/30032/5 - GetHandle is not a drop-in replacement for GetHDC
             hdc = ctypes.c_ulong(dc.GetHandle()).value
+            #TODO: If animation is ever supported, this if will cause problems.
+            #Is this whole block even useful/necessary?
             img = self.zoomed_bmp if self.zoomed_bmp else self.img
             win32gui.SetStretchBltMode(hdc, win32con.COLORONCOLOR)
             gdi32.StretchDIBits(hdc, x, y, img.width, img.height,
                                 0, 0, img.width, img.height, img.bits, img.info,
                                 win32con.DIB_RGB_COLORS, win32con.SRCCOPY)
         else:
-            bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
+            bmp = self.get_display_bmp()
             dc.DrawBitmap(bmp, x, y)
 
     def copy_to_clipboard(self) -> None:
@@ -154,6 +163,3 @@ class FreeImage(ImageHandlerBase):
     @staticmethod
     def extensions():
         return FreeImage.ext_list
-
-    def close(self):
-        pass

@@ -39,6 +39,7 @@ the specific language governing rights and limitations under the License.
 #
 import ctypes as C
 import os, sys
+from enum import IntEnum
 
 from sys import platform as _platform
 
@@ -67,43 +68,55 @@ BYTE_P = C.POINTER(BYTE)
 Bitmap fif types
 """
 FIF_UNKNOWN = -1
-FIF_BMP		= 0
-FIF_ICO		= 1
-FIF_JPEG	= 2
-FIF_JNG		= 3
-FIF_KOALA	= 4
-FIF_LBM		= 5
+FIF_BMP	    = 0
+FIF_ICO	    = 1
+FIF_JPEG    = 2
+FIF_JNG	    = 3
+FIF_KOALA   = 4
+FIF_LBM	    = 5
 FIF_IFF = FIF_LBM
-FIF_MNG		= 6
-FIF_PBM		= 7
-FIF_PBMRAW	= 8
-FIF_PCD		= 9
-FIF_PCX		= 10
-FIF_PGM		= 11
-FIF_PGMRAW	= 12
-FIF_PNG		= 13
-FIF_PPM		= 14
-FIF_PPMRAW	= 15
-FIF_RAS		= 16
-FIF_TARGA	= 17
-FIF_TIFF	= 18
-FIF_WBMP	= 19
-FIF_PSD		= 20
-FIF_CUT		= 21
-FIF_XBM		= 22
-FIF_XPM		= 23
-FIF_DDS		= 24
+FIF_MNG	    = 6
+FIF_PBM	    = 7
+FIF_PBMRAW  = 8
+FIF_PCD	    = 9
+FIF_PCX	    = 10
+FIF_PGM	    = 11
+FIF_PGMRAW  = 12
+FIF_PNG	    = 13
+FIF_PPM	    = 14
+FIF_PPMRAW  = 15
+FIF_RAS	    = 16
+FIF_TARGA   = 17
+FIF_TIFF    = 18
+FIF_WBMP    = 19
+FIF_PSD	    = 20
+FIF_CUT	    = 21
+FIF_XBM	    = 22
+FIF_XPM	    = 23
+FIF_DDS	    = 24
 FIF_GIF     = 25
-FIF_HDR		= 26
-FIF_FAXG3	= 27
-FIF_SGI		= 28
+FIF_HDR	    = 26
+FIF_FAXG3   = 27
+FIF_SGI	    = 28
+FIF_EXR     = 29
+FIF_J2K     = 30
+FIF_JP2     = 31
+FIF_PFM     = 32
+FIF_PICT    = 33
+FIF_RAW     = 34
+FIF_WEBP    = 35
+FIF_JXR     = 36
+
 
 FIFTotype = { -1 : "UNKNOWN", 0  : "BMP", 1  : "ICO", 2  : "JPEG", 3  : "JNG",
         4  : "KOALA", 5 : "LBM | IFF", 6 : "MNG", 7  : "BPM", 8 : "PBMRAW",
         9  : "PCD", 10 : "PCX", 11 : "PGM", 12 : "PGMRAW", 13 : "PNG",
         14 : "PPM", 15 : "PPMRAW", 16 : "RAS", 17 : "TARGA", 18 : "TIFF",
         19 : "WBMP", 20 : "PSD", 21 : "CUT", 22 : "XBM", 23 : "XPM",
-        24 : "DDS", 25 : "GIF", 26 : "HDR", 27 : "FAXG3", 28 : "SGI"}
+        24 : "DDS", 25 : "GIF", 26 : "HDR", 27 : "FAXG3", 28 : "SGI",
+        29 : "EXR", 30 : "J2K", 31 : "JP2", 32 : "PFM", 33 : "PICT",
+        34 : "RAW", 35 : "WEBP", 36 : "JXR",
+}
 
 FIF_MUTLIPAGE = (FIF_TIFF, FIF_ICO, FIF_GIF)
 """
@@ -327,18 +340,31 @@ FIT_RGBF	= 11
 FIT_RGBAF	= 12
 
 #Metadata
-FIMD_NODATA		    = -1
-FIMD_COMMENTS		= 0
-FIMD_EXIF_MAIN		= 1
-FIMD_EXIF_EXIF		= 2
-FIMD_EXIF_GPS		= 3
-FIMD_EXIF_MAKERNOTE = 4
-FIMD_EXIF_INTEROP	= 5
-FIMD_IPTC	    	= 6
-FIMD_XMP		    = 7
-FIMD_GEOTIFF		= 8
-FIMD_ANIMATION		= 9
-FIMD_CUSTOM		    = 10
+class FreeImageMdModel(IntEnum):
+    FIMD_NODATA         = -1
+    FIMD_COMMENTS       = 0
+    FIMD_EXIF_MAIN      = 1
+    FIMD_EXIF_EXIF      = 2
+    FIMD_EXIF_GPS       = 3
+    FIMD_EXIF_MAKERNOTE = 4
+    FIMD_EXIF_INTEROP   = 5
+    FIMD_IPTC           = 6
+    FIMD_XMP            = 7
+    FIMD_GEOTIFF        = 8
+    FIMD_ANIMATION      = 9
+    FIMD_CUSTOM         = 10
+FIMD_NODATA            = FreeImageMdModel.FIMD_NODATA
+FIMD_COMMENTS          = FreeImageMdModel.FIMD_COMMENTS
+FIMD_EXIF_MAIN         = FreeImageMdModel.FIMD_EXIF_MAIN
+FIMD_EXIF_EXIF         = FreeImageMdModel.FIMD_EXIF_EXIF
+FIMD_EXIF_GPS          = FreeImageMdModel.FIMD_EXIF_GPS
+FIMD_EXIF_MAKERNOTE    = FreeImageMdModel.FIMD_EXIF_MAKERNOTE
+FIMD_EXIF_INTEROP      = FreeImageMdModel.FIMD_EXIF_INTEROP
+FIMD_IPTC              = FreeImageMdModel.FIMD_IPTC
+FIMD_XMP               = FreeImageMdModel.FIMD_XMP
+FIMD_GEOTIFF           = FreeImageMdModel.FIMD_GEOTIFF
+FIMD_ANIMATION         = FreeImageMdModel.FIMD_ANIMATION
+FIMD_CUSTOM            = FreeImageMdModel.FIMD_CUSTOM
 
 FIMD__METALIST = {"FIMD_NODATA": FIMD_NODATA, "FIMD_COMMENTS":FIMD_COMMENTS, 
                   "FIMD_EXIF_MAIN":FIMD_EXIF_MAIN, "FIMD_EXIF_EXIF": FIMD_EXIF_EXIF,
@@ -494,7 +520,7 @@ class FISize(object):
             return other.w == self.getWidth() and other.h == self.getHeight()
     
     def __hash__(self):
-        return hash(self.__W, self.__H)
+        return hash((self.__W, self.__H))
     
     w = property(getWidth)
     h = property(getHeight)

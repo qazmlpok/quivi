@@ -1,17 +1,15 @@
-import traceback
 import logging as log
 import math
+import traceback
 from collections.abc import Callable
 from functools import partial
+
 from pubsub import pub as Publisher
 
 from quivilib.interface.canvasadapter import CanvasLike
-from quivilib.model.commandenum import FitSettings
-from quivilib.model import image
-from quivilib.util import rescale_by_size_factor
-
 from quivilib.interface.imagehandler import ImageHandler
-
+from quivilib.model.commandenum import FitSettings
+from quivilib.util import rescale_by_size_factor
 
 #Number of scrolls at the top/bottom of the image needed to switch to horizontal scroll.
 #Maybe a timestamp is more appropriate?
@@ -29,6 +27,7 @@ class Canvas(object):
         self.sticky = 0
         self.view: CanvasLike = None
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
+        self.shutdown = False
 
     def _sendMessage(self, topic, **kwargs):
         Publisher.sendMessage(topic, **kwargs)
@@ -55,9 +54,15 @@ class Canvas(object):
         """
         def load_cb(who: ImageHandler):
             if who == self.img:
+                if self.shutdown:
+                    #Try to prevent a race condition with animated images firing the callback in the midst of program shutdown
+                    return
                 self._sendMessage(f'{self.name}.changed')
+        if self.img is not None:
+            self.img.close()
         self.img = img
         img.set_callback(load_cb)
+        img.start_animation()
         self._zoom = float(img.width) / float(img.base_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         if adjust:
@@ -67,6 +72,7 @@ class Canvas(object):
 
     def close_img(self):
         if self.img:
+            self.img.close()
             self.img = None
             self._sendMessage(f'{self.name}.changed')
             self._sendMessage(f'{self.name}.image.loaded', img=None)
@@ -315,6 +321,9 @@ class Canvas(object):
         #If I've zoomed in manually, I don't want this to reset the zoom.
         self.adjust()
         self._sendMessage(f'{self.name}.changed')
+
+    def shutdown_received(self):
+        self.shutdown = True
 
 class WallpaperCanvas(Canvas):
     """ Special canvas used for the wallpaper dialog. This is completely separate from the display canvas

@@ -50,7 +50,7 @@ class ImageCacheLoaded(ImageCacheLoadRequest):
         #can't use "with" because not every file-like object used here supports it
         try:
             with DebugTimer(f'Cache: {self.path.name}'):
-                img = image.open(f, self.path, delay=True)
+                img = image.open_img(f, self.path, delay=True)
         finally:
             f.close()
         self.img: ImageHandler = img

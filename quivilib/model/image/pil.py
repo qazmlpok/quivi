@@ -1,18 +1,18 @@
 import logging
 from collections.abc import Callable
-from typing import Any, IO, Self
+from typing import Any, IO, Self, List
 
 import wx
 from PIL import Image
 
-from quivilib.interface.imagehandler import ImageHandlerBase
+from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
 logging.getLogger("PIL").setLevel(logging.ERROR)
 
 
-class PilWrapper():
+class PilWrapper(BaseImageProt):
     """ Wrapper class; used to store image data.
     Adds a few functions to be consistent with FreeImage.
     TODO: Add With support. Add an IsTemp to allow automatic disposal.
@@ -46,7 +46,7 @@ class PilWrapper():
     def getData(self) -> tuple[int, int, bytes]:
         b = self.img.tobytes()
         return (self.width, self.height, b)
-    def maybeConvert32bit(self) -> 'PilWrapper':
+    def maybeConvert32bit(self) -> Self:
         if self.img.mode != 'RGB':
             return PilWrapper(self.img.convert('RGB'))
         return self
@@ -95,21 +95,39 @@ class PilWrapper():
             del self.img
 
 class PilImage(ImageHandlerBase):
-    @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
-        #Used to convert 16-bit int precision images to 8-bit.
-        #PIL's behavior is to truncate, which is not useful.
-        #Remove this if that ever changes. It's been reported, and it sounds like they
-        #stopped truncating, but it's still doing it.
-        def lookup(x):
-            return x / 256
+    # Used to convert 16-bit int precision images to 8-bit.
+    # PIL's behavior is to truncate, which is not useful.
+    # Remove this if that ever changes. It's been reported, and it sounds like they
+    # stopped truncating, but it's still doing it.
+    @staticmethod
+    def lookup(x):
+        return x / 256
 
-        img = Image.open(f)
-        if img.mode[0] == 'I':    #16-bit precision
-            img = img.point(lookup, 'RGB')
+    @staticmethod
+    def _to_32(img: Image.Image):
+        """Does the conversion steps to ensure img is 32 bit RGB. May return the input."""
+        if img.mode[0] == 'I':  # 16-bit precision
+            img = img.point(PilImage.lookup, 'RGB')
         elif img.mode != 'RGB':
             img = img.convert('RGB')
+        return img
 
+    @classmethod
+    def OpenImage(cls, f: IO[bytes], path: str, delay=False, convert_to_32=True) -> Image.Image:
+        img = Image.open(f)
+
+        if convert_to_32:
+            img = PilImage._to_32(img)
+        return img
+    @classmethod
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+        img = cls.OpenImage(f, path, delay, convert_to_32=False)
+        #get_attr is mandatory because is_animated is only defined for plugins that support animation.
+        animated = getattr(img, "is_animated", False)
+        if (animated):
+            return AnimatedPilImage(img, path, delay)
+
+        img = PilImage._to_32(img)
         return PilImage(img, path, delay=delay)
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         self.delay = delay
@@ -125,8 +143,11 @@ class PilImage(ImageHandlerBase):
         self.delayed_bmp: tuple[int, int, bytes]|None = None
         self.rotation = 0
 
-    def getImg(self) -> Any:
+    def getImg(self) -> BaseImageProt:
         return self.img
+
+    def get_display_bmp(self):
+        return self.zoomed_bmp if self.zoomed_bmp else self.bmp
 
     def copy(self) -> Self:
         return PilImage(self.img.img, self.img_path)
@@ -142,7 +163,7 @@ class PilImage(ImageHandlerBase):
             self.delayed_bmp = None
         self.delay = False
     
-    def _img_to_bmp(self, img):
+    def _img_to_bmp(self, img: Image.Image|PilWrapper):
         s = img.tobytes()
         if self.delay:
             return s
@@ -177,7 +198,7 @@ class PilImage(ImageHandlerBase):
         if self.delay:
             log.error("paint called but image was not loaded")
             return
-        bmp = self.zoomed_bmp if self.zoomed_bmp else self.bmp
+        bmp = self.get_display_bmp()
         dc.DrawBitmap(bmp, x, y)
 
     def create_thumbnail(self, width: int, height: int, delay: bool) -> wx.Bitmap|Callable[[],wx.Bitmap]:
@@ -196,5 +217,55 @@ class PilImage(ImageHandlerBase):
     def extensions():
         return PilImage.ext_list
 
-    def close(self) -> None:
+class AnimatedPilImage(PilImage, AnimatedImage):
+    def __init__(self, img: Image.Image, path: str, delay=False) -> None:
+        # This doesn't call PilImage init to avoid some double bmp use.
+        self.delay = delay
+        self.img_path = path
+        self._original_width = self.width = img.size[0]
+        self._original_height = self.height = img.size[1]
+        self.rotation = 0
+
+        #This is number of times it should loop, not a bool.
+        loop = img.info.get('loop', 0)
+        count = img.n_frames
+        frame_delays = [0] * count
+        frames: List[wx.Bitmap] = [None] * count
+        #Get the img and delay data. This requires using img.seek to select each individual frame.
+        for i in range(count):
+            img.seek(i)
+            frame_delays[i] = self.duration_to_time(img.info.get('duration', 100))
+            frame = img
+            if img.mode != 'RGB':
+                frame = frame.convert('RGB')
+            frames[i] = self._img_to_bmp(frame)
+        img.seek(0)
+        AnimatedImage.__init__(self, frames, frame_delays)
+        self.bmp: wx.Bitmap = frames[0]
+
+        #Just the first frame.
+        self.img = PilWrapper(PilImage._to_32(img.copy()))
+        self.zoomed_bmp: wx.Bitmap | None = None
+        self.delayed_bmp: tuple[int, int, bytes] | None = None
+
+    def delayed_load(self) -> None:
+        if not self.delay:
+            log.debug("delayed_load was called but delay was off")
+            return
+
+        #TODO: Don't re-use this. Split into two lists...
+        for i in range(len(self.frames)):
+            self.frames[i] = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.frames[i])
+
+        self.bmp = self.frames[0]
+        self.delay = False
+
+    def get_display_bmp(self):
+        #Animated images just won't support zooming, at least unless cairo can be used.
+        return AnimatedImage.get_display_bmp(self)
+
+    #Disallow
+    def resize(self, width: int, height: int) -> None:
+        pass
+    def _do_rotate(self, clockwise: int) -> None:
         pass

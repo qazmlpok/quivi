@@ -45,7 +45,13 @@ The 64-bit executable prevents issues with loading large files. The upgrade to P
 - New feature: Bindable context menu. This can be assigned as any other shortcut to a mouse key, e.g. right click or middle click.
     - The menu itself is not customizable, but will include most navigation/display options that may be useful when in full screen mode.
     - This resulted in a significant backend rework of the menu system to enable nested menus. For now, the main menu bar is still exclusively "flat".
-- The delete option in the menu can now delete zip (or rar) archive files. The delete option in the menu will either delete individual images (when viewing a folder) or the entire archive (when viewing an archive). Separate bindable commands exist that will only attempt to delete one type, e.g. for backwards compatibility. 
+- The delete option in the menu can now delete zip (or rar) archive files. The delete option in the menu will either delete individual images (when viewing a folder) or the entire archive (when viewing an archive). Separate bindable commands exist that will only attempt to delete one type, e.g. for backwards compatibility.
+- Added support for animated GIFs. Other animated formats should also work (e.g. webp) but haven't been tested.
+    - Support is limited to PIL. FreeImage does (should) support animation, but the FreeImage project is no longer active so I'm considering replacing the library.
+    - Zooming is not enabled. Images are always 100%, regardless of what the status bar says. I'll revisit this later to see if Cairo can be used for fast zooming on an animated image.
+    - GIFs can specify a maximum number of times to play the animation. This is not supported - images will always play endlessly.
+    - Windows uses some tricks to work around inaccurate sleep/timer issues. I believe I have a good implementation in place.
+    - This is less tested than most other features simply because most manga are not animated.
 
 
 # Removed features

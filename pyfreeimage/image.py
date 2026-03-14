@@ -4,9 +4,10 @@ import logging as log
 from pyfreeimage import library
 import pyfreeimage.constants as CO
 from pyfreeimage.buffer import FileIO
+from quivilib.interface.imagehandler import BaseImageProt
 
 
-class Image(object):
+class Image(BaseImageProt):
     @classmethod
     def allocate(cls, width, height, bpp, red_mask=0, green_mask=0, blue_mask=0):
         lib = library.load()
