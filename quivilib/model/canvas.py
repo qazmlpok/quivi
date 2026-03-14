@@ -27,6 +27,7 @@ class Canvas(object):
         self.sticky = 0
         self.view: CanvasLike = None
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
+        self.shutdown = False
 
     def _sendMessage(self, topic, **kwargs):
         Publisher.sendMessage(topic, **kwargs)
@@ -53,9 +54,8 @@ class Canvas(object):
         """
         def load_cb(who: ImageHandler):
             if who == self.img:
-                if isinstance(self.img, AnimatedImage) and not self.img.animating:
-                    #Try to prevent a race condition with animated images. Not 100% certain it's still needed, as the class itself also checks this.
-                    #This will cause problems if a non-animating gif needs to fire the callback (cairo zoom while paused, perhaps)
+                if self.shutdown:
+                    #Try to prevent a race condition with animated images firing the callback in the midst of program shutdown
                     return
                 self._sendMessage(f'{self.name}.changed')
         if self.img is not None:
@@ -321,6 +321,9 @@ class Canvas(object):
         #If I've zoomed in manually, I don't want this to reset the zoom.
         self.adjust()
         self._sendMessage(f'{self.name}.changed')
+
+    def shutdown_received(self):
+        self.shutdown = True
 
 class WallpaperCanvas(Canvas):
     """ Special canvas used for the wallpaper dialog. This is completely separate from the display canvas

@@ -202,6 +202,10 @@ class ImageHandlerBase(ImageHandler):
     def close(self) -> None:
         pass
 
+
+def clamp(minvalue, value, maxvalue):
+    return max(minvalue, min(value, maxvalue))
+
 #Excessive obnoxious debug messages.
 FRAME_DEBUG = False
 #True - use a separate thread and sleep. False - use wx.Timer
@@ -222,6 +226,7 @@ class AnimatedImage(ImageHandlerBase):
         self.frame = 0
         self.frames = frames
         self.delays = delays
+        self.targets: list[float] = delays.copy()
         self.max_loops = loops
 
         self.animating = False
@@ -246,11 +251,21 @@ class AnimatedImage(ImageHandlerBase):
         #Animated images just won't support zooming, at least unless cairo can be used.
         return self.frames[self.frame]
 
+    def calculate_target_timestamps(self):
+        """Populates `self.targets` with the expected timestamps for each frame. Used to compensate for jitter and execution time.
+        Needs to be called time the loop resets"""
+        start = time.perf_counter()
+        _sum = 0
+        for i in (range(len(self.delays))):
+            _sum += self.delays[i]
+            self.targets[i] = start * 1000 + _sum
+
     def start_animation(self):
         """Start the animation. This must be called on the main thread for wx.Timer to work."""
         self.frame = 0
         self.planned_delay = self.delays[self.frame]
         self.real_delay = time.perf_counter()
+        self.calculate_target_timestamps()
         if USE_THREAD:
             print("Starting background thread.")
             self.thread.start()
@@ -285,6 +300,7 @@ class AnimatedImage(ImageHandlerBase):
                 #Thread should be joined.
                 return
             #Times in s.
+            print(f"Sleep for: {next_delay / 1000.0}")
             time.sleep(next_delay / 1000.0)
 
     def _next_frame(self) -> int|None:
@@ -305,6 +321,8 @@ class AnimatedImage(ImageHandlerBase):
             stop = time.perf_counter()
             print(f" ---> Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}%")
             self.start = time.perf_counter()
+        if self.frame == 0:
+            self.calculate_target_timestamps()
 
         #changing self.frame will change the image paint() uses.
         self.img_change_cb(self)
@@ -314,12 +332,13 @@ class AnimatedImage(ImageHandlerBase):
             print(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.2f}%.")
 
         self.planned_delay = self.delays[self.frame]
-
         self.real_delay = time.perf_counter()
 
-        #TODO: The return value should take actual processing time into account and prior jitter.
-        #But the processing time is nearly 0, and if the clock isn't reliable, compensating isn't perfect.
-        return self.delays[self.frame]
+        base_delay = self.delays[self.frame]
+        real_delay = (self.targets[self.frame] - time.perf_counter() * 1000)
+        #Try to sleep for the adjusted time period, but don't adjust more than 5ms in either direction.
+        return clamp(base_delay - 5, real_delay, base_delay + 5)
+        #return base_delay
 
     def duration_to_time(self, value: int) -> int:
         """
