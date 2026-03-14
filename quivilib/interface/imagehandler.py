@@ -1,3 +1,5 @@
+import sys
+import logging
 from collections.abc import Callable
 from typing import Protocol, IO, Self, Tuple, List
 
@@ -9,6 +11,8 @@ from quivilib.util import rescale_by_size_factor
 #
 import time
 import threading
+
+log = logging.getLogger('IMG')
 
 
 class BaseImageProt(Protocol):
@@ -210,8 +214,14 @@ def clamp(minvalue, value, maxvalue):
 FRAME_DEBUG = False
 #True - use a separate thread and sleep. False - use wx.Timer
 USE_THREAD = True
-#If non-zero and using wx.Timer, set the timer for this many fewer ms and sleep to make up the difference.
-SLEEP_OFFSET = 2
+#If non-zero, set the timer for this many fewer ms and sleep to make up the difference.
+SLEEP_OFFSET = 0
+#If true and the expected time hasn't arrived, spam sleep(0).
+SLEEP_0 = False
+if sys.platform == 'win32':
+    #sleep inaccuracy is usually around 4ms but I've seen higher values.
+    SLEEP_OFFSET = 7
+    SLEEP_0 = True
 class AnimatedImage(ImageHandlerBase):
     """Base class for an animated image. Manages a timer to handle the animation, using the callback function to report changes.
     delays should be a list of duration in ms (GIF stores the value in cs)
@@ -267,19 +277,19 @@ class AnimatedImage(ImageHandlerBase):
         self.real_delay = time.perf_counter()
         self.calculate_target_timestamps()
         if USE_THREAD:
-            print("Starting background thread.")
+            log.debug("Starting background thread.")
             self.thread.start()
         else:
             self.timer.Start(self.delays[self.frame] - SLEEP_OFFSET, True)
         if __debug__:
             self.start = time.perf_counter()
-            print(f"Expected loop duration: {self.loop_total}ms.")
+            log.debug(f"Expected loop duration: {self.loop_total}ms.")
         self.animating = True
 
     def stop_animation(self):
         self.animating = False
         if USE_THREAD:
-            print("Joining background thread.")
+            log.debug("Joining background thread.")
             self.thread.join()
         else:
             self.timer.Stop()
@@ -297,10 +307,8 @@ class AnimatedImage(ImageHandlerBase):
         while True:
             next_delay = self._next_frame()
             if next_delay is None:
-                #Thread should be joined.
                 return
             #Times in s.
-            print(f"Sleep for: {next_delay / 1000.0}")
             time.sleep(next_delay / 1000.0)
 
     def _next_frame(self) -> int|None:
@@ -310,16 +318,15 @@ class AnimatedImage(ImageHandlerBase):
         if not self.animating:
             return None
         stop = time.perf_counter()
-        if (SLEEP_OFFSET != 0 and (stop - self.real_delay) * 1000 < self.planned_delay):
-            delay = (self.planned_delay - ((stop - self.real_delay) * 1000)) / 1000.0
-            if FRAME_DEBUG:
-                print(f"Sleep an additional {delay}s")
-            time.sleep(delay)
+        if SLEEP_0 and time.perf_counter() * 1000 < self.targets[self.frame]:
+            target = self.targets[self.frame] / 1000.0
+            while (time.perf_counter() < target):
+                time.sleep(0)
 
         self.frame = (self.frame + 1) % len(self.frames)
         if __debug__ and self.frame == 0:
             stop = time.perf_counter()
-            print(f" ---> Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}%")
+            log.debug(f"GIF Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}%")
             self.start = time.perf_counter()
         if self.frame == 0:
             self.calculate_target_timestamps()
@@ -329,7 +336,7 @@ class AnimatedImage(ImageHandlerBase):
         stop = time.perf_counter()
         #TODO: Should this attempt to compensate for jitter at all?
         if FRAME_DEBUG:
-            print(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.2f}%.")
+            log.debug(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.2f}%.")
 
         self.planned_delay = self.delays[self.frame]
         self.real_delay = time.perf_counter()
@@ -337,8 +344,11 @@ class AnimatedImage(ImageHandlerBase):
         base_delay = self.delays[self.frame]
         real_delay = (self.targets[self.frame] - time.perf_counter() * 1000)
         #Try to sleep for the adjusted time period, but don't adjust more than 5ms in either direction.
-        return clamp(base_delay - 5, real_delay, base_delay + 5)
-        #return base_delay
+        ret = clamp(base_delay - 5, real_delay, base_delay + 5)
+        #ret = base_delay
+        if SLEEP_0:
+            return ret - SLEEP_OFFSET
+        return ret
 
     def duration_to_time(self, value: int) -> int:
         """
