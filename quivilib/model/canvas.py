@@ -7,11 +7,9 @@ from pubsub import pub as Publisher
 
 from quivilib.interface.canvasadapter import CanvasLike
 from quivilib.model.commandenum import FitSettings
-from quivilib.model import image
 from quivilib.util import rescale_by_size_factor
 
-from quivilib.interface.imagehandler import ImageHandler
-
+from quivilib.interface.imagehandler import ImageHandler, AnimatedImage
 
 #Number of scrolls at the top/bottom of the image needed to switch to horizontal scroll.
 #Maybe a timestamp is more appropriate?
@@ -55,6 +53,10 @@ class Canvas(object):
         """
         def load_cb(who: ImageHandler):
             if who == self.img:
+                if isinstance(self.img, AnimatedImage) and not self.img.animating:
+                    #Try to prevent a race condition with animated images. Not 100% certain it's still needed, as the class itself also checks this.
+                    #This will cause problems if a non-animating gif needs to fire the callback (cairo zoom while paused, perhaps)
+                    return
                 self._sendMessage(f'{self.name}.changed')
         if self.img is not None:
             self.img.close()

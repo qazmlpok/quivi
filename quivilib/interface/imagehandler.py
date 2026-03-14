@@ -8,6 +8,7 @@ from quivilib.util import rescale_by_size_factor
 
 #
 import time
+import threading
 
 
 class BaseImageProt(Protocol):
@@ -201,6 +202,12 @@ class ImageHandlerBase(ImageHandler):
     def close(self) -> None:
         pass
 
+#Excessive obnoxious debug messages.
+FRAME_DEBUG = False
+#True - use a separate thread and sleep. False - use wx.Timer
+USE_THREAD = True
+#If non-zero and using wx.Timer, set the timer for this many fewer ms and sleep to make up the difference.
+SLEEP_OFFSET = 2
 class AnimatedImage(ImageHandlerBase):
     """Base class for an animated image. Manages a timer to handle the animation, using the callback function to report changes.
     delays should be a list of duration in ms (GIF stores the value in cs)
@@ -211,21 +218,23 @@ class AnimatedImage(ImageHandlerBase):
         if len(frames) < 2:
             #Caller should guard against this. I'm sure it's possible to create a 1-frame animated gif.
             raise Exception("Animated image must have at least 2 frames.")
-        #Frames:
-        #For direct rendering, I need wx.Bitmaps.
-        #For cairo, I need something that implements convert_to_raw_bits (freeimage does this through the dll. PIL uses a wrapper)
 
         self.frame = 0
         self.frames = frames
         self.delays = delays
         self.max_loops = loops
 
-        self.all_same = all(x == delays[0] for x in delays)
-        self.handler = wx.EvtHandler()
-        self.timer = wx.Timer(self.handler)
-        self.handler.Bind(wx.EVT_TIMER, self._next_frame, self.timer)
+        self.animating = False
 
-        self.sleep_offset = 2
+        self.timer = None
+        self.thread = None
+
+        if USE_THREAD:
+            self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
+        else:
+            self.handler = wx.EvtHandler()
+            self.timer = wx.Timer(self.handler)
+            self.handler.Bind(wx.EVT_TIMER, self._next_frame_timer, self.timer)
 
         if __debug__:
             self.loop_total = sum(self.delays)
@@ -240,45 +249,77 @@ class AnimatedImage(ImageHandlerBase):
     def start_animation(self):
         """Start the animation. This must be called on the main thread for wx.Timer to work."""
         self.frame = 0
-        if self.all_same:
-            #Assumption: a repeating timer will have less jitter than firing off multiple OneShot timers.
-            #-Jitter appears to be roughly 2% (with 20-30ms frame delays). The persistent timer is not actually performing better.
-            self.timer.Start(self.delays[0])
+        self.planned_delay = self.delays[self.frame]
+        self.real_delay = time.perf_counter()
+        if USE_THREAD:
+            print("Starting background thread.")
+            self.thread.start()
         else:
-            self.planned_delay = self.delays[self.frame]
-            self.real_delay = time.perf_counter()
-            self.timer.Start(self.delays[self.frame] - self.sleep_offset, True)
+            self.timer.Start(self.delays[self.frame] - SLEEP_OFFSET, True)
         if __debug__:
             self.start = time.perf_counter()
             print(f"Expected loop duration: {self.loop_total}ms.")
+        self.animating = True
 
     def stop_animation(self):
-        self.timer.Stop()
+        self.animating = False
+        if USE_THREAD:
+            print("Joining background thread.")
+            self.thread.join()
+        else:
+            self.timer.Stop()
 
-    def _next_frame(self, event):
-        """Advance the image to the next frame, or back to the first one. Fire the callback."""
+    def _next_frame_timer(self, event):
+        next_delay = self._next_frame()
+        if next_delay is None:
+            return
+        #Times in ms.
+        self.timer.Start(next_delay - SLEEP_OFFSET, True)
+    def _next_frame_thread(self):
+        #In practice, self.frame will always be 0 here.
+        first_delay = self.delays[self.frame]
+        time.sleep(first_delay / 1000.0)
+        while True:
+            next_delay = self._next_frame()
+            if next_delay is None:
+                #Thread should be joined.
+                return
+            #Times in s.
+            time.sleep(next_delay / 1000.0)
+
+    def _next_frame(self) -> int|None:
+        """Shared logic for advancing to the next frame of an animation.
+        Returns the number of ms to delay for the next frame. Modifies state:
+        Advance the image to the next frame, or back to the first one. Fire the callback."""
+        if not self.animating:
+            return None
         stop = time.perf_counter()
-        if (self.sleep_offset != 0 and (stop - self.real_delay) * 1000 < self.planned_delay):
+        if (SLEEP_OFFSET != 0 and (stop - self.real_delay) * 1000 < self.planned_delay):
             delay = (self.planned_delay - ((stop - self.real_delay) * 1000)) / 1000.0
-            print(f"Sleep an additional {delay}s")
+            if FRAME_DEBUG:
+                print(f"Sleep an additional {delay}s")
             time.sleep(delay)
 
         self.frame = (self.frame + 1) % len(self.frames)
         if __debug__ and self.frame == 0:
             stop = time.perf_counter()
-            print(f" ---> Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.1f}%")
+            print(f" ---> Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}%")
             self.start = time.perf_counter()
 
         #changing self.frame will change the image paint() uses.
         self.img_change_cb(self)
-        if not self.all_same:
-            stop = time.perf_counter()
-            #TODO: Should this attempt to compensate for jitter at all?
-            print(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.1f}%.")
+        stop = time.perf_counter()
+        #TODO: Should this attempt to compensate for jitter at all?
+        if FRAME_DEBUG:
+            print(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.2f}%.")
 
-            self.planned_delay = self.delays[self.frame]
-            self.timer.Start(self.delays[self.frame] - self.sleep_offset, True)
-            self.real_delay = time.perf_counter()
+        self.planned_delay = self.delays[self.frame]
+
+        self.real_delay = time.perf_counter()
+
+        #TODO: The return value should take actual processing time into account and prior jitter.
+        #But the processing time is nearly 0, and if the clock isn't reliable, compensating isn't perfect.
+        return self.delays[self.frame]
 
     def duration_to_time(self, value: int) -> int:
         """
