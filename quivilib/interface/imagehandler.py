@@ -251,8 +251,8 @@ class AnimatedImage(ImageHandlerBase):
         if __debug__:
             self.loop_total = sum(self.delays)
             self.start = 0.0
-            self.planned_delay = 0#
-            self.real_delay = time.perf_counter()#
+            self.planned_delay = 0
+            self.real_delay = time.perf_counter()
 
     def get_display_bmp(self):
         #Animated images just won't support zooming, at least unless cairo can be used.
@@ -270,8 +270,6 @@ class AnimatedImage(ImageHandlerBase):
     def start_animation(self):
         """Start the animation. This must be called on the main thread for wx.Timer to work."""
         self.frame = 0
-        self.planned_delay = self.delays[self.frame]
-        self.real_delay = time.perf_counter()
         self.calculate_target_timestamps()
         if USE_THREAD:
             log.debug("Starting background thread.")
@@ -279,7 +277,9 @@ class AnimatedImage(ImageHandlerBase):
         else:
             self.timer.Start(self.delays[self.frame] - SLEEP_OFFSET, True)
         if __debug__:
+            self.planned_delay = self.delays[self.frame]
             self.start = time.perf_counter()
+            self.real_delay = time.perf_counter()
             log.debug(f"Expected loop duration: {self.loop_total}ms.")
         self.animating = True
 
@@ -331,12 +331,10 @@ class AnimatedImage(ImageHandlerBase):
         #changing self.frame will change the image paint() uses.
         self.img_change_cb(self)
         stop = time.perf_counter()
-        #TODO: Should this attempt to compensate for jitter at all?
-        if FRAME_DEBUG:
+        if __debug__ and FRAME_DEBUG:
             log.debug(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.2f}%.")
-
-        self.planned_delay = self.delays[self.frame]
-        self.real_delay = time.perf_counter()
+            self.planned_delay = self.delays[self.frame]
+            self.real_delay = time.perf_counter()
 
         base_delay = self.delays[self.frame]
         real_delay = (self.targets[self.frame] - time.perf_counter() * 1000)
@@ -351,7 +349,7 @@ class AnimatedImage(ImageHandlerBase):
         """
         GIF encodes per-frame delays in increments of 0.01s (i.e. 10ms or 1cs). Browsers will not perfectly obey this.
         In practice it looks like too-small values are moved up to 100ms, so a delay of "1" is slower than "2".
-        This is for GIF specifically; it's possible APNG/WEBM have different logic.
+        This is for GIF specifically; it's possible APNG/WebP have different logic.
         In theory this is browser-specific but every browser I tested had the same behavior.
         Ref: https://www.tumblr.com/pharanpostsartndevtrivia/126581964275/how-is-an-animated-gifs-time-delay-between
         NOTE - input time needs to be in ms. PIL at least standardizes this.

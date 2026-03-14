@@ -49,6 +49,7 @@ The 64-bit executable prevents issues with loading large files. The upgrade to P
 - Added support for animated GIFs. Other animated formats should also work (e.g. webp) but haven't been tested.
     - Support is limited to PIL. FreeImage does (should) support animation, but the FreeImage project is no longer active so I'm considering replacing the library.
     - Zooming is not enabled. Images are always 100%, regardless of what the status bar says. I'll revisit this later to see if Cairo can be used for fast zooming on an animated image.
+    - GIFs can specify a maximum number of times to play the animation. This is not supported - images will always play endlessly.
     - Windows uses some tricks to work around inaccurate sleep/timer issues. I believe I have a good implementation in place.
     - This is less tested than most other features simply because most manga are not animated.
 

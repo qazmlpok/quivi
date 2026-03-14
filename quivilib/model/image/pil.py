@@ -226,7 +226,7 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         self._original_height = self.height = img.size[1]
         self.rotation = 0
 
-        #This is number of times it should loop, not a bool. Oops.
+        #This is number of times it should loop, not a bool.
         loop = img.info.get('loop', 0)
         count = img.n_frames
         frame_delays = [0] * count
@@ -263,8 +263,6 @@ class AnimatedPilImage(PilImage, AnimatedImage):
     def get_display_bmp(self):
         #Animated images just won't support zooming, at least unless cairo can be used.
         return AnimatedImage.get_display_bmp(self)
-
-    #Thumbnail - use frame[0].
 
     #Disallow
     def resize(self, width: int, height: int) -> None:
