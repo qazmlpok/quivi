@@ -1,26 +1,26 @@
 import logging
 import threading
 
-from pubsub import pub as Publisher
 import wx
-from wx.lib.agw import thumbnailctrl as tc
 import wx.lib.agw.scrolledthumbnail as st
+from pubsub import pub as Publisher
+from wx.lib.agw import thumbnailctrl as tc
 from wx.lib.agw.thumbnailctrl import (
     THUMB_OUTLINE_FULL, THUMB_OUTLINE_IMAGE, THUMB_OUTLINE_NONE,
     THUMB_OUTLINE_RECT)
 
-from quivilib.model import image
-from quivilib.model.container import Item, ItemType
 from quivilib import util
-from quivilib.util import error_handler, DebugTimer
 from quivilib.gui.file_list_view.base import FileListViewBase
+from quivilib.model import image
+from quivilib.model.container import ItemType
+from quivilib.util import error_handler, DebugTimer
 
 log = logging.getLogger('thumb')
 
 OldScrolledThumbnail = None
 
 if __debug__:
-    import time
+    pass
 
 def _handle_error(exception, args, kwargs):
     self = args[0]

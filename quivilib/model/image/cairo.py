@@ -1,6 +1,4 @@
-import threading
 import math
-import logging
 
 #wxcairo must be imported before wx. Do not change the import order.
 from wx.lib import wxcairo

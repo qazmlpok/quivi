@@ -1,17 +1,12 @@
-
-
-import unittest
 import sys
+import unittest
 
 from quivilib.i18n import _
-from quivilib.model.container.root import RootContainer
 from quivilib.model.container import SortOrder
-from quivilib.model.container.directory import DirectoryContainer
-from pathlib import Path
+from quivilib.model.container.root import RootContainer
 
 
-
-class Test(unittest.TestCase):    
+class Test(unittest.TestCase):
     def setUp(self):
         if sys.platform != 'win32':
             self.dir = None
