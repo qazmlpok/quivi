@@ -12,7 +12,7 @@ from quivilib import util
 
 
 class WallpaperDialog(wx.Dialog):
-    def __init__(self, parent, choices, background_color):
+    def __init__(self, parent: wx.Window, choices: list[str], background_color: wx.Colour):
         # begin wxGlade: WallpaperDialog.__init__
         wx.Dialog.__init__(self, parent=parent)
         
@@ -180,8 +180,8 @@ class WallpaperDialog(wx.Dialog):
         #The recipient will update the painted_region fields.
         Publisher.sendMessage('wpcanvas.painted', dc=dc, painted_region=painted_region)
         if painted_region.left != -1:
-            clip_region = wx.Region(0, 0, self.preview_panel.GetSize()[0],
-                                    self.preview_panel.GetSize()[1])
+            panel_size = self.preview_panel.GetSize()
+            clip_region = wx.Region(0, 0, panel_size[0], panel_size[1])
             clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
                                      painted_region.width, painted_region.height))
             region_box = clip_region.GetBox()

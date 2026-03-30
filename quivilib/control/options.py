@@ -12,14 +12,14 @@ from quivilib.model.options import Options
 
 
 def get_fit_choices():
-    fit_choices = [(_("None"), FitSettings.FIT_NONE),
-                       (_("Width"), FitSettings.FIT_WIDTH),
-                       (_("Height"), FitSettings.FIT_HEIGHT),
-                       (_("Window"), FitSettings.FIT_BOTH),
-                       (_("Width if larger"), FitSettings.FIT_WIDTH_OVERSIZE),
-                       (_("Height if larger"), FitSettings.FIT_HEIGHT_OVERSIZE),
-                       (_("Window if larger"), FitSettings.FIT_BOTH_OVERSIZE),
-                       (_("Custom width"), FitSettings.FIT_CUSTOM_WIDTH),
+    fit_choices = [(_("None"), FitSettings.FitType.NONE),
+                       (_("Width"), FitSettings.FitType.WIDTH),
+                       (_("Height"), FitSettings.FitType.HEIGHT),
+                       (_("Window"), FitSettings.FitType.BOTH),
+                       (_("Width if larger"), FitSettings.FitType.WIDTH_OVERSIZE),
+                       (_("Height if larger"), FitSettings.FitType.HEIGHT_OVERSIZE),
+                       (_("Window if larger"), FitSettings.FitType.BOTH_OVERSIZE),
+                       (_("Custom width"), FitSettings.FitType.CUSTOM_WIDTH),
                        ]
     return fit_choices
 

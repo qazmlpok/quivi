@@ -268,28 +268,28 @@ class CommandDefinitionList():
                                     flags=CommandFlags.MOUSE, down_function=control.canvas.image_drag_start)
 
             cat_name = __('Fit')
-            yield CommandDefinition(CommandName.ZOOM_NONE, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_NONE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_NONE, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.NONE, save=True),
                                     __('None'), __('None'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.WIDTH, save=True),
                                     __('Width'), __('Width'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_HEIGHT, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT, save=True),
+            yield CommandDefinition(CommandName.ZOOM_HEIGHT, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.HEIGHT, save=True),
                                     __('Height'), __('Height'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WINDOW, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WINDOW, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.BOTH, save=True),
                                     __('Window'), __('Window'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WIDTH_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH_OVERSIZE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WIDTH_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.WIDTH_OVERSIZE, save=True),
                                     __('Width if larger'), __('Width if larger'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_HEIGHT_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT_OVERSIZE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_HEIGHT_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.HEIGHT_OVERSIZE, save=True),
                                     __('Height if larger'), __('Height if larger'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WINDOW_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH_OVERSIZE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WINDOW_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.BOTH_OVERSIZE, save=True),
                                     __('Window if larger'), __('Window if larger'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_CUSTOM_WIDTH, save=True),
+            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.CUSTOM_WIDTH, save=True),
                                     __('Custom width'), __('Custom width'),
                                     [])
 

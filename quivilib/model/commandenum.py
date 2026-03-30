@@ -1,4 +1,4 @@
-from enum import IntEnum, StrEnum, IntFlag, Flag, auto
+from enum import IntEnum, StrEnum, IntFlag, Flag, auto, Enum
 import wx
 
 # Assorted enums associated with menu items. Also settings (which are closely related...)
@@ -20,19 +20,86 @@ class MovementType(Flag):
 
 
 class FitSettings:
-    #TODO: Proper enum.
-    (FIT_NONE,
-     FIT_WIDTH_OVERSIZE,
-     FIT_HEIGHT_OVERSIZE,
-     FIT_BOTH_OVERSIZE,
-     FIT_CUSTOM_WIDTH,
-     FIT_SCREEN_CROP_EXCESS,
-     FIT_SCREEN_SHOW_ALL,
-     FIT_SCREEN_NONE,
-     FIT_TILED,
-     FIT_WIDTH,
-     FIT_HEIGHT,
-     FIT_BOTH) = list(range(12))
+    class OldValues:
+        (FIT_NONE,
+         FIT_WIDTH_OVERSIZE,
+         FIT_HEIGHT_OVERSIZE,
+         FIT_BOTH_OVERSIZE,
+         FIT_CUSTOM_WIDTH,
+         FIT_SCREEN_CROP_EXCESS,
+         FIT_SCREEN_SHOW_ALL,
+         FIT_SCREEN_NONE,
+         FIT_TILED,
+         FIT_WIDTH,
+         FIT_HEIGHT,
+         FIT_BOTH) = list(range(12))
+
+    class FitType(IntEnum):
+         NONE = 0
+         WIDTH_OVERSIZE = auto()
+         HEIGHT_OVERSIZE = auto()
+         BOTH_OVERSIZE = auto()
+         CUSTOM_WIDTH = auto()
+         WIDTH = auto()
+         HEIGHT = auto()
+         BOTH = auto()
+
+    class FitType2(IntEnum):
+        OLD = 31
+        #Flags
+        _FLG = 1 << 5      #32
+        _WIDTH = 1 << 6
+        _HEIGHT = 1 << 7
+        _OVERSIZE = 1 << 8
+        _CUSTOM_WIDTH = 1 << 9
+        #Composite
+        NONE = _FLG  # Can't actually use 0.
+        WIDTH = _FLG | _WIDTH
+        HEIGHT = _FLG | _HEIGHT
+        BOTH = _FLG | _WIDTH | _HEIGHT
+        WIDTH_OVERSIZE = _FLG | _WIDTH | _OVERSIZE
+        HEIGHT_OVERSIZE = _FLG | _HEIGHT | _OVERSIZE
+        BOTH_OVERSIZE = _FLG | _WIDTH | _HEIGHT | _OVERSIZE
+        CUSTOM_WIDTH = _FLG | _CUSTOM_WIDTH
+        __str__ = Enum.__str__
+
+    lookup: dict[str|int, FitType2] = {}
+    for x in FitType2:
+        lookup[x.value] = x
+        lookup[x.name] = x
+    def get_fittype(self, value: int|str) -> FitType2:
+        """Maps the incoming value to a FitType. Int or Str can be used.
+        If the int value is below 31, it is treated as an "old" value and translated to a new Flags value.
+        This is for compatibility with existing values stored in config files."""
+        if value in FitSettings.lookup:
+            return FitSettings.lookup[value]
+        if isinstance(value, int) or value.isdigit():
+            value = int(value)
+            if value == FitSettings.OldValues.FIT_NONE:
+                return FitSettings.FitType2.NONE
+            elif value == FitSettings.OldValues.FIT_WIDTH:
+                return FitSettings.FitType2.WIDTH
+            elif value == FitSettings.OldValues.FIT_HEIGHT:
+                return FitSettings.FitType2.HEIGHT
+            elif value == FitSettings.OldValues.FIT_BOTH:
+                return FitSettings.FitType2.BOTH
+            elif value == FitSettings.OldValues.FIT_WIDTH_OVERSIZE:
+                return FitSettings.FitType2.WIDTH_OVERSIZE
+            elif value == FitSettings.OldValues.FIT_HEIGHT_OVERSIZE:
+                return FitSettings.FitType2.HEIGHT_OVERSIZE
+            elif value == FitSettings.OldValues.FIT_BOTH_OVERSIZE:
+                return FitSettings.FitType2.BOTH_OVERSIZE
+            elif value == FitSettings.OldValues.FIT_CUSTOM_WIDTH:
+                return FitSettings.FitType2.CUSTOM_WIDTH
+            #The wallpaper values could not be stored in the config and thus can be ignored.
+        return FitSettings.FitType2.NONE
+
+    #These are not persisted so they can use regular int values.
+    class WallpaperFitType(IntEnum):
+        SCREEN_CROP_EXCESS = auto()
+        SCREEN_SHOW_ALL = auto()
+        SCREEN_NONE = auto()
+        TILED = auto()
 
 class CommandFlags(IntFlag):
     NONE = 0

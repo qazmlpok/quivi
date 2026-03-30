@@ -480,10 +480,9 @@ class MainWindow(wx.Frame):
         if self.update_menu_item:
             self.update_menu_item.SetItemLabel(_('&Download'))
             self.update_menu_item.SetHelp(_('Go to the download site'))
-            self.menu_bar.SetMenuLabel(self.menu_bar.GetMenuCount()-1,
-                                       _('&New version available!'))
+            self.menu_bar.SetMenuLabel(self.menu_bar.GetMenuCount()-1, _('&New version available!'))
     
-    def on_open_wallpaper_dialog(self, *, choices, color):
+    def on_open_wallpaper_dialog(self, *, choices: list[str], color: wx.Colour):
         from quivilib.gui.wallpaper import WallpaperDialog
         dialog = WallpaperDialog(self, choices, color)
         dialog.ShowModal()

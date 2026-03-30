@@ -405,7 +405,7 @@ class OptionsDialog(wx.Dialog):
         self._set_selected(self.shorcuts_cbo, selected_shortcut)
             
     def _update_custom_fit_display(self, fit_type: FitSettings):
-        show = (fit_type == FitSettings.FIT_CUSTOM_WIDTH)
+        show = (fit_type == FitSettings.FitType.CUSTOM_WIDTH)
         self.width_label.Enable(show)
         self.width_txt.Enable(show)
     
