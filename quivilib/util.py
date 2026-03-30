@@ -31,10 +31,10 @@ def get_icon_for_directory(small=True):
     size = wx.Size(16, 16) if small else wx.Size(32, 32)
     return wx.ArtProvider.GetIcon(wx.ART_FOLDER, wx.ART_OTHER, size)
 
-def rescale_by_size_factor(width, height, max_width, max_height):
+def rescale_by_size_factor(width: int, height: int, max_width: int, max_height: int) -> float:
     assert width >= 0 and height >= 0 and max_height >= 0 and max_height >= 0
     if width == 0 or height == 0:
-        return 1
+        return 1.0
     
     INFINITY = 0 #just for clarification
     img_wh = width / float(height)
@@ -45,7 +45,7 @@ def rescale_by_size_factor(width, height, max_width, max_height):
     elif max_height != INFINITY and (max_width == INFINITY or img_wh <= scr_wh):
         return max_height / float(height)
     else:
-        return 1
+        return 1.0
 
 
 def error_handler(callback_fn):
@@ -86,18 +86,18 @@ def add_exception_custom_msg(exception, msg):
     setattr(exception, 'get_custom_msg', get_msg)
 
 
-def is_frozen():
+def is_frozen() -> bool:
     """Returns whether we are frozen via py2exe.
     This will affect how we find out where we are located."""
     return hasattr(sys, "frozen")
 
-def get_exe_path():
+def get_exe_path() -> Path:
     return Path(sys.executable).resolve()
 
-def get_traceback():
+def get_traceback() -> str:
     return traceback.format_exc()
 
-def synchronized_method(lock_name):
+def synchronized_method(lock_name: str):
     """ Synchronization decorator. """
     def decorator(f):
         def synchronized_fn(self, *args, **kwargs):
@@ -107,7 +107,7 @@ def synchronized_method(lock_name):
         return synchronized_fn
     return decorator
 
-def get_formatted_zoom(zoom: float):
+def get_formatted_zoom(zoom: float) -> str:
     text = locale.format_string('%5.2f', zoom * 100)
     for i in range(len(text)):
         if text[-1] == '0':

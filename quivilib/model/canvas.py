@@ -336,6 +336,7 @@ class WallpaperCanvas(Canvas):
         super().__init__(name, settings)
         self.tiled = False
         #Wallpaper canvas won't include settings.
+        self._get_str_setting = lambda x: ''
         self._get_int_setting = lambda x: 0
         self._get_bool_setting = lambda x: False
     def paint(self, dc):
@@ -370,22 +371,20 @@ class WallpaperCanvas(Canvas):
                 factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
             else:
                 factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
-            self.zoom = factor
         elif fit_type == FitSettings.WallpaperFitType.SCREEN_SHOW_ALL:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
-            self.zoom = factor
         elif fit_type == FitSettings.WallpaperFitType.SCREEN_NONE:
             assert scr_w != -1, 'Screen width not specified'
             factor = view_w / float(scr_w)
-            self.zoom = factor
         elif fit_type == FitSettings.WallpaperFitType.TILED:
             assert scr_w != -1, 'Screen width not specified'
             factor = view_w / float(scr_w)
-            self.zoom = factor
+
             self.tiled = True
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
-        
+
+        self.zoom = factor
         if self.tiled:
             self.left = self.top = 0
         else:

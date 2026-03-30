@@ -19,10 +19,13 @@ from quivilib.control.canvas import WallpaperCanvasController
 from quivilib.model import image
 
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
-#This list should reflect the list in open_dialog (same order)
-positions = (FitSettings.WallpaperFitType.SCREEN_NONE, FitSettings.WallpaperFitType.TILED,
-             FitSettings.WallpaperFitType.SCREEN_CROP_EXCESS,
-             FitSettings.WallpaperFitType.SCREEN_SHOW_ALL)
+
+fit_choices: list[tuple[FitSettings.WallpaperFitType, str]] = [
+    (FitSettings.WallpaperFitType.SCREEN_NONE, _("&Actual size")),
+    (FitSettings.WallpaperFitType.TILED, _("&Tiled")),
+    (FitSettings.WallpaperFitType.SCREEN_CROP_EXCESS, _("Stretch to fit screen, c&rop excess")),
+    (FitSettings.WallpaperFitType.SCREEN_SHOW_ALL, _("Stretch to &fit screen, show entire image")),
+]
 
 
 class WallpaperController(object):
@@ -39,10 +42,7 @@ class WallpaperController(object):
         Publisher.subscribe(self.on_image_loaded, 'canvas.image.loaded')
         
     def open_dialog(self):
-        choices_str = [_("&Actual size"),
-                       _("&Tiled"),
-                       _("Stretch to fit screen, c&rop excess"),
-                       _("Stretch to &fit screen, show entire image")]
+        choices_str = [x[1] for x in fit_choices]
         if self.img:
             color = _get_bg_color()
             Publisher.sendMessage('wallpaper.open_dialog', choices=choices_str, color=color)
@@ -56,8 +56,8 @@ class WallpaperController(object):
         self.canvas_controller = WallpaperCanvasController('wpcanvas', self.canvas, dialog.canvas_view)
         self.canvas.load_img(self.img.copy(), False)
         
-    def on_set_wallpaper(self, *, pos_idx, color: wx.Colour):
-        position = positions[pos_idx]
+    def on_set_wallpaper(self, *, pos_idx: int, color: wx.Colour):
+        position = fit_choices[pos_idx][0]
         
         item_index = self.model.container.selected_item_index
         path = self.model.container.items[item_index].path
@@ -77,8 +77,9 @@ class WallpaperController(object):
         img = self.move_image(img, position, color)
         _set_wallpaper(img, position, color)
         
-    def on_preview_position_changed(self, *, pos_idx):
-        self.canvas_controller.set_zoom_by_fit_type(positions[pos_idx], wx.Display(0).GetGeometry().width)
+    def on_preview_position_changed(self, *, pos_idx: int):
+        fit_type = fit_choices[pos_idx][0]
+        self.canvas_controller.set_zoom_by_fit_type(fit_type, wx.Display(0).GetGeometry().width)
     
     def on_wallpaper_zoom(self, *, zoom_in: bool):
         if zoom_in:
