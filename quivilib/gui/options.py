@@ -6,6 +6,7 @@ from pubsub import pub as Publisher
 from wx.lib import langlistctrl
 
 from quivilib.i18n import _
+from quivilib.model.command import Command
 from quivilib.model.shortcut import Shortcut
 from quivilib.model.commandenum import CommandFlags, FitSettings
 import quivilib.gui.hotkeyctrl as hk
@@ -14,8 +15,8 @@ from quivilib.model.options import Options
 WINDOW_SIZE = (400, 480)
 
 class OptionsDialog(wx.Dialog):
-    def __init__(self, parent, fit_choices, settings, commands,
-                 available_languages, active_language, save_locally):
+    def __init__(self, parent, fit_choices: list[tuple[str, FitSettings.FitType]], settings, commands: list[Command],
+                 available_languages: list[wx.Language], active_language: wx.Language, save_locally: bool):
         self.fit_choices = fit_choices
         self.save_locally = save_locally
         self.settings = settings
@@ -143,9 +144,10 @@ class OptionsDialog(wx.Dialog):
         self.always_drag_chk.SetValue(always_drag)
         self.threshold_txt.SetValue(self.settings.get('Mouse', 'DragThreshold'))
 
+        setting_fit_type = FitSettings.get_fittype(self.settings.get('Options', 'FitType'))
         for name, fit_type in self.fit_choices:
             idx = self.fit_cbo.Append(name, fit_type)
-            if fit_type == self.settings.getint('Options', 'FitType'):
+            if fit_type == setting_fit_type:
                 self.fit_cbo.SetSelection(idx)
                 self._update_custom_fit_display(fit_type)
                 
@@ -404,7 +406,7 @@ class OptionsDialog(wx.Dialog):
             self.shorcuts_cbo.SetSelection(0)
         self._set_selected(self.shorcuts_cbo, selected_shortcut)
             
-    def _update_custom_fit_display(self, fit_type: FitSettings):
+    def _update_custom_fit_display(self, fit_type: FitSettings.FitType):
         show = (fit_type == FitSettings.FitType.CUSTOM_WIDTH)
         self.width_label.Enable(show)
         self.width_txt.Enable(show)
@@ -422,5 +424,6 @@ class OptionsDialog(wx.Dialog):
 if __name__ == '__main__':
     app = wx.App(False)
     #This is not going to work.
-    dlg = OptionsDialog(None, [], None, [], [], '', True)
+    lang = wx.LANGUAGE_ENGLISH_US
+    dlg = OptionsDialog(None, [], None, [], [], lang, True)
     dlg.ShowModal()

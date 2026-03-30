@@ -35,16 +35,6 @@ class FitSettings:
          FIT_BOTH) = list(range(12))
 
     class FitType(IntEnum):
-         NONE = 0
-         WIDTH_OVERSIZE = auto()
-         HEIGHT_OVERSIZE = auto()
-         BOTH_OVERSIZE = auto()
-         CUSTOM_WIDTH = auto()
-         WIDTH = auto()
-         HEIGHT = auto()
-         BOTH = auto()
-
-    class FitType2(IntEnum):
         OLD = 31
         #Flags
         _FLG = 1 << 5      #32
@@ -63,11 +53,13 @@ class FitSettings:
         CUSTOM_WIDTH = _FLG | _CUSTOM_WIDTH
         __str__ = Enum.__str__
 
-    lookup: dict[str|int, FitType2] = {}
-    for x in FitType2:
+    lookup: dict[str|int, FitType] = {}
+    for x in FitType:
         lookup[x.value] = x
         lookup[x.name] = x
-    def get_fittype(self, value: int|str) -> FitType2:
+        lookup[str(x)] = x
+    @staticmethod
+    def get_fittype(value: int|str) -> FitType:
         """Maps the incoming value to a FitType. Int or Str can be used.
         If the int value is below 31, it is treated as an "old" value and translated to a new Flags value.
         This is for compatibility with existing values stored in config files."""
@@ -76,23 +68,23 @@ class FitSettings:
         if isinstance(value, int) or value.isdigit():
             value = int(value)
             if value == FitSettings.OldValues.FIT_NONE:
-                return FitSettings.FitType2.NONE
+                return FitSettings.FitType.NONE
             elif value == FitSettings.OldValues.FIT_WIDTH:
-                return FitSettings.FitType2.WIDTH
+                return FitSettings.FitType.WIDTH
             elif value == FitSettings.OldValues.FIT_HEIGHT:
-                return FitSettings.FitType2.HEIGHT
+                return FitSettings.FitType.HEIGHT
             elif value == FitSettings.OldValues.FIT_BOTH:
-                return FitSettings.FitType2.BOTH
+                return FitSettings.FitType.BOTH
             elif value == FitSettings.OldValues.FIT_WIDTH_OVERSIZE:
-                return FitSettings.FitType2.WIDTH_OVERSIZE
+                return FitSettings.FitType.WIDTH_OVERSIZE
             elif value == FitSettings.OldValues.FIT_HEIGHT_OVERSIZE:
-                return FitSettings.FitType2.HEIGHT_OVERSIZE
+                return FitSettings.FitType.HEIGHT_OVERSIZE
             elif value == FitSettings.OldValues.FIT_BOTH_OVERSIZE:
-                return FitSettings.FitType2.BOTH_OVERSIZE
+                return FitSettings.FitType.BOTH_OVERSIZE
             elif value == FitSettings.OldValues.FIT_CUSTOM_WIDTH:
-                return FitSettings.FitType2.CUSTOM_WIDTH
+                return FitSettings.FitType.CUSTOM_WIDTH
             #The wallpaper values could not be stored in the config and thus can be ignored.
-        return FitSettings.FitType2.NONE
+        return FitSettings.FitType.NONE
 
     #These are not persisted so they can use regular int values.
     class WallpaperFitType(IntEnum):

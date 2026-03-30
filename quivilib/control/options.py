@@ -11,7 +11,7 @@ from quivilib.model.options import Options
 #    hard coded path
 
 
-def get_fit_choices():
+def get_fit_choices() -> list[tuple[str, FitSettings.FitType]]:
     fit_choices = [(_("None"), FitSettings.FitType.NONE),
                        (_("Width"), FitSettings.FitType.WIDTH),
                        (_("Height"), FitSettings.FitType.HEIGHT),

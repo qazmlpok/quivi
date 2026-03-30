@@ -19,7 +19,7 @@ from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model import Favorites
 from quivilib.model.canvas import PaintedRegion
 from quivilib.model.command import Command, CommandCategory
-from quivilib.model.commandenum import MenuName, CommandName
+from quivilib.model.commandenum import MenuName, CommandName, FitSettings
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.favorites import FavoriteMenuItem
 from quivilib.model.settings import Settings
@@ -488,7 +488,7 @@ class MainWindow(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
         
-    def on_open_options_dialog(self, *, fit_choices, settings, commands, available_languages, active_language, save_locally):
+    def on_open_options_dialog(self, *, fit_choices: list[tuple[str, FitSettings.FitType]], settings: Settings, commands: list[Command], available_languages: list[wx.Language], active_language: wx.Language, save_locally: bool):
         from quivilib.gui.options import OptionsDialog
         dialog = OptionsDialog(self, fit_choices, settings, commands, available_languages, active_language, save_locally)
         dialog.ShowModal()

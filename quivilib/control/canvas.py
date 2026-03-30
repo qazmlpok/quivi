@@ -234,7 +234,8 @@ class CanvasController(object):
         Publisher.sendMessage(f'{self.name}.changed')
     
     def set_zoom_by_current_fit(self):
-        fit_type = self.settings.getint('Options', 'FitType')
+        fit_type = self.settings.get('Options', 'FitType')
+        fit_type = FitSettings.get_fittype(fit_type)
         self.set_zoom_by_fit_type(fit_type)
         Publisher.sendMessage(f'{self.name}.changed')
         

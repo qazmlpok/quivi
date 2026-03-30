@@ -475,7 +475,7 @@ ROTATE_ANGLE_1BIT = (-90, 90, 180, 270)
 class FISize(object):
     """ A class used for store width and height bitmap informations
     """ 
-    def __init__(self, valW=0, valH=0):
+    def __init__(self, valW: int|tuple[int, int]=0, valH=0):
         """ Pass me the width and height
         """
         if type(valW) == int:
@@ -530,12 +530,12 @@ class FISize(object):
 class FIPoint(object):
     """ A class used for store a point information
     """ 
-    def __init__(self, valX=0, valY=0):
+    def __init__(self, valX:int|tuple[int, int]=0, valY=0):
         """ Pass me the x and y
         """
         if type(valX) == int:
             self.__X, self.__Y = valX, valY
-        elif len(valY) == 2:
+        elif len(valX) == 2:
             self.__X, self.__Y = valX
         else:
             raise ValueError
@@ -555,7 +555,7 @@ class FIPoint(object):
         print("point", other)
         
     def __hash__(self):
-        return hash(self.__X, self.__Y)
+        return hash((self.__X, self.__Y))
     
     def __repr__(self):
         """

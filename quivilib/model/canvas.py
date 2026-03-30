@@ -18,6 +18,7 @@ class Canvas(object):
     def __init__(self, name, settings) -> None:
         self.name = name
         if settings:
+            self._get_str_setting: Callable[str, int] = partial(settings.get, 'Options')
             self._get_int_setting: Callable[str, int] = partial(settings.getint, 'Options')
             self._get_bool_setting: Callable[str, bool] = partial(settings.getboolean, 'Options')
         self.img: ImageHandler|None = None
@@ -78,10 +79,11 @@ class Canvas(object):
             self._sendMessage(f'{self.name}.image.loaded', img=None)
 
     def adjust(self):
-        fit_type = self._get_int_setting('FitType')
+        fit_type = self._get_str_setting('FitType')
+        fit_type = FitSettings.get_fittype(fit_type)
         self.set_zoom_by_fit_type(fit_type)
         
-    def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
+    def set_zoom_by_fit_type(self, fit_type: FitSettings.FitType, scr_w = -1):
         if not self.img:
             return
         view_w = self.view.width
@@ -97,6 +99,7 @@ class Canvas(object):
             #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
             is_spread = True
 
+        #TODO: It should be possible to simplify this code using the new flags.
         if fit_type == FitSettings.FitType.WIDTH:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
             self.zoom = factor
