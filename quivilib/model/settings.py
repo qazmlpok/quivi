@@ -36,7 +36,7 @@ class Settings(RawConfigParser):
         
     def _load_defaults(self):
         defaults = (
-          ('Options', 'FitType', FitSettings.FitType.WIDTH_OVERSIZE),
+          ('Options', 'FitType', FitSettings.FitType.WIDTH_IF_LARGER),
           ('Options', 'FitWidthCustomSize', 800),
           ('Options', 'StartDir', ''),
           ('Options', 'CustomBackground', 0),

@@ -37,34 +37,35 @@ class FitSettings:
     class FitType(IntEnum):
         OLD = 31
         #Flags
-        _FLG = 1 << 5      #32
+        _FLG = 1 << 5      #32. This is just to denote "not an old, pre-enum value"
         _WIDTH = 1 << 6
         _HEIGHT = 1 << 7
         _OVERSIZE = 1 << 8
         _CUSTOM_WIDTH = 1 << 9
         #Composite
-        NONE = _FLG  # Can't actually use 0.
+        NONE = _FLG  # Can't use 0.
         WIDTH = _FLG | _WIDTH
         HEIGHT = _FLG | _HEIGHT
-        BOTH = _FLG | _WIDTH | _HEIGHT
-        WIDTH_OVERSIZE = _FLG | _WIDTH | _OVERSIZE
-        HEIGHT_OVERSIZE = _FLG | _HEIGHT | _OVERSIZE
-        BOTH_OVERSIZE = _FLG | _WIDTH | _HEIGHT | _OVERSIZE
+        WINDOW = _FLG | _WIDTH | _HEIGHT
+        WIDTH_IF_LARGER = _FLG | _WIDTH | _OVERSIZE
+        HEIGHT_IF_LARGER = _FLG | _HEIGHT | _OVERSIZE
+        WINDOW_IF_LARGER = _FLG | _WIDTH | _HEIGHT | _OVERSIZE
         CUSTOM_WIDTH = _FLG | _CUSTOM_WIDTH
+        CUSTOM_WIDTH_IF_LARGER = _FLG | _CUSTOM_WIDTH | _OVERSIZE
         __str__ = Enum.__str__
 
-    lookup: dict[str|int, FitType] = {}
+    _lookup: dict[str | int, FitType] = {}
     for x in FitType:
-        lookup[x.value] = x
-        lookup[x.name] = x
-        lookup[str(x)] = x
+        _lookup[x.value] = x
+        _lookup[x.name] = x
+        _lookup[str(x)] = x
     @staticmethod
     def get_fittype(value: int|str) -> FitType:
         """Maps the incoming value to a FitType. Int or Str can be used.
         If the int value is below 31, it is treated as an "old" value and translated to a new Flags value.
         This is for compatibility with existing values stored in config files."""
-        if value in FitSettings.lookup:
-            return FitSettings.lookup[value]
+        if value in FitSettings._lookup:
+            return FitSettings._lookup[value]
         if isinstance(value, int) or value.isdigit():
             value = int(value)
             if value == FitSettings.OldValues.FIT_NONE:
@@ -74,13 +75,13 @@ class FitSettings:
             elif value == FitSettings.OldValues.FIT_HEIGHT:
                 return FitSettings.FitType.HEIGHT
             elif value == FitSettings.OldValues.FIT_BOTH:
-                return FitSettings.FitType.BOTH
+                return FitSettings.FitType.WINDOW
             elif value == FitSettings.OldValues.FIT_WIDTH_OVERSIZE:
-                return FitSettings.FitType.WIDTH_OVERSIZE
+                return FitSettings.FitType.WIDTH_IF_LARGER
             elif value == FitSettings.OldValues.FIT_HEIGHT_OVERSIZE:
-                return FitSettings.FitType.HEIGHT_OVERSIZE
+                return FitSettings.FitType.HEIGHT_IF_LARGER
             elif value == FitSettings.OldValues.FIT_BOTH_OVERSIZE:
-                return FitSettings.FitType.BOTH_OVERSIZE
+                return FitSettings.FitType.WINDOW_IF_LARGER
             elif value == FitSettings.OldValues.FIT_CUSTOM_WIDTH:
                 return FitSettings.FitType.CUSTOM_WIDTH
             #The wallpaper values could not be stored in the config and thus can be ignored.

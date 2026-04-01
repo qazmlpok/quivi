@@ -11,17 +11,19 @@ from quivilib.model.options import Options
 #    hard coded path
 
 
+_fit_choices = [
+    (_("None"), FitSettings.FitType.NONE),
+    (_("Width"), FitSettings.FitType.WIDTH),
+    (_("Height"), FitSettings.FitType.HEIGHT),
+    (_("Window"), FitSettings.FitType.WINDOW),
+    (_("Width if larger"), FitSettings.FitType.WIDTH_IF_LARGER),
+    (_("Height if larger"), FitSettings.FitType.HEIGHT_IF_LARGER),
+    (_("Window if larger"), FitSettings.FitType.WINDOW_IF_LARGER),
+    (_("Custom width"), FitSettings.FitType.CUSTOM_WIDTH),
+    #(_("Custom width if larger"), FitSettings.FitType.CUSTOM_WIDTH_IF_LARGER), #(Not implemented)
+]
 def get_fit_choices() -> list[tuple[str, FitSettings.FitType]]:
-    fit_choices = [(_("None"), FitSettings.FitType.NONE),
-                       (_("Width"), FitSettings.FitType.WIDTH),
-                       (_("Height"), FitSettings.FitType.HEIGHT),
-                       (_("Window"), FitSettings.FitType.BOTH),
-                       (_("Width if larger"), FitSettings.FitType.WIDTH_OVERSIZE),
-                       (_("Height if larger"), FitSettings.FitType.HEIGHT_OVERSIZE),
-                       (_("Window if larger"), FitSettings.FitType.BOTH_OVERSIZE),
-                       (_("Custom width"), FitSettings.FitType.CUSTOM_WIDTH),
-                       ]
-    return fit_choices
+    return _fit_choices
 
 
 class OptionsController(object):

@@ -106,19 +106,19 @@ class Canvas(object):
         elif fit_type == FitSettings.FitType.HEIGHT:
             factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
             self.zoom = factor
-        elif fit_type == FitSettings.FitType.WIDTH_OVERSIZE:
+        elif fit_type == FitSettings.FitType.WIDTH_IF_LARGER:
             factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == FitSettings.FitType.HEIGHT_OVERSIZE:
+        elif fit_type == FitSettings.FitType.HEIGHT_IF_LARGER:
             factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == FitSettings.FitType.BOTH_OVERSIZE:
+        elif fit_type == FitSettings.FitType.WINDOW_IF_LARGER:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
             factor = 1 if factor > 1 else factor
             self.zoom = factor
-        elif fit_type == FitSettings.FitType.BOTH:
+        elif fit_type == FitSettings.FitType.WINDOW:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
             self.zoom = factor
         elif fit_type == FitSettings.FitType.CUSTOM_WIDTH:
