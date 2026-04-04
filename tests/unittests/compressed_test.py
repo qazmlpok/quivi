@@ -12,7 +12,13 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.zip = CompressedContainer(Path('./tests/dummy.zip'), SortOrder.TYPE, False)
         self.rar = CompressedContainer(Path('./tests/dummy.rar'), SortOrder.TYPE, False)
-    
+
+    def tearDown(self):
+        if self.zip:
+            self.zip.close_container()
+        if self.rar:
+            self.rar.close_container()
+
     def test_refresh_zip(self):
         old_count = self.zip.item_count
         oldselected = self.zip.selected_item
@@ -90,13 +96,15 @@ class Test(unittest.TestCase):
     def test_open_image_zip(self):
         self.zip.sort_order = SortOrder.TYPE
         img = self.zip.open_image(1).read()
-        img_ref = open('./tests/dummy/wteste.gif', 'rb').read()
+        with open('./tests/dummy/wteste.gif', 'rb') as imgfile:
+            img_ref = imgfile.read()
         self.assertEqual(img, img_ref)
         
     def test_open_image_rar(self):
         self.rar.sort_order = SortOrder.TYPE
         img = self.rar.open_image(1).read()
-        img_ref = open('./tests/dummy/wteste.gif', 'rb').read()
+        with open('./tests/dummy/wteste.gif', 'rb') as imgfile:
+            img_ref = imgfile.read()
         self.assertEqual(img, img_ref)
         
     def test_unicode_zip(self):
