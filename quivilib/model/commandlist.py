@@ -146,6 +146,10 @@ class CommandDefinitionList():
                                     __('Fit &height'), __('Zooms the image in order to make its height fit the window'),
                                     [(wx.ACCEL_CTRL, ord(__('H')))],
                                     flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.FIT_BOTH, cat_name, control.canvas.zoom_fit_both,
+                                    __('Fit w&indow'), __('Zooms the image in order to make it fit the window'),
+                                    [(wx.ACCEL_CTRL, ord(__('B')))],
+                                    flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
             yield CommandDefinition(CommandName.SHOW_SPREAD, cat_name, control.toggle_spread,
                                     __('Show &spread'), __('Attempt to show combined pages at regular zoom'),
                                     [(wx.ACCEL_CTRL, ord(__('E')))],
@@ -292,6 +296,9 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.CUSTOM_WIDTH, save=True),
                                     __('Custom width'), __('Custom width'),
                                     [])
+            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.CUSTOM_WIDTH_IF_LARGER, save=True),
+                                    __('Custom width if larger'), __('Custom width if larger'),
+                                    [])
 
             cat_name = __('Download')
             yield CommandDefinition(CommandName.DOWNLOAD_NEW, cat_name, control.view.on_download_update,
@@ -362,6 +369,7 @@ class MenuDefinitionList():
             CommandName.ZOOM_FULL,
             CommandName.FIT_WIDTH,
             CommandName.FIT_HEIGHT,
+            CommandName.FIT_BOTH,
             #TODO: All the messaging around this feature is awful but I don't know how to better word it.
             CommandName.SHOW_SPREAD,
             CommandName.ROTATE_CLOCKWISE,
@@ -406,6 +414,7 @@ class MenuDefinitionList():
             CommandName.ZOOM_FULL, 
             CommandName.FIT_WIDTH,
             CommandName.FIT_HEIGHT,
+            CommandName.FIT_BOTH,
         ))
         rotate_sub = MenuDefinition(MenuName.RotateSub, 'Rotate', (
             CommandName.ROTATE_CLOCKWISE,        
@@ -428,6 +437,7 @@ class MenuDefinitionList():
             CommandName.ZOOM_WINDOW_LARGER,
             # TODO: (2,2) Add: ask for the custom width?
             CommandName.ZOOM_CUSTOM_WIDTH,
+            CommandName.ZOOM_CUSTOM_WIDTH_LARGER,
         ))
         img_context = MenuDefinition(MenuName.ImgCtx, empty, (
             CommandName.OPEN_DIRECTORY,

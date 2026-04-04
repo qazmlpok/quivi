@@ -20,7 +20,7 @@ _fit_choices = [
     (_("Height if larger"), FitSettings.FitType.HEIGHT_IF_LARGER),
     (_("Window if larger"), FitSettings.FitType.WINDOW_IF_LARGER),
     (_("Custom width"), FitSettings.FitType.CUSTOM_WIDTH),
-    #(_("Custom width if larger"), FitSettings.FitType.CUSTOM_WIDTH_IF_LARGER), #(Not implemented)
+    (_("Custom width if larger"), FitSettings.FitType.CUSTOM_WIDTH_IF_LARGER),
 ]
 def get_fit_choices() -> list[tuple[str, FitSettings.FitType]]:
     return _fit_choices

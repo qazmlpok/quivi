@@ -99,37 +99,22 @@ class Canvas(object):
             #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
             is_spread = True
 
-        #TODO: It should be possible to simplify this code using the new flags.
-        if fit_type == FitSettings.FitType.WIDTH:
-            factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
-            self.zoom = factor
-        elif fit_type == FitSettings.FitType.HEIGHT:
-            factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
-            self.zoom = factor
-        elif fit_type == FitSettings.FitType.WIDTH_IF_LARGER:
-            factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
-        elif fit_type == FitSettings.FitType.HEIGHT_IF_LARGER:
-            factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
-        elif fit_type == FitSettings.FitType.WINDOW_IF_LARGER:
+        if (fit_type & FitSettings.FitType.WINDOW) == FitSettings.FitType.WINDOW:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
-        elif fit_type == FitSettings.FitType.WINDOW:
-            factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
-            self.zoom = factor
-        elif fit_type == FitSettings.FitType.CUSTOM_WIDTH:
+        elif (fit_type & FitSettings.FitType.HEIGHT) == FitSettings.FitType.HEIGHT:
+            factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
+        elif (fit_type & FitSettings.FitType.WIDTH) == FitSettings.FitType.WIDTH:
+            factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
+        elif (fit_type & FitSettings.FitType.CUSTOM_WIDTH) == FitSettings.FitType.CUSTOM_WIDTH:
             custom_w = self._get_int_setting('FitWidthCustomSize')
             factor = rescale_by_size_factor(img_w, img_h, custom_w, 0)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
         elif fit_type == FitSettings.FitType.NONE:
-            self.zoom = 1
+            factor = 1
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
+        if (fit_type & FitSettings.FitType._OVERSIZE):
+            factor = 1 if factor > 1 else factor
+        self.zoom = factor
         
         self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=is_spread)
