@@ -222,10 +222,13 @@ class CanvasController(object):
         Publisher.sendMessage(f'{self.name}.changed')
         
     def zoom_fit_width(self):
-        self.set_zoom_by_fit_type(FitSettings.FIT_WIDTH)
+        self.set_zoom_by_fit_type(FitSettings.FitType.WIDTH_IF_LARGER)
         
     def zoom_fit_height(self):
-        self.set_zoom_by_fit_type(FitSettings.FIT_HEIGHT)
+        self.set_zoom_by_fit_type(FitSettings.FitType.HEIGHT_IF_LARGER)
+
+    def zoom_fit_both(self):
+        self.set_zoom_by_fit_type(FitSettings.FitType.WINDOW_IF_LARGER)
         
     def set_zoom_by_fit_type(self, fit_type, scr_w = -1, save=False):
         self.canvas.set_zoom_by_fit_type(fit_type, scr_w)
@@ -234,7 +237,8 @@ class CanvasController(object):
         Publisher.sendMessage(f'{self.name}.changed')
     
     def set_zoom_by_current_fit(self):
-        fit_type = self.settings.getint('Options', 'FitType')
+        fit_type = self.settings.get('Options', 'FitType')
+        fit_type = FitSettings.get_fittype(fit_type)
         self.set_zoom_by_fit_type(fit_type)
         Publisher.sendMessage(f'{self.name}.changed')
         

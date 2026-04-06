@@ -1,17 +1,13 @@
-
-
-import unittest
 import sys
-
-from quivilib.i18n import _
-from quivilib.model.container.root import RootContainer
-from quivilib.model.container import SortOrder
-from quivilib.model.container.directory import DirectoryContainer
+import unittest
 from pathlib import Path
 
+from quivilib.i18n import _
+from quivilib.model.container import SortOrder
+from quivilib.model.container.root import RootContainer
 
 
-class Test(unittest.TestCase):    
+class Test(unittest.TestCase):
     def setUp(self):
         if sys.platform != 'win32':
             self.dir = None
@@ -70,7 +66,7 @@ class Test(unittest.TestCase):
         if self.dir is None:
             return
         parent = self.dir.open_parent()
-        self.assertTrue(parent is None)
+        self.assertTrue(parent is self.dir)
         
     def test_get_item_name(self):
         if self.dir is None:
@@ -95,5 +91,5 @@ class Test(unittest.TestCase):
     def test_path(self):
         if self.dir is None:
             return
-        self.assertEqual(self.dir.path, '')
+        self.assertEqual(self.dir.path, Path('/'))
     

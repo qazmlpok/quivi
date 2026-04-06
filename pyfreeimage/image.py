@@ -1,8 +1,7 @@
 import ctypes
-import logging as log
 
-from pyfreeimage import library
 import pyfreeimage.constants as CO
+from pyfreeimage import library
 from pyfreeimage.buffer import FileIO
 from quivilib.interface.imagehandler import BaseImageProt
 

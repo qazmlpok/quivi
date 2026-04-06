@@ -78,16 +78,16 @@ class FileListPanel(wx.Panel):
         #TODO: (3,3) Refactor: change add/del bookmark to a single button
         
         for cmd, bmp_id in zip(commands, bmp_ids):
-            bmp = wx.ArtProvider.GetBitmap(bmp_id, wx.ART_TOOLBAR, (16, 16))
+            bmp = wx.ArtProvider.GetBitmap(bmp_id, wx.ART_TOOLBAR, wx.Size(16, 16))
             kind = wx.ITEM_CHECK if cmd.checkable else wx.ITEM_NORMAL
             button = bp.ButtonInfo(self.tool_bar, -1, bmp, kind=kind,
                                    shortHelp=cmd.clean_name, longHelp=cmd.description)
             self.tool_bar.AddButton(button)
             self.buttons.append(button)
             self.update_fns.append(cmd.update_function)
-            def event_fn(event, cmd=cmd):
+            def event_fn(event, _cmd=cmd):
                 try:
-                    cmd()
+                    _cmd()
                 except Exception as e:
                     self.handle_error(e)
             self.Bind(wx.EVT_BUTTON, event_fn, id=button.GetId())

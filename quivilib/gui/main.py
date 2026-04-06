@@ -19,7 +19,7 @@ from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model import Favorites
 from quivilib.model.canvas import PaintedRegion
 from quivilib.model.command import Command, CommandCategory
-from quivilib.model.commandenum import MenuName, CommandName
+from quivilib.model.commandenum import MenuName, CommandName, FitSettings
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.favorites import FavoriteMenuItem
 from quivilib.model.settings import Settings
@@ -480,16 +480,15 @@ class MainWindow(wx.Frame):
         if self.update_menu_item:
             self.update_menu_item.SetItemLabel(_('&Download'))
             self.update_menu_item.SetHelp(_('Go to the download site'))
-            self.menu_bar.SetMenuLabel(self.menu_bar.GetMenuCount()-1,
-                                       _('&New version available!'))
+            self.menu_bar.SetMenuLabel(self.menu_bar.GetMenuCount()-1, _('&New version available!'))
     
-    def on_open_wallpaper_dialog(self, *, choices, color):
+    def on_open_wallpaper_dialog(self, *, choices: list[str], color: wx.Colour):
         from quivilib.gui.wallpaper import WallpaperDialog
         dialog = WallpaperDialog(self, choices, color)
         dialog.ShowModal()
         dialog.Destroy()
         
-    def on_open_options_dialog(self, *, fit_choices, settings, commands, available_languages, active_language, save_locally):
+    def on_open_options_dialog(self, *, fit_choices: list[tuple[str, FitSettings.FitType]], settings: Settings, commands: list[Command], available_languages: list[wx.Language], active_language: wx.Language, save_locally: bool):
         from quivilib.gui.options import OptionsDialog
         dialog = OptionsDialog(self, fit_choices, settings, commands, available_languages, active_language, save_locally)
         dialog.ShowModal()

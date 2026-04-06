@@ -61,8 +61,8 @@ class I18NController(object):
         Publisher.sendMessage('language.changed')
 
     @property
-    def available_languages(self):
-        langs = []
+    def available_languages(self) -> list[wx.Language]:
+        langs: list[wx.Language] = []
 
         # Note - This will add the language to the list even if it isn't installed.
         # It won't be possible to switch to the language even though it's in the list. There's probably a way to fix this...

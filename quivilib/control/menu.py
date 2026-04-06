@@ -1,6 +1,5 @@
 #TODO: (2,3) Refactor: this module and classes were poorly named.
 #    this is actually about commands, and not the menu.
-import wx
 from pubsub import pub as Publisher
 
 from quivilib.model.command import Command, CommandCategory

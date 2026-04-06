@@ -18,6 +18,7 @@ class Canvas(object):
     def __init__(self, name, settings) -> None:
         self.name = name
         if settings:
+            self._get_str_setting: Callable[str, int] = partial(settings.get, 'Options')
             self._get_int_setting: Callable[str, int] = partial(settings.getint, 'Options')
             self._get_bool_setting: Callable[str, bool] = partial(settings.getboolean, 'Options')
         self.img: ImageHandler|None = None
@@ -78,10 +79,11 @@ class Canvas(object):
             self._sendMessage(f'{self.name}.image.loaded', img=None)
 
     def adjust(self):
-        fit_type = self._get_int_setting('FitType')
+        fit_type = self._get_str_setting('FitType')
+        fit_type = FitSettings.get_fittype(fit_type)
         self.set_zoom_by_fit_type(fit_type)
         
-    def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
+    def set_zoom_by_fit_type(self, fit_type: FitSettings.FitType, scr_w = -1):
         if not self.img:
             return
         view_w = self.view.width
@@ -97,36 +99,22 @@ class Canvas(object):
             #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
             is_spread = True
 
-        if fit_type == FitSettings.FIT_WIDTH:
-            factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_HEIGHT:
-            factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_WIDTH_OVERSIZE:
-            factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_HEIGHT_OVERSIZE:
-            factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_BOTH_OVERSIZE:
+        if (fit_type & FitSettings.FitType.WINDOW) == FitSettings.FitType.WINDOW:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_BOTH:
-            factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_CUSTOM_WIDTH:
+        elif (fit_type & FitSettings.FitType.HEIGHT) == FitSettings.FitType.HEIGHT:
+            factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
+        elif (fit_type & FitSettings.FitType.WIDTH) == FitSettings.FitType.WIDTH:
+            factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
+        elif (fit_type & FitSettings.FitType.CUSTOM_WIDTH) == FitSettings.FitType.CUSTOM_WIDTH:
             custom_w = self._get_int_setting('FitWidthCustomSize')
             factor = rescale_by_size_factor(img_w, img_h, custom_w, 0)
-            factor = 1 if factor > 1 else factor
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_NONE:
-            self.zoom = 1
+        elif fit_type == FitSettings.FitType.NONE:
+            factor = 1
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
+        if (fit_type & FitSettings.FitType._OVERSIZE):
+            factor = 1 if factor > 1 else factor
+        self.zoom = factor
         
         self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=is_spread)
@@ -333,6 +321,7 @@ class WallpaperCanvas(Canvas):
         super().__init__(name, settings)
         self.tiled = False
         #Wallpaper canvas won't include settings.
+        self._get_str_setting = lambda x: ''
         self._get_int_setting = lambda x: 0
         self._get_bool_setting = lambda x: False
     def paint(self, dc):
@@ -351,9 +340,9 @@ class WallpaperCanvas(Canvas):
                     self.img.paint(dc, x, y)
         else:
             super().paint(dc)
-    def set_zoom_by_fit_type(self, fit_type, scr_w = -1):
-        #The wallpaper fit includes additional options. This is a full copy of the original code.
-        #Except the spread code was removed; that doesn't make sense for the wallpaper.
+
+    def set_zoom_by_fit_type(self, fit_type: FitSettings.WallpaperFitType, scr_w = -1):
+        #The wallpaper fit uses a different set of options.
         if not self.img:
             return
         view_w = self.view.width
@@ -362,27 +351,25 @@ class WallpaperCanvas(Canvas):
         img_h = self.img.base_height
         self.tiled = False
 
-        if fit_type == FitSettings.FIT_SCREEN_CROP_EXCESS:
+        if fit_type == FitSettings.WallpaperFitType.SCREEN_CROP_EXCESS:
             if img_w / float(img_h) > view_w / float(view_h):
                 factor = rescale_by_size_factor(img_w, img_h, 0, view_h)
             else:
                 factor = rescale_by_size_factor(img_w, img_h, view_w, 0)
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_SCREEN_SHOW_ALL:
+        elif fit_type == FitSettings.WallpaperFitType.SCREEN_SHOW_ALL:
             factor = rescale_by_size_factor(img_w, img_h, view_w, view_h)
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_SCREEN_NONE:
+        elif fit_type == FitSettings.WallpaperFitType.SCREEN_NONE:
             assert scr_w != -1, 'Screen width not specified'
             factor = view_w / float(scr_w)
-            self.zoom = factor
-        elif fit_type == FitSettings.FIT_TILED:
+        elif fit_type == FitSettings.WallpaperFitType.TILED:
             assert scr_w != -1, 'Screen width not specified'
             factor = view_w / float(scr_w)
-            self.zoom = factor
+
             self.tiled = True
         else:
             assert False, 'Invalid fit type: ' + str(fit_type)
-        
+
+        self.zoom = factor
         if self.tiled:
             self.left = self.top = 0
         else:

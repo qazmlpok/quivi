@@ -146,6 +146,10 @@ class CommandDefinitionList():
                                     __('Fit &height'), __('Zooms the image in order to make its height fit the window'),
                                     [(wx.ACCEL_CTRL, ord(__('H')))],
                                     flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
+            yield CommandDefinition(CommandName.FIT_BOTH, cat_name, control.canvas.zoom_fit_both,
+                                    __('Fit w&indow'), __('Zooms the image in order to make it fit the window'),
+                                    [(wx.ACCEL_CTRL, ord(__('B')))],
+                                    flags=CommandFlags.DISABLEABLE, update_function=control.on_update_image_available_menu_item)
             yield CommandDefinition(CommandName.SHOW_SPREAD, cat_name, control.toggle_spread,
                                     __('Show &spread'), __('Attempt to show combined pages at regular zoom'),
                                     [(wx.ACCEL_CTRL, ord(__('E')))],
@@ -268,29 +272,32 @@ class CommandDefinitionList():
                                     flags=CommandFlags.MOUSE, down_function=control.canvas.image_drag_start)
 
             cat_name = __('Fit')
-            yield CommandDefinition(CommandName.ZOOM_NONE, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_NONE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_NONE, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.NONE, save=True),
                                     __('None'), __('None'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.WIDTH, save=True),
                                     __('Width'), __('Width'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_HEIGHT, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT, save=True),
+            yield CommandDefinition(CommandName.ZOOM_HEIGHT, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.HEIGHT, save=True),
                                     __('Height'), __('Height'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WINDOW, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WINDOW, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.WINDOW, save=True),
                                     __('Window'), __('Window'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WIDTH_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_WIDTH_OVERSIZE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WIDTH_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.WIDTH_IF_LARGER, save=True),
                                     __('Width if larger'), __('Width if larger'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_HEIGHT_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_HEIGHT_OVERSIZE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_HEIGHT_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.HEIGHT_IF_LARGER, save=True),
                                     __('Height if larger'), __('Height if larger'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_WINDOW_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_BOTH_OVERSIZE, save=True),
+            yield CommandDefinition(CommandName.ZOOM_WINDOW_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.WINDOW_IF_LARGER, save=True),
                                     __('Window if larger'), __('Window if larger'),
                                     [])
-            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FIT_CUSTOM_WIDTH, save=True),
+            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.CUSTOM_WIDTH, save=True),
                                     __('Custom width'), __('Custom width'),
+                                    [])
+            yield CommandDefinition(CommandName.ZOOM_CUSTOM_WIDTH_LARGER, cat_name, partial(control.canvas.set_zoom_by_fit_type, FitSettings.FitType.CUSTOM_WIDTH_IF_LARGER, save=True),
+                                    __('Custom width if larger'), __('Custom width if larger'),
                                     [])
 
             cat_name = __('Download')
@@ -362,6 +369,7 @@ class MenuDefinitionList():
             CommandName.ZOOM_FULL,
             CommandName.FIT_WIDTH,
             CommandName.FIT_HEIGHT,
+            CommandName.FIT_BOTH,
             #TODO: All the messaging around this feature is awful but I don't know how to better word it.
             CommandName.SHOW_SPREAD,
             CommandName.ROTATE_CLOCKWISE,
@@ -406,6 +414,7 @@ class MenuDefinitionList():
             CommandName.ZOOM_FULL, 
             CommandName.FIT_WIDTH,
             CommandName.FIT_HEIGHT,
+            CommandName.FIT_BOTH,
         ))
         rotate_sub = MenuDefinition(MenuName.RotateSub, 'Rotate', (
             CommandName.ROTATE_CLOCKWISE,        
@@ -428,6 +437,7 @@ class MenuDefinitionList():
             CommandName.ZOOM_WINDOW_LARGER,
             # TODO: (2,2) Add: ask for the custom width?
             CommandName.ZOOM_CUSTOM_WIDTH,
+            CommandName.ZOOM_CUSTOM_WIDTH_LARGER,
         ))
         img_context = MenuDefinition(MenuName.ImgCtx, empty, (
             CommandName.OPEN_DIRECTORY,
