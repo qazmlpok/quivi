@@ -19,9 +19,6 @@ log = logging.getLogger('thumb')
 
 OldScrolledThumbnail = None
 
-if __debug__:
-    pass
-
 def _handle_error(exception, args, kwargs):
     self = args[0]
     self.handle_error(exception)
