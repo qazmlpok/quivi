@@ -39,10 +39,7 @@ class FileListPanel(wx.Panel):
         
         self.thumb_list.SetCaptionFont(wx.NORMAL_FONT)
         self.thumb_list.SetSelectionColour()
-        
-        self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
-        self.file_list.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
-        self.thumb_list._scrolled.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
+
         self.Bind(wx.EVT_IDLE, self.on_idle)
         
         Publisher.subscribe(self.on_toolbar_built, 'toolbar.built')
@@ -65,10 +62,7 @@ class FileListPanel(wx.Panel):
         
     def is_thumbnails(self):
         return self._show_thumbnails
-        
-    def on_mouse_enter(self, event):
-        self.current_view.SetFocus()
-    
+
     def on_toolbar_built(self, *, commands):
         #TODO: (2,2) Refactor: This shouldn't be hard coded
         #This must reflect the commands tuple from the message

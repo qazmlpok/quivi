@@ -105,7 +105,6 @@ class MainWindow(wx.Frame):
     def bindings_and_subscriptions(self):
         self.panel.Bind(wx.EVT_PAINT, self.on_panel_paint)
         self.panel.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
-        self.panel.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
         self._bind_panel_mouse_events()
         self.panel.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_SIZE, self.on_resize)
@@ -257,10 +256,7 @@ class MainWindow(wx.Frame):
             Publisher.sendMessage('canvas.zoom_at', lines=lines, x=event.X, y=event.Y)
         else:
             Publisher.sendMessage('canvas.scrolled', lines=lines, horizontal=event.shiftDown)
-        
-    def on_mouse_enter(self, event: wx.MouseEvent):
-        self.panel.SetFocus()
-        
+
     def on_fit_context_menu(self, event: wx.ContextMenuEvent):
         """Appears on right-clicking the status bar"""
         self.PopupMenu(self.menus[MenuName.FitCtx])
