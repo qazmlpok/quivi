@@ -53,6 +53,11 @@ The 64-bit executable prevents issues with loading large files. The upgrade to P
     - Windows uses some tricks to work around inaccurate sleep/timer issues. I believe I have a good implementation in place.
     - This is less tested than most other features simply because most manga are not animated.
 
+# Breaking changes
+- Version 2.0.9 changes how the automatic zoom setting is stored in the configuration file. Existing configuration files will still read the old value, but if switching back to an older version of the application, the application will fail to load
+    - Workaround is to manually edit pyquivi.ini to change `fittype = FitType.WIDTH_IF_LARGER` (as an example) to `fittype = 1`
+    - This is likely a one-off; other values that use magic numbers are not planned for a similar switch to text.
+- Version 2.0.9 changes the behavior of the 'Fit x' options in the View header menu to be 'Fit x if larger'. 
 
 # Removed features
 For the most part, existing functionality is being kept intact. A few things were dropped either due to difficulty porting the code from Python2 to Python3, or because they aren't needed any more.
