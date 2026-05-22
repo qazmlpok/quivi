@@ -21,7 +21,7 @@ class CanvasController(object):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name, view: CanvasLike, canvas: Canvas = None, settings: Settings = None):
+    def __init__(self, name, view: CanvasLike, canvas: Canvas|None = None, settings: Settings|None = None):
         self.name = name
         if canvas is None:
             self.canvas = Canvas('canvas', settings)
@@ -30,7 +30,7 @@ class CanvasController(object):
             self.canvas = canvas
         self.canvas.set_view(view)
         self.view = view
-        self.settings = settings
+        self.settings: Settings = settings
         self.pending_request = None
         Publisher.subscribe(self.on_request_open_image, f'{self.name}.load.img')
         Publisher.subscribe(self.on_cache_image_loaded, 'cache.image_loaded')
@@ -142,39 +142,30 @@ class CanvasController(object):
         self._zoom_to_point(lines > 0, x, y, zoom_scale=scale)
         Publisher.sendMessage(f'{self.name}.changed')
     
-    def on_canvas_mouse_event(self, *, button, event, x, y):
-        if self.name == 'canvas':
-            button_name = ('Left', 'Middle', 'Right', 'Aux1', 'Aux2')[button]
-            cmd_ide = self.settings.getint('Mouse', f'{button_name}ClickCmd')
-            always_drag = self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1'
-            drag_threshold = self.settings.getint('Mouse', 'DragThreshold')
-            #Reproduce the old drag behavior (left mouse always drags; run command iff mouse didn't move)
-            #if configured. Otherwise, the drag behavior will be a regular command.
-            if always_drag and button == 0:
-                if event == 0:
-                    Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
-                    self._moving_image = True
-                    self._orig_mouse_pos = (x, y)
-                elif event == 1:
-                    #If always dragging but the mouse hasn't moved (within the configured delta), execute the click event anyway
-                    xdiff = self._orig_mouse_pos[0] - x
-                    ydiff = self._orig_mouse_pos[1] - y
-                    if not self._moved_image or (xdiff**2 + ydiff**2 < drag_threshold**2):
-                        Publisher.sendMessage('command.execute', ide=cmd_ide)
-                    Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
-                    self._moving_image = False
-            elif event == 0:
-                Publisher.sendMessage('command.down_execute', ide=cmd_ide)
-            elif event == 1:
-                Publisher.sendMessage('command.execute', ide=cmd_ide)
-        else:
-            #Not the main canvas (e.g. wallpaper dialog canvas)
-            if button == 0 and event == 0:
+    def on_canvas_mouse_event(self, *, button: int, event: int, x: int, y: int):
+        button_name = ('Left', 'Middle', 'Right', 'Aux1', 'Aux2')[button]
+        cmd_ide = self.settings.getint('Mouse', f'{button_name}ClickCmd')
+        always_drag = self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1'
+        drag_threshold = self.settings.getint('Mouse', 'DragThreshold')
+        #Reproduce the old drag behavior (left mouse always drags; run command iff mouse didn't move)
+        #if configured. Otherwise, the drag behavior will be a regular command.
+        if always_drag and button == 0:
+            if event == 0:
                 Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
                 self._moving_image = True
-            elif button == 0 and event == 1:
+                self._orig_mouse_pos = (x, y)
+            elif event == 1:
+                #If always dragging but the mouse hasn't moved (within the configured delta), execute the click event anyway
+                xdiff = self._orig_mouse_pos[0] - x
+                ydiff = self._orig_mouse_pos[1] - y
+                if not self._moved_image or (xdiff**2 + ydiff**2 < drag_threshold**2):
+                    Publisher.sendMessage('command.execute', ide=cmd_ide)
                 Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
                 self._moving_image = False
+        elif event == 0:
+            Publisher.sendMessage('command.down_execute', ide=cmd_ide)
+        elif event == 1:
+            Publisher.sendMessage('command.execute', ide=cmd_ide)
         self._moved_image = False
 
     def image_drag_start(self):
@@ -276,7 +267,7 @@ class WallpaperCanvasController(CanvasController):
         #It should be possible to remove some of the event subscriptions
         #but that would require a base class instead of direct inheritence.
         super().__init__(name, view, canvas=canvas)
-    def on_canvas_painted(self, *, dc, painted_region):
+    def on_canvas_painted(self, *, dc: wx.DC, painted_region: PaintedRegion):
         self.canvas.paint(dc)
         if self.canvas.tiled:
             painted_region.top = 0
@@ -285,3 +276,11 @@ class WallpaperCanvasController(CanvasController):
             painted_region.height = self.view.height
         else:
             super().on_canvas_painted(dc=dc, painted_region=painted_region)
+    def on_canvas_mouse_event(self, *, button: int, event: int, x: int, y: int):
+        if button == 0 and event == 0:
+            Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
+            self._moving_image = True
+        elif button == 0 and event == 1:
+            Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
+            self._moving_image = False
+        self._moved_image = False
