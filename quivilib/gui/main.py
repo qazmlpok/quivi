@@ -145,8 +145,8 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
 
     def _bind_panel_mouse_events(self):
-        def make_fn(btn_idx, evt_idx):
-            def fn(evt):
+        def make_fn(btn_idx: int, evt_idx: int):
+            def fn(evt: wx.MouseEvent):
                 Publisher.sendMessage('canvas.mouse.event', button=btn_idx, event=evt_idx, x=evt.x, y=evt.y)
                 evt.Skip()
             return fn

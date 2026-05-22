@@ -120,7 +120,7 @@ class WallpaperDialog(wx.Dialog):
     def canvas_view(self):
         return CanvasAdapter(self.preview_panel)
     
-    def on_mouse_wheel(self, event):
+    def on_mouse_wheel(self, event: wx.MouseEvent):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
         lines *= event.GetLinesPerAction()
         if event.controlDown:
@@ -129,19 +129,19 @@ class WallpaperDialog(wx.Dialog):
         else:
             Publisher.sendMessage('wpcanvas.scrolled', lines=lines, horizontal=event.shiftDown)
         
-    def on_mouse_left_down(self, event):
+    def on_mouse_left_down(self, event: wx.MouseEvent):
         Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=0, x=event.x, y=event.y)
         event.Skip()
         
-    def on_mouse_left_up(self, event):
+    def on_mouse_left_up(self, event: wx.MouseEvent):
         Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=1, x=event.x, y=event.y)
         event.Skip()
         
-    def on_mouse_motion(self, event):
+    def on_mouse_motion(self, event: wx.MouseEvent):
         Publisher.sendMessage('wpcanvas.mouse.motion', x=event.GetX(), y=event.GetY())
         event.Skip()
         
-    def on_color_select(self, event):
+    def on_color_select(self, event: csel.ColourSelectEvent):
         color = event.GetValue()
         self.preview_panel.SetBackgroundColour(color)
         self.preview_panel.Refresh()
