@@ -52,6 +52,10 @@ The 64-bit executable prevents issues with loading large files. The upgrade to P
     - GIFs can specify a maximum number of times to play the animation. This is not supported - images will always play endlessly.
     - Windows uses some tricks to work around inaccurate sleep/timer issues. I believe I have a good implementation in place.
     - This is less tested than most other features simply because most manga are not animated.
+- New configuration option: Hide mouse cursor if not moved for x seconds. Setting to 0 (default) will disable this feature.
+  - If the mouse is not moved, the cursor will eventually disappear. This only applies to movement, not mouse clicks or any other interaction.
+  - This only applies to the image viewing canvas, not other parts of the application. If the cursor is the hand, it will disappear.
+  - The check for this is purposely low-accuracy, so it may take up to a second more than the configured value to disappear.
 
 # Breaking changes
 - Version 2.0.9 changes how the automatic zoom setting is stored in the configuration file. Existing configuration files will still read the old value, but if switching back to an older version of the application, the application will fail to load

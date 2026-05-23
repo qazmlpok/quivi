@@ -114,9 +114,14 @@ class OptionsDialog(wx.Dialog):
         self.threshold_lbl = wx.StaticText(self.mouse_pane, -1, _("Threshold:"))    #TODO: Better text.
         self.pixels_lbl = wx.StaticText(self.mouse_pane, -1, _("px"))
         self.threshold_txt = wx.TextCtrl(self.mouse_pane, -1)
-        #This doesn't return the size of the "padding" - and it changes on different platformss/themes.
+        #This doesn't return the size of the "padding" - and it changes on different platforms/themes.
         sz = self.threshold_txt.GetTextExtent('99')
         self.threshold_txt.SetInitialSize(wx.Size(sz.x+30, -1))
+
+        self.hide_cursor_lbl = wx.StaticText(self.mouse_pane, -1, _("Hide mouse cursor if not moved for"))
+        self.hide_cursor_post_lbl = wx.StaticText(self.mouse_pane, -1, _("seconds"))
+        self.hide_cursor_txt = wx.TextCtrl(self.mouse_pane, -1)
+        self.hide_cursor_txt.SetInitialSize(wx.Size(sz.x + 30, -1))
         
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
@@ -143,6 +148,7 @@ class OptionsDialog(wx.Dialog):
         always_drag = (self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1')
         self.always_drag_chk.SetValue(always_drag)
         self.threshold_txt.SetValue(self.settings.get('Mouse', 'DragThreshold'))
+        self.hide_cursor_txt.SetValue(self.settings.get('Mouse', 'HideMouseDuration'))
 
         setting_fit_type = FitSettings.get_fittype(self.settings.get('Options', 'FitType'))
         for name, fit_type in self.fit_choices:
@@ -213,6 +219,8 @@ class OptionsDialog(wx.Dialog):
         # end wxGlade
     def __do_layout_mouse(self):
         mouse_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Mouse bindings
         mouse_sizer.Add(self.mouse_left_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_left_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_middle_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
@@ -224,6 +232,8 @@ class OptionsDialog(wx.Dialog):
         mouse_sizer.Add(self.mouse_aux2_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_aux2_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_separator, 0, wx.TOP|wx.EXPAND, 10)
+
+        # Drag checkbox and treshold
         mouse_drag_sizer = wx.BoxSizer(wx.VERTICAL)
         mouse_drag_sizer_nested = wx.BoxSizer(wx.HORIZONTAL)
         mouse_drag_sizer.Add(self.always_drag_chk, 0, wx.LEFT|wx.TOP, 5)
@@ -232,6 +242,13 @@ class OptionsDialog(wx.Dialog):
         mouse_drag_sizer_nested.Add(self.pixels_lbl, 0, wx.ALIGN_CENTER_VERTICAL, 5)
         mouse_drag_sizer.Add(mouse_drag_sizer_nested, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(mouse_drag_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+
+        # Hide mouse
+        mouse_hide_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        mouse_hide_sizer.Add(self.hide_cursor_lbl, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_hide_sizer.Add(self.hide_cursor_txt, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_hide_sizer.Add(self.hide_cursor_post_lbl, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_sizer.Add(mouse_hide_sizer, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
         
         self.mouse_pane.SetSizer(mouse_sizer)
     def __do_layout_keys(self):
@@ -372,6 +389,7 @@ class OptionsDialog(wx.Dialog):
         opt.shortcuts = self.shortcuts
         opt.always_drag = self.always_drag_chk.GetValue()
         opt.drag_threshold = self.threshold_txt.GetValue()
+        opt.hide_mouse_duration = self.hide_cursor_txt.GetValue()
         
         #TODO: (2,2) Improve: handle errors here
         Publisher.sendMessage('options.update', opt=opt)

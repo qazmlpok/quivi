@@ -46,15 +46,17 @@ class OptionsController(object):
         )
         
     def on_update(self, *, opt: Options):
-        try:
-            fit_width = int(opt.fit_width_str)
-        except ValueError:
-            fit_width = None
-        try:
-            drag_threshold = int(opt.drag_threshold)
-        except ValueError:
-            drag_threshold = 0
-        if fit_width is None or fit_width <= 0:
+        def to_int(val):
+            if val is None:
+                return 0
+            try:
+                return int(val)
+            except ValueError:
+                return 0
+        fit_width = to_int(opt.fit_width_str)
+        drag_threshold = to_int(opt.drag_threshold)
+        hide_duration = to_int(opt.hide_mouse_duration)
+        if fit_width <= 0:
             #I guess there's no need to bother the user with this, so just use default
             fit_width = self.model.settings.get_default('Options', 'FitWidthCustomSize')
             
@@ -72,7 +74,7 @@ class OptionsController(object):
         open_first = '1' if opt.open_first else '0'
         
         self.model.settings.set('Options', 'FitType', opt.fit_type)
-        self.model.settings.set('Options', 'FitWidthCustomSize', fit_width)
+        self.model.settings.set('Options', 'FitWidthCustomSize', str(fit_width))
         self.model.settings.set('Options', 'StartDir', opt.start_dir)
         self.model.settings.set('Options', 'CustomBackgroundColor', custom_bg_color)
         self.model.settings.set('Options', 'CustomBackground', custom_bg)
@@ -92,6 +94,7 @@ class OptionsController(object):
         self.model.settings.set('Mouse', 'Aux2ClickCmd', opt.aux2_click_cmd)
         self.model.settings.set('Mouse', 'AlwaysLeftMouseDrag', always_drag)
         self.model.settings.set('Mouse', 'DragThreshold', str(drag_threshold))
+        self.model.settings.set('Mouse', 'HideMouseDuration', str(hide_duration))
         self.control.i18n.language = opt.language
         self.control.menu.set_shortcuts(opt.shortcuts)
         self.control.set_settings_location(opt.save_locally)

@@ -49,15 +49,12 @@ class BaseCanvasController(object):
         If there is no image, use the OS default cursor.
         If actively dragging the current image, use a closed hand.
         If not dragging the image, use an open hand.
-        If the mouse hasn't moved in a while, hide the cursor.
+        If the mouse hasn't moved in a while, hide the cursor. This is a configuration setting and only applies to the main canvas
         """
-        ts = time.time()
         if not self.has_image():
             cursor = wx.NullCursor
         elif self._moving_image:
             cursor = self._moving_cursor
-        elif self._last_cursor_move is not None and ts - self._last_cursor_move > 5.0:
-            cursor = self._blank_cursor
         else:
             cursor = self._default_cursor
 
@@ -195,8 +192,8 @@ class CanvasController(BaseCanvasController):
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
     def __init__(self, name, view: CanvasLike, settings: Settings):
-        super().__init__(name, view, canvas=Canvas('canvas', settings))
         self.settings: Settings = settings
+        super().__init__(name, view, canvas=Canvas('canvas', settings))
 
         self.pending_request: ImageCacheLoadRequest|None = None
         Publisher.subscribe(self.on_request_open_image, f'{self.name}.load.img')
@@ -249,6 +246,23 @@ class CanvasController(BaseCanvasController):
     def on_timer(self):
         # Generic timer that is called every second. Use it to avoid needing an EvtHandler obj.
         self.update_cursor()
+
+    def update_cursor(self):
+        ts = time.time()
+        setting = self.settings.getint('Mouse', 'HideMouseDuration')
+        if not self.has_image():
+            cursor = wx.NullCursor
+        elif self._moving_image:
+            cursor = self._moving_cursor
+        elif self._last_cursor_move is not None and setting > 0 and ts - self._last_cursor_move > setting:
+            cursor = self._blank_cursor
+        else:
+            cursor = self._default_cursor
+
+        #SetCursor appears to take a trivial amount of time, but this is called with every touch of the mouse.
+        if cursor is not self._current_cursor:
+            Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=cursor)
+            self._current_cursor = cursor
 
     # Open/close image
     def close_img(self):

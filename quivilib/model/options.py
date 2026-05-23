@@ -18,6 +18,7 @@ class Options():
         self.aux2_click_cmd: CommandName | None = None
         self.always_drag: bool | None = None
         self.drag_threshold: str | None = None
+        self.hide_mouse_duration: str | None = None
         self.custom_bg: bool | None = None
         self.custom_bg_color: wx.core.Colour | None = None
         # Viewing checkboxes

@@ -66,6 +66,7 @@ class Settings(RawConfigParser):
           ('Mouse', 'Aux2ClickCmd', -1),
           ('Mouse', 'AlwaysLeftMouseDrag', 1),
           ('Mouse', 'DragThreshold', 0),
+          ('Mouse', 'HideMouseDuration', 0),
           ('FileList', 'SortOrder', SortOrder.TYPE),
           ('Language', 'ID', 'default'),
           ('Update', 'LastCheck', ''),
