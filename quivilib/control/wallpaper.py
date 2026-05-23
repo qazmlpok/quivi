@@ -10,6 +10,7 @@ from subprocess import Popen, PIPE, call
 import wx
 from pubsub import pub as Publisher
 
+from quivilib.gui.wallpaper import WallpaperDialog
 from quivilib.i18n import _
 from quivilib.interface.imagehandler import ImageHandler, BaseImageProt
 from quivilib.model import App
@@ -50,11 +51,13 @@ class WallpaperController(object):
     def on_image_loaded(self, *, img: ImageHandler):
         self.img = img
 
-    def on_dialog_opened(self, *, dialog):
+    def on_dialog_opened(self, *, dialog: WallpaperDialog):
         #canvas_view is a CanvasAdapter with a width and height property.
-        self.canvas.view = dialog.canvas_view
-        self.canvas_controller = WallpaperCanvasController('wpcanvas', self.canvas, dialog.canvas_view)
-        self.canvas.load_img(self.img.copy(), False)
+        if self.img is not None:
+            self.canvas.view = dialog.canvas_view
+            self.canvas_controller = WallpaperCanvasController('wpcanvas', self.canvas, dialog.canvas_view)
+            self.canvas.load_img(self.img.copy(), False)
+            self.canvas_controller.update_cursor() # Hack - could move load_img into the ctor but that seems worse
         
     def on_set_wallpaper(self, *, pos_idx: int, color: wx.Colour):
         position = fit_choices[pos_idx][0]

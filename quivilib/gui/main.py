@@ -52,7 +52,12 @@ class MainWindow(wx.Frame):
         bundle.AddIcon(images.quivi48.Icon)
         bundle.AddIcon(images.quivi256.Icon)
         self.SetIcons(bundle)
-        
+
+        # Timer that runs every 1s and broadcasts. So non-frame components can access a timer for simple stuff.
+        self.global_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_global_timer, self.global_timer)
+        self.global_timer.Start(1000)
+
         dt = self.QuiviFileDropTarget(self)
         self.SetDropTarget(dt)
         
@@ -224,7 +229,10 @@ class MainWindow(wx.Frame):
     def on_mouse_motion(self, event: wx.MouseEvent):
         Publisher.sendMessage('canvas.mouse.motion', x=event.GetX(), y=event.GetY())
         event.Skip()
-        
+
+    def on_global_timer(self, event: wx.TimerEvent):
+        Publisher.sendMessage("timer.pulse")
+
     def on_settings_loaded(self, *, settings: Settings):
         self.load(settings)
         self.file_list_panel.load(settings)
@@ -295,7 +303,7 @@ class MainWindow(wx.Frame):
             txt += ' ' + _('(Spread)')
         self.status_bar.SetStatusText(txt, FIT_FIELD)
 
-    def on_canvas_cursor_changed(self, *, cursor):
+    def on_canvas_cursor_changed(self, *, cursor: wx.Cursor):
         self.panel.SetCursor(cursor)
         
     def on_canvas_zoom_changed(self, *, zoom: float):

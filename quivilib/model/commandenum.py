@@ -7,17 +7,17 @@ class MovementType(Flag):
     MOVE = auto()
     MOVE_HORI = auto()
     MOVE_NEG = auto()
-    
-    MOVETYPE_SMALL = auto()
-    MOVETYPE_LARGE = auto()
-    MOVETYPE_FULL = auto()
-    
+
     #Composite directions
     MOVE_LEFT = MOVE | MOVE_HORI
     MOVE_RIGHT = MOVE | MOVE_HORI | MOVE_NEG
     MOVE_UP = MOVE
     MOVE_DOWN = MOVE | MOVE_NEG
 
+class MovementSize(Enum):
+    MOVETYPE_SMALL = auto()
+    MOVETYPE_LARGE = auto()
+    MOVETYPE_FULL = auto()
 
 class FitSettings:
     class OldValues:

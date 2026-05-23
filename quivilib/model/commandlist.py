@@ -218,51 +218,51 @@ class CommandDefinitionList():
                                     flags=CommandFlags.KB)
 
             cat_name = __('Move')
-            yield CommandDefinition(CommandName.MOVE_SMALL_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_SMALL),
+            yield CommandDefinition(CommandName.MOVE_SMALL_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementSize.MOVETYPE_SMALL),
                                     __('Small move up'), __('Small move up'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_UP)],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_SMALL_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_SMALL),
+            yield CommandDefinition(CommandName.MOVE_SMALL_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementSize.MOVETYPE_SMALL),
                                     __('Small move down'), __('Small move down'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_DOWN)],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_SMALL_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_SMALL),
+            yield CommandDefinition(CommandName.MOVE_SMALL_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementSize.MOVETYPE_SMALL),
                                     __('Small move left'), __('Small move left'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_LEFT)],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_SMALL_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_SMALL),
+            yield CommandDefinition(CommandName.MOVE_SMALL_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementSize.MOVETYPE_SMALL),
                                     __('Small move right'), __('Small move right'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_RIGHT)],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_LARGE),
+            yield CommandDefinition(CommandName.MOVE_LARGE_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementSize.MOVETYPE_LARGE),
                                     __('Large move up'), __('Large move up'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_PAGEUP)],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_LARGE),
+            yield CommandDefinition(CommandName.MOVE_LARGE_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementSize.MOVETYPE_LARGE),
                                     __('Large move down'), __('Large move down'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_PAGEDOWN)],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_LARGE),
+            yield CommandDefinition(CommandName.MOVE_LARGE_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementSize.MOVETYPE_LARGE),
                                     __('Large move left'), __('Large move left'),
                                     [],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_LARGE_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_LARGE),
+            yield CommandDefinition(CommandName.MOVE_LARGE_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementSize.MOVETYPE_LARGE),
                                     __('Large move right'), __('Large move right'),
                                     [],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementType.MOVETYPE_FULL),
+            yield CommandDefinition(CommandName.MOVE_FULL_UP, cat_name, partial(control.canvas.move_image, MovementType.MOVE_UP, MovementSize.MOVETYPE_FULL),
                                     __('Full move up'), __('Full move up'),
                                     [],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementType.MOVETYPE_FULL),
+            yield CommandDefinition(CommandName.MOVE_FULL_DOWN, cat_name, partial(control.canvas.move_image, MovementType.MOVE_DOWN, MovementSize.MOVETYPE_FULL),
                                     __('Full move down'), __('Full move down'),
                                     [],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementType.MOVETYPE_FULL),
+            yield CommandDefinition(CommandName.MOVE_FULL_LEFT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_LEFT, MovementSize.MOVETYPE_FULL),
                                     __('Full move left'), __('Full move left'),
                                     [],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.MOVE_FULL_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementType.MOVETYPE_FULL),
+            yield CommandDefinition(CommandName.MOVE_FULL_RIGHT, cat_name, partial(control.canvas.move_image, MovementType.MOVE_RIGHT, MovementSize.MOVETYPE_FULL),
                                     __('Full move right'), __('Full move right'),
                                     [],
                                     flags=CommandFlags.KB)

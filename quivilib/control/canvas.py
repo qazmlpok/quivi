@@ -1,11 +1,13 @@
 import logging
+import time
+
 import wx
 from pubsub import pub as Publisher
 
 from quivilib import meta
 from quivilib.interface.canvasadapter import CanvasLike
 from quivilib.model import image
-from quivilib.model.commandenum import MovementType, FitSettings
+from quivilib.model.commandenum import MovementType, FitSettings, MovementSize
 from quivilib.model.canvas import Canvas, PaintedRegion, WallpaperCanvas
 from quivilib.model.settings import Settings
 from quivilib.resources import images
@@ -35,9 +37,34 @@ class BaseCanvasController(object):
         self._moved_image = False
         self._old_mouse_pos = (-1, -1)
         self._orig_mouse_pos = (-1, -1)
-        self._default_cursor = wx.Cursor(images.cursor_hand.GetImage())
-        self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())
-        Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
+        self._last_cursor_move: float|None = None
+        self._default_cursor = wx.Cursor(images.cursor_hand.GetImage())     # (Open Hand)
+        self._moving_cursor = wx.Cursor(images.cursor_drag.GetImage())      # (Closed Hand)
+        self._blank_cursor = wx.Cursor(wx.CURSOR_BLANK)                     # (Invisible)
+        self._current_cursor = None
+        self.update_cursor()
+
+    def update_cursor(self):
+        """Update the mouse cursor depending on state.
+        If there is no image, use the OS default cursor.
+        If actively dragging the current image, use a closed hand.
+        If not dragging the image, use an open hand.
+        If the mouse hasn't moved in a while, hide the cursor.
+        """
+        ts = time.time()
+        if not self.has_image():
+            cursor = wx.NullCursor
+        elif self._moving_image:
+            cursor = self._moving_cursor
+        elif self._last_cursor_move is not None and ts - self._last_cursor_move > 5.0:
+            cursor = self._blank_cursor
+        else:
+            cursor = self._default_cursor
+
+        #SetCursor appears to take a trivial amount of time, but this is called with every touch of the mouse.
+        if cursor is not self._current_cursor:
+            Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=cursor)
+            self._current_cursor = cursor
 
     def on_canvas_painted(self, *, dc: wx.DC, painted_region: PaintedRegion):
         raise NotImplementedError("Implement in subclass")
@@ -77,25 +104,23 @@ class BaseCanvasController(object):
             self.canvas.scroll_vert(inc)
         Publisher.sendMessage(f'{self.name}.changed')
 
-    def on_canvas_zoom_point(self, *, lines, x, y):
+    def on_canvas_zoom_point(self, *, lines: float, x: int, y: int):
         """ Zoom in or out. Unlike the keyboard command, this will shift the canvas as well
         in order to zoom in/out specifically at the mouse's position.
         """
-        old_top, old_left = self.canvas.top, self.canvas.left
-        old_w, old_h = self.canvas.width, self.canvas.height
         scale = ZOOM_FACTOR * (abs(lines) / 3)
         self._zoom_to_point(lines > 0, x, y, zoom_scale=scale)
         Publisher.sendMessage(f'{self.name}.changed')
 
     def image_drag_start(self):
-        Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
         self._moving_image = True
+        self.update_cursor()
 
     def image_drag_end(self):
-        Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
         self._moving_image = False
+        self.update_cursor()
 
-    def on_canvas_mouse_motion(self, *, x, y):
+    def on_canvas_mouse_motion(self, *, x: int, y: int):
         old_x, old_y = self._old_mouse_pos
         canvas = self.canvas
         if old_x != -1 and self._moving_image:
@@ -116,7 +141,7 @@ class BaseCanvasController(object):
         # (Calls the setter _set_zoom)
         self.canvas.zoom *= zoom
 
-    def _zoom_to_point(self, zoom_in, x, y, zoom_scale=ZOOM_FACTOR):
+    def _zoom_to_point(self, zoom_in, x: int, y: int, zoom_scale:float=ZOOM_FACTOR):
         zoom = 1 + zoom_scale / 100.0
         zoom = zoom if zoom_in else 1.0 / zoom
         self.canvas.zoom_to_point(self.canvas.zoom * zoom, x, y)
@@ -134,7 +159,7 @@ class BaseCanvasController(object):
         self.canvas.set_zoom_by_fit_type(fit_type, scr_w)
         Publisher.sendMessage(f'{self.name}.changed')
 
-    def move_image(self, direction, typ):
+    def move_image(self, direction: MovementType, typ: MovementSize):
         if direction & MovementType.MOVE_HORI:
             scr = self.view.width
             scr_fn = self.canvas.scroll_hori
@@ -142,9 +167,9 @@ class BaseCanvasController(object):
             scr = self.view.height
             scr_fn = self.canvas.scroll_vert
         scr_rev = direction & MovementType.MOVE_NEG
-        if typ == MovementType.MOVETYPE_LARGE:
+        if typ == MovementSize.MOVETYPE_LARGE:
             inc = int(scr * 0.8)
-        elif typ == MovementType.MOVETYPE_SMALL:
+        elif typ == MovementSize.MOVETYPE_SMALL:
             inc = int(scr * 0.2)
         else:
             # Adding all these together will guarantee the scroll is always complete
@@ -177,6 +202,7 @@ class CanvasController(BaseCanvasController):
         Publisher.subscribe(self.on_request_open_image, f'{self.name}.load.img')
         Publisher.subscribe(self.on_cache_image_loaded, 'cache.image_loaded')
         Publisher.subscribe(self.on_cache_image_load_error, 'cache.image_load_error')
+        Publisher.subscribe(self.on_timer, 'timer.pulse')
 
     def on_canvas_painted(self, *, dc: wx.DC, painted_region: PaintedRegion):
         # Reminder - this is updating the painted_region object. The caller will use these values.
@@ -196,7 +222,6 @@ class CanvasController(BaseCanvasController):
         # if configured. Otherwise, the drag behavior will be a regular command.
         if always_drag and button == 0:
             if event == 0:
-                Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
                 self._moving_image = True
                 self._orig_mouse_pos = (x, y)
             elif event == 1:
@@ -205,16 +230,25 @@ class CanvasController(BaseCanvasController):
                 ydiff = self._orig_mouse_pos[1] - y
                 if not self._moved_image or (xdiff ** 2 + ydiff ** 2 < drag_threshold ** 2):
                     Publisher.sendMessage('command.execute', ide=cmd_ide)
-                Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
                 self._moving_image = False
         elif event == 0:
             Publisher.sendMessage('command.down_execute', ide=cmd_ide)
         elif event == 1:
             Publisher.sendMessage('command.execute', ide=cmd_ide)
         self._moved_image = False
+        self.update_cursor()
+
+    def on_canvas_mouse_motion(self, *, x: int, y: int):
+        super().on_canvas_mouse_motion(x=x, y=y)
+        self._last_cursor_move = time.time()
+        self.update_cursor()
 
     def get_rtl_setting(self):
         return self.settings.getboolean('Options', 'UseRightToLeft')
+
+    def on_timer(self):
+        # Generic timer that is called every second. Use it to avoid needing an EvtHandler obj.
+        self.update_cursor()
 
     # Open/close image
     def close_img(self):
@@ -255,12 +289,13 @@ class CanvasController(BaseCanvasController):
             Publisher.sendMessage('busy', busy=False)
             item = request.item
             Publisher.sendMessage('container.image.opened', item=item)
+            # First image load needs to update the cursor
+            self.update_cursor()
 
     def on_cache_image_load_error(self, *, request: ImageCacheLoadRequest, exception, tb):
         if request == self.pending_request:
             Publisher.sendMessage('busy', busy=False)
             Publisher.sendMessage('error', exception=exception, tb=tb)
-            # Wasn't being done before. Kinda odd.
             self.pending_request = None
 
     #Zoom commands
@@ -292,9 +327,8 @@ class CanvasController(BaseCanvasController):
 
 class WallpaperCanvasController(BaseCanvasController):
     def __init__(self, name, canvas: WallpaperCanvas, view: CanvasLike):
-        #It should be possible to remove some of the event subscriptions
-        #but that would require a base class instead of direct inheritence.
         super().__init__(name, view, canvas)
+        # Redefine self.canvas to the more-specific type
         self.canvas = canvas
 
     def on_canvas_painted(self, *, dc: wx.DC, painted_region: PaintedRegion):
@@ -312,9 +346,8 @@ class WallpaperCanvasController(BaseCanvasController):
 
     def on_canvas_mouse_event(self, *, button: int, event: int, x: int, y: int):
         if button == 0 and event == 0:
-            Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._moving_cursor)
             self._moving_image = True
         elif button == 0 and event == 1:
-            Publisher.sendMessage(f'{self.name}.cursor.changed', cursor=self._default_cursor)
             self._moving_image = False
         self._moved_image = False
+        self.update_cursor()

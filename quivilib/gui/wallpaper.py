@@ -149,10 +149,10 @@ class WallpaperDialog(wx.Dialog):
     def on_canvas_changed(self):
         self.preview_panel.Refresh(eraseBackground=False)
         
-    def on_canvas_cursor_changed(self, *, cursor):
+    def on_canvas_cursor_changed(self, *, cursor: wx.Cursor):
         self.preview_panel.SetCursor(cursor)
         
-    def on_selection_changed(self, event):
+    def on_selection_changed(self, event: wx.CommandEvent):
         position = event.GetInt()
         Publisher.sendMessage('wallpaper.preview_position_changed', pos_idx=position)
         
