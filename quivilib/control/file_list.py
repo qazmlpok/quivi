@@ -1,20 +1,22 @@
+import logging
 import os
 from pathlib import Path
-import logging
+from typing import Any
 
-from pubsub import pub as Publisher
 import wx
+from pubsub import pub as Publisher
 
-from quivilib.i18n import _
 from quivilib import meta
-from quivilib.model import App
-from quivilib.model.container import ItemType, get_supported_extensions as get_supported_container_extensions
-from quivilib.model.container.base import BaseContainer
-from quivilib.model.container.directory import DirectoryContainer
-from quivilib.model.container.compressed import CompressedContainer
-from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from quivilib.control.cache import ImageCacheLoadRequest
+from quivilib.i18n import _
 from quivilib.meta import PATH_SEP
+from quivilib.model import App
+from quivilib.model.container import ItemType, get_supported_extensions as get_supported_container_extensions, SortOrder
+from quivilib.model.container.base import BaseContainer
+from quivilib.model.container.compressed import CompressedContainer
+from quivilib.model.container.directory import DirectoryContainer
+from quivilib.model.favorites import Favorite
+from quivilib.model.image import get_supported_extensions as get_supported_image_extensions
 from quivilib.util import DebugTimer
 
 log = logging.getLogger('control.file_list')
@@ -44,32 +46,33 @@ class FileListController(object):
         self.show_hidden = False
         self._set_container(start_container)
         
-    def on_file_list_activated(self, *, index):
+    def on_file_list_activated(self, *, index: int):
         container = self.model.container
         if container.items[index].typ != ItemType.IMAGE:
             opened = container.open_container(index)
             if opened:
                 self._set_container(opened)
             
-    def on_file_list_selected(self, *, index):
+    def on_file_list_selected(self, *, index: int):
         container = self.model.container
         container.selected_item = index
         if container.items[index].typ == ItemType.IMAGE:
             self.open_item(index)
             
-    def on_file_list_column_clicked(self, *, sort_order):
+    def on_file_list_column_clicked(self, *, sort_order: SortOrder):
         self.model.container.sort_order = sort_order
         
-    def on_file_list_begin_drag(self, *, obj):
+    def on_file_list_begin_drag(self, *, obj: Any):
+        # Note - this is modifying the input object
         if not self.model.container.virtual_files:
             obj.path = self.model.container.get_item_path(obj.idx)
         else:
             obj.path = None
             
-    def on_container_item_changed(self, *, index):
+    def on_container_item_changed(self, *, index: int):
         self.open_item(index)
 
-    def on_favorite_open(self, *, favorite, window=None):
+    def on_favorite_open(self, *, favorite: Favorite, window=None):
         is_placeholder = favorite.page is not None
         try:
             self._open_path(favorite.path, is_placeholder)
@@ -115,16 +118,16 @@ class FileListController(object):
             if opened:
                 self._set_container(opened)
 
-    def on_file_dropped(self, *, path):
+    def on_file_dropped(self, *, path: Path):
         self.open_path(path)
 
-    def open_parent(self):
+    def open_parent(self) -> None:
         container = self.model.container
         parent = container.open_parent()
         if parent and parent is not container:
             self._set_container(parent)
 
-    def open_directory(self):
+    def open_directory(self) -> None:
         class Request():
             start_directory = self.model.container.path
             directory = None
@@ -133,7 +136,7 @@ class FileListController(object):
         if req.directory:
             self.open_path(req.directory)
     
-    def select_index(self, nindex):
+    def select_index(self, nindex: int) -> None:
         container = self.model.container
         #Notice that it works even if no item is selected (item = -1)
         if 0 <= nindex < container.item_count:
@@ -141,19 +144,19 @@ class FileListController(object):
             if container.items[nindex].typ == ItemType.IMAGE:
                 self.open_item(nindex)
     
-    def select_next(self, skip):
+    def select_next(self, skip: int) -> None:
         container = self.model.container
         nindex = container.selected_item_index + skip
         self.select_index(nindex)
 
-    def open_selected_container(self):
+    def open_selected_container(self) -> None:
         container = self.model.container
         index = container.selected_item_index
         if container.items[index].typ != ItemType.IMAGE:
             container = container.open_container(index)
             self._set_container(container)
             
-    def open_sibling(self, skip):
+    def open_sibling(self, skip) -> None:
         Publisher.sendMessage('gui.freeze')
         try:
             container = self.model.container
@@ -168,11 +171,11 @@ class FileListController(object):
         finally:
             Publisher.sendMessage('gui.thaw') 
         
-    def refresh(self):
+    def refresh(self) -> None:
         Publisher.sendMessage('cache.flush')
         self.model.container.refresh(self.show_hidden)
         
-    def refresh_after_delete(self, deleted_index: int):
+    def refresh_after_delete(self, deleted_index: int) -> None:
         container = self.model.container
         self.refresh()
         nindex = deleted_index if self._direction == 1 else deleted_index - 1
@@ -229,12 +232,12 @@ class FileListController(object):
         
     def on_update_move_menu_item(self, event: wx.UpdateUIEvent):
         event.Enable(self._can_move())
-    def _can_move(self):
+    def _can_move(self) -> bool:
         if not self.model.container:
             return False
         return self.model.container.can_move
 
-    def open_path(self, path, skip_open=False):
+    def open_path(self, path: Path, skip_open=False) -> None:
         #Check if this path is saved as a placeholder. If it is, load it instead
         autoload = self.model.settings.get('Options', 'PlaceholderAutoOpen') == '1'
         if (autoload and self.model.favorites.contains(path, True)):
@@ -242,7 +245,7 @@ class FileListController(object):
             self.on_favorite_open(favorite=favorite)
         else:
             self._open_path(path, skip_open)
-    def _open_path(self, path, skip_open=False):
+    def _open_path(self, path: Path, skip_open=False) -> None:
         """Open the given path for viewing. This may be a directory (show images), a single image,
         or a archive (e.g. zip) containing images.
         Opening a single image will open the containing directory and jump directly to that image.
@@ -276,14 +279,14 @@ class FileListController(object):
             else:
                 raise FileNotFoundError(_('File or directory does not exist'))
             
-    def toggle_show_hidden(self):
+    def toggle_show_hidden(self) -> None:
         self.show_hidden = not self.show_hidden
         self.refresh()
         
     def on_update_hidden_menu_item(self, event: wx.UpdateUIEvent):
         event.Check(self.show_hidden)
         
-    def _open_virtual_path(self, container: BaseContainer, paths: list[str]):
+    def _open_virtual_path(self, container: BaseContainer, paths: list[str]) -> BaseContainer:
         if not paths:
             return container
         path = Path(paths[0])
@@ -297,7 +300,7 @@ class FileListController(object):
                 container = container.open_container(container.selected_item_index)
                 return self._open_virtual_path(container, paths[1:])
         
-    def _set_container(self, container: BaseContainer, skip_open=False):
+    def _set_container(self, container: BaseContainer, skip_open=False) -> None:
         if self.model.container is not None:
             self.model.container.close_container()
         self.model.container = container

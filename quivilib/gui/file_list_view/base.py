@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import wx
 from pubsub import pub as Publisher
 from wx import FileDataObject, DropSource
@@ -19,18 +21,18 @@ class FileListViewBase(object):
         self.PopupMenu(menu)
         menu.Destroy()
         
-    def on_begin_drag(self, event):
+    def on_begin_drag(self, event: wx.ListEvent):
         sel = self._get_selected_index()
         if sel == -1:
             return
         class Dummy:
             idx = sel
-            path = None
+            path: Path = None
         obj = Dummy()
         Publisher.sendMessage('file_list.begin_drag', obj=obj)
         if obj.path:
             do = FileDataObject()
-            do.AddFile(obj.path)
+            do.AddFile(str(obj.path))
             ds = DropSource(self)
             ds.SetData(do)
             ds.DoDragDrop(wx.Drag_CopyOnly)
