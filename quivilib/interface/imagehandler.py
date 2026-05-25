@@ -197,14 +197,14 @@ class ImageHandlerBase(ImageHandler):
     def is_animated(self):
         return False
 
-    def set_callback(self, cb:Callable[[Self], None]):
+    def set_callback(self, cb:Callable[[ImageHandler], None]) -> None:
         self.img_change_cb = cb
 
     def close(self) -> None:
         pass
 
 
-def clamp(minvalue, value, maxvalue):
+def clamp(minvalue: float, value: float, maxvalue: float) -> float:
     return max(minvalue, min(value, maxvalue))
 
 #Excessive obnoxious debug messages.
@@ -272,9 +272,11 @@ class AnimatedImage(ImageHandlerBase):
         self.frame = 0
         self.calculate_target_timestamps()
         if USE_THREAD:
+            assert self.thread is not None
             log.debug("Starting background thread.")
             self.thread.start()
         else:
+            assert self.timer is not None
             self.timer.Start(self.delays[self.frame] - SLEEP_OFFSET, True)
         if __debug__:
             self.planned_delay = self.delays[self.frame]
@@ -287,16 +289,19 @@ class AnimatedImage(ImageHandlerBase):
         self.animating = False
         if USE_THREAD:
             log.debug("Joining background thread.")
+            assert self.thread is not None
             self.thread.join()
         else:
+            assert self.timer is not None
             self.timer.Stop()
 
     def _next_frame_timer(self, event):
+        assert self.timer is not None
         next_delay = self._next_frame()
         if next_delay is None:
             return
         #Times in ms.
-        self.timer.Start(next_delay - SLEEP_OFFSET, True)
+        self.timer.Start(int(next_delay - SLEEP_OFFSET), True)
     def _next_frame_thread(self):
         #In practice, self.frame will always be 0 here.
         first_delay = self.delays[self.frame]
@@ -308,7 +313,7 @@ class AnimatedImage(ImageHandlerBase):
             #Times in s.
             time.sleep(next_delay / 1000.0)
 
-    def _next_frame(self) -> int|None:
+    def _next_frame(self) -> float|None:
         """Shared logic for advancing to the next frame of an animation.
         Returns the number of ms to delay for the next frame. Modifies state:
         Advance the image to the next frame, or back to the first one. Fire the callback."""

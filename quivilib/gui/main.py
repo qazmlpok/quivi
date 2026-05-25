@@ -1,7 +1,8 @@
+import logging as log
 import sys
 import traceback
-import logging as log
 from pathlib import Path
+from typing import Any
 
 import wx
 import wx.aui
@@ -9,30 +10,22 @@ from pubsub import pub as Publisher
 
 from quivilib import meta
 from quivilib import util
-from quivilib.control.options import get_fit_choices
+from quivilib.gui.components.status_bar import QuiviStatusBar
 from quivilib.gui.debug_cache import DebugCacheDialog
 from quivilib.gui.debug_memory import DebugMemoryDialog
 from quivilib.gui.file_list import FileListPanel
 from quivilib.i18n import _
 from quivilib.interface.canvasadapter import CanvasAdapter
-from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model import Favorites
 from quivilib.model.canvas import PaintedRegion
 from quivilib.model.command import Command, CommandCategory
 from quivilib.model.commandenum import MenuName, CommandName, FitSettings
+from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.favorites import FavoriteMenuItem
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.util import error_handler
-
-from typing import Any
-
-# The status bar is split into four fields.
-NAME_FIELD = 0
-SIZE_FIELD = 1
-ZOOM_FIELD = 2
-FIT_FIELD = 3
 
 def _handle_error(exception, args, kwargs):
     self = args[0]
@@ -64,14 +57,9 @@ class MainWindow(wx.Frame):
         self.menu_bar = wx.MenuBar()
         self.SetMenuBar(self.menu_bar)
         
-        self.status_bar = wx.StatusBar(self)
+        self.status_bar = QuiviStatusBar(self)
         self.SetStatusBar(self.status_bar)
-        self.status_bar.SetFieldsCount(4)
-        size_width = self.status_bar.GetTextExtent('10000 x 10000')[0] + 10
-        zoom_width = self.status_bar.GetTextExtent('9999.99%')[0] + 20
-        fit_width = self.status_bar.GetTextExtent('Width if larger with added stuff')[0] + 20
-        self.status_bar.SetStatusWidths([-1, size_width, zoom_width, fit_width])
-        
+
         self.file_list_panel = FileListPanel(self)
         self.aui_mgr.AddPane(self.file_list_panel, wx.aui.AuiPaneInfo().
                              Name('file_list').Caption(_('Files')).Left().
@@ -123,13 +111,9 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_thaw, 'gui.thaw')
         Publisher.subscribe(self.on_container_opened, 'container.opened')
         Publisher.subscribe(self.on_image_opened, 'container.image.opened')
-        Publisher.subscribe(self.on_image_loading, 'container.image.loading')
-        Publisher.subscribe(self.on_image_loaded, 'canvas.image.loaded')
         Publisher.subscribe(self.on_language_changed, 'language.changed')
         Publisher.subscribe(self.on_canvas_changed, 'canvas.changed')
-        Publisher.subscribe(self.on_canvas_fit_changed, 'canvas.fit.changed')
         Publisher.subscribe(self.on_canvas_cursor_changed, 'canvas.cursor.changed')
-        Publisher.subscribe(self.on_canvas_zoom_changed, 'canvas.zoom.changed')
         Publisher.subscribe(self.on_menu_built, 'menu.built')
         Publisher.subscribe(self.on_menu_labels_changed, 'menu.labels.changed')
         Publisher.subscribe(self.on_shortcuts_changed, 'menu.shortcuts.changed')
@@ -204,7 +188,7 @@ class MainWindow(wx.Frame):
             return self.GetSize()
         else:
             return self.GetClientSize()
-    def set_window_size(self, x:int, y: int, w: int, h: int):
+    def set_window_size(self, x: int, y: int, w: int, h: int):
         """As with get. The parameters are different so this is two calls on Linux."""
         if sys.platform == 'win32':
             self.SetSize(x, y, w, h)
@@ -295,21 +279,9 @@ class MainWindow(wx.Frame):
     def on_canvas_changed(self):
         self.panel.Refresh(eraseBackground=False)
 
-    def on_canvas_fit_changed(self, *, FitType, IsSpread=False):
-        fit_choices = get_fit_choices()
-        name = [name for name, typ in fit_choices if typ == FitType][0]
-        txt = name
-        if IsSpread:
-            txt += ' ' + _('(Spread)')
-        self.status_bar.SetStatusText(txt, FIT_FIELD)
-
     def on_canvas_cursor_changed(self, *, cursor: wx.Cursor):
         self.panel.SetCursor(cursor)
-        
-    def on_canvas_zoom_changed(self, *, zoom: float):
-        text = util.get_formatted_zoom(zoom)
-        self.status_bar.SetStatusText(text, ZOOM_FIELD)
-        
+
     def on_menu_built(self, *, main_menu: list[MenuName], all_menus: list[CommandCategory], commands: list[Command]):
         """ Turn the model objects into actual wx menu objects and store them locally.
         These will be used to populate the menu bar (immediately) and context menus (on demand)
@@ -460,23 +432,9 @@ class MainWindow(wx.Frame):
     
     def on_container_opened(self, *, container: BaseContainer):
         self.SetTitle(f'{container.name} - {meta.APPNAME}')
-        self.status_bar.SetStatusText(container.name, NAME_FIELD)
     
-    def on_image_opened(self, *, item):
+    def on_image_opened(self, *, item: Item):
         self.SetTitle(f'{item.name} - {meta.APPNAME}')
-        self.status_bar.SetStatusText(str(item.full_path), NAME_FIELD)
-        
-    def on_image_loading(self, *, item):
-        self.status_bar.SetStatusText(_('Loading...'), NAME_FIELD)
-        
-    def on_image_loaded(self, *, img: ImageHandler):
-        if img is None:
-            self.status_bar.SetStatusText('', SIZE_FIELD)
-            self.status_bar.SetStatusText('', ZOOM_FIELD)
-        else:
-            width = img.base_width
-            height = img.base_height
-            self.status_bar.SetStatusText('%d x %d' % (width, height), SIZE_FIELD)
 
     def on_language_changed(self):
         self.aui_mgr.GetPane('file_list').Caption(_('Files'))
