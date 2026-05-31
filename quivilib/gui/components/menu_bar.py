@@ -66,17 +66,6 @@ class QuiviMenuBar(wx.MenuBar):
             category.menu_idx = i
             i += 1
 
-        # Create actual bindings for the commands
-        for command in commands:
-            def event_fn(event, cmd=command):
-                #try:
-                #    cmd()
-                #except Exception as e:
-                #    self.handle_error(e)
-                cmd()
-                #raise  Exception("Error.")
-
-            self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
         # This is the number of pre-defined menu items in favorites; everything past this is a favorite.
         self._favorite_menu_count = self.menus[MenuName.Favorites].GetMenuItemCount()
 
@@ -136,24 +125,17 @@ class QuiviMenuBar(wx.MenuBar):
         """Resets and populates self.favorites_menu_items"""
         items = favorites.getitems()
         self.favorites_menu_items = []
-        i = 0
+        Publisher.sendMessage("menu.reset_favorites")
         for path_key, fav in items:
+            #TODO: Try to preserve IDs instead of creating new ones for old favorites.
             ide = wx.NewId()
-            def event_fn(event: wx.CommandEvent, favorite=fav):
-                try:
-                    raise Exception("Error.")
-                    Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
-                except Exception as e:
-                    self.handle_error(e)
-
 
             name = fav.displayText()
             if not name:
                 continue
 
             self.favorites_menu_items.append(FavoriteMenuItem(ide, name, fav))
-            self.Bind(wx.EVT_MENU, event_fn, id=ide)
-            i += 1
+            Publisher.sendMessage("menu.bind_favorite", ide=ide, fav=fav)
 
     def _reset_favorite_menus(self):
         """The favorites menus are always updated by wiping them out and re-building from scratch.

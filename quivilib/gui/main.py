@@ -22,6 +22,7 @@ from quivilib.model.command import Command
 from quivilib.model.commandenum import FitSettings
 from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
+from quivilib.model.favorites import Favorite
 from quivilib.model.settings import Settings
 from quivilib.resources import images
 from quivilib.util import error_handler
@@ -84,6 +85,7 @@ class MainWindow(wx.Frame):
         self._busy = False
 
         self.accel_table = None
+        self._bound_favorites: list[int] = []
 
     def bindings_and_subscriptions(self):
         self.panel.Bind(wx.EVT_PAINT, self.on_panel_paint)
@@ -104,6 +106,9 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_language_changed, 'language.changed')
         Publisher.subscribe(self.on_canvas_changed, 'canvas.changed')
         Publisher.subscribe(self.on_canvas_cursor_changed, 'canvas.cursor.changed')
+        Publisher.subscribe(self.on_menu_built, 'menu.built')
+        Publisher.subscribe(self.on_favorites_reset, 'menu.reset_favorites')
+        Publisher.subscribe(self.on_favorite_bind, 'menu.bind_favorite')
         Publisher.subscribe(self.on_shortcuts_changed, 'menu.shortcuts.changed')
         Publisher.subscribe(self.on_cmd_context_menu, 'menu.context_menu')
         Publisher.subscribe(self.on_settings_loaded, 'settings.loaded')
@@ -266,6 +271,39 @@ class MainWindow(wx.Frame):
 
     def on_canvas_cursor_changed(self, *, cursor: wx.Cursor):
         self.panel.SetCursor(cursor)
+
+    def on_menu_built(self, *, main_menu, all_menus, commands: list[Command]):
+        """ Bind the functions for the menu commands.
+        :param commands: All command objects
+        """
+        # Create actual bindings for the commands
+        for command in commands:
+            def event_fn(event, cmd=command):
+                try:
+                    cmd()
+                except Exception as e:
+                    self.handle_error(e)
+
+            self.Bind(wx.EVT_MENU, event_fn, id=command.ide)
+
+    def on_favorites_reset(self):
+        """ Unbind all favorites and clear out the local cache.
+        This isn't strictly necessary (the menus are destroyed) but it's probably a good idea."""
+        for i in self._bound_favorites:
+            self.Unbind(wx.EVT_MENU, id=i)
+        self._bound_favorites = []
+
+    def on_favorite_bind(self, *, ide: int, fav: Favorite):
+        """ Bind a favorite"""
+
+        def event_fn(event: wx.CommandEvent, favorite=fav):
+            try:
+                Publisher.sendMessage('favorite.open', favorite=favorite, window=self)
+            except Exception as e:
+                self.handle_error(e)
+
+        self.Bind(wx.EVT_MENU, event_fn, id=ide)
+        self._bound_favorites.append(ide)
 
     def on_shortcuts_changed(self, *, accel_table: wx.AcceleratorTable):
         self.accel_table = accel_table
