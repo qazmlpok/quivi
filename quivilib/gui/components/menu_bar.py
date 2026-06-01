@@ -185,8 +185,7 @@ class QuiviMenuBar(wx.MenuBar):
         self.Append(menu, self.menu_names[MenuName.Downloads])
         Publisher.sendMessage('menu.item_added', cmd=MenuName.Downloads, idx=menu_idx)
 
-    #TODO: Rename
-    def on_download_update(self):
+    def do_download_update(self):
         Publisher.sendMessage('program.open_update_site', url=self.down_url)
 
     # Accessors for specific context menus

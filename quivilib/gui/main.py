@@ -364,8 +364,8 @@ class MainWindow(wx.Frame):
         dialog.ShowModal()
         dialog.Destroy()
 
-    def on_download_update(self):
-        self.menu_bar.on_download_update()
+    def do_download_update(self):
+        self.menu_bar.do_download_update()
 
     def on_bg_color_changed(self, *, settings: Settings):
         if settings.get('Options', 'CustomBackground') == '1':

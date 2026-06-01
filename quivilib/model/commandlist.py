@@ -301,7 +301,7 @@ class CommandDefinitionList():
                                     [])
 
             cat_name = __('Download')
-            yield CommandDefinition(CommandName.DOWNLOAD_NEW, cat_name, control.view.on_download_update,
+            yield CommandDefinition(CommandName.DOWNLOAD_NEW, cat_name, control.view.do_download_update,
                                     __('&Download'), __('Go to the download site'),
                                     [],
                                     flags=CommandFlags.NOMENU)
