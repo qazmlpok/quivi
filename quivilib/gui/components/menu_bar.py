@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import wx
 import wx.aui
 from pubsub import pub as Publisher
@@ -6,7 +8,7 @@ from quivilib.i18n import _
 from quivilib.model import Favorites
 from quivilib.model.command import Command, CommandCategory
 from quivilib.model.commandenum import MenuName, CommandName
-from quivilib.model.favorites import FavoriteMenuItem
+from quivilib.model.favorites import FavoriteMenuItem, Favorite
 from quivilib.model.settings import Settings
 
 
@@ -26,6 +28,8 @@ class QuiviMenuBar(wx.MenuBar):
         self.all_cmd_pairs: list[tuple[Command, wx.MenuItem]] = []
 
         self.accel_table = None
+
+        self.seen_favorites: dict[tuple[Path, bool], int] = {}
 
         # Set by a background task if there is an update available.
         self.down_url: str | None = None
@@ -127,15 +131,24 @@ class QuiviMenuBar(wx.MenuBar):
         self.favorites_menu_items = []
         Publisher.sendMessage("menu.reset_favorites")
         for path_key, fav in items:
-            #TODO: Try to preserve IDs instead of creating new ones for old favorites.
-            ide = wx.NewId()
-
             name = fav.displayText()
             if not name:
                 continue
+            ide = self._get_favorite_id(fav)
 
             self.favorites_menu_items.append(FavoriteMenuItem(ide, name, fav))
             Publisher.sendMessage("menu.bind_favorite", ide=ide, fav=fav)
+
+    def _get_favorite_id(self, fav: Favorite) -> int:
+        """ Returns a wx id for a specific favorite. This is to avoid generating unnecessary new ids
+        This is probably not needed, but the favorites menu is destroyed each time it changes, so it's not
+        completely impossible that a huge favorites list will cause problems"""
+        k = fav.getKey()
+        if k in self.seen_favorites:
+            return self.seen_favorites[k]
+        new_id = wx.NewId()
+        self.seen_favorites[k] = new_id
+        return new_id
 
     def _reset_favorite_menus(self):
         """The favorites menus are always updated by wiping them out and re-building from scratch.
