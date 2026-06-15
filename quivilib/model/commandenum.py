@@ -220,7 +220,5 @@ class MenuName(StrEnum):
     ZoomSub = '_zoomSub'
     RotateSub = '_rotateSub'
     FavoritesSub = '_favoriteSub'
-    FavoritesCtx = '_favoriteCtx'
     PlaceholderSub = '_placeholderSub'
-    PlaceholderCtx = '_placeholderCtx'
 #

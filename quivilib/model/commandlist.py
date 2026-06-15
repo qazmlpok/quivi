@@ -421,12 +421,6 @@ class MenuDefinitionList():
             CommandName.ROTATE_COUNTER_CLOCKWISE,
         ))
         # Context menus
-        fav_ctx = MenuDefinition(MenuName.FavoritesCtx, 'Favorites', (
-            #Deliberately empty
-        ))
-        placeholder_ctx = MenuDefinition(MenuName.PlaceholderCtx, 'Placeholders', (
-            #Deliberately empty
-        ))
         fit_menu = MenuDefinition(MenuName.FitCtx, empty, (
             CommandName.ZOOM_NONE,
             CommandName.ZOOM_WIDTH,
@@ -452,8 +446,8 @@ class MenuDefinitionList():
             CommandName.FULL_SCREEN,
             CommandName.SHOW_FILE_LIST,
             None,
-            MenuName.FavoritesCtx,
-            MenuName.PlaceholderCtx,
+            MenuName.FavoritesSub,
+            MenuName.PlaceholderSub,
             None,
             CommandName.OPTIONS,
             CommandName.HELP,
@@ -468,7 +462,7 @@ class MenuDefinitionList():
         self.menu_list = (
             file_menu, folder_menu, view_menu, help_menu, download_menu,
             fav_sub, placeholder_sub, favorites_menu,
-            zoom_sub, rotate_sub, fav_ctx, placeholder_ctx,
+            zoom_sub, rotate_sub,
             fit_menu, img_context,
             debug_menu,
         )

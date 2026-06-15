@@ -13,14 +13,15 @@ from quivilib.model.settings import Settings
 
 
 class QuiviMenuBar(wx.MenuBar):
-    def __init__(self, style = 0):
+    def __init__(self, style = 0) -> None:
         super().__init__(style)
 
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
         self.favorites_menu_items: list[FavoriteMenuItem] = []
         self._favorite_menu_count = 0
-        self.update_menu_item = None
+        """Exists just to prevent adding the menubar item twice, which should be impossible anyway"""
+        self.update_menu = None
         #Track as a dictionary
         self.menus: dict[MenuName, wx.Menu] = {}
         self.menu_names: dict[MenuName, str] = {}
@@ -34,7 +35,6 @@ class QuiviMenuBar(wx.MenuBar):
         # Set by a background task if there is an update available.
         self.down_url: str | None = None
 
-        Publisher.subscribe(self.on_language_changed, 'language.changed')
         Publisher.subscribe(self.on_menu_built, 'menu.built')
         Publisher.subscribe(self.on_menu_labels_changed, 'menu.labels.changed')
         Publisher.subscribe(self.on_favorites_changed, 'favorites.changed')
@@ -85,7 +85,7 @@ class QuiviMenuBar(wx.MenuBar):
             elif type(cmd) is MenuName:
                 if cmd not in self.menus:
                     raise Exception(f"Menu {cmd} referenced before it was created.")
-                submenu = self.menus[cmd]
+                submenu: wx.Menu = self.menus[cmd]
                 data = all_menus[cmd]
                 _menu.AppendSubMenu(submenu, data.name)
             # Command
@@ -93,6 +93,7 @@ class QuiviMenuBar(wx.MenuBar):
                 command = cmd_lookup[cmd]
                 style = wx.ITEM_CHECK if command.checkable else wx.ITEM_NORMAL
                 wx_menuitem = _menu.Append(command.ide, command.name_and_shortcut, command.description, style)
+
                 #Track for later updates (i.e. translations).
                 self.all_cmd_pairs.append((command, wx_menuitem))
                 #If a cmd is in multiple menus, it will bind multiple times. Is this a problem?
@@ -103,9 +104,8 @@ class QuiviMenuBar(wx.MenuBar):
     def on_favorites_changed(self, *, favorites: Favorites, settings: Settings):
         favorites_menu = self.menus[MenuName.Favorites]
         fav_only = self.menus[MenuName.FavoritesSub]
-        fav_ctx = self.menus[MenuName.FavoritesCtx]
         place_only = self.menus[MenuName.PlaceholderSub]
-        place_ctx = self.menus[MenuName.PlaceholderCtx]
+        fav_dest = [fav_only, place_only]
         self._create_favorites(favorites)
         self.Freeze()
         try:
@@ -115,12 +115,7 @@ class QuiviMenuBar(wx.MenuBar):
                 favorites_menu.AppendSeparator()
             for item in self.favorites_menu_items:
                 favorites_menu.Append(item.ide, item.name)
-                if item.fav.is_placeholder():
-                    place_only.Append(item.ide, item.name)
-                    place_ctx.Append(item.ide, item.name)
-                else:
-                    fav_only.Append(item.ide, item.name)
-                    fav_ctx.Append(item.ide, item.name)
+                fav_dest[item.fav.is_placeholder()+0].Append(item.ide, item.name)
         finally:
             self.Thaw()
         pass
@@ -155,7 +150,7 @@ class QuiviMenuBar(wx.MenuBar):
         Call this within a 'freeze' block. """
         favorites_menu = self.menus[MenuName.Favorites]
 
-        reset_submenus = (self.menus[MenuName.FavoritesSub], self.menus[MenuName.PlaceholderSub], self.menus[MenuName.FavoritesCtx], self.menus[MenuName.PlaceholderCtx])
+        reset_submenus = (self.menus[MenuName.FavoritesSub], self.menus[MenuName.PlaceholderSub])
         for menu in reset_submenus:
             while menu.GetMenuItemCount() > 0:
                 item = menu.FindItemByPosition(0)
@@ -184,19 +179,16 @@ class QuiviMenuBar(wx.MenuBar):
             if midx != -1:
                 self.SetMenuLabel(midx, category.name)
 
-    # Update available menu
-    def on_language_changed(self):
-        if self.update_menu_item:
-            self.update_menu_item.SetItemLabel(_('&Download'))
-            self.update_menu_item.SetHelp(_('Go to the download site'))
-            self.SetMenuLabel(self.GetMenuCount()-1, _('&New version available!'))
-
     def on_update_available(self, *, down_url, check_time, version):
-        self.down_url = down_url
-        menu = self.menus[MenuName.Downloads]
-        menu_idx = self.GetMenuCount()
-        self.Append(menu, self.menu_names[MenuName.Downloads])
-        Publisher.sendMessage('menu.item_added', cmd=MenuName.Downloads, idx=menu_idx)
+        if not self.update_menu:
+            # (Shouldn't be possible, but don't try to add this twice)
+            self.down_url = down_url
+            menu = self.menus[MenuName.Downloads]
+            menu_idx = self.GetMenuCount()
+            self.update_menu = menu
+            self.Append(menu, self.menu_names[MenuName.Downloads])
+
+            Publisher.sendMessage('menu.item_added', cmd=MenuName.Downloads, idx=menu_idx)
 
     def do_download_update(self):
         Publisher.sendMessage('program.open_update_site', url=self.down_url)
