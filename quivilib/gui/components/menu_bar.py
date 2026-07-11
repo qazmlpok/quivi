@@ -231,8 +231,8 @@ class QuiviMenuBar(wx.MenuBar):
         Publisher.sendMessage('program.open_update_site', url=self.down_url)
 
     # Accessors for specific context menus
-    def open_fit_menu(self):
-        self.PopupMenu(self.menus[MenuName.FitCtx])
+    def get_fit_menu(self):
+        return self.menus[MenuName.FitCtx]
 
-    def open_context_menu(self):
-        self.PopupMenu(self.menus[MenuName.ImgCtx])
+    def get_context_menu(self):
+        return self.menus[MenuName.ImgCtx]

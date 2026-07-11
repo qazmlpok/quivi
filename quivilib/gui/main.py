@@ -241,11 +241,12 @@ class MainWindow(wx.Frame):
 
     def on_fit_context_menu(self, event: wx.ContextMenuEvent):
         """Appears on right-clicking the status bar"""
-        self.menu_bar.open_fit_menu()
+        # Note - on Windows, it appears to be necessary to call PopupMenu here, not in the menubar. Linux doesn't care.
+        self.PopupMenu(self.menu_bar.get_fit_menu())
         
     def on_cmd_context_menu(self):
         """Appears on executing the bindable 'open context menu' command, e.g. middle/right clicking. """
-        self.menu_bar.open_context_menu()
+        self.PopupMenu(self.menu_bar.get_context_menu())
         
     def on_busy(self, *, busy):
         if self._busy == busy:
