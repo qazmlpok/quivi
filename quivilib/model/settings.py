@@ -33,7 +33,8 @@ class Settings(RawConfigParser):
             _parseError()
         self.__defaults = self._load_defaults()
         Publisher.sendMessage('settings.changed', settings=self)
-        
+        Publisher.sendMessage('settings.initial_load', settings=self)
+
     def _load_defaults(self):
         defaults = (
           ('Options', 'FitType', FitSettings.FitType.WIDTH_IF_LARGER),

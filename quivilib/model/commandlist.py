@@ -392,6 +392,24 @@ class MenuDefinitionList():
         fav_sub = MenuDefinition(MenuName.FavoritesSub, 'Favorites', (
             # Deliberately empty
         ))
+        placeholder_sub_split = MenuDefinition(MenuName.PlaceholderSubSplit, 'Placeholders', (
+            # Deliberately empty
+        ))
+        fav_sub_split = MenuDefinition(MenuName.FavoritesSubSplit, 'Favorites', (
+            # Deliberately empty
+        ))
+        favorites_split_menu = MenuDefinition(MenuName.FavoritesSplit, 'F&avorites', (
+            # In theory these should be in the sub menus, but the main purpose of this is to make long fav lists easier to deal with
+            # And there's a lot more room here.
+            CommandName.ADD_FAVORITES,
+            CommandName.ADD_PLACEHOLDER,
+            CommandName.REMOVE_FAVORITES,
+            CommandName.REMOVE_PLACEHOLDER,
+            None,
+            #It is not possible to use fav_sub etc twice.
+            MenuName.FavoritesSubSplit,
+            MenuName.PlaceholderSubSplit,
+        ))
         help_menu = MenuDefinition(MenuName.Help, '&Help', (
             CommandName.HELP,
             CommandName.FEEDBACK,
@@ -461,7 +479,7 @@ class MenuDefinitionList():
             self.menubar_menus = self.menubar_menus + (debug_menu,)
         self.menu_list = (
             file_menu, folder_menu, view_menu, help_menu, download_menu,
-            fav_sub, placeholder_sub, favorites_menu,
+            fav_sub, placeholder_sub, fav_sub_split, placeholder_sub_split, favorites_menu, favorites_split_menu,
             zoom_sub, rotate_sub,
             fit_menu, img_context,
             debug_menu,

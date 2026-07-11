@@ -16,15 +16,19 @@ class QuiviMenuBar(wx.MenuBar):
     def __init__(self, style = 0) -> None:
         super().__init__(style)
 
+        self.use_split_favorites: bool|None = None
+
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
         self.favorites_menu_items: list[FavoriteMenuItem] = []
         self._favorite_menu_count = 0
         """Exists just to prevent adding the menubar item twice, which should be impossible anyway"""
         self.update_menu = None
+
         #Track as a dictionary
         self.menus: dict[MenuName, wx.Menu] = {}
         self.menu_names: dict[MenuName, str] = {}
+        self.menu_idxs: dict[MenuName, int] = {}
         #Used for updating translations dynamically. Pair the actual wx objects and the local definitions.
         self.all_cmd_pairs: list[tuple[Command, wx.MenuItem]] = []
 
@@ -39,7 +43,8 @@ class QuiviMenuBar(wx.MenuBar):
         Publisher.subscribe(self.on_menu_labels_changed, 'menu.labels.changed')
         Publisher.subscribe(self.on_favorites_changed, 'favorites.changed')
         Publisher.subscribe(self.on_update_available, 'program.update_available')
-        # Publisher.subscribe(self.on_favorite_settings_changed, 'settings.changed.Options.PlaceholderSeparateMenu')
+        Publisher.subscribe(self.on_favorite_settings_changed, 'settings.initial_load')
+        Publisher.subscribe(self.on_favorite_settings_changed, 'settings.changed.Options.PlaceholderSeparateMenu')
 
     def on_menu_built(self, *, main_menu: list[MenuName], all_menus: list[CommandCategory], commands: list[Command]):
         """ Turn the model objects into actual wx menu objects and store them locally.
@@ -61,14 +66,18 @@ class QuiviMenuBar(wx.MenuBar):
 
         # Add the appropriate items to self (use Append). Set indices
         i = 0
-        for idx in main_menu:
-            menu = self.menus[idx]
-            category = menu_lookup[idx]
+        for menu_key in main_menu:
+            menu = self.menus[menu_key]
+            category = menu_lookup[menu_key]
             self.Append(menu, category.name)
+            self.menu_idxs[menu_key] = i
             # Need to manually track the id. Searching by name doesn't work if the name can change (translations)
             # Just counting up is fine as long as there aren't existing menu items, and there shouldn't be.
             category.menu_idx = i
             i += 1
+
+        #Need to duplicate as these are supposed to be the same menu
+        self.menu_idxs[MenuName.FavoritesSplit] = self.menu_idxs[MenuName.Favorites]
 
         # This is the number of pre-defined menu items in favorites; everything past this is a favorite.
         self._favorite_menu_count = self.menus[MenuName.Favorites].GetMenuItemCount()
@@ -102,13 +111,17 @@ class QuiviMenuBar(wx.MenuBar):
         return _menu
 
     def on_favorites_changed(self, *, favorites: Favorites, settings: Settings):
+        split = settings.getboolean('Options','PlaceholderSeparateMenu')
         favorites_menu = self.menus[MenuName.Favorites]
-        fav_only = self.menus[MenuName.FavoritesSub]
-        place_only = self.menus[MenuName.PlaceholderSub]
-        fav_dest = [fav_only, place_only]
+        fav_dest = [self.menus[MenuName.FavoritesSub], self.menus[MenuName.PlaceholderSub]]
+        fav_dest2 = [self.menus[MenuName.FavoritesSubSplit], self.menus[MenuName.PlaceholderSubSplit]]
         self._create_favorites(favorites)
         self.Freeze()
         try:
+            if self.use_split_favorites != split:
+                self.use_split_favorites = split
+                self.ChangeFavoriteMenubar(True)
+
             self._reset_favorite_menus()
             #Rebuild
             if self.favorites_menu_items:
@@ -116,9 +129,24 @@ class QuiviMenuBar(wx.MenuBar):
             for item in self.favorites_menu_items:
                 favorites_menu.Append(item.ide, item.name)
                 fav_dest[item.fav.is_placeholder()+0].Append(item.ide, item.name)
+                fav_dest2[item.fav.is_placeholder()+0].Append(item.ide, item.name)
         finally:
             self.Thaw()
         pass
+
+    def ChangeFavoriteMenubar(self, already_frozen: bool):
+        """Find the favorite menu item in the menubar and remove it, then re-add the appropriate one
+        Which menu to use is based on the current value of self.use_split_favorites, so be sure to set that first.
+        An alternate implementation would be to keep the same Fav menubar menu and modify that. However, I absolutely could not get that to work (it caused segfaults)
+        """
+        if not already_frozen:
+            self.Freeze()
+        idx = self.menu_idxs[MenuName.Favorites]
+        replacement = self.menus[MenuName.FavoritesSplit] if self.use_split_favorites else self.menus[MenuName.Favorites]
+        self.Replace(idx, replacement, _('F&avorites'))
+
+        if not already_frozen:
+            self.Thaw()
 
     def _create_favorites(self, favorites: Favorites):
         """Resets and populates self.favorites_menu_items"""
@@ -150,7 +178,10 @@ class QuiviMenuBar(wx.MenuBar):
         Call this within a 'freeze' block. """
         favorites_menu = self.menus[MenuName.Favorites]
 
-        reset_submenus = (self.menus[MenuName.FavoritesSub], self.menus[MenuName.PlaceholderSub])
+        reset_submenus = (
+            self.menus[MenuName.FavoritesSub], self.menus[MenuName.PlaceholderSub],
+            self.menus[MenuName.FavoritesSubSplit], self.menus[MenuName.PlaceholderSubSplit]
+        )
         for menu in reset_submenus:
             while menu.GetMenuItemCount() > 0:
                 item = menu.FindItemByPosition(0)
@@ -165,7 +196,12 @@ class QuiviMenuBar(wx.MenuBar):
         """Updates the various menus that display favorites. Called when settings change or when the favorites change."""
         #The best way to handle this is likely to alternate between adding favorites directly to the menu and the two sub menus.
         #Trying to do this is giving me wx free errors.
-        pass
+        value = settings.getboolean('Options','PlaceholderSeparateMenu')
+        # Note - this is called on saving options, whether or not the value actually changed.
+        if value == self.use_split_favorites:
+            return
+        self.use_split_favorites = value
+        self.ChangeFavoriteMenubar(False)
 
     def on_menu_labels_changed(self, *, categories: list[CommandCategory]):
         #Commands (i.e. wx.MenuItem s) use stored data. The menu_bar requires indices; wx.Menu references will not work.

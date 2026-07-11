@@ -210,6 +210,7 @@ class MenuName(StrEnum):
     Folder = 'fold'
     View = 'view'
     Favorites = 'fav'
+    FavoritesSplit = 'favS'
     Help = 'help'
     Downloads = 'download'      #Conditionally in the menu bar
     Debug = 'debug'     #Debug mode only
@@ -221,4 +222,6 @@ class MenuName(StrEnum):
     RotateSub = '_rotateSub'
     FavoritesSub = '_favoriteSub'
     PlaceholderSub = '_placeholderSub'
+    FavoritesSubSplit = '_favoriteSplit'
+    PlaceholderSubSplit = '_placeholderSplit'
 #
