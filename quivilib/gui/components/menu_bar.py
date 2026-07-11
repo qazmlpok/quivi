@@ -16,7 +16,8 @@ class QuiviMenuBar(wx.MenuBar):
     def __init__(self, style = 0) -> None:
         super().__init__(style)
 
-        self.use_split_favorites: bool|None = None
+        #The menubar is created as if this setting is False. Settings are then applied later.
+        self.use_split_favorites: bool = False
 
         #List of (id, name) tuples. Filled on the favorites.changed event,
         #used in the file list popup menu
