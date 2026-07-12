@@ -237,6 +237,8 @@ class AnimatedImage(ImageHandlerBase):
         self.max_loops = loops
 
         self.animating = False
+        # Used to control the background thread's loop. A separate bool is used to ensure it can't be set to True again when re-opening an image.
+        self.stopped = False
 
         self.timer = None
         self.thread = None
@@ -273,6 +275,11 @@ class AnimatedImage(ImageHandlerBase):
         self.calculate_target_timestamps()
         if USE_THREAD:
             assert self.thread is not None
+            if self.stopped:
+                log.debug('Joining old background thread.')
+                self.thread.join()
+                self.stopped = False
+                self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
             log.debug("Starting background thread.")
             self.thread.start()
         else:
@@ -287,10 +294,10 @@ class AnimatedImage(ImageHandlerBase):
 
     def stop_animation(self):
         self.animating = False
+        self.stopped = True
         if USE_THREAD:
-            log.debug("Joining background thread.")
             assert self.thread is not None
-            self.thread.join()
+            # Do nothing - self.stopped while prevent further execution.
         else:
             assert self.timer is not None
             self.timer.Stop()
@@ -306,7 +313,7 @@ class AnimatedImage(ImageHandlerBase):
         #In practice, self.frame will always be 0 here.
         first_delay = self.delays[self.frame]
         time.sleep(first_delay / 1000.0)
-        while True:
+        while not self.stopped:
             next_delay = self._next_frame()
             if next_delay is None:
                 return
