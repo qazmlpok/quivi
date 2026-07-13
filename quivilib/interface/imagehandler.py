@@ -368,7 +368,8 @@ class AnimatedImage(ImageHandlerBase):
         """
         if value < 20:
             return 100
-        return value
+        # APNG have have unusual denominators so PIL uses floats. Force integers.
+        return int(value)
 
     def is_animated(self):
         return True
