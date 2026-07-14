@@ -228,12 +228,15 @@ class AnimatedPilImage(PilImage, AnimatedImage):
 
         #This is number of times it should loop, not a bool.
         loop = img.info.get('loop', 0)
-        count = img.n_frames
+        count: int = img.n_frames
         frame_delays = [0] * count
         frames: List[wx.Bitmap] = [None] * count
         #Get the img and delay data. This requires using img.seek to select each individual frame.
         for i in range(count):
             img.seek(i)
+            # WebP does not populate `info` until the image is loaded, so calling load() is mandatory.
+            # This method is idempotent so there's no harm in an early call.
+            img.load()
             frame_delays[i] = self.duration_to_time(img.info.get('duration', 100))
             frame = img
             if img.mode != 'RGB':
