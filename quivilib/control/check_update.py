@@ -1,10 +1,10 @@
-from threading import Thread
-from datetime import datetime
-import traceback
 import logging
+import traceback
+from datetime import datetime
+from threading import Thread
 
-from pubsub import pub as Publisher
 import wx
+from pubsub import pub as Publisher
 
 from quivilib import meta
 
@@ -48,7 +48,7 @@ class UpdateChecker(object):
             log.error(traceback.format_exc())
             
     def _get_update_info(self, url):
-        import urllib.request, urllib.error, urllib.parse
+        import urllib.request, urllib.parse
         with urllib.request.urlopen(url) as f:
             txt = f.read()
             txt = txt.decode('utf-8')

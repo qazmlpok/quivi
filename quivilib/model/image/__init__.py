@@ -1,15 +1,14 @@
 import logging as log
 import traceback
-import sys
+from pathlib import Path
 
 from quivilib import meta
 
+from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 
-IMG_CLASSES = []
-IMG_LOAD_CLASSES = []
-if 'win' in sys.platform and meta.USE_GDI_PLUS:
-    from quivilib.model.image.gdiplus import GdiPlusImage
-    IMG_CLASSES.append(GdiPlusImage)
+IMG_CLASSES: list[type[SecondaryImageHandler]] = []
+IMG_LOAD_CLASSES: list[type[ImageHandler]] = []
+
 if meta.USE_CAIRO:
     from quivilib.model.image.cairo import CairoImage
     IMG_CLASSES.append(CairoImage)
@@ -40,38 +39,64 @@ def get_supported_extensions():
 supported_extensions = get_supported_extensions()
 
 
-def open(f, path, canvas_type, delay=False):
-    """ Open the provided filehandle/path as an image.
-    Wraps the image in a Cairo object if USE_CAIRO is True
-    (This would also use GDI on Windows, if GDI was still supported)
-    """
-    ext = path.suffix
-    img = open_direct(f, path, canvas_type, delay)
-    for cls in IMG_CLASSES:
-        try:
-            img2 = cls(canvas_type, src=img, delay=delay)
-            img = img2
-            break
-        except Exception as e:
-            log.debug(traceback.format_exc())
-    return img
-
-def open_direct(f, path, canvas_type, delay=False):
-    """ Open the provided filehandle/path as an image.
-    PIL/Freeimage is used to open the image, depending on configuration.
-    """
-    ext = path.suffix
+def open_base_image(f, path, delay=False):
+    """Return a PIL/FreeImage image, without the additional logic provided by an ImageHandler
+    Used for thumbnail generation and wallpaper - the extra baggage, including wx.Bitmap, is not needed."""
+    ext = path.suffix.casefold()
     img = None
     for cls in IMG_LOAD_CLASSES:
         if not ext in cls.extensions():
             log.debug(f"Skip {cls} - no support for {ext}")
             continue
         try:
-            img = cls(canvas_type, f, str(path), delay=delay)
+            img = cls.OpenImage(f, str(path), delay=delay)
             break
-        except Exception as e:
+        except Exception:
             if IMG_LOAD_CLASSES[-1] is cls:
                 raise
             else:
                 log.debug(traceback.format_exc())
+    if img is not None:
+        return img
+    raise Exception(f"Could not open {path} (unsupported extension?)")
+
+def open_img(f, path, delay=False) -> ImageHandler:
+    """ Open the provided filehandle/path as an image.
+    Wraps the image in a Cairo object if USE_CAIRO is True
+    (This would also use GDI on Windows, if GDI was still supported)
+    """
+    ext = path.suffix
+    img = open_direct(f, path, delay)
+    if img.is_animated():
+        #It may be possible to use cairo, but figure that out later.
+        return img
+    for cls in IMG_CLASSES:
+        try:
+            img2 = cls.CreateWrappedImage(src=img, delay=delay)
+            img = img2
+            break
+        except Exception:
+            log.debug(traceback.format_exc())
     return img
+
+def open_direct(f, path: Path, delay=False) -> ImageHandler:
+    """ Open the provided filehandle/path as an image.
+    PIL/Freeimage is used to open the image, depending on configuration.
+    """
+    ext = path.suffix.casefold()
+    img = None
+    for cls in IMG_LOAD_CLASSES:
+        if not ext in cls.extensions():
+            log.debug(f"Skip {cls} - no support for {ext}")
+            continue
+        try:
+            img = cls.CreateImage(f, str(path), delay=delay)
+            break
+        except Exception:
+            if IMG_LOAD_CLASSES[-1] is cls:
+                raise
+            else:
+                log.debug(traceback.format_exc())
+    if img is not None:
+        return img
+    raise Exception(f"Could not open {path} (unsupported extension?)")

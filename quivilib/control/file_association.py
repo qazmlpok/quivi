@@ -1,16 +1,17 @@
 import logging
-from configparser import ConfigParser, NoOptionError, NoSectionError
+from configparser import RawConfigParser, NoOptionError, NoSectionError
 from pathlib import Path
 from quivilib import util
 from quivilib.i18n import _
 from quivilib.model.image import get_supported_extensions
 
 log = logging
+#TODO: Appears to be dead code. Was this invoked by the original installer?
 
 try:
     import winreg as reg
 except ImportError:
-    reg = None
+    pass
 
 
 SKIP_EXT = ('.psd', '.ico')
@@ -276,7 +277,7 @@ class AssociationManager(object):
             ini_path = util.get_exe_path().parent / CONFIG_INI
         else:
             ini_path = self.main_script_path.parent / CONFIG_INI
-        ini = ConfigParser()
+        ini = RawConfigParser()
         try:
             ini.read(ini_path)
             if ini.get('config', 'user') == 'current':

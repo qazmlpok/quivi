@@ -17,6 +17,7 @@ def run():
     
     class MyApp(wx.App):
         def __init__(self, redir, script, argv):
+            self.controller: MainController|None = None
             self.script = script
             self.argv = argv
             wx.App.__init__(self, redir)

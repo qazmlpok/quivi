@@ -1,52 +1,50 @@
+from quivilib.i18n import _
+from quivilib.model.shortcut import Shortcut
+from quivilib.model.commandlist import CommandDefinition, MenuDefinition
+from quivilib.model.commandenum import CommandName, CommandFlags
+
+from typing import Protocol
 
 
+class QuiviMenuItem(Protocol):
+    """ Something that can appear within a menu. Either a single menu item (with executable command(s)),
+    or a list of other QuiviMenuItems that will appear as a submenu.
+    """
+    def update_translation(self):
+        pass
+    name: str
+    ide: int    #CommandName|MenuName
 
-
-class CommandCategory(object):
-    def __init__(self, order, idx, name, commands, hidden=False):
+class Command(QuiviMenuItem):
+    def __init__(self, definition: CommandDefinition):
         """
             Create a new command category.
             
-            @param order: The order within the Options menu (not used elsewhere)
-            @param idx: String key to use as a unique identifier for this menu. Needed for updates.
-            @param commands: Collection of commands (e.g. menu items) associated with this category.
-            @param name: Display name for the menu - translated to the target language
-            @param hidden: If true, the menu will be created but not added to the menu bar.
+            @param definition: Static definition for the command; contains most fields.
+            @param function: Function to execute upon selecting this command.
+            @param down_function: For mouse events, command to execute on mouse down
+            @param update_function: Function used to modify display of this menu item, e.g. to disable it or to check the checkbox.
         """
-        self.order = order
-        self.idx = idx
-        self.commands = commands
-        self.name = name
-        self.hidden = hidden
+        self.ide = definition.uid
+        self.name = self.nameKey = definition.nameKey
+        self.description = self.descrKey = definition.descrKey
+        self.category = self.categoryKey = definition.categoryKey
+        self.default_shortcuts = definition.shortcuts
+        self.shortcuts: list[Shortcut] = []
+        self.flags = definition.flags
+        self.update_translation()
         
-    @property
-    def clean_name(self):
-        return self.name.replace('&', '')
-    
-    
-class Command(object):
-    (
-        KB,         #Command can be assigned to a keyboard shortcut
-        MOUSE,      #Command can be assigned to a mouse button
-        NOMENU,     #Command does not appear in the application menu
-    ) = (1 << x for x in range(3))
-    KBM = KB|MOUSE
+        self._function = definition.function
+        self.update_function = definition.update_function
+        self._down_function = definition.down_function
+        
+    def update_translation(self):
+        #dumb hack to avoid translating the debug menu option stuff.
+        if self.ide < CommandName.CACHE_INFO:
+            self.name = _(self.nameKey)
+            self.description = _(self.descrKey)
+            self.category = _(self.categoryKey)
 
-    def __init__(self, ide, name, description, function, default_shortcuts, 
-            flags=None, down_function=None, checkable=False, update_function=None):
-        self.ide = ide
-        self.name = name
-        self.description = description
-        self._function = function
-        self._down_function = down_function
-        self.default_shortcuts = default_shortcuts
-        self.shortcuts = []
-        self.checkable = checkable
-        self.update_function = update_function
-        self.flags = flags
-        if self.flags is None:
-            self.flags = Command.KBM
-        
     def load_default_shortcut(self):
         if self.default_shortcuts:
             self.shortcuts = self.default_shortcuts
@@ -59,8 +57,12 @@ class Command(object):
             self._down_function()
         
     def __repr__(self):
-        return f'{self.clean_name}: {self.description}'
-        
+        return f"{self.ide}: '{self.clean_name}' - {self.description}"
+    
+    @staticmethod
+    def clean_str(s):
+        return s.replace('&', '').replace('...', '')
+    
     @property
     def name_and_shortcut(self):
         if self.shortcuts:
@@ -69,5 +71,40 @@ class Command(object):
             return self.name
     
     @property
+    def name_and_category(self):
+        return f'{self.clean_str(self.category)} | {self.clean_str(self.name)}'
+    
+    @property
     def clean_name(self):
-        return self.name.replace('&', '').replace('...', '')
+        return self.clean_str(self.name)
+    
+    @property
+    def checkable(self) -> bool:
+        return (self.flags & CommandFlags.CHECKABLE) != 0
+#
+
+class CommandCategory(QuiviMenuItem):
+    def __init__(self, definition: MenuDefinition):
+        """ Create a new command category from the provided definition
+        """
+        self.idx = definition.menu_id
+        self.commands = definition.commands
+        self.name = self.nameKey = definition.nameKey
+        
+        #From what I'm seeing, the only way to find a menu is by the position or by the title.
+        #Title poses problems when trying to update translations.
+        #So to work around this, store the id when inserting the menu into the bar.
+        #This will be set when the menu is built.
+        self.menu_idx = -1
+        
+        self.update_translation()
+
+    def update_translation(self):
+        #dumb hack to avoid translating the debug menu option stuff.
+        if self.nameKey != 'Debug':
+            self.name = _(self.nameKey)
+        
+    @property
+    def clean_name(self):
+        return self.name.replace('&', '')
+#

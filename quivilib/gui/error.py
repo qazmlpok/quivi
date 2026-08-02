@@ -51,7 +51,7 @@ class ErrorDialog(wx.Dialog):
         self.traceback_txt.Show(False)
         self.copy_btn.Show(False)
         self.report_link.Show(False)
-        bmp = wx.ArtProvider.GetBitmap(wx.ART_ERROR, wx.ART_MESSAGE_BOX, (32, 32))
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_ERROR, wx.ART_MESSAGE_BOX, wx.Size(32, 32))
         self.error_bmp.SetBitmap(bmp)
         self.traceback_txt.SetSelection(-1, -1)
         self.ok_btn.SetDefault()

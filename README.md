@@ -4,23 +4,23 @@ Quivi is an image viewer (specialized for comic/manga reading) which supports ma
 The home page for the original distribution of Quivi is http://quivi.sourceforge.net/
 
 # Quivi-64
-This fork was made with the primary purpose of adding 64-bit compatibility. The original Python code has been ported to Python 3.
+This fork was made with the primary purpose of adding 64-bit compatibility. The original Python code has been ported to Python 3. Most of the original functionality is unchanged, and some additional features have been added.
+
+The 64-bit executable prevents issues with loading large files. The upgrade to Python 3 fixes some Unicode issues that could prevent opening files depending on the name. Upgrading the image libraries used for displaying images adds support for webp images.
 
 # Added features
-- Upgrading Python to version 3 fixed some Unicode issues.
-- Upgrading the image rendering libraries added support for webp.
-- Upgrading to 64-bit enables viewing very large images without crashing due to running out of memory.
 - Quivi will now remember if you closed the application while in fullscreen mode and automatically re-open in fullscreen mode. This can be disabled in the configuration ("Remember full screen on close").
 - Added support for mouse auxiliary buttons (Aux1 and Aux2). These can be assigned behavior in the settings menu. By default they do nothing.
 - Internal change to how the Config file (pyquivi.ini) is written to should reduce the chances of it becoming corrupted.
-- If the config file does become corrupt, it will re-create a new file from scratch instead of making the application inoperable.
-- The config file is now stored as UTF-8 instead of the system default. It will attempt to open the file both as UTF-8 and the system default, but always write as UTF-8.
+    - If the config file does become corrupt, it will re-create a new file from scratch instead of making the application inoperable.
+    - The config file is now stored as UTF-8 instead of the system default. It will attempt to open the file both as UTF-8 and the system default, but always write as UTF-8.
 - New feature: Placeholders. These act like Favorites, but with some changes. The behavior can be tweaked in Settings.
     - Placeholders save a path and a specific page. They are intended to quickly resume reading something you're in the middle of.
     - Only one placeholder can exist for an item; saving a new placeholder will replace the existing one.
     - (Optionally) Only a single place holder can be used for anything. Saving any new placeholder will replace the existing one.
     - (Optionally) Placeholders will be deleted upon opening.
     - (Optionally) Opening a folder/archive that has a placeholder will automatically load the placeholder.
+    - Placeholders and Favorites can optionally be separated into separate submenus of the Favorites menu on the menu bar. This is a configuration option in settings. Placeholders and favorites are also included in a right-click context menu and are always separated there.
 - Holding down shift while using the scrollwheel will scroll horizontally.
 - Holding down ctrl while using the scrollwheel zoom in/out on the mouse cursor's location (instead of the center of the image).
 - Added "Drag image" as an explicit command, instead of the default behavior of always dragging with left click. This means left click can be reassigned to a different action, such as Next image, and it will never attempt to move the image. The old behavior can be restored via an option in the Mouse tab.
@@ -35,11 +35,34 @@ This fork was made with the primary purpose of adding 64-bit compatibility. The 
     - This can be toggled in the options. There's no effect if the image is resized to fit the screen.
     - This is intended mostly for mousewheel scrolling, but it will work for other scrolling as well. It will not do anything for dragging an image.
     - To prevent accidental horizontal scrolling, there's a small "buffer" that needs to be overcome; scroll while at the bottom 3+ times and it should start.
-- New feature: Spread page viewing. If enabled and the current image is taller than it is long (height > width), fit-to-width will be calculating using half of the image width instead of the full width.
+- New feature: Spread page viewing. If enabled and the current image is wider than it is tall (width > height), fit-to-width will be calculating using half of the image width instead of the full width.
     - The intent is for when viewing standard page images that includes image files that are two physical pages joined together, i.e. full-page spreads. This _should_ keep the zoom level roughly consistent with the rest of the book.
-    - This will lead to false positive if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
+    - This will lead to false positives if viewing landscape pages, or any digital art that doesn't try to adhere to a standard page layout. It can be toggled via a hotkey. This will automatically resize the image.
     - There's no indication that this is being done while in fullscreen, so if two pages are joined together but don't have shared art and contain ample margins, it will be easy to accidentally skip pages.
+- Increased the size of the image cache to better account for modern hardware (it's still hardcoded and doesn't check system RAM available or anything).
+- New feature: Move the currently opened archive to another folder.
+    - Folders can be saved to settings to quickly move zip archives to a specific "archive" folder
+    - There is currently no way to reorder or delete these saved folders, only add.
+- New feature: Bindable context menu. This can be assigned as any other shortcut to a mouse key, e.g. right click or middle click.
+    - The menu itself is not customizable, but will include most navigation/display options that may be useful when in full screen mode.
+    - This resulted in a significant backend rework of the menu system to enable nested menus. For now, the main menu bar is still exclusively "flat".
+- The delete option in the menu can now delete zip (or rar) archive files. The delete option in the menu will either delete individual images (when viewing a folder) or the entire archive (when viewing an archive). Separate bindable commands exist that will only attempt to delete one type, e.g. for backwards compatibility.
+- Added support for animated GIFs. Other animated formats should also work (e.g. webp) but haven't been tested.
+    - Support is limited to PIL. FreeImage does (should) support animation, but the FreeImage project is no longer active so I'm considering replacing the library.
+    - Zooming is not enabled. Images are always 100%, regardless of what the status bar says. I'll revisit this later to see if Cairo can be used for fast zooming on an animated image.
+    - GIFs can specify a maximum number of times to play the animation. This is not supported - images will always play endlessly.
+    - Windows uses some tricks to work around inaccurate sleep/timer issues. I believe I have a good implementation in place.
+    - This is less tested than most other features simply because most manga are not animated.
+- New configuration option: Hide mouse cursor if not moved for x seconds. Setting to 0 (default) will disable this feature.
+  - If the mouse is not moved, the cursor will eventually disappear. This only applies to movement, not mouse clicks or any other interaction.
+  - This only applies to the image viewing canvas, not other parts of the application. If the cursor is the hand, it will disappear.
+  - The check for this is purposely low-accuracy, so it may take up to a second more than the configured value to disappear.
 
+# Breaking changes
+- Version 2.0.9 changes how the automatic zoom setting is stored in the configuration file. Existing configuration files will still read the old value, but if switching back to an older version of the application, the application will fail to load
+    - Workaround is to manually edit pyquivi.ini to change `fittype = FitType.WIDTH_IF_LARGER` (as an example) to `fittype = 1`
+    - This is likely a one-off; other values that use magic numbers are not planned for a similar switch to text.
+- Version 2.0.9 changes the behavior of the 'Fit x' options in the View header menu to be 'Fit x if larger'. 
 
 # Removed features
 For the most part, existing functionality is being kept intact. A few things were dropped either due to difficulty porting the code from Python2 to Python3, or because they aren't needed any more.
@@ -50,47 +73,18 @@ For the most part, existing functionality is being kept intact. A few things wer
 # Porting progress
 Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that need to be cleaned up. It's also likely there's some real division that needs to be corrected. Some of the Unicode hacks were removed, but others may remain. Python3 should give much better Unicode support overall.
 
-- Updated to support Python 3.11.3. Minimum required version is Python 3.6 due to the use of fstrings.
-- wx updated to 4.2.0
+Type hints have been added to some methods. This is mostly added to subclasses to ensure they adhere to the common interface. I don't intend on adding type hints everywhere, only where "most needed" (or just trivial functions)
+
+- Updated to support Python 3.13.3. Minimum required version is Python 3.6 due to the use of fstrings.
+- wx updated to 4.2.4
 - wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
-- Image display supports Freeimage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
+- Image display supports FreeImage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
 - Removed third party path utlity; pathlib (core Python module) is used instead.
-- Only minimal testing has been done in Linux. The console logs numerous warnings about key accelerators, but for the most part the app works (tested in an Ubuntu VM)
 - Tests haven't been modified, except for the automated conversion.
 
 # Known Issues
-- 16-bit precision images do not work with freeimage. PIL support is hackish.
-- The wallpaper dialog broke due to other changes to the canvas and I haven't bothered to fix it.
+- 16-bit precision images do not work with FreeImage. PIL support is hackish.
 
 # Missing translations
-The following text strings are new and have not been added to any of the translation files.
-
-- Remember full screen on close
-- Delete placeholders when opening
-- Only allow a single placeholder
-- Automatically jump to placeholder page on open
-- Aux1 click
-- Aux2 click
-- Open last placeholder
-- Open the most recently created placeholder
-- Add &placeholder
-- Remove p&laceholder
-- Add the current directory or compressed file to the favorites on the current image
-- Remove the saved page for the current directory or compressed file from the favorites
-- The file or directory "%s" couldn't be found. Remove the favorite?
-- Favorite not found
-- The settings file is corrupt and cannot be opened. Settings will return to their default values. The corrupt file has been renamed to %s.
-- The settings file is corrupt and cannot be opened. Settings will return to their default values.
-- &Copy path
-- Copy the path of the current container to the clipboard
-- Always drag image with left mouse
-- Drag image
-- Full move up
-- Full move down
-- Full move left
-- Full move right
-- View images right-to-left
-- Show &spread
-- Attempt to show combined pages at regular zoom
-- (Spread)
+A large number of text strings have been added or modified. The existing translations have not been updated. All of the supported languages are only partially translated as a result.

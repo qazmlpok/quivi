@@ -1,7 +1,4 @@
-
-
 import unittest
-import sys
 
 import quivilib.util as U
 

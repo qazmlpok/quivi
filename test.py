@@ -1,9 +1,8 @@
-
-
-import sys, unittest, os, shutil
-
-import wx
 import logging
+import os
+import shutil
+import unittest
+
 logging.getLogger().setLevel(logging.DEBUG)
 
 

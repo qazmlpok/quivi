@@ -39,10 +39,7 @@ class FileListPanel(wx.Panel):
         
         self.thumb_list.SetCaptionFont(wx.NORMAL_FONT)
         self.thumb_list.SetSelectionColour()
-        
-        self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
-        self.file_list.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
-        self.thumb_list._scrolled.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
+
         self.Bind(wx.EVT_IDLE, self.on_idle)
         
         Publisher.subscribe(self.on_toolbar_built, 'toolbar.built')
@@ -65,10 +62,7 @@ class FileListPanel(wx.Panel):
         
     def is_thumbnails(self):
         return self._show_thumbnails
-        
-    def on_mouse_enter(self, event):
-        self.current_view.SetFocus()
-    
+
     def on_toolbar_built(self, *, commands):
         #TODO: (2,2) Refactor: This shouldn't be hard coded
         #This must reflect the commands tuple from the message
@@ -78,16 +72,16 @@ class FileListPanel(wx.Panel):
         #TODO: (3,3) Refactor: change add/del bookmark to a single button
         
         for cmd, bmp_id in zip(commands, bmp_ids):
-            bmp = wx.ArtProvider.GetBitmap(bmp_id, wx.ART_TOOLBAR, (16, 16))
+            bmp = wx.ArtProvider.GetBitmap(bmp_id, wx.ART_TOOLBAR, wx.Size(16, 16))
             kind = wx.ITEM_CHECK if cmd.checkable else wx.ITEM_NORMAL
             button = bp.ButtonInfo(self.tool_bar, -1, bmp, kind=kind,
                                    shortHelp=cmd.clean_name, longHelp=cmd.description)
             self.tool_bar.AddButton(button)
             self.buttons.append(button)
             self.update_fns.append(cmd.update_function)
-            def event_fn(event, cmd=cmd):
+            def event_fn(event, _cmd=cmd):
                 try:
-                    cmd()
+                    _cmd()
                 except Exception as e:
                     self.handle_error(e)
             self.Bind(wx.EVT_BUTTON, event_fn, id=button.GetId())

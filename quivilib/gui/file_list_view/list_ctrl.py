@@ -1,12 +1,16 @@
 import sys
+
 import wx
 from pubsub import pub as Publisher
 
 from quivilib.gui.file_list_view.base import FileListViewBase
 from quivilib.i18n import _
-from quivilib.util import error_handler
+from quivilib.model import Settings
 from quivilib.model.container import SortOrder
+from quivilib.model.container.base import BaseContainer
+from quivilib.util import error_handler
 from quivilib.util import get_icon_for_extension, get_icon_for_directory
+
 
 def _handle_error(exception, args, kwargs):
     self = args[0]
@@ -18,11 +22,12 @@ class FileList(wx.ListCtrl, FileListViewBase):
         wx.ListCtrl.__init__(
             self, parent, -1, 
             style=wx.LC_REPORT|wx.LC_VIRTUAL|wx.LC_SINGLE_SEL 
-            )
+        )
         
         self.container = None
         self._selecting_programatically = False
         self.image_list = None
+        self.icon_cache = {}
         self.flush_icon_cache()
 
         self.InsertColumn(0, '')
@@ -50,22 +55,22 @@ class FileList(wx.ListCtrl, FileListViewBase):
         Publisher.subscribe(self.on_language_changed, 'language.changed')
         
     @error_handler(_handle_error)
-    def on_item_selected(self, event):
+    def on_item_selected(self, event: wx.ListEvent):
         if not self._selecting_programatically:
             Publisher.sendMessage('file_list.selected', index=event.GetIndex())
 
     @error_handler(_handle_error)
-    def on_item_activated(self, event):
+    def on_item_activated(self, event: wx.ListEvent):
         Publisher.sendMessage('file_list.activated', index=event.GetIndex())
         
-    def on_key_down(self, event):
+    def on_key_down(self, event: wx.ListEvent):
         event.Skip()
 
     def getColumnText(self, index, col):
         item = self.GetItem(index, col)
         return item.GetText()
 
-    def OnGetItemText(self, item, col):
+    def OnGetItemText(self, item: int, col: int):
         if col == 0:
             return self.container.get_item_name(item)
         elif col == 1:
@@ -78,7 +83,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
                 return ''
         assert False
 
-    def OnGetItemImage(self, item):
+    def OnGetItemImage(self, item: int):
         ext = self.container.get_item_extension(item)
         if ext in self.icon_cache:
             icon_index = self.icon_cache[ext]
@@ -98,10 +103,10 @@ class FileList(wx.ListCtrl, FileListViewBase):
             self.icon_cache[ext] = icon_index
         return icon_index
 
-    def OnGetItemAttr(self, item):
+    def OnGetItemAttr(self, item: int):
         return None
     
-    def on_container_changed(self, *, container):
+    def on_container_changed(self, *, container: BaseContainer):
         self.container = container
         old_sel = self.GetFirstSelected()
         self.flush_icon_cache()
@@ -124,7 +129,7 @@ class FileList(wx.ListCtrl, FileListViewBase):
         self.image_list = wx.ImageList(16, 16)
         self.SetImageList(self.image_list, wx.IMAGE_LIST_SMALL)
         
-    def on_selection_changed(self, *, idx, item):
+    def on_selection_changed(self, *, idx: int, item):
         self._selecting_programatically = True
         try:
             self.SetItemState(idx, wx.LIST_STATE_SELECTED | wx.LIST_STATE_FOCUSED,
@@ -144,12 +149,12 @@ class FileList(wx.ListCtrl, FileListViewBase):
         set_col_text(1, _('Extension'))
         set_col_text(2, _('Last modified'))
             
-    def on_column_click(self, event):
+    def on_column_click(self, event: wx.ListEvent):
         col = event.GetColumn()
         sort_order = self.columns[col]
         Publisher.sendMessage('file_list.column_clicked', sort_order=sort_order)
             
-    def on_resize(self, event):
+    def on_resize(self, event: wx.SizeEvent):
         #TODO: (4,?) Investigate: uncommenting this line causes a bizarre bug
         #    in the GUI when opening a container
         #    (the file list gets a huge padding above the content)
@@ -169,12 +174,12 @@ class FileList(wx.ListCtrl, FileListViewBase):
                          in range(1, self.GetColumnCount()))
         self.SetColumnWidth(0, width - used_width - 5)
         
-    def save(self, settings_lst):
+    def save(self, settings_lst: list[tuple[str, str, str]]):
         widths = ','.join(str(self.GetColumnWidth(i))
                           for i in range(self.GetColumnCount()))
         settings_lst.append(('Window', 'FileListColumnsWidth', widths))
     
-    def load(self, settings):
+    def load(self, settings: Settings):
         widths = settings.get('Window', 'FileListColumnsWidth')
         if widths:
             for i, width_str in enumerate(widths.split(',')):

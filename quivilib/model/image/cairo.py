@@ -1,44 +1,54 @@
-import threading
 import math
-import logging
 
+#wxcairo must be imported before wx. Do not change the import order.
 from wx.lib import wxcairo
-import cairo
+try:
+    # noinspection PyUnusedImports
+    import cairocffi
+    cairocffi.install_as_pycairo()
+    import cairo
+    cairo_stride_for_width = cairo.ImageSurface.format_stride_for_width
+except ImportError:
+    import cairo
+    cairo_stride_for_width = cairo.Format.stride_for_width
 import wx
-from quivilib.util import rescale_by_size_factor
+from quivilib.interface.imagehandler import *
 
 log = logging.getLogger('cairo')
 
 
-class CairoImage(object):
-    def __init__(self, canvas_type, src=None, img=None, delay=False):
-        self.canvas_type = canvas_type
-        
+class CairoImage(ImageHandlerBase, SecondaryImageHandler):
+    @classmethod
+    def CreateImage(cls, f, path, delay=False) -> ImageHandler:
+        raise Exception("Use another class to open the image first")
+    @classmethod
+    def CreateWrappedImage(cls, src:ImageHandler|None=None, delay=False) -> ImageHandler:
         if src is None:
             raise Exception("Cairo must have a separate image loader.")
-            #if img.transparent:
-            #    img = img.composite(True)
-            #img = img.convert_to_32_bits()
+        return CairoImage(src, delay=delay)
+    def __init__(self, src:ImageHandler, delay=False) -> None:
         self.src = src
-        img = self.convert_to_cairo_surface(src.img)
-        width = img.get_width()
-        height = img.get_height()
+        self.img_path = src.img_path
+        img = self.convert_to_cairo_surface(src.getImg())
         
-        self._original_width = self._width = width
-        self._original_height = self._height = height
+        self._original_width = self._width = img.get_width()
+        self._original_height = self._height = img.get_height()
         
         self.img = img
         #Set by the thread
-        self.zoomed_bmp = None
+        self.zoomed_bmp: cairo.ImageSurface|None = None
         self.zoomed_width = None
         self.delay = delay
         self.rotation = 0
         
-        self.timer = None
+        self.timer: threading.Timer|None = None
         #Used to determine if the current paint action is a pan or a zoom.
         #Pans need to be significantly faster, and thus require a lower quality filter.
-        self.last_zoom = 0
-        self.last_rot = 0
+        self._last_zoom = 1.0
+        self._last_rot = 0
+
+    def copy(self) -> Self:
+        return CairoImage(src=self.src)
 
     @property
     def width(self):
@@ -51,27 +61,15 @@ class CairoImage(object):
         if self.rotation in (0, 2):
             return self._height
         return self._width
-        
-    @property
-    def original_width(self):
-        if self.rotation in (0, 2):
-            return self._original_width
-        return self._original_height
 
-    @property
-    def original_height(self):
-        if self.rotation in (0, 2):
-            return self._original_height
-        return self._original_width
-    
-    def convert_to_cairo_surface(self, img):
+    def convert_to_cairo_surface(self, img: BaseImageProt|ImageHandler):
         """ Requests img data as bytes from the loaded image
         Loads that data in as a cairo surface. Should work with either image loader.
         """
         srcImage = img
-        img_format = cairo.Format.ARGB32
+        img_format = cairo.FORMAT_ARGB32
         width, height = img.width, img.height
-        stride = img_format.stride_for_width(width)
+        stride = cairo_stride_for_width(img_format, width)
         #Make sure PIL and FreeImage both have this.
         #TODO: I can't get other cairo formats to work. But if I could, this would need to report
         #the format, e.g. to allow changing to RGB24. See https://afrantzis.com/pixel-format-guide/cairo.html
@@ -86,17 +84,10 @@ class CairoImage(object):
         return surface
     
     def delayed_load(self):
-#        if not self.delay:
-#            log.debug("delayed_load was called but delay was off")
-#            return
-#        if self.zoomed_bmp:
-#            canvas = self.zoomed_bmp
-#            self.zoomed_bmp = self._resize_img(w, h)
+        #The actual delay load is unncessary, but the flag is needed to know if this is waiting for actual display or not.
         self.delay = False
 
-    #TODO: This should trigger a paint event (i.e. canvas.changed), but there's no existing way to do this here
-    #and I don't think it's worth it to try and work around this.
-    def delayed_resize(self, width, height):
+    def _delayed_resize(self, width: int, height: int):
         if self.zoomed_width == width or self._original_width == width:
             return
         zoomed = self._resize_img(width, height)
@@ -104,10 +95,13 @@ class CairoImage(object):
             #Make sure this isn't an out of order execution.
             self.zoomed_bmp = zoomed
             self.zoomed_width = width
-    def maybe_scale_image(self):
+            log.debug(f"Cairo: Updated zoomed bitmap ({width}x{height})")
+            if self.img_change_cb:
+                self.img_change_cb(self)
+
+    def _maybe_scale_image(self):
         #Always clear out the timer and previous scaled image, if set.
-        #if self.timer is not None:
-        self.zoomed_bmp = None      #if?
+        self.zoomed_bmp = None
         self.zoomed_width = None
         if self.timer is not None:
             self.timer.cancel()
@@ -119,10 +113,10 @@ class CairoImage(object):
             #Don't resize if zooming in. Need to figure out an appropriate cutoff
             #In practice this is probably dependent on screen size.
             return
-        self.timer = threading.Timer(0.2, self.delayed_resize, args=[self._width, self._height])
+        self.timer = threading.Timer(0.2, self._delayed_resize, args=[self._width, self._height])
         self.timer.start()
 
-    def resize(self, width, height):
+    def resize(self, width: int, height: int) -> None:
         #The actual resizing will be done on-demand by a matrix transformation.
         self._width = width
         self._height = height
@@ -132,26 +126,27 @@ class CairoImage(object):
         #This should avoid both the stuttering from rapid resizing and from panning a scaled image.
         if self.delay:
             #This is still in the cache - immediately create the resized image in the current (cache) thread.
-            self.delayed_resize(self._width, self._height)
+            self._delayed_resize(self._width, self._height)
         else:
-            self.maybe_scale_image()
+            self._maybe_scale_image()
 
-    def _resize_img(self, width, height):
+    def _resize_img(self, width: int, height: int):
         resized = self.src.rescale(width, height)
         ret = self.convert_to_cairo_surface(resized)
         #del resized
         return ret
-        
-    def resize_by_factor(self, factor):
+
+    def resize_by_factor(self, factor: float) -> None:
+        #Needs to use the non-rotated values as the image isn't actually rotated.
         width = int(self._original_width * factor)
         height = int(self._original_height * factor)
         self.resize(width, height)
-        
-    def rotate(self, clockwise):
-        self.rotation += (1 if clockwise else -1)
-        self.rotation %= 4
 
-    def paint(self, dc, x, y):
+    def _do_rotate(self, clockwise: int) -> None:
+        #Do nothing - changing self.rotation is enough
+        pass
+
+    def paint(self, dc: wx.DC, x: int, y: int) -> None:
         img = self.zoomed_bmp if self.zoomed_bmp else self.img
         ctx = wxcairo.ContextFromDC(dc)
         imgpat = cairo.SurfacePattern(img)
@@ -160,17 +155,17 @@ class CairoImage(object):
         hscale = self._original_height / self._height
 
         #Set quality for the scale. There are a few tricks that can be done with this.
-        if (self.last_zoom != wscale or self.last_rot != self.rotation):
+        if (self._last_zoom != wscale or self._last_rot != self.rotation):
             #This is a zoom change - panning needs to be fast, but scaling doesn't.
-            quality = cairo.Filter.GOOD
+            quality = cairo.FILTER_GOOD
         elif self._width > self._original_width:
             #Zooming in on a large image is faster than zooming out
             #This is kinda annoying, because the artifacts are a lot worse when zooming out.
-            quality = cairo.Filter.GOOD
+            quality = cairo.FILTER_GOOD
         else:
-            quality = cairo.Filter.FAST
-        self.last_zoom = wscale    #No real need to track both.
-        self.last_rot = self.rotation
+            quality = cairo.FILTER_FAST
+        self._last_zoom = wscale    #No real need to track both.
+        self._last_rot = self.rotation
         #FAST - A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST.
         #GOOD - A reasonable-performance filter, with quality similar to Cairo::BILINEAR.
         #BEST - The highest-quality available, performance may not be suitable for interactive use.
@@ -196,19 +191,25 @@ class CairoImage(object):
         
         ctx.set_source(imgpat)
         ctx.paint()
-
-    def copy(self):
-        return CairoImage(self.canvas_type, img=self.img, src=self.src)
     
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
         bmp = wxcairo.BitmapFromImageSurface(self.img)
-        data = wx.BitmapDataObject(bmp)
-        if wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(data)
-            wx.TheClipboard.Close()
+        self.do_copy_to_clipboard(bmp)
 
-    def create_thumbnail(self, width, height, delay=False):
+    def create_thumbnail(self, width: int, height: int, delay: bool = False) -> wx.Bitmap|Callable[[],wx.Bitmap]:
         return self.src.create_thumbnail(width, height, delay)
 
-    def close(self):
-        pass
+    def set_callback(self, cb: Callable[[Self], None]):
+        def wrapped_cb(who: ImageHandler):
+            #For cairo, if the underlying image changes, that should (potentially) trigger an update here
+            #and then pass on the update. But for now, nothing will do that.
+            if self.img_change_cb:
+                self.img_change_cb(self)
+        self.src.set_callback(wrapped_cb)
+        super().set_callback(cb)
+
+    @staticmethod
+    def extensions():
+        """ Extensions do not matter for Cairo.
+        """
+        return []

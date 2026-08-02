@@ -134,3 +134,6 @@ dmypy.json
 FreeImage.dll
 UnRAR64.dll
 UnRAR.dll
+
+# Pycharm
+.idea

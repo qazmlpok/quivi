@@ -1,25 +1,15 @@
 import os
-from configparser import ConfigParser, ParsingError
+from configparser import RawConfigParser
+
 from pubsub import pub as Publisher
+
+from quivilib.model.commandenum import CommandName, FitSettings
 from quivilib.model.container import SortOrder
 
 
-class Settings(ConfigParser):
-    (FIT_NONE,
-     FIT_WIDTH_OVERSIZE,
-     FIT_HEIGHT_OVERSIZE,
-     FIT_BOTH_OVERSIZE,
-     FIT_CUSTOM_WIDTH,
-     FIT_SCREEN_CROP_EXCESS,
-     FIT_SCREEN_SHOW_ALL,
-     FIT_SCREEN_NONE,
-     FIT_TILED,
-     FIT_WIDTH,
-     FIT_HEIGHT,
-     FIT_BOTH) = list(range(12))
-
+class Settings(RawConfigParser):
     def __init__(self, path):
-        ConfigParser.__init__(self)
+        RawConfigParser.__init__(self)
         self.path = path
         
         def _parseError():
@@ -43,10 +33,11 @@ class Settings(ConfigParser):
             _parseError()
         self.__defaults = self._load_defaults()
         Publisher.sendMessage('settings.changed', settings=self)
-        
+        Publisher.sendMessage('settings.initial_load', settings=self)
+
     def _load_defaults(self):
         defaults = (
-          ('Options', 'FitType', self.FIT_WIDTH_OVERSIZE),
+          ('Options', 'FitType', FitSettings.FitType.WIDTH_IF_LARGER),
           ('Options', 'FitWidthCustomSize', 800),
           ('Options', 'StartDir', ''),
           ('Options', 'CustomBackground', 0),
@@ -59,6 +50,7 @@ class Settings(ConfigParser):
           ('Options', 'PlaceholderDelete', 1),
           ('Options', 'PlaceholderSingle', 0),
           ('Options', 'PlaceholderAutoOpen', 1),
+          ('Options', 'PlaceholderSeparateMenu', 0),
           ('Options', 'OpenFirst', 0),
           ('Window', 'Perspective', ''),
           ('Window', 'MainWindowX', 50),
@@ -68,13 +60,14 @@ class Settings(ConfigParser):
           ('Window', 'MainWindowMaximized', '0'),
           ('Window', 'MainWindowFullscreen', '0'),
           ('Window', 'FileListColumnsWidth', ''),
-          ('Mouse', 'LeftClickCmd', 16100),
-          ('Mouse', 'MiddleClickCmd', 12001),
-          ('Mouse', 'RightClickCmd', 13007),
+          ('Mouse', 'LeftClickCmd', CommandName.DRAG_IMAGE),
+          ('Mouse', 'MiddleClickCmd', CommandName.SELECT_NEXT),
+          ('Mouse', 'RightClickCmd', CommandName.SHOW_FILE_LIST),
           ('Mouse', 'Aux1ClickCmd', -1),
           ('Mouse', 'Aux2ClickCmd', -1),
           ('Mouse', 'AlwaysLeftMouseDrag', 1),
           ('Mouse', 'DragThreshold', 0),
+          ('Mouse', 'HideMouseDuration', 0),
           ('FileList', 'SortOrder', SortOrder.TYPE),
           ('Language', 'ID', 'default'),
           ('Update', 'LastCheck', ''),
@@ -89,8 +82,8 @@ class Settings(ConfigParser):
                 self.set(section, option, value)
         return defaults
     
-    def set(self, section, option, value):
-        ConfigParser.set(self, section, option, str(value))
+    def set(self, section: str, option: str, value: str|None = None):
+        RawConfigParser.set(self, section, option, str(value))
         try:
             Publisher.sendMessage(f'settings.changed.{section}.{option}', settings=self)
         except Publisher.TopicNameError:

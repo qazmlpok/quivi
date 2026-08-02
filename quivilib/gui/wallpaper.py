@@ -2,6 +2,8 @@ import wx
 import wx.lib.colourselect as csel
 from pubsub import pub as Publisher
 
+from quivilib.interface.canvasadapter import CanvasAdapter
+from quivilib.model.canvas import PaintedRegion
 from quivilib.i18n import _
 from quivilib import util
 
@@ -10,7 +12,7 @@ from quivilib import util
 
 
 class WallpaperDialog(wx.Dialog):
-    def __init__(self, parent, choices, background_color):
+    def __init__(self, parent: wx.Window, choices: list[str], background_color: wx.Colour):
         # begin wxGlade: WallpaperDialog.__init__
         wx.Dialog.__init__(self, parent=parent)
         
@@ -63,7 +65,7 @@ class WallpaperDialog(wx.Dialog):
         screen = wx.Display(0)
         screen_width = screen.GetGeometry().width
         screen_height = screen.GetGeometry().height
-        preview_panel_size = (int(screen_width * 200.0 / screen_height), 200) 
+        preview_panel_size = wx.Size(int(screen_width * 200.0 / screen_height), 200)
         self.preview_panel.SetMinSize(preview_panel_size)
         self.preview_panel.SetMaxSize(preview_panel_size)
         self.position_radio.SetSelection(0)
@@ -77,37 +79,37 @@ class WallpaperDialog(wx.Dialog):
         grid_sizer_3 = wx.FlexGridSizer(rows=6, cols=3, vgap=5, hgap=5)
         btnsizer = wx.StdDialogButtonSizer()
         sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         grid_sizer_3.Add(self.preview_panel, 1, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         sizer_1.Add(self.zoom_text_label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_1.Add((10, 20), 0, 0, 0)
+        sizer_1.Add(wx.Size(10, 20), 0, 0, 0)
         sizer_1.Add(self.zoom_label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_1.Add((10, 20), 0, 0, 0)
+        sizer_1.Add(wx.Size(10, 20), 0, 0, 0)
         sizer_1.Add(self.zoom_in_button, 0, 0, 0)
         sizer_1.Add(self.zoom_out_button, 0, 0, 0)
-        sizer_1.Add((30, 20), 0, wx.EXPAND, 0)
+        sizer_1.Add(wx.Size(30, 20), 0, wx.EXPAND, 0)
         sizer_1.Add(self.color_text_label, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_1.Add((10, 20), 0, 0, 0)
+        sizer_1.Add(wx.Size(10, 20), 0, 0, 0)
         sizer_1.Add(self.color_button, 0, 0, 0)
         grid_sizer_3.Add(sizer_1, 1, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         grid_sizer_3.Add(self.position_radio, 0, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         btnsizer.AddButton(self.ok_button)
         btnsizer.AddButton(self.cancel_button)
         btnsizer.Realize()
         grid_sizer_3.Add(btnsizer, 1, wx.EXPAND, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
-        grid_sizer_3.Add((5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
+        grid_sizer_3.Add(wx.Size(5, 5), 0, 0, 0)
         self.SetSizer(grid_sizer_3)
         grid_sizer_3.Fit(self)
         self.Layout()
@@ -116,21 +118,9 @@ class WallpaperDialog(wx.Dialog):
         
     @property
     def canvas_view(self):
-        class CanvasAdapter(object):
-            def __init__(self, panel):
-                self.panel = panel
-            
-            @property
-            def width(self):
-                return self.panel.GetSize()[0]
-            
-            @property
-            def height(self):
-                return self.panel.GetSize()[1]
-
         return CanvasAdapter(self.preview_panel)
     
-    def on_mouse_wheel(self, event):
+    def on_mouse_wheel(self, event: wx.MouseEvent):
         lines = event.GetWheelRotation() / event.GetWheelDelta()
         lines *= event.GetLinesPerAction()
         if event.controlDown:
@@ -139,19 +129,19 @@ class WallpaperDialog(wx.Dialog):
         else:
             Publisher.sendMessage('wpcanvas.scrolled', lines=lines, horizontal=event.shiftDown)
         
-    def on_mouse_left_down(self, event):
+    def on_mouse_left_down(self, event: wx.MouseEvent):
         Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=0, x=event.x, y=event.y)
         event.Skip()
         
-    def on_mouse_left_up(self, event):
+    def on_mouse_left_up(self, event: wx.MouseEvent):
         Publisher.sendMessage('wpcanvas.mouse.event', button=0, event=1, x=event.x, y=event.y)
         event.Skip()
         
-    def on_mouse_motion(self, event):
+    def on_mouse_motion(self, event: wx.MouseEvent):
         Publisher.sendMessage('wpcanvas.mouse.motion', x=event.GetX(), y=event.GetY())
         event.Skip()
         
-    def on_color_select(self, event):
+    def on_color_select(self, event: csel.ColourSelectEvent):
         color = event.GetValue()
         self.preview_panel.SetBackgroundColour(color)
         self.preview_panel.Refresh()
@@ -159,10 +149,10 @@ class WallpaperDialog(wx.Dialog):
     def on_canvas_changed(self):
         self.preview_panel.Refresh(eraseBackground=False)
         
-    def on_canvas_cursor_changed(self, *, cursor):
+    def on_canvas_cursor_changed(self, *, cursor: wx.Cursor):
         self.preview_panel.SetCursor(cursor)
         
-    def on_selection_changed(self, event):
+    def on_selection_changed(self, event: wx.CommandEvent):
         position = event.GetInt()
         Publisher.sendMessage('wallpaper.preview_position_changed', pos_idx=position)
         
@@ -186,31 +176,28 @@ class WallpaperDialog(wx.Dialog):
         dc = wx.PaintDC(self.preview_panel)
         #This is required on Linux
         dc.SetBackground(wx.Brush(self.preview_panel.GetBackgroundColour()))
-        class PaintedRegion(object):
-            def __init__(self):
-                self.left = self.top = self.width = self.height = -1
         painted_region = PaintedRegion()
         #The recipient will update the painted_region fields.
         Publisher.sendMessage('wpcanvas.painted', dc=dc, painted_region=painted_region)
         if painted_region.left != -1:
-            clip_region = wx.Region(0, 0, self.preview_panel.GetSize()[0],
-                                    self.preview_panel.GetSize()[1])
+            panel_size = self.preview_panel.GetSize()
+            clip_region = wx.Region(0, 0, panel_size[0], panel_size[1])
             clip_region.Subtract(wx.Rect(painted_region.left, painted_region.top,
                                      painted_region.width, painted_region.height))
             region_box = clip_region.GetBox()
-            iter = wx.RegionIterator(clip_region)
-            while (iter.HaveRects()):
-                rect = iter.GetRect()
+            itr = wx.RegionIterator(clip_region)
+            while (itr.HaveRects()):
+                rect = itr.GetRect()
                 dc.DestroyClippingRegion()
                 dc.SetClippingRegion(rect)
                 dc.Clear()
-                iter.Next()
+                itr.Next()
         
     def on_preview_changed(self, *, bmp, tiled):
         self.bmp = bmp
         self.tiled = tiled
         self.preview_panel.Refresh()
         
-    def on_canvas_zoom_changed(self, *, zoom):
+    def on_canvas_zoom_changed(self, *, zoom: float):
         text = util.get_formatted_zoom(zoom * self.adjust_factor)
         self.zoom_label.SetLabel(text)

@@ -31,9 +31,9 @@ class AboutDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: AboutDialog.__set_properties
         self.SetTitle(_("About"))
-        self.name_lbl.SetFont(wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
+        self.name_lbl.SetFont(wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, ""))
         # end wxGlade
-        self.copyright_txt.SetMinSize((300, -1))
+        self.copyright_txt.SetMinSize(wx.Size(300, -1))
         color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNFACE)
         self.copyright_txt.SetBackgroundColour(color)
         self.copyright_txt.Refresh()
@@ -46,7 +46,7 @@ class AboutDialog(wx.Dialog):
             txt += '\n'
             txt += lib.GetCopyrightMessage().decode("utf-8")
             txt += '\nFreeImage is used under the FreeImage Public License, version 1.0'
-            txt += '\n\nThis program uses source from FreeImagePy (http://freeimagepy.sourceforge.net/) under the FreeImage Public License, version 1.0' 
+            txt += '\n\nThis program uses source from FreeImagePy (https://freeimagepy.sourceforge.net/) under the FreeImage Public License, version 1.0'
             
         self.copyright_txt.SetValue(txt) 
 

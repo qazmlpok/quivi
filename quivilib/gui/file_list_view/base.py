@@ -1,6 +1,10 @@
+from pathlib import Path
+
 import wx
 from pubsub import pub as Publisher
 from wx import FileDataObject, DropSource
+
+from quivilib.model.favorites import FavoriteMenuItem
 
 
 class FileListViewBase(object):
@@ -10,24 +14,25 @@ class FileListViewBase(object):
     def on_context_menu(self, event):
         menu = wx.Menu()
         #Kinda ugly reference to the MainWindow list of favorites...
-        for ide, name in self.Parent.Parent.favorites_menu_items:
-            menu.Append(ide, name)
+        fav_list: list[FavoriteMenuItem] = self.Parent.Parent.menu_bar.favorites_menu_items
+        for item in fav_list:
+            menu.Append(item.ide, item.name)
         #The event handlers were already set by the MainWindow.
         self.PopupMenu(menu)
         menu.Destroy()
         
-    def on_begin_drag(self, event):
+    def on_begin_drag(self, event: wx.ListEvent):
         sel = self._get_selected_index()
         if sel == -1:
             return
         class Dummy:
             idx = sel
-            path = None
+            path: Path = None
         obj = Dummy()
         Publisher.sendMessage('file_list.begin_drag', obj=obj)
         if obj.path:
             do = FileDataObject()
-            do.AddFile(obj.path)
+            do.AddFile(str(obj.path))
             ds = DropSource(self)
             ds.SetData(do)
             ds.DoDragDrop(wx.Drag_CopyOnly)

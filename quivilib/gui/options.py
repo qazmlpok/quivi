@@ -6,24 +6,21 @@ from pubsub import pub as Publisher
 from wx.lib import langlistctrl
 
 from quivilib.i18n import _
-from quivilib.model.shortcut import Shortcut
 from quivilib.model.command import Command
-from quivilib.model.settings import Settings
+from quivilib.model.shortcut import Shortcut
+from quivilib.model.commandenum import CommandFlags, FitSettings
 import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
 
 WINDOW_SIZE = (400, 480)
 
 class OptionsDialog(wx.Dialog):
-    def __init__(self, parent, fit_choices, settings, categories,
-                 available_languages, active_language, save_locally):
+    def __init__(self, parent, fit_choices: list[tuple[str, FitSettings.FitType]], settings, commands: list[Command],
+                 available_languages: list[wx.Language], active_language: wx.Language, save_locally: bool):
         self.fit_choices = fit_choices
         self.save_locally = save_locally
         self.settings = settings
-        self.commands = []
-        self.categories = categories
-        for category in categories:
-            self.commands += category.commands
+        self.commands = commands
         # begin wxGlade: OptionsDialog.__init__
         wx.Dialog.__init__(self, parent=parent, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         self.main_notebook = wx.Notebook(self, -1, style=wx.NB_TOP)
@@ -61,7 +58,7 @@ class OptionsDialog(wx.Dialog):
         
         self.lang_lst.SetColumnWidth(0, self.lang_lst.GetClientSize()[0])
         
-        self.shortcuts = {}
+        self.shortcuts: dict[Command, list[Shortcut]] = {}
         for cmd in self.commands:
             if cmd is not None:
                 self.shortcuts[cmd] = cmd.shortcuts[:]
@@ -86,6 +83,7 @@ class OptionsDialog(wx.Dialog):
         self.placeholder_autodelete_chk = wx.CheckBox(self.viewing_pane, -1, _("Delete placeholders when opening"))
         self.placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
         self.placeholder_autoopen_chk = wx.CheckBox(self.viewing_pane, -1, _("Automatically jump to placeholder page on open"))
+        self.placeholder_separate_chk = wx.CheckBox(self.viewing_pane, -1, _("Use separate menus for favorites and placeholders"))
     def _init_commands(self):
         self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
         self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
@@ -95,7 +93,7 @@ class OptionsDialog(wx.Dialog):
         self.new_shortcut_lbl = wx.StaticText(self.keys_pane, -1, _("New shortcut"))
         self.new_shortcut_key = hk.HotkeyCtrl(self.keys_pane, -1, _("Press key"))
         self.shortcut_assign_btn = wx.Button(self.keys_pane, -1, _("Assign"))
-        self.assigned_comamnd_lbl = wx.StaticText(self.keys_pane, -1, "")
+        self.assigned_command_lbl = wx.StaticText(self.keys_pane, -1, "")
         self.reset_btn = wx.Button(self.keys_pane, -1, _("Reset all to defaults"))
     def _init_mouse(self):
         def _make_mouse_cbo(text):
@@ -110,15 +108,20 @@ class OptionsDialog(wx.Dialog):
         self._mouse_cbos = (self.mouse_left_cbo, self.mouse_middle_cbo, self.mouse_right_cbo, self.mouse_aux1_cbo, self.mouse_aux2_cbo)
         
         #This looks worse than I hoped, but I think it's still better than nothing.
-        self.mouse_separator = wx.StaticLine(self.mouse_pane, size=(100, 1), style=wx.LI_HORIZONTAL)
+        self.mouse_separator = wx.StaticLine(self.mouse_pane, size=wx.Size(100, 1), style=wx.LI_HORIZONTAL)
         
         self.always_drag_chk = wx.CheckBox(self.mouse_pane, -1, _("Always drag image with left mouse"))
         self.threshold_lbl = wx.StaticText(self.mouse_pane, -1, _("Threshold:"))    #TODO: Better text.
         self.pixels_lbl = wx.StaticText(self.mouse_pane, -1, _("px"))
         self.threshold_txt = wx.TextCtrl(self.mouse_pane, -1)
-        #This doesn't return the size of the "padding" - and it changes on different platformss/themes.
+        #This doesn't return the size of the "padding" - and it changes on different platforms/themes.
         sz = self.threshold_txt.GetTextExtent('99')
         self.threshold_txt.SetInitialSize(wx.Size(sz.x+30, -1))
+
+        self.hide_cursor_lbl = wx.StaticText(self.mouse_pane, -1, _("Hide mouse cursor if not moved for"))
+        self.hide_cursor_post_lbl = wx.StaticText(self.mouse_pane, -1, _("seconds"))
+        self.hide_cursor_txt = wx.TextCtrl(self.mouse_pane, -1)
+        self.hide_cursor_txt.SetInitialSize(wx.Size(sz.x + 30, -1))
         
     def __set_properties(self):
         # begin wxGlade: OptionsDialog.__set_properties
@@ -128,18 +131,14 @@ class OptionsDialog(wx.Dialog):
         
         for m in self._mouse_cbos:
             m.Append(_("None"), -1)
-        #TODO: A lot of these commands don't make sense for the mouse. Filter some of them out.
-        #Conversely, some things that could be useful for mouse viewing don't exist. Like scroll to bottom.
-        for category in sorted(self.categories, key=lambda x: x.order):
-            for cmd in category.commands:
-                if cmd is None:
-                    continue
-                text = f'{category.clean_name} | {cmd.clean_name}'
-                if cmd.flags & Command.KB:
-                    self.commands_lst.Append(text, cmd)
-                if cmd.flags & Command.MOUSE:
-                    for m in self._mouse_cbos:
-                        m.Append(text, cmd.ide)
+        #Commands will be in the same order they are defined in MenuDefinitionList. Same-groups are inherently together.
+        for cmd in self.commands:
+            text = cmd.name_and_category
+            if cmd.flags & CommandFlags.KB:
+                self.commands_lst.Append(text, cmd)
+            if cmd.flags & CommandFlags.MOUSE:
+                for m in self._mouse_cbos:
+                    m.Append(text, cmd.ide)
 
         self._set_selected(self.mouse_left_cbo, self.settings.getint('Mouse', 'LeftClickCmd'))
         self._set_selected(self.mouse_middle_cbo, self.settings.getint('Mouse', 'MiddleClickCmd'))
@@ -149,10 +148,12 @@ class OptionsDialog(wx.Dialog):
         always_drag = (self.settings.get('Mouse', 'AlwaysLeftMouseDrag') == '1')
         self.always_drag_chk.SetValue(always_drag)
         self.threshold_txt.SetValue(self.settings.get('Mouse', 'DragThreshold'))
+        self.hide_cursor_txt.SetValue(self.settings.get('Mouse', 'HideMouseDuration'))
 
+        setting_fit_type = FitSettings.get_fittype(self.settings.get('Options', 'FitType'))
         for name, fit_type in self.fit_choices:
             idx = self.fit_cbo.Append(name, fit_type)
-            if fit_type == self.settings.getint('Options', 'FitType'):
+            if fit_type == setting_fit_type:
                 self.fit_cbo.SetSelection(idx)
                 self._update_custom_fit_display(fit_type)
                 
@@ -184,6 +185,8 @@ class OptionsDialog(wx.Dialog):
         self.placeholder_single_chk.SetValue(placeholder_single)
         placeholder_autoopen = (self.settings.get('Options', 'PlaceholderAutoOpen') == '1')
         self.placeholder_autoopen_chk.SetValue(placeholder_autoopen)
+        placeholder_separate = (self.settings.get('Options', 'PlaceholderSeparateMenu') == '1')
+        self.placeholder_separate_chk.SetValue(placeholder_separate)
         
         self.settings_local_chk.SetValue(self.save_locally)
         
@@ -216,6 +219,8 @@ class OptionsDialog(wx.Dialog):
         # end wxGlade
     def __do_layout_mouse(self):
         mouse_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Mouse bindings
         mouse_sizer.Add(self.mouse_left_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_left_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_middle_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
@@ -227,6 +232,8 @@ class OptionsDialog(wx.Dialog):
         mouse_sizer.Add(self.mouse_aux2_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_aux2_cbo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(self.mouse_separator, 0, wx.TOP|wx.EXPAND, 10)
+
+        # Drag checkbox and treshold
         mouse_drag_sizer = wx.BoxSizer(wx.VERTICAL)
         mouse_drag_sizer_nested = wx.BoxSizer(wx.HORIZONTAL)
         mouse_drag_sizer.Add(self.always_drag_chk, 0, wx.LEFT|wx.TOP, 5)
@@ -235,6 +242,13 @@ class OptionsDialog(wx.Dialog):
         mouse_drag_sizer_nested.Add(self.pixels_lbl, 0, wx.ALIGN_CENTER_VERTICAL, 5)
         mouse_drag_sizer.Add(mouse_drag_sizer_nested, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.TOP, 5)
         mouse_sizer.Add(mouse_drag_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+
+        # Hide mouse
+        mouse_hide_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        mouse_hide_sizer.Add(self.hide_cursor_lbl, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_hide_sizer.Add(self.hide_cursor_txt, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_hide_sizer.Add(self.hide_cursor_post_lbl, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        mouse_sizer.Add(mouse_hide_sizer, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
         
         self.mouse_pane.SetSizer(mouse_sizer)
     def __do_layout_keys(self):
@@ -251,7 +265,7 @@ class OptionsDialog(wx.Dialog):
         new_shortcut_sizer.Add(self.new_shortcut_key, 1, wx.RIGHT|wx.EXPAND, 5)
         new_shortcut_sizer.Add(self.shortcut_assign_btn, 0, 0, 0)
         keys_sizer.Add(new_shortcut_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
-        keys_sizer.Add(self.assigned_comamnd_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+        keys_sizer.Add(self.assigned_command_lbl, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 5)
         keys_sizer.Add(self.reset_btn, 0, wx.ALL, 5)
         self.keys_pane.SetSizer(keys_sizer)
     def __do_layout_viewing(self):
@@ -288,6 +302,7 @@ class OptionsDialog(wx.Dialog):
         viewing_sizer.Add(self.placeholder_autodelete_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.placeholder_single_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.placeholder_autoopen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
+        viewing_sizer.Add(self.placeholder_separate_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.viewing_pane.SetSizer(viewing_sizer)
 
     def on_fit_select(self, event): # wxGlade: OptionsDialog.<event_handler>
@@ -295,12 +310,12 @@ class OptionsDialog(wx.Dialog):
         self._update_custom_fit_display(fit_type)
         event.Skip()
 
-    def on_command_select(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_command_select(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         cmd = event.GetClientData()
         self._load_shortcuts(cmd)
         event.Skip()
 
-    def on_remove_shorcut(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_remove_shorcut(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         sel = self.shorcuts_cbo.GetSelection()
         if sel != -1:
             shortcut = self.shorcuts_cbo.GetClientData(sel)
@@ -309,7 +324,7 @@ class OptionsDialog(wx.Dialog):
             self._load_shortcuts(cmd)
         event.Skip()
 
-    def on_assign_shortcut(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_assign_shortcut(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         sel = self.commands_lst.GetSelection()
         if sel != -1 and self.new_shortcut_key.IsOk():
             cmd = self.commands_lst.GetClientData(sel)
@@ -323,15 +338,15 @@ class OptionsDialog(wx.Dialog):
                     pass
             self.shortcuts[cmd].append(shortcut)
             self._load_shortcuts(cmd, shortcut)
-            self.assigned_comamnd_lbl.SetLabel('')
+            self.assigned_command_lbl.SetLabel('')
             self.new_shortcut_key.Clear()
         event.Skip()
 
-    def on_reset_all(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_reset_all(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         self.shortcuts = {}
         for cmd in self.commands:
             if cmd.default_shortcuts:
-                self.shortcuts[cmd] = [cmd.default_shortcuts]
+                self.shortcuts[cmd] = cmd.default_shortcuts[:]
             else:
                 self.shortcuts[cmd] = []
         sel = self.commands_lst.GetSelection()
@@ -340,7 +355,7 @@ class OptionsDialog(wx.Dialog):
             self._load_shortcuts(cmd)
         event.Skip()
 
-    def on_ok(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_ok(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         opt = Options()
         sel = self.fit_cbo.GetSelection()
         opt.fit_type = self.fit_cbo.GetClientData(sel)
@@ -370,26 +385,28 @@ class OptionsDialog(wx.Dialog):
         opt.placeholder_delete = self.placeholder_autodelete_chk.GetValue()
         opt.placeholder_single = self.placeholder_single_chk.GetValue()
         opt.placeholder_autoopen = self.placeholder_autoopen_chk.GetValue()
+        opt.placeholder_separate = self.placeholder_separate_chk.GetValue()
         opt.shortcuts = self.shortcuts
         opt.always_drag = self.always_drag_chk.GetValue()
         opt.drag_threshold = self.threshold_txt.GetValue()
+        opt.hide_mouse_duration = self.hide_cursor_txt.GetValue()
         
         #TODO: (2,2) Improve: handle errors here
         Publisher.sendMessage('options.update', opt=opt)
         event.Skip()
 
-    def on_cancel(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_cancel(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         event.Skip()
         
-    def on_hotkey_pressed(self, event):
+    def on_hotkey_pressed(self, event: hk.HotkeyUpdatedEvent):
         new_shortcut = Shortcut(event.GetAcceleratorFlags(), event.GetKeyCode())
-        self.assigned_comamnd_lbl.SetLabel('')
+        self.assigned_command_lbl.SetLabel('')
         sel_cmd = self._get_selected_command()
         for cmd, shortcut_lst in list(self.shortcuts.items()):
             for shortcut in shortcut_lst:
                 if new_shortcut == shortcut and cmd is not sel_cmd:
-                    text = _('Assigned for "%s"') % (cmd.name)
-                    self.assigned_comamnd_lbl.SetLabel(text)
+                    text = _('Already Assigned to "%s"') % (cmd.name)
+                    self.assigned_command_lbl.SetLabel(text)
                     return
                 
     def _get_selected_command(self):
@@ -407,13 +424,13 @@ class OptionsDialog(wx.Dialog):
             self.shorcuts_cbo.SetSelection(0)
         self._set_selected(self.shorcuts_cbo, selected_shortcut)
             
-    def _update_custom_fit_display(self, fit_type):
-        show = (fit_type == Settings.FIT_CUSTOM_WIDTH)
+    def _update_custom_fit_display(self, fit_type: FitSettings.FitType):
+        show = (fit_type == FitSettings.FitType.CUSTOM_WIDTH)
         self.width_label.Enable(show)
         self.width_txt.Enable(show)
     
     @staticmethod
-    def _set_selected(control, item):
+    def _set_selected(control: wx.ComboBox, item):
         for i in range(control.GetCount()):
             if control.GetClientData(i) == item:
                 control.SetSelection(i)
@@ -424,5 +441,7 @@ class OptionsDialog(wx.Dialog):
 
 if __name__ == '__main__':
     app = wx.App(False)
-    dlg = OptionsDialog(None)
+    #This is not going to work.
+    lang = wx.LANGUAGE_ENGLISH_US
+    dlg = OptionsDialog(None, [], None, [], [], lang, True)
     dlg.ShowModal()

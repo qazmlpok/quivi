@@ -1,26 +1,23 @@
 import logging
 import threading
 
-from pubsub import pub as Publisher
 import wx
-from wx.lib.agw import thumbnailctrl as tc
 import wx.lib.agw.scrolledthumbnail as st
+from pubsub import pub as Publisher
+from wx.lib.agw import thumbnailctrl as tc
 from wx.lib.agw.thumbnailctrl import (
     THUMB_OUTLINE_FULL, THUMB_OUTLINE_IMAGE, THUMB_OUTLINE_NONE,
     THUMB_OUTLINE_RECT)
 
-from quivilib.model import image
-from quivilib.model.container import Item, ItemType
 from quivilib import util
-from quivilib.util import error_handler
 from quivilib.gui.file_list_view.base import FileListViewBase
+from quivilib.model import image
+from quivilib.model.container import ItemType
+from quivilib.util import error_handler, DebugTimer
 
 log = logging.getLogger('thumb')
 
 OldScrolledThumbnail = None
-
-if __debug__:
-    import time
 
 def _handle_error(exception, args, kwargs):
     self = args[0]
@@ -99,31 +96,6 @@ class QuiviThumb(tc.Thumb):
         """ Breaks the caption in several lines of text (if needed). """
         self._captionbreaks = [0, None]
         return
-        
-        self._captionbreaks = []
-        self._captionbreaks.append(0)
-        if len(self._caption) == 0:
-            return
-        pos = width/16
-        beg = 0
-        dc = wx.MemoryDC()
-        bmp = wx.Bitmap(10,10)
-        dc.SelectObject(bmp)
-        dc.SetFont(self._parent.GetCaptionFont())
-        
-        while True:
-            if pos >= len(self._caption):
-                self._captionbreaks.append(len(self._caption))
-                break
-            line = self._caption[beg:pos]
-            sw = dc.GetTextExtent(line)[0]
-            if  sw > width:
-                self._captionbreaks.append(pos)
-                beg = pos
-                pos = beg + width/16
-            pos += 1
-
-        dc.SelectObject(wx.NullBitmap)
 
     def GetBitmap(self, width, height):
         self.DelayLoad()
@@ -162,65 +134,58 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         """ Threaded method to load images. Used internally. """
         
         for count, item in enumerate(container.items):
-            if __debug__:
-                start = time.perf_counter()
-                log.debug('Loading thumb #%d' % count)
-            if not self._isrunning:
-                return
-            try:
-                self.LoadImageContainer(container, item, count)
-            except:
-                log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=1)
-            if __debug__:
-                stop = time.perf_counter()
-                log.debug(f'Loaded thumb #{count}. Took: {(stop - start)*1000:0.1f}ms.')
-            if count < 4:
+            with DebugTimer(f'Loaded thumb #{count}.'):
+                if not self._isrunning:
+                    return
+                try:
+                    self.LoadImageContainer(container, item, count)
+                except:
+                    log.debug("Failed to generate thumbnail for image #%d" % count, exc_info=True)
+            if count < 4 or count%4 == 0:
                 wx.CallAfter(self.Refresh)
-            elif count%4 == 0:
-                wx.CallAfter(self.Refresh)
-            log.debug('Refresh requested')
+                log.debug('Refresh requested')
 
         wx.CallAfter(self.Refresh)
         log.debug('Thumbs done!')
         self._isrunning = False
 
-    def LoadImageContainer(self, container, item, index):
+    def LoadImageContainer(self, container, item, index) -> None:
         """ Threaded method to load images. Used internally. """
         #TODO: (2,2) Refactor: this should be moved inside the Item class
         bmp = None
         if item.typ == ItemType.IMAGE:
             f = container.open_image(index)
             try:
-                img = image.open(f, item.path, None)
+                img = image.open_direct(f, item.path)
             finally:
                 f.close()
-            originalsize = (img.original_width, img.original_height)
+            originalsize = (img.base_width, img.base_height)
             bmp = img.create_thumbnail(300, 240, delay=True)
             alpha = False
-            def delayed_fn(bmp=bmp):
-                if callable(bmp):
-                    bmp = bmp()
-                img = bmp.ConvertToImage()
-                return img
+            def delayed_fn(_bmp=bmp, _ext=None):
+                if callable(_bmp):
+                    _bmp = _bmp()
+                _img = _bmp.ConvertToImage()
+                return _img
         elif item.typ in (ItemType.DIRECTORY, ItemType.PARENT):
             originalsize = 32, 32
             alpha = True
-            def delayed_fn(bmp=bmp):
+            def delayed_fn(_bmp=bmp, _ext=None):
                 icon = util.get_icon_for_directory(small=False)
-                bmp = wx.Bitmap(icon.GetWidth(), icon.GetHeight())
-                bmp.CopyFromIcon(icon)
-                img = bmp.ConvertToImage()
-                return img
+                _bmp = wx.Bitmap(icon.GetWidth(), icon.GetHeight())
+                _bmp.CopyFromIcon(icon)
+                _img = _bmp.ConvertToImage()
+                return _img
         elif item.typ == ItemType.COMPRESSED:
             originalsize = 32, 32
             alpha = True
             ext = container.get_item_extension(index)
-            def delayed_fn(bmp=bmp, ext=ext):
-                icon = util.get_icon_for_extension('.' + ext, small=False)
-                bmp = wx.Bitmap(icon.GetWidth(), icon.GetHeight())
-                bmp.CopyFromIcon(icon)
-                img = bmp.ConvertToImage()
-                return img
+            def delayed_fn(_bmp=bmp, _ext=ext):
+                icon = util.get_icon_for_extension('.' + _ext, small=False)
+                _bmp = wx.Bitmap(icon.GetWidth(), icon.GetHeight())
+                _bmp.CopyFromIcon(icon)
+                _img = _bmp.ConvertToImage()
+                return _img
 
         self._items[index]._originalsize = originalsize
         self._items[index].delay_fn = delayed_fn
@@ -273,124 +238,6 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
             sw, sh = dc.GetTextExtent(caption)
             
         return caption[0:-3] + "..."
-        
-    #The changes made here appear to be mostly styling
-    #def DrawThumbnail(self, bmp, thumb, index):
-    #    """ Draws the visible thumbnails. """
-    #
-    #    dc = wx.MemoryDC()
-    #    dc.SelectObject(bmp)
-    #    dc.BeginDrawing()
-    #    
-    #    x = self._tBorder/2
-    #    y = self._tBorder/2
-    #
-    #    # background
-    #    dc.SetPen(wx.Pen(wx.BLACK, 0, wx.TRANSPARENT))
-    #    dc.SetBrush(wx.Brush(self.GetBackgroundColour(), wx.SOLID))
-    #    dc.DrawRectangle(0, 0, bmp.GetWidth(), bmp.GetHeight())
-    #    
-    #    # image
-    #    img = thumb.GetBitmap(self._tWidth, self._tHeight)
-    #    ww = img.GetWidth()
-    #    hh = img.GetHeight()
-    #    
-    #    imgRect = wx.Rect(x + (self._tWidth - img.GetWidth())/2,
-    #                      y + (self._tHeight - img.GetHeight())/2,
-    #                      img.GetWidth(), img.GetHeight())
-    #
-#   #     if not thumb._alpha:
-#   #         dc.Blit(imgRect.x+5, imgRect.y+5, imgRect.width, imgRect.height, self.shadow, 500-ww, 500-hh)        
-    #    dc.DrawBitmap(img, imgRect.x, imgRect.y, True)
-    #
-    #    colour = self.GetSelectionColour()
-    #    selected = self.IsSelected(index)
-    #
-    #    # draw caption
-    #    sw, sh = 0, 0
-    #    if self._showfilenames:
-    #        textWidth = 0
-    #        dc.SetFont(self.GetCaptionFont())
-    #        mycaption = thumb.GetCaption(0)
-    #        sw, sh = dc.GetTextExtent(mycaption)
-    #
-    #        if sw > self._tWidth:
-    #            mycaption = self.CalculateBestCaption(dc, mycaption, sw, self._tWidth)
-    #            sw = self._tWidth
-    #        
-    #        if selected:
-    #            dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
-    #            dc.SetTextBackground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
-    #            dc.SetBrush(wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)))
-    #        
-    #        tx = x + (self._tWidth - sw)/2
-    #        ty = y + self._tHeight + (self._tTextHeight - sh)/2 + 3
-    #
-    #        lines = thumb.GetCaptionLinesCount(self._tWidth)
-    #        if selected:
-    #            dc.DrawRectangle(tx-2, ty-2, sw+4, (sh*lines)+4)
-    #        
-    #        if lines == 1:
-    #            dc.DrawText(mycaption, tx, ty)
-    #        else:
-    #            start = 0
-    #            for end in thumb._captionbreaks[1:]:
-    #                dc.DrawText(thumb._caption[start:end], x, ty)
-    #                start = end
-    #                ty += sh
-    #        
-    #    # outline
-    #    if self._tOutline != tc.THUMB_OUTLINE_NONE and (self._tOutlineNotSelected or selected):
-    #
-    #        dotrect = wx.Rect()
-    #        dotrect.x = x - 2
-    #        dotrect.y = y - 2
-    #        dotrect.width = bmp.GetWidth() - self._tBorder + 4
-    #        dotrect.height = bmp.GetHeight() - self._tBorder + 4
-    #    
-    #        dc.SetPen(wx.Pen((self.IsSelected(index) and [colour] or [wx.LIGHT_GREY])[0],
-    #                         0, wx.SOLID))       
-    #        dc.SetBrush(wx.Brush(wx.BLACK, wx.TRANSPARENT))
-    #    
-    #        if self._tOutline == tc.THUMB_OUTLINE_FULL or self._tOutline == tc.THUMB_OUTLINE_RECT:
-    #
-    #            imgRect.x = x
-    #            imgRect.y = y
-    #            imgRect.width = bmp.GetWidth() - self._tBorder
-    #            imgRect.height = bmp.GetHeight() - self._tBorder
-    #
-    #            if self._tOutline == tc.THUMB_OUTLINE_RECT:
-    #                imgRect.height = self._tHeight             
-    #
-    #        dc.SetBrush(wx.TRANSPARENT_BRUSH)
-    #
-    #        if selected:
-    #
-#   #             dc.SetPen(self.grayPen)
-#   #             dc.DrawRoundedRectangleRect(dotrect, 2)
-    #            
-#   #             dc.SetPen(wx.Pen(wx.WHITE))
-#   #             dc.DrawRectangle(imgRect.x, imgRect.y,
-#   #                              imgRect.width, imgRect.height)
-    #
-    #            pen = wx.Pen((selected and [colour] or [wx.LIGHT_GREY])[0], 2)
-    #            pen.SetJoin(wx.JOIN_MITER)
-    #            dc.SetPen(pen)
-    #            if self._tOutline == tc.THUMB_OUTLINE_FULL:
-    #                dc.DrawRoundedRectangle(imgRect.x - 1, imgRect.y - 1,
-    #                                        imgRect.width + 3, imgRect.height + 3, 2)
-    #            else:
-    #                dc.DrawRectangle(imgRect.x, imgRect.y,
-    #                                 imgRect.width, imgRect.height)
-    #        else:
-    #            dc.SetPen(wx.Pen(wx.LIGHT_GREY))
-    #
-    #            dc.DrawRectangle(imgRect.x - 1, imgRect.y - 1,
-    #                             imgRect.width + 2, imgRect.height + 2)
-    #        
-    #
-    #    dc.EndDrawing()
-    #    dc.SelectObject(wx.NullBitmap)
 
     def DeleteFiles(self):
         pass
