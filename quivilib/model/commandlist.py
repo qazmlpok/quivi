@@ -301,7 +301,7 @@ class CommandDefinitionList():
                                     [])
 
             cat_name = __('Download')
-            yield CommandDefinition(CommandName.DOWNLOAD_NEW, cat_name, control.view.on_download_update,
+            yield CommandDefinition(CommandName.DOWNLOAD_NEW, cat_name, control.view.do_download_update,
                                     __('&Download'), __('Go to the download site'),
                                     [],
                                     flags=CommandFlags.NOMENU)
@@ -392,6 +392,24 @@ class MenuDefinitionList():
         fav_sub = MenuDefinition(MenuName.FavoritesSub, 'Favorites', (
             # Deliberately empty
         ))
+        placeholder_sub_split = MenuDefinition(MenuName.PlaceholderSubSplit, 'Placeholders', (
+            # Deliberately empty
+        ))
+        fav_sub_split = MenuDefinition(MenuName.FavoritesSubSplit, 'Favorites', (
+            # Deliberately empty
+        ))
+        favorites_split_menu = MenuDefinition(MenuName.FavoritesSplit, 'F&avorites', (
+            # In theory these should be in the sub menus, but the main purpose of this is to make long fav lists easier to deal with
+            # And there's a lot more room here.
+            CommandName.ADD_FAVORITES,
+            CommandName.ADD_PLACEHOLDER,
+            CommandName.REMOVE_FAVORITES,
+            CommandName.REMOVE_PLACEHOLDER,
+            None,
+            #It is not possible to use fav_sub etc twice.
+            MenuName.FavoritesSubSplit,
+            MenuName.PlaceholderSubSplit,
+        ))
         help_menu = MenuDefinition(MenuName.Help, '&Help', (
             CommandName.HELP,
             CommandName.FEEDBACK,
@@ -421,12 +439,6 @@ class MenuDefinitionList():
             CommandName.ROTATE_COUNTER_CLOCKWISE,
         ))
         # Context menus
-        fav_ctx = MenuDefinition(MenuName.FavoritesCtx, 'Favorites', (
-            #Deliberately empty
-        ))
-        placeholder_ctx = MenuDefinition(MenuName.PlaceholderCtx, 'Placeholders', (
-            #Deliberately empty
-        ))
         fit_menu = MenuDefinition(MenuName.FitCtx, empty, (
             CommandName.ZOOM_NONE,
             CommandName.ZOOM_WIDTH,
@@ -452,8 +464,8 @@ class MenuDefinitionList():
             CommandName.FULL_SCREEN,
             CommandName.SHOW_FILE_LIST,
             None,
-            MenuName.FavoritesCtx,
-            MenuName.PlaceholderCtx,
+            MenuName.FavoritesSub,
+            MenuName.PlaceholderSub,
             None,
             CommandName.OPTIONS,
             CommandName.HELP,
@@ -467,8 +479,8 @@ class MenuDefinitionList():
             self.menubar_menus = self.menubar_menus + (debug_menu,)
         self.menu_list = (
             file_menu, folder_menu, view_menu, help_menu, download_menu,
-            fav_sub, placeholder_sub, favorites_menu,
-            zoom_sub, rotate_sub, fav_ctx, placeholder_ctx,
+            fav_sub, placeholder_sub, fav_sub_split, placeholder_sub_split, favorites_menu, favorites_split_menu,
+            zoom_sub, rotate_sub,
             fit_menu, img_context,
             debug_menu,
         )

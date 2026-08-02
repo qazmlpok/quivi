@@ -14,7 +14,7 @@ class FileListViewBase(object):
     def on_context_menu(self, event):
         menu = wx.Menu()
         #Kinda ugly reference to the MainWindow list of favorites...
-        fav_list: list[FavoriteMenuItem] = self.Parent.Parent.favorites_menu_items
+        fav_list: list[FavoriteMenuItem] = self.Parent.Parent.menu_bar.favorites_menu_items
         for item in fav_list:
             menu.Append(item.ide, item.name)
         #The event handlers were already set by the MainWindow.
