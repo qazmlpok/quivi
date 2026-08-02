@@ -20,6 +20,7 @@ The 64-bit executable prevents issues with loading large files. The upgrade to P
     - (Optionally) Only a single place holder can be used for anything. Saving any new placeholder will replace the existing one.
     - (Optionally) Placeholders will be deleted upon opening.
     - (Optionally) Opening a folder/archive that has a placeholder will automatically load the placeholder.
+    - Placeholders and Favorites can optionally be separated into separate submenus of the Favorites menu on the menu bar. This is a configuration option in settings. Placeholders and favorites are also included in a right-click context menu and are always separated there.
 - Holding down shift while using the scrollwheel will scroll horizontally.
 - Holding down ctrl while using the scrollwheel zoom in/out on the mouse cursor's location (instead of the center of the image).
 - Added "Drag image" as an explicit command, instead of the default behavior of always dragging with left click. This means left click can be reassigned to a different action, such as Next image, and it will never attempt to move the image. The old behavior can be restored via an option in the Mouse tab.
