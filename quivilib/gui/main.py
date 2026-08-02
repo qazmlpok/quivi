@@ -54,8 +54,7 @@ class MainWindow(wx.Frame):
 
         dt = self.QuiviFileDropTarget(self)
         self.SetDropTarget(dt)
-        
-        #self.menu_bar = QuiviMenuBar(err_fn = lambda e: self.handle_error(e))
+
         self.menu_bar = QuiviMenuBar()
         self.SetMenuBar(self.menu_bar)
         
