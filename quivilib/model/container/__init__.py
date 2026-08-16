@@ -71,8 +71,6 @@ class Item(object):
     __repr__ = __str__
 
 
-#TODO: Replace with a special IntStrEnum. This is saved into the config as an int.
-#It should be saved as a string. For compatibility, it should read both and then write as str.
 class SortOrder(IntEnum):
     NAME = 0
     EXTENSION = 1

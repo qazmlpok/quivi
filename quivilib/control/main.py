@@ -1,4 +1,5 @@
 import sys
+from enum import IntEnum, auto
 from pathlib import Path
 import logging as log
 import traceback
@@ -25,6 +26,25 @@ from quivilib.control.i18n import I18NController
 from quivilib.model.favorites import Favorite
 from quivilib import util
 from quivilib import tempdir
+
+
+
+class DarkModeValue(IntEnum):
+    """This is effectively a duplicate of the wx values. It's separate just in case those change or new values are added."""
+    SYSTEM = 0
+    LIGHT = 1
+    DARK = 2
+
+    def ToWx(self) -> wx.PyApp.Appearance:
+        match self.value:
+            case self.SYSTEM:
+                return wx.PyApp.Appearance.System
+            case self.LIGHT:
+                return wx.PyApp.Appearance.Light
+            case self.DARK:
+                return wx.PyApp.Appearance.Dark
+            case _:
+                return wx.PyApp.Appearance.Light
 
 
 class MainController(object):
@@ -70,6 +90,8 @@ class MainController(object):
         start_dir = self._get_start_dir(self.settings)
         if util.is_frozen():
             sys.stdout = sys.stderr = stdio_path.open('w')
+
+        self.DarkMode()
         
         self.view = MainWindow()
         
@@ -95,6 +117,7 @@ class MainController(object):
         Publisher.subscribe(self.on_open_update_site, 'program.open_update_site')
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
         Publisher.sendMessage('settings.loaded', settings=self.model.settings)
+        Publisher.subscribe(self.on_dark_mode_changed, 'settings.changed.Options.DarkMode')
         
         #Receive messages for Settings from the Daemon thread
         Publisher.subscribe(self.on_update_available, 'program.update_available')
@@ -135,8 +158,37 @@ class MainController(object):
         autoFullscreen = self.settings.getboolean('Options', 'AutoFullscreen')
         if useFullscreen and autoFullscreen:
             self.toggle_fullscreen()
-        
-    def on_update_fullscreen_menu_item(self, event):
+
+    def on_dark_mode_changed(self, *, settings: Settings):
+        useDarkmode = DarkModeValue(settings.getint('Options', 'DarkMode'))
+        self.SetDarkMode(useDarkmode)
+
+    def DarkMode(self):
+        """Initialize Dark Mode based on the Setting"""
+
+        useDarkmode = DarkModeValue(self.settings.getint('Options', 'DarkMode'))
+        self.SetDarkMode(useDarkmode)
+
+    def SetDarkMode(self, value: DarkModeValue):
+        """Set up Dark Mode."""
+        app = wx.GetApp()
+        #GetApp can return an AppConsole; this shouldn't ever happen but just in case don't try to set dark mode.
+        if (not isinstance(app, wx.App)):
+            return
+        if wx.__version__ < '4.3.0':
+            log.warning(f"Dark mode is only supported for wxPython version >= 4.3.0")
+            return
+        # I can't tell if I _need_ to call MSWEnableDarkMode or not.
+        wxApp: wx.App = app
+        result = wxApp.SetAppearance(value.ToWx())
+        if result == wx.PyApp.AppearanceResult.Ok:
+            log.debug(f"Dark mode setting: {value}")
+        else:
+            #May be "Failure" or "CannotChange" - latter
+            log.warning(f"Changing dark mode failed. Result: {result}")
+
+
+    def on_update_fullscreen_menu_item(self, event: wx.UpdateUIEvent):
         event.Check(self.view.IsFullScreen())
         
     def toggle_file_list(self):

@@ -32,3 +32,4 @@ class Options():
         self.placeholder_single: bool | None = None
         self.placeholder_autoopen: bool | None = None
         self.placeholder_separate: bool | None = None
+        self.darkmode = None

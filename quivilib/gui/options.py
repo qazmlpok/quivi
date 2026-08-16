@@ -71,9 +71,10 @@ class OptionsDialog(wx.Dialog):
         self.width_txt = wx.TextCtrl(self.viewing_pane, -1, "800")
         self.start_dir_lbl = wx.StaticText(self.viewing_pane, -1, _("Start directory"))
         self.start_dir_picker = wx.DirPickerCtrl(self.viewing_pane, -1)
-        self.bg_color_default_rdo = wx.RadioButton(self.viewing_pane, -1, _("Default system color"), style=wx.RB_GROUP)
-        self.bg_color_custom_rdo = wx.RadioButton(self.viewing_pane, -1, _("Custom color:"))
-        self.bg_color_picker = wx.ColourPickerCtrl(self.viewing_pane, -1)
+        self.bg_color_default_rdo = wx.RadioButton(self.bg_color_sizer_staticbox, -1, _("Default system color"), style=wx.RB_GROUP)
+        self.bg_color_custom_rdo = wx.RadioButton(self.bg_color_sizer_staticbox, -1, _("Custom color:"))
+        self.bg_color_picker = wx.ColourPickerCtrl(self.bg_color_sizer_staticbox, -1)
+        self.dark_mode_system_rdo = wx.RadioBox(self.viewing_pane, -1, _("Dark Mode"), choices=[_("System Default"), _("Light"), _("Dark")])
         self.real_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Hide menu and status on full screen"))
         self.open_first_chk = wx.CheckBox(self.viewing_pane, -1, _("Open first image of the folder automatically"))
         self.settings_local_chk = wx.CheckBox(self.viewing_pane, -1, _("Portable mode (save settings inside the program folder)"))
@@ -84,6 +85,7 @@ class OptionsDialog(wx.Dialog):
         self.placeholder_single_chk = wx.CheckBox(self.viewing_pane, -1, _("Only allow a single placeholder"))
         self.placeholder_autoopen_chk = wx.CheckBox(self.viewing_pane, -1, _("Automatically jump to placeholder page on open"))
         self.placeholder_separate_chk = wx.CheckBox(self.viewing_pane, -1, _("Use separate menus for favorites and placeholders"))
+
     def _init_commands(self):
         self.commands_label = wx.StaticText(self.keys_pane, -1, _("Commands"))
         self.commands_lst = wx.ListBox(self.keys_pane, -1, choices=[])
@@ -165,6 +167,9 @@ class OptionsDialog(wx.Dialog):
             self.bg_color_custom_rdo.SetValue(True)
         else:
             self.bg_color_default_rdo.SetValue(True)
+        darkmode = self.settings.getint('Options', 'DarkMode')
+        self.dark_mode_system_rdo.SetSelection(darkmode)
+
         color = self.settings.get('Options', 'CustomBackgroundColor').split(',')
         color = wx.Colour(*[int(c) for c in color])
         self.bg_color_picker.SetColour(color)
@@ -270,8 +275,7 @@ class OptionsDialog(wx.Dialog):
         self.keys_pane.SetSizer(keys_sizer)
     def __do_layout_viewing(self):
         viewing_sizer = wx.BoxSizer(wx.VERTICAL)
-        bg_color_sizer = wx.StaticBoxSizer(self.bg_color_sizer_staticbox, wx.VERTICAL)
-        custom_bg_color_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
         fit_outer = wx.BoxSizer(wx.HORIZONTAL)
         fit_inner1 = wx.BoxSizer(wx.VERTICAL)
         fit_inner2 = wx.BoxSizer(wx.VERTICAL)
@@ -286,12 +290,18 @@ class OptionsDialog(wx.Dialog):
         
         viewing_sizer.Add(self.start_dir_lbl, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.start_dir_picker, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
-        
+
+        bg_color_sizer = wx.StaticBoxSizer(self.bg_color_sizer_staticbox, wx.VERTICAL)
+        custom_bg_color_sizer = wx.BoxSizer(wx.HORIZONTAL)
         bg_color_sizer.Add(self.bg_color_default_rdo, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         custom_bg_color_sizer.Add(self.bg_color_custom_rdo, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         custom_bg_color_sizer.Add(self.bg_color_picker, 0, wx.LEFT|wx.RIGHT|wx.EXPAND, 5)
         bg_color_sizer.Add(custom_bg_color_sizer, 1, wx.ALL|wx.EXPAND, 5)
         viewing_sizer.Add(bg_color_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
+
+        darkmode_sizer = wx.BoxSizer(wx.VERTICAL)
+        darkmode_sizer.Add(self.dark_mode_system_rdo, 0, wx.LEFT, 15)
+        viewing_sizer.Add(darkmode_sizer, 0, wx.TOP|wx.BOTTOM, 5)
         
         viewing_sizer.Add(self.real_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.open_first_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
@@ -305,7 +315,7 @@ class OptionsDialog(wx.Dialog):
         viewing_sizer.Add(self.placeholder_separate_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         self.viewing_pane.SetSizer(viewing_sizer)
 
-    def on_fit_select(self, event): # wxGlade: OptionsDialog.<event_handler>
+    def on_fit_select(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         fit_type = event.GetClientData()
         self._update_custom_fit_display(fit_type)
         event.Skip()
@@ -390,6 +400,7 @@ class OptionsDialog(wx.Dialog):
         opt.always_drag = self.always_drag_chk.GetValue()
         opt.drag_threshold = self.threshold_txt.GetValue()
         opt.hide_mouse_duration = self.hide_cursor_txt.GetValue()
+        opt.darkmode = self.dark_mode_system_rdo.GetSelection()
         
         #TODO: (2,2) Improve: handle errors here
         Publisher.sendMessage('options.update', opt=opt)

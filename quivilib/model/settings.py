@@ -1,4 +1,5 @@
 import os
+import sys
 from configparser import RawConfigParser
 
 from pubsub import pub as Publisher
@@ -36,6 +37,8 @@ class Settings(RawConfigParser):
         Publisher.sendMessage('settings.initial_load', settings=self)
 
     def _load_defaults(self):
+        #Dark Mode defaults to 'off' (i.e. light) on Win32 and the System setting otherwise.
+        darkModeDefault = 1 if sys.platform == 'win32' else 0
         defaults = (
           ('Options', 'FitType', FitSettings.FitType.WIDTH_IF_LARGER),
           ('Options', 'FitWidthCustomSize', 800),
@@ -44,6 +47,7 @@ class Settings(RawConfigParser):
           ('Options', 'CustomBackgroundColor', '0,0,0'),
           ('Options', 'RealFullscreen', 0),
           ('Options', 'AutoFullscreen', 1),
+          ('Options', 'DarkMode', darkModeDefault),
           ('Options', 'UseRightToLeft', 0),
           ('Options', 'DetectSpreads', 0),
           ('Options', 'HorizontalScrollAtBottom', 0),
