@@ -164,6 +164,8 @@ class MainWindow(wx.Frame):
         Publisher.sendMessage('canvas.resized')
         if not self.IsMaximized() and not self.IsFullScreen():
             self._last_size = self.get_window_size()
+        # Necessary as of wxWidgets 3.3. May be needed in other locations.
+        self.aui_mgr.Update()
             
     def on_move(self, event: wx.MoveEvent):
         if not self.IsMaximized() and not self.IsFullScreen():
