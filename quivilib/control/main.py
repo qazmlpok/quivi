@@ -35,7 +35,7 @@ class DarkModeValue(IntEnum):
     LIGHT = 1
     DARK = 2
 
-    def ToWx(self) -> wx.PyApp.Appearance:
+    def ToWx(self):
         match self.value:
             case self.SYSTEM:
                 return wx.PyApp.Appearance.System
@@ -178,14 +178,14 @@ class MainController(object):
         if wx.__version__ < '4.3.0':
             log.warning(f"Dark mode is only supported for wxPython version >= 4.3.0")
             return
-        # I can't tell if I _need_ to call MSWEnableDarkMode or not.
         wxApp: wx.App = app
         result = wxApp.SetAppearance(value.ToWx())
         if result == wx.PyApp.AppearanceResult.Ok:
             log.debug(f"Dark mode setting: {value}")
         else:
-            #May be "Failure" or "CannotChange" - latter
-            log.warning(f"Changing dark mode failed. Result: {result}")
+            #May be "Failure" or "CannotChange" - latter will occur on MSW after windows have been created.
+            resultMsg = 'CannotChange' if result == 2 else 'Failure' if result == 1 else 'Unknown'
+            log.warning(f"Changing dark mode failed. Result: {resultMsg}")
 
 
     def on_update_fullscreen_menu_item(self, event: wx.UpdateUIEvent):
