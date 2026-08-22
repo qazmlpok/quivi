@@ -1,18 +1,19 @@
 #TODO: (2,2) Improve: change the command listbox into a listctrl with columns:
 #    (Category / Command / Assigned shortcuts)
+import sys
 
 import wx
 from pubsub import pub as Publisher
 from wx.lib import langlistctrl
 
+import quivilib.gui.hotkeyctrl as hk
 from quivilib.i18n import _
 from quivilib.model.command import Command
-from quivilib.model.shortcut import Shortcut
 from quivilib.model.commandenum import CommandFlags, FitSettings
-import quivilib.gui.hotkeyctrl as hk
 from quivilib.model.options import Options
+from quivilib.model.shortcut import Shortcut
 
-WINDOW_SIZE = (400, 480)
+WINDOW_SIZE = (500, 780)
 
 class OptionsDialog(wx.Dialog):
     def __init__(self, parent, fit_choices: list[tuple[str, FitSettings.FitType]], settings, commands: list[Command],
@@ -74,7 +75,8 @@ class OptionsDialog(wx.Dialog):
         self.bg_color_default_rdo = wx.RadioButton(self.bg_color_sizer_staticbox, -1, _("Default system color"), style=wx.RB_GROUP)
         self.bg_color_custom_rdo = wx.RadioButton(self.bg_color_sizer_staticbox, -1, _("Custom color:"))
         self.bg_color_picker = wx.ColourPickerCtrl(self.bg_color_sizer_staticbox, -1)
-        self.dark_mode_system_rdo = wx.RadioBox(self.viewing_pane, -1, _("Dark Mode"), choices=[_("System Default"), _("Light"), _("Dark")])
+        self.dark_mode_system_rdo = DarkModeRadioBox(self.viewing_pane)
+
         self.real_fullscreen_chk = wx.CheckBox(self.viewing_pane, -1, _("Hide menu and status on full screen"))
         self.open_first_chk = wx.CheckBox(self.viewing_pane, -1, _("Open first image of the folder automatically"))
         self.settings_local_chk = wx.CheckBox(self.viewing_pane, -1, _("Portable mode (save settings inside the program folder)"))
@@ -299,9 +301,7 @@ class OptionsDialog(wx.Dialog):
         bg_color_sizer.Add(custom_bg_color_sizer, 1, wx.ALL|wx.EXPAND, 5)
         viewing_sizer.Add(bg_color_sizer, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 5)
 
-        darkmode_sizer = wx.BoxSizer(wx.VERTICAL)
-        darkmode_sizer.Add(self.dark_mode_system_rdo, 0, wx.LEFT, 15)
-        viewing_sizer.Add(darkmode_sizer, 0, wx.TOP|wx.BOTTOM, 5)
+        self.dark_mode_system_rdo.do_layout(viewing_sizer)
         
         viewing_sizer.Add(self.real_fullscreen_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
         viewing_sizer.Add(self.open_first_chk, 0, wx.LEFT|wx.RIGHT|wx.TOP, 5)
@@ -449,10 +449,57 @@ class OptionsDialog(wx.Dialog):
 
 # end of class OptionsDialog
 
+class DarkModeRadioBox():
+    """Encapsulation for the dark mode control, sizer, and radio buttons. The standard RadioBox does not give enough flexibility for what I want.
+    This isn't intended to be reusable at all."""
+    def __init__(self, parent: wx.Window):
+        self.show_warning_label = sys.platform == 'win32'
+
+        self.static_box = wx.StaticBox(parent, -1, _("Dark Mode"))
+        self.static_box_sizer = wx.StaticBoxSizer(self.static_box, wx.VERTICAL)
+
+        self.radio_default = wx.RadioButton(self.static_box, -1, _("System Default"), style=wx.RB_GROUP)
+        self.radio_light = wx.RadioButton(self.static_box, -1, _("Light"))
+        self.radio_dark = wx.RadioButton(self.static_box, -1, _("Dark"))
+
+        self.dark_mode_warning_lbl = None
+        if self.show_warning_label:
+            self.dark_mode_warning_lbl = wx.StaticText(self.static_box, -1, _("Requires restart to take effect"))
+            self.dark_mode_warning_lbl.SetForegroundColour(wx.Colour(0xc4, 0x32, 0x55))
+            self.dark_mode_warning_lbl.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, ""))
+
+    def do_layout(self, sizer: wx.Sizer):
+        radio_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        radio_sizer.Add(self.radio_default, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_LEFT, 5)
+        radio_sizer.Add(self.radio_light, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_LEFT, 5)
+        radio_sizer.Add(self.radio_dark, 0, wx.LEFT|wx.RIGHT|wx.ALIGN_LEFT, 5)
+
+        if self.dark_mode_warning_lbl:
+            self.static_box_sizer.Add(self.dark_mode_warning_lbl, 0, wx.ALIGN_RIGHT|wx.RIGHT, 10)
+        self.static_box_sizer.Add(radio_sizer, 0, wx.ALIGN_LEFT|wx.TOP|wx.BOTTOM, 5)
+        sizer.Add(self.static_box_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 5)
+
+    def GetSelection(self):
+        if (self.radio_light.GetValue()):
+            return 1
+        if (self.radio_dark.GetValue()):
+            return 2
+        return 0
+    def SetSelection(self, value: int):
+        value = max(0, min(value, 2))
+        self.radio_default.SetValue(value == 0)
+        self.radio_light.SetValue(value == 1)
+        self.radio_dark.SetValue(value == 2)
 
 if __name__ == '__main__':
     app = wx.App(False)
-    #This is not going to work.
+    class FakeSettings:
+        def getint(self, sect, key):
+            return 0
+        def get(self, sect, key):
+            return "0"
+
     lang = wx.LANGUAGE_ENGLISH_US
-    dlg = OptionsDialog(None, [], None, [], [], lang, True)
+    fit = [("Fake", FitSettings.FitType.HEIGHT)]
+    dlg = OptionsDialog(None, fit, FakeSettings(), [], [], lang, True)
     dlg.ShowModal()
