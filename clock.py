@@ -15,55 +15,38 @@ from PIL import ImageDraw
 # - Text in the upper-right stating the duration of this frame
 # - A single pixel with value equal to the current frame (intended for test cases)
 
-#Durations are in 10ths of a second, to match GIF delay behavior
-#If the sum is less than 300, padding is added to make up the difference.
-#Durations less than 2 will be changed to 10 (to match browser behavior, which quivi also emulates)
+def flatten_durations(inp: list[tuple[int|str, ...]]):
+    for x in inp:
+        if len(x) == 1:
+            yield [x[0], '']
+        if len(x) == 2:
+            yield x
+        else:
+            reps: int = x[2]
+            for _ in range(reps):
+                yield [x[0], x[1],]
+
+#Durations are in ms
+#GIFs will change a delay of 0 or 1 (1 meaning 10ms) to be 10 (10 meaning 100ms), which will make the animation appear much slower
+#WebP and APNG have the same behavior, but allow more specific times. A timestamp of 10ms will be slowed to 100ms. A timestamp of 11ms will not
+#But a timestamp of 11ms can't be done with GIF, only 10ms or 20ms.
+#VALUES (only [0] is required): [0]=delay in ms. [1]=Text to add to clock for this frame. [2]=Repeat x times.
 durations = [
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [50, "5s"],
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [10, "1s (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [2, "Smoother (5s)"],
-    [10, "1s"],
-    [50, "5s"],
+    [1000, "1s (5s)", 5],
+    [10, "minimum", 50],
+    [1000, "1s", 2],
 ]
+
+durations = [x for x in flatten_durations(durations)]
 
 width = 800
 height = 800
 
+#Mark the clock at fixed intervals. It is best if the total is evenly divisible by this value, and most "breakpoints" are too.
+divisor = 6
 
-# Should be 'gif', 'png', or 'webp'. PIL doesn't support any other formats.
+
+# Should be 'gif', 'png', or 'webp' (or a list of these values). PIL doesn't support any other formats.
 img_format: str | list[str]
 #img_format = 'webp'
 img_format = ['gif', 'png', 'webp']
@@ -71,22 +54,17 @@ img_format = ['gif', 'png', 'webp']
 # ---------------------------------------------------
 radius = int(min(width, height) * 0.75) / 2
 
-for x in durations:
-    if x[0] < 2:
-        x[0] = 10
-    if (len(x) == 1):
-        x.append('')
 #
+#-This will re-sync durations with the browser corrections so the clock moves normally.
+#Except that's usually not desired.
+#(also values of [11-19] will still display wrong for a gif, but not other formats)
+#for x in durations:
+#    if x[0] <= 10:
+#        x[0] = 100
+##
 
 total = sum([x[0] for x in durations])
 print("Total duration:", total)
-while total < 300:
-    if total % 2 == 1:
-        durations.append([3, 'Padding'])
-        total += 3
-        continue
-    durations.append([2, 'Padding'])
-    total += 2
 #
 
 def generate_frame(elapsed: int, frameNo: int, next_delay: int, txt: str) -> Image.Image:
@@ -98,14 +76,14 @@ def generate_frame(elapsed: int, frameNo: int, next_delay: int, txt: str) -> Ima
     draw.circle((center_x, center_y), radius, outline=0, width=4)
 
     # Clock hand
-    deg = (elapsed / 300) * 2 * math.pi - math.pi / 2
+    deg = (elapsed / total) * 2 * math.pi - math.pi / 2
     hand_x = center_x + radius * math.cos(deg) * 0.95
     hand_y = center_y + radius * math.sin(deg) * 0.95
     draw.line([(center_x, center_y),(hand_x, hand_y)], fill=0, width=2)
 
     # Clock markers every 5s (so 6 in total). Very similar to the clockhand calculation
-    for i in range(6):
-        deg = (i / 6) * 2 * math.pi - math.pi / 2
+    for i in range(divisor):
+        deg = (i / divisor) * 2 * math.pi - math.pi / 2
         start_x = center_x + radius * math.cos(deg) * 0.97
         end_x = center_x + radius * math.cos(deg) * 1.03
         start_y = center_y + radius * math.sin(deg) * 0.97
@@ -113,8 +91,8 @@ def generate_frame(elapsed: int, frameNo: int, next_delay: int, txt: str) -> Ima
         draw.line([(start_x, start_y),(end_x, end_y)], fill=0, width=4)
 
     # Draw elapsed time bottom-right. This can't actually function as a clock since it can't animate separately.
-    draw.text((width * 0.85, height * 0.925), f'0:{elapsed//10:02d}.{elapsed%10}', 0, font_size=16)
-    draw.text((width * 0.85, height * 0.925 + 20), f'Next: +{next_delay/10:.1f}', 0, font_size=16)
+    draw.text((width * 0.85, height * 0.925), f'0:{elapsed//1000:02d}.{elapsed%1000}', 0, font_size=16)
+    draw.text((width * 0.85, height * 0.925 + 20), f'Next: +{next_delay/1000:.1f}', 0, font_size=16)
 
     # Draw specified text, top-right
     if txt:
@@ -137,7 +115,7 @@ for i in range(len(durations)):
 
 # Save to GIF
 #This is in ms.
-img_durations = [x[0] * 100 for x in durations]
+img_durations = [x[0] for x in durations]
 first = imgs.pop(0)
 def save(fmt: str):
     out_filename = f'clock.{fmt}'
