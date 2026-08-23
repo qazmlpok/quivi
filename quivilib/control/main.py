@@ -162,6 +162,9 @@ class MainController(object):
     def on_dark_mode_changed(self, *, settings: Settings):
         useDarkmode = DarkModeValue(settings.getint('Options', 'DarkMode'))
         self.SetDarkMode(useDarkmode)
+        #Need to update the canvas background color to reflect dark mode. This is called during option update but it happens before the dark mode switch
+        #(Or, more likely, the order is not guaranteed)
+        self.view.on_bg_color_changed(settings=settings)
 
     def DarkMode(self):
         """Initialize Dark Mode based on the Setting"""
@@ -183,7 +186,7 @@ class MainController(object):
         if result == wx.PyApp.AppearanceResult.Ok:
             log.debug(f"Dark mode setting: {value}")
         else:
-            #May be "Failure" or "CannotChange" - latter will occur on MSW after windows have been created.
+            #May be "Failure" or "CannotChange" - latter will occur on MSW after frames have been created.
             resultMsg = 'CannotChange' if result == 2 else 'Failure' if result == 1 else 'Unknown'
             log.warning(f"Changing dark mode failed. Result: {resultMsg}")
 
