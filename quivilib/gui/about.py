@@ -20,8 +20,9 @@ class AboutDialog(wx.Dialog):
         self.name_lbl = wx.StaticText(self, -1, f'{meta.APPNAME} {meta.VERSION}')
         self.copyright_txt = wx.TextCtrl(self, -1, '', style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_NOHIDESEL|wx.NO_BORDER)
         self.project_link = hl.HyperLinkCtrl(self, -1, meta.URL, URL=meta.URL)
+        self.set_link_color()
+
         self.ok_btn = wx.Button(self, wx.ID_OK, _("&OK"))
-        
         self.ok_btn.Bind(wx.EVT_BUTTON, self.on_ok_click)
 
         self.__set_properties()
@@ -31,7 +32,7 @@ class AboutDialog(wx.Dialog):
     def __set_properties(self):
         # begin wxGlade: AboutDialog.__set_properties
         self.SetTitle(_("About"))
-        self.name_lbl.SetFont(wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, ""))
+        self.name_lbl.SetFont(wx.Font(16, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, ""))
         # end wxGlade
         self.copyright_txt.SetMinSize(wx.Size(300, -1))
         color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_BTNFACE)
@@ -73,6 +74,17 @@ class AboutDialog(wx.Dialog):
         
     def on_ok_click(self, event):
         self.EndModal(1)
+
+    def set_link_color(self):
+        link = wx.BLUE
+        visited = wx.Colour(79, 47, 79)
+        if wx.SystemSettings.GetAppearance().IsDark():
+            link = wx.Colour(0x87, 0xce, 0xfa)
+            visited = wx.Colour(0x6d, 0x4b, 0x8d)
+
+        #This should be set up to change on light/dark switch, but this really isn't worth the effort.
+        self.project_link.SetColours(link=link, visited=visited, rollover=link)
+        self.project_link.UpdateLink()
 
 # end of class AboutDialog
 

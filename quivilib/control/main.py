@@ -1,30 +1,30 @@
-import sys
-from pathlib import Path
 import logging as log
+import sys
 import traceback
+from pathlib import Path
 
 import wx
 from pubsub import pub as Publisher
 
 from quivilib import meta
+from quivilib import tempdir, util
+from quivilib.control.cache import ImageCache
+from quivilib.control.canvas import CanvasController
+from quivilib.control.check_update import UpdateChecker
+from quivilib.control.debug import DebugController
+from quivilib.control.file_list import FileListController
+from quivilib.control.i18n import I18NController
+from quivilib.control.menu import MenuController
+from quivilib.control.options import OptionsController
+from quivilib.control.wallpaper import WallpaperController
+from quivilib.gui.art import QuiviArtProvider
+from quivilib.gui.main import MainWindow
 from quivilib.i18n import _
 from quivilib.model import App
+from quivilib.model.commandenum import DarkModeValue
 from quivilib.model.container import ItemType
-from quivilib.model.settings import Settings
-from quivilib.gui.main import MainWindow
-from quivilib.gui.art import QuiviArtProvider 
-from quivilib.control.file_list import FileListController
-from quivilib.control.menu import MenuController
-from quivilib.control.canvas import CanvasController
-from quivilib.control.wallpaper import WallpaperController
-from quivilib.control.options import OptionsController
-from quivilib.control.debug import DebugController
-from quivilib.control.cache import ImageCache
-from quivilib.control.check_update import UpdateChecker
-from quivilib.control.i18n import I18NController
 from quivilib.model.favorites import Favorite
-from quivilib import util
-from quivilib import tempdir
+from quivilib.model.settings import Settings
 
 
 class MainController(object):
@@ -70,6 +70,8 @@ class MainController(object):
         start_dir = self._get_start_dir(self.settings)
         if util.is_frozen():
             sys.stdout = sys.stderr = stdio_path.open('w')
+
+        self.DarkMode()
         
         self.view = MainWindow()
         
@@ -95,6 +97,7 @@ class MainController(object):
         Publisher.subscribe(self.on_open_update_site, 'program.open_update_site')
         Publisher.sendMessage('favorites.changed', favorites=self.model.favorites, settings=self.model.settings)
         Publisher.sendMessage('settings.loaded', settings=self.model.settings)
+        Publisher.subscribe(self.on_dark_mode_changed, 'settings.changed.Options.DarkMode')
         
         #Receive messages for Settings from the Daemon thread
         Publisher.subscribe(self.on_update_available, 'program.update_available')
@@ -135,8 +138,51 @@ class MainController(object):
         autoFullscreen = self.settings.getboolean('Options', 'AutoFullscreen')
         if useFullscreen and autoFullscreen:
             self.toggle_fullscreen()
-        
-    def on_update_fullscreen_menu_item(self, event):
+
+    def get_dark_mode_value(self, settings: Settings):
+        intval = settings.getint('Options', 'DarkMode')
+        intval = max(0, min(intval, 2))
+        useDarkmode = DarkModeValue(intval)
+        match useDarkmode:
+            case DarkModeValue.SYSTEM:
+                return wx.PyApp.Appearance.System
+            case DarkModeValue.LIGHT:
+                return wx.PyApp.Appearance.Light
+            case DarkModeValue.DARK:
+                return wx.PyApp.Appearance.Dark
+
+    def on_dark_mode_changed(self, *, settings: Settings):
+        useDarkmode = self.get_dark_mode_value(settings)
+        self.SetDarkMode(useDarkmode)
+        #Need to update the canvas background color to reflect dark mode. This is called during option update but it happens before the dark mode switch
+        #(Or, more likely, the order is not guaranteed)
+        self.view.on_bg_color_changed(settings=settings)
+
+    def DarkMode(self):
+        """Initialize Dark Mode based on the Setting"""
+        useDarkmode = self.get_dark_mode_value(self.settings)
+        self.SetDarkMode(useDarkmode)
+
+    def SetDarkMode(self, value: wx.PyApp.Appearance):
+        """Set up Dark Mode."""
+        app = wx.GetApp()
+        #GetApp can return an AppConsole; this shouldn't ever happen but just in case don't try to set dark mode.
+        if (not isinstance(app, wx.App)):
+            return
+        if wx.__version__ < '4.3.0':
+            log.warning(f"Dark mode is only supported for wxPython version >= 4.3.0")
+            return
+        wxApp: wx.App = app
+        result = wxApp.SetAppearance(value)
+        if result == wx.PyApp.AppearanceResult.Ok:
+            log.debug(f"Dark mode setting: {value}")
+        else:
+            #May be "Failure" or "CannotChange" - latter will occur on MSW after frames have been created.
+            resultMsg = 'CannotChange' if result == 2 else 'Failure' if result == 1 else 'Unknown'
+            log.warning(f"Changing dark mode failed. Result: {resultMsg}")
+
+
+    def on_update_fullscreen_menu_item(self, event: wx.UpdateUIEvent):
         event.Check(self.view.IsFullScreen())
         
     def toggle_file_list(self):

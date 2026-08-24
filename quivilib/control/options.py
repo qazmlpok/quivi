@@ -87,6 +87,7 @@ class OptionsController(object):
         self.model.settings.set('Options', 'PlaceholderAutoOpen', placeholder_autoopen)
         self.model.settings.set('Options', 'PlaceholderSeparateMenu', placeholder_separate)
         self.model.settings.set('Options', 'OpenFirst', open_first)
+        self.model.settings.set('Options', 'DarkMode', opt.darkmode)
         self.model.settings.set('Mouse', 'LeftClickCmd', opt.left_click_cmd)
         self.model.settings.set('Mouse', 'MiddleClickCmd', opt.middle_click_cmd)
         self.model.settings.set('Mouse', 'RightClickCmd', opt.right_click_cmd)

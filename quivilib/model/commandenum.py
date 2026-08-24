@@ -94,6 +94,12 @@ class FitSettings:
         SCREEN_NONE = auto()
         TILED = auto()
 
+class DarkModeValue(IntEnum):
+    """This is effectively a duplicate of the wx values. It's separate just in case those change or new values are added."""
+    SYSTEM = 0
+    LIGHT = 1
+    DARK = 2
+
 class CommandFlags(IntFlag):
     NONE = 0
     KB = auto()          #Command can be assigned to a keyboard shortcut

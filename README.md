@@ -58,6 +58,10 @@ The 64-bit executable prevents issues with loading large files. The upgrade to P
     - This is not recommended on Windows as it will hide the cursor even if a window or menu is open. 
   - This only applies to the image viewing canvas, not other parts of the application. If the cursor is the hand, it will disappear.
   - The check for this is purposely low-accuracy, so it may take up to a second more than the configured value to disappear.
+- New feature: Dark Mode.
+  - Dark mode can be enabled in the settings page and set to "Match System Setting", "Force Light", or "Force Dark".
+  - The default is "Light" for Windows and "System" otherwise. This matches the original behavior.
+  - On Windows, the dark mode setting cannot be changed while the application is running. You will need to restart Quivi for the new setting to take effect. Similarly, changing the system setting will not immediately update the display.
 
 # Breaking changes
 - Version 2.0.9 changes how the automatic zoom setting is stored in the configuration file. Existing configuration files will still read the old value, but if switching back to an older version of the application, the application will fail to load
