@@ -101,7 +101,6 @@ class MouseOptionsPanel(wx.Panel):
 
         self.SetSizer(mouse_sizer)
         self.Layout()
-        # end wxGlade
 
     def on_ok(self, opt: Options):
         #TODO: Use a separate object. Options is also too big.
