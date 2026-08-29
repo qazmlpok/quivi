@@ -9,7 +9,6 @@ from quivilib.model.options import Options
 
 class MouseOptionsPanel(wx.Panel):
     def __init__(self, parent: wx.Window, settings: Settings, commands: list[Command]):
-        # begin wxGlade: OptionsDialog.__init__
         super().__init__(parent=parent, id=-1)
 
         self._init_mouse()
@@ -17,8 +16,6 @@ class MouseOptionsPanel(wx.Panel):
         self.set_mouse_cbo(commands)
         self.__set_properties(settings)
         self.__do_layout()
-
-        # end wxGlade
 
     def _init_mouse(self):
         def _make_mouse_cbo(text):
@@ -70,7 +67,6 @@ class MouseOptionsPanel(wx.Panel):
         self.hide_cursor_txt.SetValue(settings.get('Mouse', 'HideMouseDuration'))
 
     def __do_layout(self):
-        # begin wxGlade: OptionsDialog.__do_layout
         mouse_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Mouse bindings
@@ -107,7 +103,7 @@ class MouseOptionsPanel(wx.Panel):
         self.Layout()
         # end wxGlade
 
-    def on_ok(self, opt: Options): # wxGlade: OptionsDialog.<event_handler>
+    def on_ok(self, opt: Options):
         #TODO: Use a separate object. Options is also too big.
         sel = self.mouse_left_cbo.GetSelection()
         opt.left_click_cmd = self.mouse_left_cbo.GetClientData(sel)
