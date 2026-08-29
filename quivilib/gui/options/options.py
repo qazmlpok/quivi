@@ -4,17 +4,14 @@
 import wx
 from pubsub import pub as Publisher
 
-from quivilib.gui.options.keyboard_options_panel import KeyboardOptionsPanel
-from quivilib.gui.options.language_panel import LanguagePanel
-from quivilib.gui.options.mouse_options_panel import MouseOptionsPanel
-from quivilib.gui.options.viewing_panel import ViewingPanel
+from quivilib.gui.options import *
 from quivilib.i18n import _
 from quivilib.model import Settings
 from quivilib.model.command import Command
 from quivilib.model.commandenum import FitSettings
 from quivilib.model.options import Options
 
-WINDOW_SIZE = (500, 780)
+WINDOW_SIZE = (480, 620)
 
 
 class OptionsDialog(wx.Dialog):
@@ -26,11 +23,13 @@ class OptionsDialog(wx.Dialog):
         self.commands = commands
         # begin wxGlade: OptionsDialog.__init__
         wx.Dialog.__init__(self, parent=parent, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+
         self.main_notebook = wx.Notebook(self, -1, style=wx.NB_TOP)
+        self.general_pane = GeneralPanel(self.main_notebook, settings, save_locally)
+        self.viewing_pane = ViewingPanel(self.main_notebook, settings, fit_choices)
+        self.keys_pane = KeyboardOptionsPanel(self.main_notebook, settings, commands)
         self.mouse_pane = MouseOptionsPanel(self.main_notebook, settings, commands)
         self.language_pane = LanguagePanel(self.main_notebook, available_languages, active_language)
-        self.keys_pane = KeyboardOptionsPanel(self.main_notebook,  settings, commands)
-        self.viewing_pane = ViewingPanel(self.main_notebook, settings, fit_choices, save_locally)
 
         self.ok_button = wx.Button(self, wx.ID_OK, _("&OK"))
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, _("&Cancel"))
@@ -58,6 +57,7 @@ class OptionsDialog(wx.Dialog):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         btn_sizer = wx.StdDialogButtonSizer()
 
+        self.main_notebook.AddPage(self.general_pane, _("&General"))
         self.main_notebook.AddPage(self.viewing_pane, _("&Viewing"))
         self.main_notebook.AddPage(self.keys_pane, _("&Keys"))
         self.main_notebook.AddPage(self.mouse_pane, _("&Mouse"))
@@ -73,11 +73,12 @@ class OptionsDialog(wx.Dialog):
 
     def on_ok(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         opt = Options()
+        self.general_pane.on_ok(opt)
+        self.viewing_pane.on_ok(opt)
+        self.keys_pane.on_ok(opt)
         self.mouse_pane.on_ok(opt)
         self.language_pane.on_ok(opt)
-        self.keys_pane.on_ok(opt)
-        self.viewing_pane.on_ok(opt)
-        
+
         #TODO: (2,2) Improve: handle errors here
         Publisher.sendMessage('options.update', opt=opt)
         event.Skip()
