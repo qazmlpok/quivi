@@ -140,6 +140,9 @@ class MainController(object):
             self.toggle_fullscreen()
 
     def get_dark_mode_value(self, settings: Settings):
+        if wx.__version__ < '4.3.0':
+            log.warning(f"Dark mode is only supported for wxPython version >= 4.3.0")
+            return None
         intval = settings.getint('Options', 'DarkMode')
         intval = max(0, min(intval, 2))
         useDarkmode = DarkModeValue(intval)
@@ -163,11 +166,11 @@ class MainController(object):
         useDarkmode = self.get_dark_mode_value(self.settings)
         self.SetDarkMode(useDarkmode)
 
-    def SetDarkMode(self, value: wx.PyApp.Appearance):
+    def SetDarkMode(self, value: wx.PyApp.Appearance|None):
         """Set up Dark Mode."""
         app = wx.GetApp()
         #GetApp can return an AppConsole; this shouldn't ever happen but just in case don't try to set dark mode.
-        if (not isinstance(app, wx.App)):
+        if (not isinstance(app, wx.App) or value is None):
             return
         if wx.__version__ < '4.3.0':
             log.warning(f"Dark mode is only supported for wxPython version >= 4.3.0")
