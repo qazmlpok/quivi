@@ -328,7 +328,7 @@ class MainWindow(wx.Frame):
         dialog.Destroy()
         
     def on_open_options_dialog(self, *, fit_choices: list[tuple[str, FitSettings.FitType]], settings: Settings, commands: list[Command], available_languages: list[wx.Language], active_language: wx.Language, save_locally: bool):
-        from quivilib.gui.options import OptionsDialog
+        from quivilib.gui.options.options import OptionsDialog
         dialog = OptionsDialog(self, fit_choices, settings, commands, available_languages, active_language, save_locally)
         dialog.ShowModal()
         dialog.Destroy()

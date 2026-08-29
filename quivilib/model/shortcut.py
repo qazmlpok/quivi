@@ -1,3 +1,5 @@
+from typing import Self
+
 import wx
 
 from quivilib.gui.hotkeyctrl import GetAcceleratorName
