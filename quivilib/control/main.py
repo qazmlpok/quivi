@@ -59,12 +59,12 @@ class MainController(object):
         
         wx.ArtProvider.Push(QuiviArtProvider())
         
-        if self.can_save_settings_locally():
-            settings_path = self.program_path / self.INI_FILE_NAME
-            stdio_path = self.program_path / self.STDIO_FILE_NAME
+        if self.use_local_config():
+            settings_path = self.local_ini_path
+            stdio_path = self.local_stdio_path
         else:
-            settings_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.INI_FILE_NAME
-            stdio_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.STDIO_FILE_NAME
+            settings_path = self.userdata_ini_path
+            stdio_path = self.userdata_stdio_path
         Publisher.subscribe(self.on_settings_corrupt, 'settings.corrupt')
         self.settings = Settings(settings_path)
         start_dir = self._get_start_dir(self.settings)
@@ -183,7 +183,6 @@ class MainController(object):
             #May be "Failure" or "CannotChange" - latter will occur on MSW after frames have been created.
             resultMsg = 'CannotChange' if result == 2 else 'Failure' if result == 1 else 'Unknown'
             log.warning(f"Changing dark mode failed. Result: {resultMsg}")
-
 
     def on_update_fullscreen_menu_item(self, event: wx.UpdateUIEvent):
         event.Check(self.view.IsFullScreen())
@@ -338,7 +337,7 @@ class MainController(object):
         dlg.Destroy()
         return res == wx.ID_YES
 
-    def on_update_delete_menu_item(self, event):
+    def on_update_delete_menu_item(self, event: wx.UpdateUIEvent):
         """ Enables/Disables the "delete" menu item. """
         event.Enable(self._can_delete())
 
@@ -369,10 +368,10 @@ class MainController(object):
         webbrowser.open(meta.REPORT_URL)
         
     def open_debug_cache_dialog(self):
-        if __debug__:
+        if __debug__ and self.debugController:
             self.debugController.open_debug_cache_dialog()
     def open_debug_memory_dialog(self):
-        if __debug__:
+        if __debug__ and self.debugController:
             self.debugController.open_debug_memory_dialog()
         
     def on_open_update_site(self, *, url):
@@ -434,40 +433,57 @@ class MainController(object):
             return util.get_exe_path().parent
         else:
             return self.main_script.parent
-    
-    def can_save_settings_locally(self):
-        settings_path = self.program_path / self.INI_FILE_NAME
+
+    @property
+    def local_ini_path(self):
+        return self.program_path / self.INI_FILE_NAME
+
+    @property
+    def userdata_ini_path(self):
+        return Path(wx.StandardPaths.Get().GetUserDataDir()) / self.INI_FILE_NAME
+
+    @property
+    def local_stdio_path(self):
+        return self.program_path / self.STDIO_FILE_NAME
+
+    @property
+    def userdata_stdio_path(self):
+        return Path(wx.StandardPaths.Get().GetUserDataDir()) / self.STDIO_FILE_NAME
+
+    def use_local_config(self):
+        """Portable mode is not a setting. If the local cfg file exists and is writable, use it. Otherwise, use AppData"""
+        settings_path = self.local_ini_path
         try:
-            if settings_path.exists():
-                with settings_path.open(mode='a') as f:
-                    pass
-            else:
+            if not settings_path.exists():
                 return False
+            with settings_path.open(mode='a') as f:
+                return True
         except:
             return False
-        return True
-    
+
     def set_settings_location(self, local):
+        """Changes the configuration path to either local or within the user data folder (e.g. AppData). Called when changing options. """
         if local:
-            settings_path = self.program_path / self.INI_FILE_NAME
+            settings_path = self.local_ini_path
             try:
-                if not settings_path.exists():
-                    with settings_path.open(mode='w') as f:
-                        pass
-                    self.settings.path = settings_path
-            except:
-                pass
-        else:
-            settings_path = self.program_path / self.INI_FILE_NAME
-            try:
-                settings_path.remove()
-                settings_path = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.INI_FILE_NAME
+                with settings_path.open(mode='w') as f:
+                    pass
                 self.settings.path = settings_path
             except:
+                log.error("Failed to use portable settings - " + traceback.format_exc())
+            return
+        else:
+            try:
+                #Try to remove the local ini. This will switch the application out of portable mode.
+                settings_path = self.local_ini_path
+                settings_path.unlink(True)
+            except:
+                #If this fails, the file is likely read-only and should be ignored by the rest of the application.
                 pass
+            self.settings.path = self.userdata_ini_path
                 
     @staticmethod
-    def _get_start_dir(settings):
+    def _get_start_dir(settings: Settings):
         start_dir_str = settings.get('Options', 'StartDir')
         start_dir = None
         if start_dir_str:

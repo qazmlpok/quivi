@@ -42,7 +42,7 @@ class OptionsController(object):
                                 commands=commands,
                                 available_languages=self.control.i18n.available_languages,
                                 active_language=self.control.i18n.language,
-                                save_locally=self.control.can_save_settings_locally()
+                                save_locally=self.control.use_local_config()
         )
         
     def on_update(self, *, opt: Options):
