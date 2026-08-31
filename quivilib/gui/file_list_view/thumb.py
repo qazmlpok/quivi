@@ -1,5 +1,6 @@
 import logging
 import threading
+from typing import Callable
 
 import wx
 import wx.lib.agw.scrolledthumbnail as st
@@ -12,12 +13,13 @@ from wx.lib.agw.thumbnailctrl import (
 from quivilib import util
 from quivilib.gui.file_list_view.base import FileListViewBase
 from quivilib.model import image
-from quivilib.model.container import ItemType
+from quivilib.model.container import ItemType, Item
+from quivilib.model.container.base import BaseContainer
 from quivilib.util import error_handler, DebugTimer
 
 log = logging.getLogger('thumb')
 
-OldScrolledThumbnail = None
+OldScrolledThumbnail: type[tc.ScrolledThumbnail] = None
 
 def _handle_error(exception, args, kwargs):
     self = args[0]
@@ -33,7 +35,7 @@ class QuiviThumbnailCtrl(tc.ThumbnailCtrl, FileListViewBase):
         tc.ThumbnailCtrl.__init__(self, *args, **kwargs)
         tc.ScrolledThumbnail = OldScrolledThumbnail
         #
-        self.container = None
+        self.container: BaseContainer = None
         self._selecting_programatically = False
         self._delayed_load = False
         
@@ -52,7 +54,7 @@ class QuiviThumbnailCtrl(tc.ThumbnailCtrl, FileListViewBase):
     @error_handler(_handle_error)
     def on_item_activated(self, event):
         Publisher.sendMessage('file_list.activated', index=self.GetSelection())
-    def on_container_changed(self, *, container):
+    def on_container_changed(self, *, container: BaseContainer):
         self.container = container
         sel = self.container.selected_item_index
         self._delayed_load = not self.Parent.is_thumbnails()
@@ -61,7 +63,7 @@ class QuiviThumbnailCtrl(tc.ThumbnailCtrl, FileListViewBase):
             if sel >= 0:
                 self.on_selection_changed(idx=sel, item=self.container.selected_item)
         
-    def on_selection_changed(self, *, idx, item):
+    def on_selection_changed(self, *, idx: int, item):
         if not self._delayed_load:
             self._selecting_programatically = True
             try:
@@ -81,7 +83,7 @@ class QuiviThumbnailCtrl(tc.ThumbnailCtrl, FileListViewBase):
 class QuiviThumb(tc.Thumb):
     def __init__(self, *args, **kwargs):
         tc.Thumb.__init__(self, *args, **kwargs)
-        self.delay_fn = None
+        self.delay_fn: Callable[..., wx.Image]|None = None
     def DelayLoad(self):
         """ Executes the delay load function and populates _image with the result.
         This needs to be called before any references to _image in the base class.
@@ -120,6 +122,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         self._thread = None
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         self.SetDropShadow(False)
+        self._items: list[QuiviThumb] = []
 
     def ShowThumbs(self, thumbs):
         #Prevent default behavior. GenerateThumbs handles the thread
@@ -130,7 +133,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         if self._thread:
             self._thread.join()
         
-    def ThreadImageContainer(self, container):
+    def ThreadImageContainer(self, container: BaseContainer):
         """ Threaded method to load images. Used internally. """
         
         for count, item in enumerate(container.items):
@@ -149,7 +152,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         log.debug('Thumbs done!')
         self._isrunning = False
 
-    def LoadImageContainer(self, container, item, index) -> None:
+    def LoadImageContainer(self, container: BaseContainer, item: Item, index: int) -> None:
         """ Threaded method to load images. Used internally. """
         #TODO: (2,2) Refactor: this should be moved inside the Item class
         bmp = None
@@ -186,12 +189,14 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
                 _bmp.CopyFromIcon(icon)
                 _img = _bmp.ConvertToImage()
                 return _img
+        else:
+            raise Exception(f'Unknown item type: {item.typ}')
 
         self._items[index]._originalsize = originalsize
         self._items[index].delay_fn = delayed_fn
         self._items[index]._alpha = alpha
 
-    def ShowContainer(self, container, create_thumbs):
+    def ShowContainer(self, container: BaseContainer, create_thumbs: bool):
         #self.SetCaption('')
         
         self._isrunning = False
@@ -220,7 +225,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         self.Refresh()
         self.UpdateShow()
 
-    def GenerateThumbs(self, container):
+    def GenerateThumbs(self, container: BaseContainer):
         if not self.thumbs_generated:
             self._isrunning = True
             self._thread = threading.Thread(target=self.ThreadImageContainer, args=(container,))
@@ -228,7 +233,7 @@ class QuiviScrolledThumbnail(tc.ScrolledThumbnail):
         self.thumbs_generated = True
         
     #The default control truncates from the left. Unchanged since v2
-    def CalculateBestCaption(self, dc, caption, sw, width):
+    def CalculateBestCaption(self, dc: wx.DC, caption: str, sw, width):
         """ Calculate the best caption based on the actual zoom. """
 
         caption = caption + "..."
