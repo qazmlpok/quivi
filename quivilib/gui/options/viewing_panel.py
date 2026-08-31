@@ -92,7 +92,7 @@ class ViewingPanel(wx.Panel):
         event.Skip()
 
     def on_ok(self):
-        opt = ViewingOptions
+        opt = ViewingOptions()
         sel = self.fit_cbo.GetSelection()
         opt.fit_type = self.fit_cbo.GetClientData(sel)
         opt.fit_width_str = self.width_txt.GetValue()
