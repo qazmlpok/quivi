@@ -5,6 +5,7 @@ import sys
 import wx
 from pubsub import pub as Publisher
 
+from quivilib.control.i18n import LanguageList
 from quivilib.gui.options import *
 from quivilib.i18n import _
 from quivilib.model import Settings
@@ -20,7 +21,7 @@ else:
 
 class OptionsDialog(wx.Dialog):
     def __init__(self, parent, fit_choices: list[tuple[str, FitSettings.FitType]], settings: Settings, commands: list[Command],
-                 available_languages: list[wx.Language], active_language: wx.Language, save_locally: bool):
+                 languages: LanguageList, save_locally: bool):
         self.fit_choices = fit_choices
         self.save_locally = save_locally
         self.settings = settings
@@ -33,7 +34,7 @@ class OptionsDialog(wx.Dialog):
         self.viewing_pane = ViewingPanel(self.main_notebook, settings, fit_choices)
         self.keys_pane = KeyboardOptionsPanel(self.main_notebook, settings, commands)
         self.mouse_pane = MouseOptionsPanel(self.main_notebook, settings, commands)
-        self.language_pane = LanguagePanel(self.main_notebook, available_languages, active_language)
+        self.language_pane = LanguagePanel(self.main_notebook, languages)
 
         self.ok_button = wx.Button(self, wx.ID_OK, _("&OK"))
         self.cancel_button = wx.Button(self, wx.ID_CANCEL, _("&Cancel"))

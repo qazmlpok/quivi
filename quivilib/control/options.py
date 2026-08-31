@@ -40,8 +40,7 @@ class OptionsController(object):
                                 fit_choices=fit_choices, 
                                 settings=self.model.settings, 
                                 commands=commands,
-                                available_languages=self.control.i18n.available_languages,
-                                active_language=self.control.i18n.language,
+                                languages=self.control.i18n.langs,
                                 save_locally=self.control.use_local_config()
         )
         

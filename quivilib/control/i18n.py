@@ -8,6 +8,14 @@ import wx
 from pubsub import pub as Publisher
 
 
+class LanguageList:
+    """A list of all languages and also the current language.
+    Exists just because the two are commonly needed together, and this tends to make ugly type hints."""
+    def __init__(self, all_lang: list[wx.Language], current: wx.Language):
+        self.all_lang = all_lang
+        self.current = current
+
+
 class I18NController(object):
     def __init__(self, control, settings):
         self.control = control
@@ -30,7 +38,7 @@ class I18NController(object):
         self.language = lang
 
     @property
-    def language(self):
+    def language(self) -> wx.Language:
         return self._language
     @language.setter
     def language(self, lang_id):
@@ -86,3 +94,7 @@ class I18NController(object):
         if wx.LANGUAGE_ENGLISH_US not in langs:
             langs.append(wx.LANGUAGE_ENGLISH_US)
         return langs
+
+    @property
+    def langs(self) -> LanguageList:
+        return LanguageList(self.available_languages, self.language)

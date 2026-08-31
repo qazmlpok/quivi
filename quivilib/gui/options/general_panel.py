@@ -75,6 +75,7 @@ class GeneralPanel(wx.Panel):
         viewing_sizer.Add(self.open_first_chk, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
         viewing_sizer.Add(self.settings_local_chk, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
         viewing_sizer.Add(self.auto_fullscreen_chk, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+
         self.SetSizer(viewing_sizer)
 
     def on_ok(self, opt: Options):
