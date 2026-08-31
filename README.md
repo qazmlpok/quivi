@@ -44,8 +44,7 @@ The 64-bit executable prevents issues with loading large files. The upgrade to P
     - Folders can be saved to settings to quickly move zip archives to a specific "archive" folder
     - There is currently no way to reorder or delete these saved folders, only add.
 - New feature: Bindable context menu. This can be assigned as any other shortcut to a mouse key, e.g. right click or middle click.
-    - The menu itself is not customizable, but will include most navigation/display options that may be useful when in full screen mode.
-    - This resulted in a significant backend rework of the menu system to enable nested menus. For now, the main menu bar is still exclusively "flat".
+    - The menu itself is not customizable, but will include most navigation/display options that may be useful, especially when in full screen mode.
 - The delete option in the menu can now delete zip (or rar) archive files. The delete option in the menu will either delete individual images (when viewing a folder) or the entire archive (when viewing an archive). Separate bindable commands exist that will only attempt to delete one type, e.g. for backwards compatibility.
 - Added support for animated GIFs. Other animated formats should also work (e.g. webp) but haven't been tested.
     - Support is limited to PIL. FreeImage does (should) support animation, but the FreeImage project is no longer active so I'm considering replacing the library.
@@ -81,8 +80,8 @@ Most of the 2 -> 3 conversion was automatic, which did leave some artifacts that
 Type hints have been added to some methods. This is mostly added to subclasses to ensure they adhere to the common interface. I don't intend on adding type hints everywhere, only where "most needed" (or just trivial functions)
 
 - Updated to support Python 3.13.3. Minimum required version is Python 3.6 due to the use of fstrings.
-- wx updated to 4.2.4
-- wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.3 is used.
+- wxpython updated to 4.3.1
+- wx.lib.pubsub was split off of Wx as Pypubsub; version 4.0.7 is used.
 - Image display supports FreeImage and PIL (Pillow). GDI works for local files only, not files within compressed archives. Cairo can be used to speed up zooming operations.
 - Removed online manga reader support. This is mostly to simplify the conversion process, as it allowed dropping httplib and beautifulsoup from the project
 - Removed third party path utlity; pathlib (core Python module) is used instead.
