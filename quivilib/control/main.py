@@ -453,11 +453,16 @@ class MainController(object):
     def use_local_config(self):
         """Portable mode is not a setting. If the local cfg file exists and is writable, use it. Otherwise, use AppData"""
         settings_path = self.local_ini_path
+        stdio_path = self.local_stdio_path
         try:
             if not settings_path.exists():
                 return False
             with settings_path.open(mode='a') as f:
-                return True
+                pass
+            #Portable mode also tries to open error.log - make sure both are writable, just in case only one of them is flagged read-only or something.
+            with stdio_path.open(mode='a') as f:
+                pass
+            return True
         except:
             return False
 
