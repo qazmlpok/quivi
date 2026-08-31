@@ -4,7 +4,7 @@ import wx
 
 from quivilib.i18n import _
 from quivilib.model import Settings
-from quivilib.model.options import Options
+from quivilib.model.options import GeneralOptions
 
 
 class GeneralPanel(wx.Panel):
@@ -31,6 +31,7 @@ class GeneralPanel(wx.Panel):
         self.auto_fullscreen_chk = wx.CheckBox(self, -1, _("Remember full screen on close"))
 
     def __set_properties(self):
+        """Initialize dialog checkboxes/dropdowns based on current application settings"""
         if self.settings.get('Options', 'CustomBackground') == '1':
             self.bg_color_custom_rdo.SetValue(True)
         else:
@@ -78,7 +79,8 @@ class GeneralPanel(wx.Panel):
 
         self.SetSizer(viewing_sizer)
 
-    def on_ok(self, opt: Options):
+    def on_ok(self):
+        opt = GeneralOptions()
         opt.custom_bg = self.bg_color_custom_rdo.GetValue()
         opt.custom_bg_color = self.bg_color_picker.GetColour()
 
@@ -87,6 +89,7 @@ class GeneralPanel(wx.Panel):
         opt.open_first = self.open_first_chk.GetValue()
         opt.auto_fullscreen = self.auto_fullscreen_chk.GetValue()
         opt.darkmode = self.dark_mode_system_rdo.GetSelection()
+        return opt
 
 # end of class OptionsDialog
 

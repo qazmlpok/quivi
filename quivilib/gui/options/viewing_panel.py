@@ -3,7 +3,7 @@ import wx
 from quivilib.i18n import _
 from quivilib.model import Settings
 from quivilib.model.commandenum import FitSettings
-from quivilib.model.options import Options
+from quivilib.model.options import ViewingOptions
 
 
 class ViewingPanel(wx.Panel):
@@ -35,6 +35,7 @@ class ViewingPanel(wx.Panel):
         self.placeholder_separate_chk = wx.CheckBox(self, -1, _("Use separate menus for favorites and placeholders"))
 
     def __set_properties(self):
+        """Initialize dialog checkboxes/dropdowns based on current application settings"""
         setting_fit_type = FitSettings.get_fittype(self.settings.get('Options', 'FitType'))
         for name, fit_type in self.fit_choices:
             idx = self.fit_cbo.Append(name, fit_type)
@@ -90,7 +91,8 @@ class ViewingPanel(wx.Panel):
         self._update_custom_fit_display(fit_type)
         event.Skip()
 
-    def on_ok(self, opt: Options):
+    def on_ok(self):
+        opt = ViewingOptions
         sel = self.fit_cbo.GetSelection()
         opt.fit_type = self.fit_cbo.GetClientData(sel)
         opt.fit_width_str = self.width_txt.GetValue()
@@ -102,6 +104,7 @@ class ViewingPanel(wx.Panel):
         opt.placeholder_single = self.placeholder_single_chk.GetValue()
         opt.placeholder_autoopen = self.placeholder_autoopen_chk.GetValue()
         opt.placeholder_separate = self.placeholder_separate_chk.GetValue()
+        return opt
 
     def _update_custom_fit_display(self, fit_type: FitSettings.FitType):
         show = (fit_type == FitSettings.FitType.CUSTOM_WIDTH)

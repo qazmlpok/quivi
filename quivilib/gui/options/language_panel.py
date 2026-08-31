@@ -22,6 +22,8 @@ class LanguagePanel(wx.Panel):
         self.__do_layout()
 
     def __set_properties(self):
+        """Initialize dialog checkboxes/dropdowns based on current application settings"""
+        #(Nothing to do)
         pass
 
     def __do_layout(self):

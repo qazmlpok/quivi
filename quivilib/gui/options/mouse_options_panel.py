@@ -4,7 +4,7 @@ from quivilib.i18n import _
 from quivilib.model import Settings
 from quivilib.model.command import Command
 from quivilib.model.commandenum import CommandFlags
-from quivilib.model.options import Options
+from quivilib.model.options import MouseOptions
 
 
 class MouseOptionsPanel(wx.Panel):
@@ -56,6 +56,7 @@ class MouseOptionsPanel(wx.Panel):
                     m.Append(text, cmd.ide)
 
     def __set_properties(self, settings: Settings):
+        """Initialize dialog checkboxes/dropdowns based on current application settings"""
         self._set_selected(self.mouse_left_cbo, settings.getint('Mouse', 'LeftClickCmd'))
         self._set_selected(self.mouse_middle_cbo, settings.getint('Mouse', 'MiddleClickCmd'))
         self._set_selected(self.mouse_right_cbo, settings.getint('Mouse', 'RightClickCmd'))
@@ -102,8 +103,8 @@ class MouseOptionsPanel(wx.Panel):
         self.SetSizer(mouse_sizer)
         self.Layout()
 
-    def on_ok(self, opt: Options):
-        #TODO: Use a separate object. Options is also too big.
+    def on_ok(self):
+        opt = MouseOptions()
         sel = self.mouse_left_cbo.GetSelection()
         opt.left_click_cmd = self.mouse_left_cbo.GetClientData(sel)
         sel = self.mouse_middle_cbo.GetSelection()
@@ -118,6 +119,7 @@ class MouseOptionsPanel(wx.Panel):
         opt.always_drag = self.always_drag_chk.GetValue()
         opt.drag_threshold = self.threshold_txt.GetValue()
         opt.hide_mouse_duration = self.hide_cursor_txt.GetValue()
+        return opt
 
     @staticmethod
     def _set_selected(control: wx.ComboBox, item):

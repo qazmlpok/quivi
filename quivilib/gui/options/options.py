@@ -78,10 +78,11 @@ class OptionsDialog(wx.Dialog):
 
     def on_ok(self, event: wx.CommandEvent): # wxGlade: OptionsDialog.<event_handler>
         opt = Options()
-        self.general_pane.on_ok(opt)
-        self.viewing_pane.on_ok(opt)
+        opt.general_options = self.general_pane.on_ok()
+        opt.viewing_options = self.viewing_pane.on_ok()
+        opt.mouse_options = self.mouse_pane.on_ok()
+        #These only have a single field so it's not worth adding a separate class.
         self.keys_pane.on_ok(opt)
-        self.mouse_pane.on_ok(opt)
         self.language_pane.on_ok(opt)
 
         #TODO: (2,2) Improve: handle errors here
@@ -104,5 +105,6 @@ if __name__ == '__main__':
 
     lang = wx.LANGUAGE_ENGLISH_US
     fit = [("Fake", FitSettings.FitType.HEIGHT)]
-    dlg = OptionsDialog(None, fit, FakeSettings(), [], [], lang, True)
+    langs = LanguageList([lang], lang)
+    dlg = OptionsDialog(None, fit, FakeSettings(), [], langs, True)
     dlg.ShowModal()

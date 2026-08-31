@@ -1,35 +1,46 @@
-import wx.core
+import wx
 
 from quivilib.model.commandenum import CommandName
 
 
+class GeneralOptions:
+    custom_bg: bool
+    custom_bg_color: wx.Colour
+    save_locally: bool
+    auto_fullscreen: bool
+    darkmode: int
+    real_fullscreen: bool
+    open_first: bool
+
+class ViewingOptions:
+    use_right_to_left: bool
+    scroll_at_bottom: bool
+    placeholder_delete: bool
+    placeholder_single: bool
+    placeholder_autoopen: bool
+    placeholder_separate: bool
+    fit_type: int
+    fit_width_str: str
+    start_dir: str
+
+class MouseOptions:
+    left_click_cmd: CommandName
+    left_click_cmd: CommandName
+    middle_click_cmd: CommandName
+    right_click_cmd: CommandName
+    aux1_click_cmd: CommandName
+    aux2_click_cmd: CommandName
+    always_drag: bool
+    drag_threshold: str
+    hide_mouse_duration: str
+
+
 class Options():
+    general_options: GeneralOptions
+    viewing_options: ViewingOptions
+    mouse_options: MouseOptions
     def __init__(self):
+        #Keys tab
         self.shortcuts = None
-        self.fit_type = None
-        self.fit_width_str = None
-        self.start_dir = None
+        #Language tab
         self.language = None
-        # Mouse
-        self.left_click_cmd: CommandName | None = None
-        self.middle_click_cmd: CommandName | None = None
-        self.right_click_cmd: CommandName | None = None
-        self.aux1_click_cmd: CommandName | None = None
-        self.aux2_click_cmd: CommandName | None = None
-        self.always_drag: bool | None = None
-        self.drag_threshold: str | None = None
-        self.hide_mouse_duration: str | None = None
-        self.custom_bg: bool | None = None
-        self.custom_bg_color: wx.core.Colour | None = None
-        # Viewing checkboxes
-        self.real_fullscreen: bool | None = None
-        self.open_first: bool | None = None
-        self.save_locally: bool | None = None
-        self.auto_fullscreen: bool | None = None
-        self.use_right_to_left: bool | None = None
-        self.scroll_at_bottom: bool | None = None
-        self.placeholder_delete: bool | None = None
-        self.placeholder_single: bool | None = None
-        self.placeholder_autoopen: bool | None = None
-        self.placeholder_separate: bool | None = None
-        self.darkmode = None

@@ -45,6 +45,7 @@ class OptionsController(object):
         )
         
     def on_update(self, *, opt: Options):
+        #TODO: All of these value adjustments should be moved to the model instead.
         def to_int(val):
             if val is None:
                 return 0
@@ -52,29 +53,30 @@ class OptionsController(object):
                 return int(val)
             except ValueError:
                 return 0
-        fit_width = to_int(opt.fit_width_str)
-        drag_threshold = to_int(opt.drag_threshold)
-        hide_duration = to_int(opt.hide_mouse_duration)
+
+        fit_width = to_int(opt.viewing_options.fit_width_str)
+        drag_threshold = to_int(opt.mouse_options.drag_threshold)
+        hide_duration = to_int(opt.mouse_options.hide_mouse_duration)
+        always_drag = '1' if opt.mouse_options.always_drag else '0'
         if fit_width <= 0:
             #I guess there's no need to bother the user with this, so just use default
             fit_width = self.model.settings.get_default('Options', 'FitWidthCustomSize')
             
-        custom_bg = '1' if opt.custom_bg else '0'
-        custom_bg_color = '%d,%d,%d' % (opt.custom_bg_color.Red(), opt.custom_bg_color.Green(), opt.custom_bg_color.Blue())
-        real_fullscreen = '1' if opt.real_fullscreen else '0'
-        auto_fullscreen = '1' if opt.auto_fullscreen else '0'
-        use_right_to_left = '1' if opt.use_right_to_left else '0'
-        scroll_at_bottom = '1' if opt.scroll_at_bottom else '0'
-        placeholder_delete = '1' if opt.placeholder_delete else '0'
-        placeholder_single = '1' if opt.placeholder_single else '0'
-        placeholder_autoopen = '1' if opt.placeholder_autoopen else '0'
-        placeholder_separate = '1' if opt.placeholder_separate else '0'
-        always_drag = '1' if opt.always_drag else '0'
-        open_first = '1' if opt.open_first else '0'
-        
-        self.model.settings.set('Options', 'FitType', opt.fit_type)
+        custom_bg = '1' if opt.general_options.custom_bg else '0'
+        custom_bg_color = '%d,%d,%d' % (opt.general_options.custom_bg_color.Red(), opt.general_options.custom_bg_color.Green(), opt.general_options.custom_bg_color.Blue())
+        real_fullscreen = '1' if opt.general_options.real_fullscreen else '0'
+        auto_fullscreen = '1' if opt.general_options.auto_fullscreen else '0'
+        use_right_to_left = '1' if opt.viewing_options.use_right_to_left else '0'
+        scroll_at_bottom = '1' if opt.viewing_options.scroll_at_bottom else '0'
+        placeholder_delete = '1' if opt.viewing_options.placeholder_delete else '0'
+        placeholder_single = '1' if opt.viewing_options.placeholder_single else '0'
+        placeholder_autoopen = '1' if opt.viewing_options.placeholder_autoopen else '0'
+        placeholder_separate = '1' if opt.viewing_options.placeholder_separate else '0'
+
+        open_first = '1' if opt.general_options.open_first else '0'
+        self.model.settings.set('Options', 'FitType', str(opt.viewing_options.fit_type))
         self.model.settings.set('Options', 'FitWidthCustomSize', str(fit_width))
-        self.model.settings.set('Options', 'StartDir', opt.start_dir)
+        self.model.settings.set('Options', 'StartDir', opt.viewing_options.start_dir)
         self.model.settings.set('Options', 'CustomBackgroundColor', custom_bg_color)
         self.model.settings.set('Options', 'CustomBackground', custom_bg)
         self.model.settings.set('Options', 'RealFullscreen', real_fullscreen)
@@ -86,15 +88,16 @@ class OptionsController(object):
         self.model.settings.set('Options', 'PlaceholderAutoOpen', placeholder_autoopen)
         self.model.settings.set('Options', 'PlaceholderSeparateMenu', placeholder_separate)
         self.model.settings.set('Options', 'OpenFirst', open_first)
-        self.model.settings.set('Options', 'DarkMode', opt.darkmode)
-        self.model.settings.set('Mouse', 'LeftClickCmd', opt.left_click_cmd)
-        self.model.settings.set('Mouse', 'MiddleClickCmd', opt.middle_click_cmd)
-        self.model.settings.set('Mouse', 'RightClickCmd', opt.right_click_cmd)
-        self.model.settings.set('Mouse', 'Aux1ClickCmd', opt.aux1_click_cmd)
-        self.model.settings.set('Mouse', 'Aux2ClickCmd', opt.aux2_click_cmd)
+        self.model.settings.set('Options', 'DarkMode', str(opt.general_options.darkmode))
+        self.model.settings.set('Mouse', 'LeftClickCmd', str(int(opt.mouse_options.left_click_cmd)))
+        self.model.settings.set('Mouse', 'MiddleClickCmd', str(int(opt.mouse_options.middle_click_cmd)))
+        self.model.settings.set('Mouse', 'RightClickCmd', str(int(opt.mouse_options.right_click_cmd)))
+        self.model.settings.set('Mouse', 'Aux1ClickCmd', str(int(opt.mouse_options.aux1_click_cmd)))
+        self.model.settings.set('Mouse', 'Aux2ClickCmd', str(int(opt.mouse_options.aux2_click_cmd)))
         self.model.settings.set('Mouse', 'AlwaysLeftMouseDrag', always_drag)
         self.model.settings.set('Mouse', 'DragThreshold', str(drag_threshold))
         self.model.settings.set('Mouse', 'HideMouseDuration', str(hide_duration))
+
         self.control.i18n.language = opt.language
         self.control.menu.set_shortcuts(opt.shortcuts)
-        self.control.set_settings_location(opt.save_locally)
+        self.control.set_settings_location(opt.general_options.save_locally)
