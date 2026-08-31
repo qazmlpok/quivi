@@ -1,6 +1,7 @@
 #TODO: (2,2) Improve: change the command listbox into a listctrl with columns:
 #    (Category / Command / Assigned shortcuts)
 
+import sys
 import wx
 from pubsub import pub as Publisher
 
@@ -11,7 +12,10 @@ from quivilib.model.command import Command
 from quivilib.model.commandenum import FitSettings
 from quivilib.model.options import Options
 
-WINDOW_SIZE = (480, 620)
+if sys.platform == 'win32':
+    WINDOW_SIZE = (320, 440)
+else:
+    WINDOW_SIZE = (480, 620)
 
 
 class OptionsDialog(wx.Dialog):
