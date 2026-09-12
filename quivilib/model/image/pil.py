@@ -122,7 +122,7 @@ class PilImage(ImageHandlerBase):
     @classmethod
     def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
         img = cls.OpenImage(f, path, delay, convert_to_32=False)
-        #get_attr is mandatory because is_animated is only defined for plugins that support animation.
+        #getattr is mandatory because is_animated is only defined for plugins that support animation.
         animated = getattr(img, "is_animated", False)
         if (animated):
             return AnimatedPilImage(img, path, delay)
@@ -231,6 +231,7 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         count: int = img.n_frames
         frame_delays = [0] * count
         frames: List[wx.Bitmap] = [None] * count
+        img_frames: List[BaseImageProt] = [None] * count
         #Get the img and delay data. This requires using img.seek to select each individual frame.
         for i in range(count):
             img.seek(i)
@@ -242,8 +243,9 @@ class AnimatedPilImage(PilImage, AnimatedImage):
             if img.mode != 'RGB':
                 frame = frame.convert('RGB')
             frames[i] = self._img_to_bmp(frame)
+            img_frames[i] = PilWrapper(frame)
         img.seek(0)
-        AnimatedImage.__init__(self, frames, frame_delays)
+        AnimatedImage.__init__(self, frames, img_frames, frame_delays)
         self.bmp: wx.Bitmap = frames[0]
 
         #Just the first frame.

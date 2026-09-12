@@ -117,7 +117,7 @@ class ImageHandler(Protocol):
     def extensions() -> list[str]:
         pass
     def getImg(self) -> BaseImageProt:
-        """Direct access to the underlying Image, which is likely a mistake."""
+        """Direct access to the underlying Image, which is likely a mistake outside of ImageHandler."""
         pass
 
 class SecondaryImageHandler(ImageHandler):
@@ -197,7 +197,7 @@ class ImageHandlerBase(ImageHandler):
     def is_animated(self):
         return False
 
-    def set_callback(self, cb:Callable[[ImageHandler], None]) -> None:
+    def set_callback(self, cb: Callable[[ImageHandler], None]) -> None:
         self.img_change_cb = cb
 
     def close(self) -> None:
@@ -223,7 +223,7 @@ class AnimatedImage(ImageHandlerBase):
     """Base class for an animated image. Manages a timer to handle the animation, using the callback function to report changes.
     delays should be a list of duration in ms (GIF stores the value in cs)
     """
-    def __init__(self, frames: List[wx.Bitmap], delays: List[int], loops = 0):
+    def __init__(self, frames: List[wx.Bitmap], img_frames: List[BaseImageProt], delays: List[int], loops = 0):
         if len(frames) != len(delays):
             raise Exception("Frames and Delays must have the same number of entries.")
         if len(frames) < 2:
@@ -232,6 +232,7 @@ class AnimatedImage(ImageHandlerBase):
 
         self.frame = 0
         self.frames = frames
+        self.img_frames = img_frames
         self.delays = delays
         self.targets: list[float] = delays.copy()
         self.max_loops = loops
@@ -361,12 +362,12 @@ class AnimatedImage(ImageHandlerBase):
         """
         GIF encodes per-frame delays in increments of 0.01s (i.e. 10ms or 1cs). Browsers will not perfectly obey this.
         In practice it looks like too-small values are moved up to 100ms, so a delay of "1" is slower than "2".
-        This is for GIF specifically; it's possible APNG/WebP have different logic.
+        APNG and WebP use the same logic, but both formats allow more precise times.
         In theory this is browser-specific but every browser I tested had the same behavior.
         Ref: https://www.tumblr.com/pharanpostsartndevtrivia/126581964275/how-is-an-animated-gifs-time-delay-between
         NOTE - input time needs to be in ms. PIL at least standardizes this.
         """
-        if value < 20:
+        if value < 11:
             return 100
         # APNG have have unusual denominators so PIL uses floats. Force integers.
         return int(value)
