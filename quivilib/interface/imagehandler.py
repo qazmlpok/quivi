@@ -21,10 +21,10 @@ class BaseImageProt(Protocol):
     def save_bitmap(self, path: str):
         pass
 
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> 'BaseImageProt':
         pass
 
-    def AllocateNew(self, *args, **kwargs) -> Self:
+    def AllocateNew(self, *args, **kwargs) -> 'BaseImageProt':
         pass
 
     def maybeConvert32bit(self) -> 'BaseImageProt':
@@ -33,7 +33,7 @@ class BaseImageProt(Protocol):
     def convert_to_raw_bits(self, width_bytes=None) -> bytearray:
         pass
 
-    def copy_region(self, left: int, top: int, right: int, bottom: int) -> Self:
+    def copy_region(self, left: int, top: int, right: int, bottom: int) -> 'BaseImageProt':
         pass
 
     def paste(self, src, left: int, top: int, alpha: int = 256) -> None:
@@ -47,7 +47,7 @@ class ImageHandler(Protocol):
     The actual Image class for the appropriate handler (i.e. Freeimage or PIL) will expose a common set of operations.
     """
     @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> 'ImageHandler':
         """Static constructor. Create a new image object."""
         pass
     @classmethod
@@ -64,13 +64,13 @@ class ImageHandler(Protocol):
     def rotate(self, clockwise: int) -> None:
         """Rotate the image in 90 degree increments (clockwise or counter). Modifies the local image."""
         pass
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> BaseImageProt:
         """Create a new image with the given width/height."""
         pass
     def paint(self, dc: wx.DC, x: int, y: int) -> None:
         """Draw onto the wx DrawingContext"""
         pass
-    def copy(self) -> Self:
+    def copy(self) -> 'ImageHandler':
         pass
     def copy_to_clipboard(self) -> None:
         pass

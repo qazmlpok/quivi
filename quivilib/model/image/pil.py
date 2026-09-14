@@ -5,7 +5,7 @@ from typing import Any, IO, Self, List
 import wx
 from PIL import Image
 
-from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt, AnimationFrame
+from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt, AnimationFrame, ImageHandler
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
@@ -19,7 +19,7 @@ class PilWrapper(BaseImageProt):
     some methods may create a temporary object, which can just be removed automatically.
     """
     @classmethod
-    def allocate(cls: type[Self], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> Self:
+    def allocate(cls: type[Self], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> 'PilWrapper':
         #*_mask is for FI compatibility; they will be ignored.
         #Should be 8-bit monochrome
         #Note - this will only ever actually be called with 24
@@ -30,7 +30,7 @@ class PilWrapper(BaseImageProt):
             mode = 'RGB'
         img = Image.new(mode, size=(width, height))
         return PilWrapper(img)
-    def AllocateNew(self, *args, **kwargs) -> Self:
+    def AllocateNew(self, *args, **kwargs) -> BaseImageProt:
         """ Forward to static implementation. Needed for polymorphism.
         """
         return PilWrapper.allocate(*args, **kwargs)
@@ -63,11 +63,11 @@ class PilWrapper(BaseImageProt):
     def tobytes(self):
         return self.img.tobytes()
     #Image operations; this needs to have the same interface as FI.
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> 'PilWrapper':
         #I think this needs to return self if the width/height are the same.
         img = self.img.resize((width, height), Image.Resampling.BICUBIC)
         return PilWrapper(img)
-    def transpose(self, method: Image.Transpose) -> Self:
+    def transpose(self, method: Image.Transpose) -> 'PilWrapper':
         img = self.img.transpose(method)
         return PilWrapper(img)
     def fill(self, color) -> None:
@@ -81,15 +81,15 @@ class PilWrapper(BaseImageProt):
         srcimg = src.img
         img.paste(srcimg, (left, top, srcimg.size[0] + left, srcimg.size[1] + top))
 
-    def copy_region(self, left: int, top: int, right: int, bottom: int) -> Self:
+    def copy_region(self, left: int, top: int, right: int, bottom: int) -> BaseImageProt:
         #The freeimage copy function will also crop. PIL's copy is just a straight copy.
         img = self.img
         copy = img.crop((left, top, right, bottom,))
         return PilWrapper(copy)
-    def save_bitmap(self, path):
+    def save_bitmap(self, path: str):
         #FI needs a constant; this is exposed as a separate member for compatibility
-        return self.save(path)
-    def save(self, path) -> None:
+        self.save(path)
+    def save(self, path: str) -> None:
         #Type will be determined by path; there's no need to specify manually.
         self.img.save(path)
     def __del__(self) -> None:
@@ -102,7 +102,7 @@ class PilImage(ImageHandlerBase):
     # Remove this if that ever changes. It's been reported, and it sounds like they
     # stopped truncating, but it's still doing it.
     @staticmethod
-    def lookup(x):
+    def lookup(x: int):
         return x / 256
 
     @staticmethod
@@ -123,7 +123,7 @@ class PilImage(ImageHandlerBase):
         return img
 
     @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> ImageHandler:
         img = cls.OpenImage(f, path, delay, convert_to_32=False)
         #getattr is mandatory because is_animated is only defined for plugins that support animation.
         animated = getattr(img, "is_animated", False)
@@ -153,7 +153,7 @@ class PilImage(ImageHandlerBase):
     def get_display_bmp(self):
         return self.zoomed_bmp if self.zoomed_bmp else self.bmp
 
-    def copy(self) -> Self:
+    def copy(self) -> ImageHandler:
         return PilImage(self.img.img, self.img_path)
         
     def delayed_load(self) -> None:
@@ -174,7 +174,7 @@ class PilImage(ImageHandlerBase):
         else:
             return wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
     
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> BaseImageProt:
         #Wrapper (needed for Cairo)
         return self.img.rescale(width, height)
     def resize(self, width: int, height: int) -> None:

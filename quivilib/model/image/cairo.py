@@ -1,7 +1,8 @@
 import math
 
-#wxcairo must be imported before wx. Do not change the import order.
+# wxcairo must be imported before wx. Do not change the import order.
 from wx.lib import wxcairo
+
 try:
     # noinspection PyUnusedImports
     import cairocffi
@@ -20,7 +21,7 @@ log = logging.getLogger('cairo')
 
 class CairoImage(ImageHandlerBase, SecondaryImageHandler):
     @classmethod
-    def CreateImage(cls, f, path, delay=False) -> ImageHandler:
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> ImageHandler:
         raise Exception("Use another class to open the image first")
 
     @classmethod
@@ -52,7 +53,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         self._last_zoom = 1.0
         self._last_rot = 0
 
-    def copy(self) -> Self:
+    def copy(self) -> ImageHandler:
         return CairoImage(src=self.src)
 
     @property
@@ -67,7 +68,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
             return self._height
         return self._width
 
-    def convert_to_cairo_surface(self, img: BaseImageProt|ImageHandler):
+    def convert_to_cairo_surface(self, img: BaseImageProt):
         """ Requests img data as bytes from the loaded image
         Loads that data in as a cairo surface. Should work with either image loader.
         """
@@ -136,7 +137,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         else:
             self._maybe_scale_image()
 
-    def _resize_img(self, width: int, height: int):
+    def _resize_img(self, width: int, height: int) -> ImageSurface:
         resized = self.src.rescale(width, height)
         ret = self.convert_to_cairo_surface(resized)
         #del resized

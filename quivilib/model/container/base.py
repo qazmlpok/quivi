@@ -93,8 +93,8 @@ class BaseContainer(object):
             #TODO: (1,4) Improve: check if item has really changed before sending message?
             #i.e., file has been modified (but it's probably overkill)
             self.selected_item = selected_item
-            if self.selected_item.typ == ItemType.IMAGE:
-                Publisher.sendMessage('container.item.changed', index=self.items.index(self.selected_item))
+            if selected_item.typ == ItemType.IMAGE:
+                Publisher.sendMessage('container.item.changed', index=self.items.index(selected_item))
 
     @property
     def item_count(self):
