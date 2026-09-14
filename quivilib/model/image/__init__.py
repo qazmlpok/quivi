@@ -4,7 +4,7 @@ from pathlib import Path
 
 from quivilib import meta
 
-from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
+from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler, AnimatedImage
 
 IMG_CLASSES: list[type[SecondaryImageHandler]] = []
 IMG_LOAD_CLASSES: list[type[ImageHandler]] = []
@@ -67,9 +67,6 @@ def open_img(f, path, delay=False) -> ImageHandler:
     """
     ext = path.suffix
     img = open_direct(f, path, delay)
-    #if img.is_animated():
-    #    #It may be possible to use cairo, but figure that out later.
-    #    return img
     for cls in IMG_CLASSES:
         try:
             img2 = cls.CreateWrappedImage(src=img, delay=delay)
@@ -77,6 +74,8 @@ def open_img(f, path, delay=False) -> ImageHandler:
             break
         except Exception:
             log.debug(traceback.format_exc())
+    if isinstance(img, AnimatedImage):
+        img.load_frames()
     return img
 
 def open_direct(f, path: Path, delay=False) -> ImageHandler:

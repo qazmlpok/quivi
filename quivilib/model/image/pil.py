@@ -5,7 +5,7 @@ from typing import Any, IO, Self, List
 import wx
 from PIL import Image
 
-from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt
+from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt, AnimationFrame
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
@@ -46,7 +46,7 @@ class PilWrapper(BaseImageProt):
     def getData(self) -> tuple[int, int, bytes]:
         b = self.img.tobytes()
         return (self.width, self.height, b)
-    def maybeConvert32bit(self) -> Self:
+    def maybeConvert32bit(self) -> BaseImageProt:
         if self.img.mode != 'RGB':
             return PilWrapper(self.img.convert('RGB'))
         return self
@@ -60,6 +60,8 @@ class PilWrapper(BaseImageProt):
         if im is not self.img:
             del im
         return arr
+    def tobytes(self):
+        return self.img.tobytes()
     #Image operations; this needs to have the same interface as FI.
     def rescale(self, width: int, height: int) -> Self:
         #I think this needs to return self if the width/height are the same.
@@ -119,6 +121,7 @@ class PilImage(ImageHandlerBase):
         if convert_to_32:
             img = PilImage._to_32(img)
         return img
+
     @classmethod
     def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
         img = cls.OpenImage(f, path, delay, convert_to_32=False)
@@ -129,6 +132,7 @@ class PilImage(ImageHandlerBase):
 
         img = PilImage._to_32(img)
         return PilImage(img, path, delay=delay)
+
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         self.delay = delay
         self.img_path = path
@@ -217,6 +221,7 @@ class PilImage(ImageHandlerBase):
     def extensions():
         return PilImage.ext_list
 
+
 class AnimatedPilImage(PilImage, AnimatedImage):
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         # This doesn't call PilImage init to avoid some double bmp use.
@@ -230,44 +235,65 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         loop = img.info.get('loop', 0)
         count: int = img.n_frames
         frame_delays = [0] * count
-        frames: List[wx.Bitmap] = [None] * count
-        img_frames: List[BaseImageProt] = [None] * count
+        frames: List[AnimationFrame] = [None] * count
         #Get the img and delay data. This requires using img.seek to select each individual frame.
         for i in range(count):
             img.seek(i)
             # WebP does not populate `info` until the image is loaded, so calling load() is mandatory.
             # This method is idempotent so there's no harm in an early call.
             img.load()
-            frame_delays[i] = self.duration_to_time(img.info.get('duration', 100))
+            delay = self.duration_to_time(img.info.get('duration', 100))
+            frame_delays[i] = delay
             frame = img
             if img.mode != 'RGB':
                 frame = frame.convert('RGB')
-            frames[i] = self._img_to_bmp(frame)
-            img_frames[i] = PilWrapper(frame)
+                def fn(me: AnimationFrame):
+                    pimg: PilWrapper = me.img
+                    return pimg
+            else:
+                def fn(me: AnimationFrame):
+                    pimg: PilWrapper = me.img
+                    pimg.seek(me.idx)
+                    return pimg
+
+            frame_obj = AnimationFrame(PilWrapper(frame), fn, self.get_bitmap_impl, delay, i)
+            frames[i] = frame_obj
         img.seek(0)
-        AnimatedImage.__init__(self, frames, img_frames, frame_delays)
-        self.bmp: wx.Bitmap = frames[0]
+        AnimatedImage.__init__(self, frames)
+
+        #self.bmp is still needed for some operations (clipboard/wallpaper I think). This should be made lazy.
+        self.bmp: wx.Bitmap
+        if not delay:
+            self.bmp = frames[0].get_bitmap()
 
         #Just the first frame.
         self.img = PilWrapper(PilImage._to_32(img.copy()))
         self.zoomed_bmp: wx.Bitmap | None = None
         self.delayed_bmp: tuple[int, int, bytes] | None = None
 
+    @staticmethod
+    def get_bitmap_impl(img: PilWrapper) -> wx.Bitmap:
+        # If the img was converted, don't seek. If it wasn't, seek. This function is set up in init.
+        return wx.Bitmap.FromBuffer(img.width, img.height, img.tobytes())
+
     def delayed_load(self) -> None:
         if not self.delay:
             log.debug("delayed_load was called but delay was off")
             return
 
-        #TODO: Don't re-use this. Split into two lists...
-        for i in range(len(self.frames)):
-            self.frames[i] = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.frames[i])
+        for i in range(self.frame_count):
+            self.frames[i].get_bitmap()
 
-        self.bmp = self.frames[0]
+        self.bmp = self.frames[0].get_bitmap()
         self.delay = False
 
     def get_display_bmp(self):
         #Animated images just won't support zooming, at least unless cairo can be used.
         return AnimatedImage.get_display_bmp(self)
+
+    def load_frames(self) -> None:
+        for x in self.frames:
+            x.get_bitmap()
 
     #Disallow
     def resize(self, width: int, height: int) -> None:
