@@ -250,12 +250,13 @@ class AnimatedImage(ImageHandlerBase):
     """Base class for an animated image. Manages a timer to handle the animation, using the callback function to report changes.
     delays should be a list of duration in ms (GIF stores the value in cs)
     """
-    def __init__(self, frames: List[AnimationFrame], loops = 0):
+    def __init__(self, frames: List[AnimationFrame], loops: int = 0):
         if len(frames) < 2:
             #Caller should guard against this. I'm sure it's possible to create a 1-frame animated gif.
             raise Exception("Animated image must have at least 2 frames.")
 
         self.frame = 0
+        self.play_count = 0
         self.frames = frames
         self.frame_count = len(frames)
         self.targets: list[float] = [0] * len(frames)
@@ -282,7 +283,7 @@ class AnimatedImage(ImageHandlerBase):
             self.real_delay = time.perf_counter()
 
     def get_display_bmp(self) -> wx.Bitmap:
-        #Animated images just won't support zooming, at least unless cairo can be used.
+        #Animated images won't support zooming without cairo.
         return self.frames[self.frame].get_bitmap()
 
     def load_frames(self) -> None:
@@ -303,6 +304,7 @@ class AnimatedImage(ImageHandlerBase):
     def start_animation(self):
         """Start the animation. This must be called on the main thread for wx.Timer to work."""
         self.frame = 0
+        self.play_count = 0
         self.calculate_target_timestamps()
         if USE_THREAD:
             assert self.thread is not None
@@ -315,7 +317,9 @@ class AnimatedImage(ImageHandlerBase):
             self.thread.start()
         else:
             assert self.timer is not None
-            self.timer.Start(self.frames[self.frame].delay - SLEEP_OFFSET, True)
+            self.timer.Start(self.frames[self.frame].delay - SLEEP_OFFSET, oneShot=True)
+            #self.stopped does not matter for timer, but set it for consistency.
+            self.stopped = False
         if __debug__:
             self.planned_delay = self.frames[self.frame].delay
             self.start = time.perf_counter()
@@ -328,7 +332,7 @@ class AnimatedImage(ImageHandlerBase):
         self.stopped = True
         if USE_THREAD:
             assert self.thread is not None
-            # Do nothing - self.stopped while prevent further execution.
+            # Do nothing - self.stopped will prevent further execution.
         else:
             assert self.timer is not None
             self.timer.Stop()
@@ -339,7 +343,7 @@ class AnimatedImage(ImageHandlerBase):
         if next_delay is None:
             return
         #Times in ms.
-        self.timer.Start(int(next_delay - SLEEP_OFFSET), True)
+        self.timer.Start(int(next_delay - SLEEP_OFFSET), oneShot=True)
     def _next_frame_thread(self):
         #In practice, self.frame will always be 0 here.
         first_delay = self.frames[self.frame].delay
@@ -357,7 +361,7 @@ class AnimatedImage(ImageHandlerBase):
         Advance the image to the next frame, or back to the first one. Fire the callback."""
         if not self.animating:
             return None
-        stop = time.perf_counter()
+
         if SLEEP_0 and time.perf_counter() * 1000 < self.targets[self.frame]:
             target = self.targets[self.frame] / 1000.0
             while (time.perf_counter() < target):
@@ -369,6 +373,11 @@ class AnimatedImage(ImageHandlerBase):
             log.debug(f"GIF Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}%")
             self.start = time.perf_counter()
         if self.frame == 0:
+            self.play_count += 1
+            if self.max_loops != 0 and self.play_count >= self.max_loops:
+                self.stop_animation()
+                log.debug(f"Stopping animation after {self.play_count} times.")
+                return None
             self.calculate_target_timestamps()
 
         #changing self.frame will change the image paint() uses.
@@ -381,9 +390,9 @@ class AnimatedImage(ImageHandlerBase):
 
         base_delay = self.frames[self.frame].delay
         real_delay = (self.targets[self.frame] - time.perf_counter() * 1000)
+
         #Try to sleep for the adjusted time period, but don't adjust more than 5ms in either direction.
         ret = clamp(base_delay - 5, real_delay, base_delay + 5)
-        #ret = base_delay
         if SLEEP_0:
             return ret - SLEEP_OFFSET
         return ret
@@ -395,7 +404,8 @@ class AnimatedImage(ImageHandlerBase):
         APNG and WebP use the same logic, but both formats allow more precise times.
         In theory this is browser-specific but every browser I tested had the same behavior.
         Ref: https://www.tumblr.com/pharanpostsartndevtrivia/126581964275/how-is-an-animated-gifs-time-delay-between
-        NOTE - input time needs to be in ms. PIL at least standardizes this.
+
+        NOTE - input time needs to be in ms. PIL standardizes this. Output is also ms.
         """
         if value < 11:
             return 100

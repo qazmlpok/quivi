@@ -1,4 +1,5 @@
 import logging
+import os
 from collections.abc import Callable
 from typing import Any, IO, Self, List
 
@@ -231,8 +232,10 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         self._original_height = self.height = img.size[1]
         self.rotation = 0
 
-        #This is number of times it should loop, not a bool.
-        loop = img.info.get('loop', 0)
+        ext = os.path.splitext(path)[1]
+
+        #This is number of times it should play, not a bool.
+        loop = AnimatedPilImage.get_play_count(img.info, ext)
         count: int = img.n_frames
         frame_delays = [0] * count
         frames: List[AnimationFrame] = [None] * count
@@ -259,7 +262,7 @@ class AnimatedPilImage(PilImage, AnimatedImage):
             frame_obj = AnimationFrame(PilWrapper(frame), fn, self.get_bitmap_impl, delay, i)
             frames[i] = frame_obj
         img.seek(0)
-        AnimatedImage.__init__(self, frames)
+        AnimatedImage.__init__(self, frames, loop)
 
         #self.bmp is still needed for some operations (clipboard/wallpaper I think). This should be made lazy.
         self.bmp: wx.Bitmap
@@ -270,6 +273,20 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         self.img = PilWrapper(PilImage._to_32(img.copy()))
         self.zoomed_bmp: wx.Bitmap | None = None
         self.delayed_bmp: tuple[int, int, bytes] | None = None
+
+    @staticmethod
+    def get_play_count(info: dict, ext: str) -> int:
+        """Determines the number of times to play an animated image. 0 = forever.
+        For webp/png, this is straightforward: It's just the value of loop.
+        For GIFs, it is loop + 1. If loop is missing entirely (and not merely set to 0), play once.
+        Note that saving an image using PIL will not standardize this - loop=1 plays twice as gif, once otherwise.
+        """
+        if not 'loop' in info:
+            return 1
+        loop = int(info.get('loop', 0))
+        if ext == '.gif':
+            return loop + 1
+        return loop
 
     @staticmethod
     def get_bitmap_impl(img: PilWrapper) -> wx.Bitmap:

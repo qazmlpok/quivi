@@ -15,16 +15,21 @@ from PIL import ImageDraw
 # - Text in the upper-right stating the duration of this frame
 # - A single pixel with value equal to the current frame (intended for test cases)
 
-def flatten_durations(inp: list[tuple[int|str, ...]]):
+def flatten_durations(inp: list[list[int|str]]):
     for x in inp:
         if len(x) == 1:
             yield [x[0], '']
         if len(x) == 2:
             yield x
         else:
-            reps: int = x[2]
+            reps: int = int(x[2])
             for _ in range(reps):
                 yield [x[0], x[1],]
+
+# Number of times to play the animation. 0=forever, 1=play once, etc.
+# Except for gif, it will play one more time. To play a gif once, don't specify loop at all.
+# In other words, formats are different and PIL will not standardize their behavior.
+loop = 1
 
 #Durations are in ms
 #GIFs will change a delay of 0 or 1 (1 meaning 10ms) to be 10 (10 meaning 100ms), which will make the animation appear much slower
@@ -63,7 +68,7 @@ radius = int(min(width, height) * 0.75) / 2
 #        x[0] = 100
 ##
 
-total = sum([x[0] for x in durations])
+total = sum([int(x[0]) for x in durations])
 print("Total duration:", total)
 #
 
@@ -110,7 +115,7 @@ count = 0
 imgs: list[Image.Image] = []
 for i in range(len(durations)):
     data = durations[i]
-    imgs.append(generate_frame(count, i, data[0], data[1]))
+    imgs.append(generate_frame(count, i, int(data[0]), str(data[1])))
     count += data[0]
 
 # Save to GIF
@@ -119,10 +124,10 @@ img_durations = [x[0] for x in durations]
 first = imgs.pop(0)
 def save(fmt: str):
     out_filename = f'clock.{fmt}'
-    first.save(out_filename, save_all=True, append_images=imgs, loop=0, duration=img_durations)
+    first.save(out_filename, save_all=True, append_images=imgs, loop=loop, duration=img_durations)
     print("Wrote: ", out_filename)
 
-if img_format is str:
+if isinstance(img_format, str):
     save(img_format)
 else:
     for x in img_format:
