@@ -263,18 +263,13 @@ class AnimatedImage(ImageHandlerBase):
         self.max_loops = loops
 
         self.animating = False
-        # Used to control the background thread's loop. A separate bool is used to ensure it can't be set to True again when re-opening an image.
-        self.stopped = False
 
         self.timer = None
         self.thread = None
-
         if USE_THREAD:
-            self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
+            self.timer_obj = ThreadBasedTimer(self)
         else:
-            self.handler = wx.EvtHandler()
-            self.timer = wx.Timer(self.handler)
-            self.handler.Bind(wx.EVT_TIMER, self._next_frame_timer, self.timer)
+            self.timer_obj = TimerBasedTimer(self)
 
         if __debug__:
             self.loop_total = sum([x.delay for x in self.frames])
@@ -306,20 +301,8 @@ class AnimatedImage(ImageHandlerBase):
         self.frame = 0
         self.play_count = 0
         self.calculate_target_timestamps()
-        if USE_THREAD:
-            assert self.thread is not None
-            if self.stopped:
-                log.debug('Joining old background thread.')
-                self.thread.join()
-                self.stopped = False
-                self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
-            log.debug("Starting background thread.")
-            self.thread.start()
-        else:
-            assert self.timer is not None
-            self.timer.Start(self.frames[self.frame].delay - SLEEP_OFFSET, oneShot=True)
-            #self.stopped does not matter for timer, but set it for consistency.
-            self.stopped = False
+        self.timer_obj.start_animation()
+
         if __debug__:
             self.planned_delay = self.frames[self.frame].delay
             self.start = time.perf_counter()
@@ -329,31 +312,7 @@ class AnimatedImage(ImageHandlerBase):
 
     def stop_animation(self):
         self.animating = False
-        self.stopped = True
-        if USE_THREAD:
-            assert self.thread is not None
-            # Do nothing - self.stopped will prevent further execution.
-        else:
-            assert self.timer is not None
-            self.timer.Stop()
-
-    def _next_frame_timer(self, event):
-        assert self.timer is not None
-        next_delay = self._next_frame()
-        if next_delay is None:
-            return
-        #Times in ms.
-        self.timer.Start(int(next_delay - SLEEP_OFFSET), oneShot=True)
-    def _next_frame_thread(self):
-        #In practice, self.frame will always be 0 here.
-        first_delay = self.frames[self.frame].delay
-        time.sleep(first_delay / 1000.0)
-        while not self.stopped:
-            next_delay = self._next_frame()
-            if next_delay is None:
-                return
-            #Times in s.
-            time.sleep(next_delay / 1000.0)
+        self.timer_obj.stop_animation()
 
     def _next_frame(self) -> float|None:
         """Shared logic for advancing to the next frame of an animation.
@@ -412,9 +371,69 @@ class AnimatedImage(ImageHandlerBase):
         # APNG have have unusual denominators so PIL uses floats. Force integers.
         return int(value)
 
+    @property
+    def current_delay(self) -> int:
+        return self.frames[self.frame].delay
+
     def is_animated(self):
         return True
 
     def close(self) -> None:
         super().close()
         self.stop_animation()
+
+
+class ThreadBasedTimer():
+    def __init__(self, img: AnimatedImage):
+        self.stopped = False
+        self.img = img
+        self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
+
+    def start_animation(self):
+        if self.stopped:
+            log.debug('Joining old background thread.')
+            self.thread.join()
+            self.stopped = False
+            self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
+        log.debug("Starting background thread.")
+        self.thread.start()
+
+    def stop_animation(self):
+        self.stopped = True
+
+    def _next_frame_thread(self):
+        #In practice, self.frame will always be 0 here.
+        first_delay = self.img.current_delay
+        time.sleep(first_delay / 1000.0)
+        while not self.stopped:
+            next_delay = self.img._next_frame()
+            if next_delay is None:
+                return
+            #Times in s.
+            time.sleep(next_delay / 1000.0)
+
+
+class TimerBasedTimer():
+    def __init__(self, img: AnimatedImage):
+        self.stopped = False
+        self.img = img
+        self.handler = wx.EvtHandler()
+        self.timer = wx.Timer(self.handler)
+        self.handler.Bind(wx.EVT_TIMER, self._next_frame_timer, self.timer)
+
+    def start_animation(self):
+        self.timer.Start(self.img.current_delay - SLEEP_OFFSET, oneShot=True)
+        # self.stopped does not matter for timer, but set it for consistency.
+        self.stopped = False
+
+    def stop_animation(self):
+        self.stopped = True
+        self.timer.Stop()
+
+    def _next_frame_timer(self, event):
+        assert self.timer is not None
+        next_delay = self.img._next_frame()
+        if next_delay is None:
+            return
+        #Times in ms.
+        self.timer.Start(int(next_delay - SLEEP_OFFSET), oneShot=True)

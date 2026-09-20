@@ -284,6 +284,9 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         if not 'loop' in info:
             return 1
         loop = int(info.get('loop', 0))
+        if loop == 0:
+            return 0
+
         if ext == '.gif':
             return loop + 1
         return loop
