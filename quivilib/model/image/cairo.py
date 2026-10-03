@@ -13,7 +13,7 @@ except ImportError:
     import cairo
     cairo_stride_for_width = cairo.Format.stride_for_width
 import wx
-from cairo._cairo import ImageSurface
+from cairo._cairo import ImageSurface, Filter
 from quivilib.interface.imagehandler import *
 
 log = logging.getLogger('cairo')
@@ -32,10 +32,12 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
             return AnimatedCairoImage(src, delay=delay)
         return CairoImage(src, delay=delay)
 
-    def __init__(self, src:ImageHandler, delay=False) -> None:
+    def __init__(self, src: ImageHandler, delay=False) -> None:
         self.src = src
         self.img_path = src.img_path
         img = self.convert_to_cairo_surface(src.getImg())
+
+        self.rescale_delay = 0.2
         
         self._original_width = self._width = img.get_width()
         self._original_height = self._height = img.get_height()
@@ -72,6 +74,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         """ Requests img data as bytes from the loaded image
         Loads that data in as a cairo surface. Should work with either image loader.
         """
+
         srcImage = img
         img_format = cairo.FORMAT_ARGB32
         width, height = img.width, img.height
@@ -117,10 +120,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
             #Don't resize if zooming in. Need to figure out an appropriate cutoff
             #In practice this is probably dependent on screen size.
             return
-        if self.src.is_animated():
-            #Disable this for now.
-            return
-        self.timer = timer = threading.Timer(0.2, self._delayed_resize, args=[self._width, self._height])
+        self.timer = timer = threading.Timer(self.rescale_delay, self._delayed_resize, args=[self._width, self._height])
         timer.start()
 
     def resize(self, width: int, height: int) -> None:
@@ -171,6 +171,8 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         hscale = self._original_height / self._height
 
         #Set quality for the scale. There are a few tricks that can be done with this.
+        #TODO: Animated images should use GOOD (while not panning). Just caching x/y isn't enough for this.
+        #Maybe 0.1s since last pan?
         if (self._last_zoom != wscale or self._last_rot != self.rotation):
             #This is a zoom change - panning needs to be fast, but scaling doesn't.
             quality = cairo.FILTER_GOOD
@@ -182,9 +184,10 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
             quality = cairo.FILTER_FAST
         self._last_zoom = wscale    #No real need to track both.
         self._last_rot = self.rotation
-        #FAST - A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST.
-        #GOOD - A reasonable-performance filter, with quality similar to Cairo::BILINEAR.
-        #BEST - The highest-quality available, performance may not be suitable for interactive use.
+        #FAST - A high-performance filter, with quality similar to Cairo::Patern::Filter::NEAREST.      Expect 1ms paint time when zoomed out
+        #GOOD - A reasonable-performance filter, with quality similar to Cairo::BILINEAR.               Expect 50ms paint time when zoomed out
+        #BEST - The highest-quality available, performance may not be suitable for interactive use.     Expect 500ms paint time when zoomed out. Expect ~15ms when zoomed way in
+        # (Quality only matters when zooming; transform/90-deg rotate is always fast.)
 
         matrix = cairo.Matrix()
         if not is_zoomed:
@@ -204,7 +207,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         ctx_matrix = cairo.Matrix()
         ctx_matrix.translate(x, y)
         ctx.set_matrix(ctx_matrix)
-        
+
         ctx.set_source(imgpat)
         ctx.paint()
     
@@ -229,6 +232,16 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         """ Extensions do not matter for Cairo. """
         return []
 
+    @staticmethod
+    def filter_to_str(fmt: Filter) -> str:
+        if fmt == cairo.FILTER_FAST:
+            return 'FAST'
+        if fmt == cairo.FILTER_GOOD:
+            return 'GOOD'
+        if fmt == cairo.FILTER_BEST:
+            return 'BEST'
+        return '?'
+
 class AnimatedCairoImage(CairoImage, AnimatedImage):
     def __init__(self, src: AnimatedImage, delay=False) -> None:
         CairoImage.__init__(self, src, delay)
@@ -237,9 +250,44 @@ class AnimatedCairoImage(CairoImage, AnimatedImage):
         self.converted_cairo_frames: list[ImageSurface|None] = [None] * src.frame_count
 
         self.src = src
-        # Calling this creates, but does not start, the timer.
-        # The underlying image will manage the actual animation, so just don't call super.
-        #AnimatedImage.__init__(self, src.frames, src.delays)
+        # Do not call AnimatedImage.__init__. This will create the animation timer.
+        # Instead, use the underlying image's animation for everything.
+
+        #Plan: Start resizing images when the first play is 50% done.
+        #loop_total is in ms, timer wants s.
+        self.rescale_delay = self.src.loop_total / 2000
+
+    def _delayed_resize(self, width: int, height: int):
+        if width != self._width:
+            return
+        if self.zoomed_width == width or self._original_width == width:
+            return
+
+        #This could be "if img is next in the queue" but there's no way to detect that now.
+        #I don't want enqueued images to be doing a ton of resizes/storing images.
+        if self.delay:
+            return
+
+        log.debug(f"Cairo: Starting background zoom ({width}x{height})")
+        #Loop and create all frames.
+        for i in range(self.src.frame_count):
+            if self._width != width or self._height != height:
+                # Make sure this isn't an out of order execution.
+                return
+            #re-implement rescale, since that works on state and not inputs. Should probably change.
+            zoomed = self.src.frames[i].img.rescale(width, height)
+            surface = self.convert_to_cairo_surface(zoomed)
+
+            self.converted_cairo_frames[i] = surface
+            log.debug(f"Cairo: Updated frame {i} ({width}x{height})")
+
+            #Do not call img_change_cb
+        self.zoomed_width = width
+
+    def _maybe_scale_image(self):
+        super()._maybe_scale_image()
+        # Size changed - need to clear out frames. Equivalent to `self.zoomed_bmp = None` in super.
+        self.converted_cairo_frames: list[ImageSurface | None] = [None] * self.src.frame_count
 
     def get_display_surface(self) -> tuple[ImageSurface, bool]:
         #Return the current frame.

@@ -255,24 +255,27 @@ class AnimatedImage(ImageHandlerBase):
             #Caller should guard against this. I'm sure it's possible to create a 1-frame animated gif.
             raise Exception("Animated image must have at least 2 frames.")
 
+        #Current frame index (0 based)
         self.frame = 0
-        self.play_count = 0
+        #Individual animation frames
         self.frames = frames
         self.frame_count = len(frames)
         self.targets: list[float] = [0] * len(frames)
+        self.loop_total = sum([x.delay for x in self.frames])
+
+        #GIFs may specify a maximum number of plays.
+        self.play_count = 0
         self.max_loops = loops
 
+        #True if actively playing - timers shouldn't be active if the image isn't being displayed.
         self.animating = False
 
-        self.timer = None
-        self.thread = None
         if USE_THREAD:
             self.timer_obj = ThreadBasedTimer(self)
         else:
             self.timer_obj = TimerBasedTimer(self)
 
         if __debug__:
-            self.loop_total = sum([x.delay for x in self.frames])
             self.start = 0.0
             self.planned_delay = 0
             self.real_delay = time.perf_counter()
@@ -297,7 +300,8 @@ class AnimatedImage(ImageHandlerBase):
             self.targets[i] = start * 1000 + _sum
 
     def start_animation(self):
-        """Start the animation. This must be called on the main thread for wx.Timer to work."""
+        """Start the animation. Should be called when the image is displayed in the canvas.
+        This must be called on the main thread for wx.Timer to work."""
         self.frame = 0
         self.play_count = 0
         self.calculate_target_timestamps()
@@ -311,6 +315,7 @@ class AnimatedImage(ImageHandlerBase):
         self.animating = True
 
     def stop_animation(self):
+        """Stop the animation. Should be called when the image is closed for any reason."""
         self.animating = False
         self.timer_obj.stop_animation()
 

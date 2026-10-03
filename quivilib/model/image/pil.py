@@ -248,6 +248,7 @@ class AnimatedPilImage(PilImage, AnimatedImage):
             delay = self.duration_to_time(img.info.get('duration', 100))
             frame_delays[i] = delay
             frame = img
+
             if img.mode != 'RGB':
                 frame = frame.convert('RGB')
                 def fn(me: AnimationFrame):
