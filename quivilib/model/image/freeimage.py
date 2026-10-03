@@ -1,15 +1,15 @@
-import sys
 import logging
+import sys
 from collections.abc import Callable
+from typing import IO
 
 import wx
+
 import pyfreeimage as fi
 from pyfreeimage import Image
 from quivilib.i18n import _
-from quivilib.interface.imagehandler import ImageHandlerBase, BaseImageProt
+from quivilib.interface.imagehandler import ImageHandlerBase, BaseImageProt, ImageHandler
 from quivilib.util import add_exception_custom_msg
-
-from typing import IO, Self
 
 log = logging.getLogger('freeimage')
 
@@ -42,7 +42,7 @@ class FreeImage(ImageHandlerBase):
             add_exception_custom_msg(e, error_msg)
             raise
     @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> ImageHandler:
         img = cls.OpenImage(f, path, delay)
         return FreeImage(img, path, delay=delay)
     def __init__(self, img: Image, path: str, delay=False) -> None:
@@ -68,7 +68,7 @@ class FreeImage(ImageHandlerBase):
     def get_display_bmp(self):
         return self.zoomed_bmp if self.zoomed_bmp else self.bmp
 
-    def copy(self) -> Self:
+    def copy(self) -> ImageHandler:
         return FreeImage(self.img, self.img_path)
         
     def delayed_load(self) -> None:
@@ -81,7 +81,7 @@ class FreeImage(ImageHandlerBase):
                 self.zoomed_bmp = self.zoomed_bmp.convert_to_wx_bitmap(wx)
         self.delay = False
 
-    def rescale(self, width, height) -> Self:
+    def rescale(self, width: int, height: int) -> BaseImageProt:
         #TODO: Make sure this isn't called multiple times with the same dimensions.
         #I don't want to actually store this in zoomed_bmp, but something similar is fine.
         return self.img.rescale(width, height, fi.FILTER_BICUBIC)

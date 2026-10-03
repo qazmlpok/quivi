@@ -1,11 +1,12 @@
 import logging
+import os
 from collections.abc import Callable
 from typing import Any, IO, Self, List
 
 import wx
 from PIL import Image
 
-from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt
+from quivilib.interface.imagehandler import ImageHandlerBase, AnimatedImage, BaseImageProt, AnimationFrame, ImageHandler
 
 log: logging.Logger = logging.getLogger('pil')
 #PIL has its own logging that's typically not relevant.
@@ -19,7 +20,7 @@ class PilWrapper(BaseImageProt):
     some methods may create a temporary object, which can just be removed automatically.
     """
     @classmethod
-    def allocate(cls: type[Self], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> Self:
+    def allocate(cls: type[Self], width, height, bpp, red_mask=0, green_mask=0, blue_mask=0) -> 'PilWrapper':
         #*_mask is for FI compatibility; they will be ignored.
         #Should be 8-bit monochrome
         #Note - this will only ever actually be called with 24
@@ -30,7 +31,7 @@ class PilWrapper(BaseImageProt):
             mode = 'RGB'
         img = Image.new(mode, size=(width, height))
         return PilWrapper(img)
-    def AllocateNew(self, *args, **kwargs) -> Self:
+    def AllocateNew(self, *args, **kwargs) -> BaseImageProt:
         """ Forward to static implementation. Needed for polymorphism.
         """
         return PilWrapper.allocate(*args, **kwargs)
@@ -46,7 +47,7 @@ class PilWrapper(BaseImageProt):
     def getData(self) -> tuple[int, int, bytes]:
         b = self.img.tobytes()
         return (self.width, self.height, b)
-    def maybeConvert32bit(self) -> Self:
+    def maybeConvert32bit(self) -> BaseImageProt:
         if self.img.mode != 'RGB':
             return PilWrapper(self.img.convert('RGB'))
         return self
@@ -60,12 +61,14 @@ class PilWrapper(BaseImageProt):
         if im is not self.img:
             del im
         return arr
+    def tobytes(self):
+        return self.img.tobytes()
     #Image operations; this needs to have the same interface as FI.
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> 'PilWrapper':
         #I think this needs to return self if the width/height are the same.
         img = self.img.resize((width, height), Image.Resampling.BICUBIC)
         return PilWrapper(img)
-    def transpose(self, method: Image.Transpose) -> Self:
+    def transpose(self, method: Image.Transpose) -> 'PilWrapper':
         img = self.img.transpose(method)
         return PilWrapper(img)
     def fill(self, color) -> None:
@@ -79,15 +82,15 @@ class PilWrapper(BaseImageProt):
         srcimg = src.img
         img.paste(srcimg, (left, top, srcimg.size[0] + left, srcimg.size[1] + top))
 
-    def copy_region(self, left: int, top: int, right: int, bottom: int) -> Self:
+    def copy_region(self, left: int, top: int, right: int, bottom: int) -> BaseImageProt:
         #The freeimage copy function will also crop. PIL's copy is just a straight copy.
         img = self.img
         copy = img.crop((left, top, right, bottom,))
         return PilWrapper(copy)
-    def save_bitmap(self, path):
+    def save_bitmap(self, path: str):
         #FI needs a constant; this is exposed as a separate member for compatibility
-        return self.save(path)
-    def save(self, path) -> None:
+        self.save(path)
+    def save(self, path: str) -> None:
         #Type will be determined by path; there's no need to specify manually.
         self.img.save(path)
     def __del__(self) -> None:
@@ -100,7 +103,7 @@ class PilImage(ImageHandlerBase):
     # Remove this if that ever changes. It's been reported, and it sounds like they
     # stopped truncating, but it's still doing it.
     @staticmethod
-    def lookup(x):
+    def lookup(x: int):
         return x / 256
 
     @staticmethod
@@ -119,16 +122,18 @@ class PilImage(ImageHandlerBase):
         if convert_to_32:
             img = PilImage._to_32(img)
         return img
+
     @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> ImageHandler:
         img = cls.OpenImage(f, path, delay, convert_to_32=False)
-        #get_attr is mandatory because is_animated is only defined for plugins that support animation.
+        #getattr is mandatory because is_animated is only defined for plugins that support animation.
         animated = getattr(img, "is_animated", False)
         if (animated):
             return AnimatedPilImage(img, path, delay)
 
         img = PilImage._to_32(img)
         return PilImage(img, path, delay=delay)
+
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         self.delay = delay
         self.img_path = path
@@ -149,7 +154,7 @@ class PilImage(ImageHandlerBase):
     def get_display_bmp(self):
         return self.zoomed_bmp if self.zoomed_bmp else self.bmp
 
-    def copy(self) -> Self:
+    def copy(self) -> ImageHandler:
         return PilImage(self.img.img, self.img_path)
         
     def delayed_load(self) -> None:
@@ -170,7 +175,7 @@ class PilImage(ImageHandlerBase):
         else:
             return wx.Bitmap.FromBuffer(img.size[0], img.size[1], s)
     
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> BaseImageProt:
         #Wrapper (needed for Cairo)
         return self.img.rescale(width, height)
     def resize(self, width: int, height: int) -> None:
@@ -217,6 +222,7 @@ class PilImage(ImageHandlerBase):
     def extensions():
         return PilImage.ext_list
 
+
 class AnimatedPilImage(PilImage, AnimatedImage):
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         # This doesn't call PilImage init to avoid some double bmp use.
@@ -226,46 +232,89 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         self._original_height = self.height = img.size[1]
         self.rotation = 0
 
-        #This is number of times it should loop, not a bool.
-        loop = img.info.get('loop', 0)
+        ext = os.path.splitext(path)[1]
+
+        #This is number of times it should play, not a bool.
+        loop = AnimatedPilImage.get_play_count(img.info, ext)
         count: int = img.n_frames
         frame_delays = [0] * count
-        frames: List[wx.Bitmap] = [None] * count
+        frames: List[AnimationFrame] = [None] * count
         #Get the img and delay data. This requires using img.seek to select each individual frame.
         for i in range(count):
             img.seek(i)
             # WebP does not populate `info` until the image is loaded, so calling load() is mandatory.
             # This method is idempotent so there's no harm in an early call.
             img.load()
-            frame_delays[i] = self.duration_to_time(img.info.get('duration', 100))
+            delay = self.duration_to_time(img.info.get('duration', 100))
+            frame_delays[i] = delay
             frame = img
+
             if img.mode != 'RGB':
                 frame = frame.convert('RGB')
-            frames[i] = self._img_to_bmp(frame)
+                def fn(me: AnimationFrame):
+                    pimg: PilWrapper = me.img
+                    return pimg
+            else:
+                def fn(me: AnimationFrame):
+                    pimg: PilWrapper = me.img
+                    pimg.seek(me.idx)
+                    return pimg
+
+            frame_obj = AnimationFrame(PilWrapper(frame), fn, self.get_bitmap_impl, delay, i)
+            frames[i] = frame_obj
         img.seek(0)
-        AnimatedImage.__init__(self, frames, frame_delays)
-        self.bmp: wx.Bitmap = frames[0]
+        AnimatedImage.__init__(self, frames, loop)
+
+        #self.bmp is still needed for some operations (clipboard/wallpaper I think). This should be made lazy.
+        self.bmp: wx.Bitmap
+        if not delay:
+            self.bmp = frames[0].get_bitmap()
 
         #Just the first frame.
         self.img = PilWrapper(PilImage._to_32(img.copy()))
         self.zoomed_bmp: wx.Bitmap | None = None
         self.delayed_bmp: tuple[int, int, bytes] | None = None
 
+    @staticmethod
+    def get_play_count(info: dict, ext: str) -> int:
+        """Determines the number of times to play an animated image. 0 = forever.
+        For webp/png, this is straightforward: It's just the value of loop.
+        For GIFs, it is loop + 1. If loop is missing entirely (and not merely set to 0), play once.
+        Note that saving an image using PIL will not standardize this - loop=1 plays twice as gif, once otherwise.
+        """
+        if not 'loop' in info:
+            return 1
+        loop = int(info.get('loop', 0))
+        if loop == 0:
+            return 0
+
+        if ext == '.gif':
+            return loop + 1
+        return loop
+
+    @staticmethod
+    def get_bitmap_impl(img: PilWrapper) -> wx.Bitmap:
+        # If the img was converted, don't seek. If it wasn't, seek. This function is set up in init.
+        return wx.Bitmap.FromBuffer(img.width, img.height, img.tobytes())
+
     def delayed_load(self) -> None:
         if not self.delay:
             log.debug("delayed_load was called but delay was off")
             return
 
-        #TODO: Don't re-use this. Split into two lists...
-        for i in range(len(self.frames)):
-            self.frames[i] = wx.Bitmap.FromBuffer(self.img.size[0], self.img.size[1], self.frames[i])
+        for i in range(self.frame_count):
+            self.frames[i].get_bitmap()
 
-        self.bmp = self.frames[0]
+        self.bmp = self.frames[0].get_bitmap()
         self.delay = False
 
     def get_display_bmp(self):
         #Animated images just won't support zooming, at least unless cairo can be used.
         return AnimatedImage.get_display_bmp(self)
+
+    def load_frames(self) -> None:
+        for x in self.frames:
+            x.get_bitmap()
 
     #Disallow
     def resize(self, width: int, height: int) -> None:

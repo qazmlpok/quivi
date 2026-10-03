@@ -21,19 +21,19 @@ class BaseImageProt(Protocol):
     def save_bitmap(self, path: str):
         pass
 
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> 'BaseImageProt':
         pass
 
-    def AllocateNew(self, *args, **kwargs) -> Self:
+    def AllocateNew(self, *args, **kwargs) -> 'BaseImageProt':
         pass
 
-    def maybeConvert32bit(self) -> Self:
+    def maybeConvert32bit(self) -> 'BaseImageProt':
         pass
 
     def convert_to_raw_bits(self, width_bytes=None) -> bytearray:
         pass
 
-    def copy_region(self, left: int, top: int, right: int, bottom: int) -> Self:
+    def copy_region(self, left: int, top: int, right: int, bottom: int) -> 'BaseImageProt':
         pass
 
     def paste(self, src, left: int, top: int, alpha: int = 256) -> None:
@@ -47,7 +47,7 @@ class ImageHandler(Protocol):
     The actual Image class for the appropriate handler (i.e. Freeimage or PIL) will expose a common set of operations.
     """
     @classmethod
-    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> Self:
+    def CreateImage(cls, f:IO[bytes], path:str, delay=False) -> 'ImageHandler':
         """Static constructor. Create a new image object."""
         pass
     @classmethod
@@ -64,13 +64,13 @@ class ImageHandler(Protocol):
     def rotate(self, clockwise: int) -> None:
         """Rotate the image in 90 degree increments (clockwise or counter). Modifies the local image."""
         pass
-    def rescale(self, width: int, height: int) -> Self:
+    def rescale(self, width: int, height: int) -> BaseImageProt:
         """Create a new image with the given width/height."""
         pass
     def paint(self, dc: wx.DC, x: int, y: int) -> None:
         """Draw onto the wx DrawingContext"""
         pass
-    def copy(self) -> Self:
+    def copy(self) -> 'ImageHandler':
         pass
     def copy_to_clipboard(self) -> None:
         pass
@@ -117,7 +117,7 @@ class ImageHandler(Protocol):
     def extensions() -> list[str]:
         pass
     def getImg(self) -> BaseImageProt:
-        """Direct access to the underlying Image, which is likely a mistake."""
+        """Direct access to the underlying Image, which is likely a mistake outside of ImageHandler."""
         pass
 
 class SecondaryImageHandler(ImageHandler):
@@ -197,7 +197,7 @@ class ImageHandlerBase(ImageHandler):
     def is_animated(self):
         return False
 
-    def set_callback(self, cb:Callable[[ImageHandler], None]) -> None:
+    def set_callback(self, cb: Callable[[ImageHandler], None]) -> None:
         self.img_change_cb = cb
 
     def close(self) -> None:
@@ -219,106 +219,105 @@ if sys.platform == 'win32':
     #sleep inaccuracy is usually around 4ms but I've seen higher values.
     SLEEP_OFFSET = 7
     SLEEP_0 = True
+
+
+class AnimationFrame:
+    """Represents a single frame of an animation.
+    A frame is an image and a duration/delay.
+    The image is stored both as the underlying ImageHandler and the wx.Bitmap for actual rendering.
+    In theory the image could be delta-only and include rects to draw, but this isn't supported. I'm not positive PIL supports this.
+    """
+    def __init__(self, image: BaseImageProt, img_fn: Callable[['AnimationFrame'], BaseImageProt], bmp_fn: Callable[[BaseImageProt], wx.Bitmap], delay: int, frame_idx=0) -> None:
+        self.delay = delay
+        self.img = image
+        self.bitmap: wx.Bitmap|None = None
+        self.idx = frame_idx
+
+        #I really don't like these lambdas but the alternative seems to be making even more subclasses with parallel inheritance.
+        self.get_frame_img = img_fn
+        self.get_bitmap_img = bmp_fn
+
+    def get_bitmap(self) -> wx.Bitmap:
+        if self.bitmap is not None:
+            return self.bitmap
+
+        bmp = self.get_bitmap_img(self.get_frame_img(self))
+        self.bitmap = bmp
+        return bmp
+
+
 class AnimatedImage(ImageHandlerBase):
     """Base class for an animated image. Manages a timer to handle the animation, using the callback function to report changes.
     delays should be a list of duration in ms (GIF stores the value in cs)
     """
-    def __init__(self, frames: List[wx.Bitmap], delays: List[int], loops = 0):
-        if len(frames) != len(delays):
-            raise Exception("Frames and Delays must have the same number of entries.")
+    def __init__(self, frames: List[AnimationFrame], loops: int = 0):
         if len(frames) < 2:
             #Caller should guard against this. I'm sure it's possible to create a 1-frame animated gif.
             raise Exception("Animated image must have at least 2 frames.")
 
+        #Current frame index (0 based)
         self.frame = 0
+        #Individual animation frames
         self.frames = frames
-        self.delays = delays
-        self.targets: list[float] = delays.copy()
+        self.frame_count = len(frames)
+        self.targets: list[float] = [0] * len(frames)
+        self.loop_total = sum([x.delay for x in self.frames])
+
+        #GIFs may specify a maximum number of plays.
+        self.play_count = 0
         self.max_loops = loops
 
+        #True if actively playing - timers shouldn't be active if the image isn't being displayed.
         self.animating = False
-        # Used to control the background thread's loop. A separate bool is used to ensure it can't be set to True again when re-opening an image.
-        self.stopped = False
-
-        self.timer = None
-        self.thread = None
 
         if USE_THREAD:
-            self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
+            self.timer_obj = ThreadBasedTimer(self)
         else:
-            self.handler = wx.EvtHandler()
-            self.timer = wx.Timer(self.handler)
-            self.handler.Bind(wx.EVT_TIMER, self._next_frame_timer, self.timer)
+            self.timer_obj = TimerBasedTimer(self)
 
         if __debug__:
-            self.loop_total = sum(self.delays)
             self.start = 0.0
             self.planned_delay = 0
             self.real_delay = time.perf_counter()
 
-    def get_display_bmp(self):
-        #Animated images just won't support zooming, at least unless cairo can be used.
-        return self.frames[self.frame]
+    def get_display_bmp(self) -> wx.Bitmap:
+        #Animated images won't support zooming without cairo.
+        return self.frames[self.frame].get_bitmap()
+
+    def load_frames(self) -> None:
+        """Loads the images stored in self.frames. Call this before the img is closed.
+        This only needs to be called on the image that's actually displayed:
+        with Cairo wrapping PIL, for example, the PIL animated image does not need to be loaded."""
+        raise Exception("Implement in subclass")
 
     def calculate_target_timestamps(self):
         """Populates `self.targets` with the expected timestamps for each frame. Used to compensate for jitter and execution time.
         Needs to be called time the loop resets"""
         start = time.perf_counter()
         _sum = 0
-        for i in (range(len(self.delays))):
-            _sum += self.delays[i]
+        for i in (range(self.frame_count)):
+            _sum += self.frames[i].delay
             self.targets[i] = start * 1000 + _sum
 
     def start_animation(self):
-        """Start the animation. This must be called on the main thread for wx.Timer to work."""
+        """Start the animation. Should be called when the image is displayed in the canvas.
+        This must be called on the main thread for wx.Timer to work."""
         self.frame = 0
+        self.play_count = 0
         self.calculate_target_timestamps()
-        if USE_THREAD:
-            assert self.thread is not None
-            if self.stopped:
-                log.debug('Joining old background thread.')
-                self.thread.join()
-                self.stopped = False
-                self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
-            log.debug("Starting background thread.")
-            self.thread.start()
-        else:
-            assert self.timer is not None
-            self.timer.Start(self.delays[self.frame] - SLEEP_OFFSET, True)
+        self.timer_obj.start_animation()
+
         if __debug__:
-            self.planned_delay = self.delays[self.frame]
+            self.planned_delay = self.frames[self.frame].delay
             self.start = time.perf_counter()
             self.real_delay = time.perf_counter()
             log.debug(f"Expected loop duration: {self.loop_total}ms.")
         self.animating = True
 
     def stop_animation(self):
+        """Stop the animation. Should be called when the image is closed for any reason."""
         self.animating = False
-        self.stopped = True
-        if USE_THREAD:
-            assert self.thread is not None
-            # Do nothing - self.stopped while prevent further execution.
-        else:
-            assert self.timer is not None
-            self.timer.Stop()
-
-    def _next_frame_timer(self, event):
-        assert self.timer is not None
-        next_delay = self._next_frame()
-        if next_delay is None:
-            return
-        #Times in ms.
-        self.timer.Start(int(next_delay - SLEEP_OFFSET), True)
-    def _next_frame_thread(self):
-        #In practice, self.frame will always be 0 here.
-        first_delay = self.delays[self.frame]
-        time.sleep(first_delay / 1000.0)
-        while not self.stopped:
-            next_delay = self._next_frame()
-            if next_delay is None:
-                return
-            #Times in s.
-            time.sleep(next_delay / 1000.0)
+        self.timer_obj.stop_animation()
 
     def _next_frame(self) -> float|None:
         """Shared logic for advancing to the next frame of an animation.
@@ -326,18 +325,23 @@ class AnimatedImage(ImageHandlerBase):
         Advance the image to the next frame, or back to the first one. Fire the callback."""
         if not self.animating:
             return None
-        stop = time.perf_counter()
+
         if SLEEP_0 and time.perf_counter() * 1000 < self.targets[self.frame]:
             target = self.targets[self.frame] / 1000.0
             while (time.perf_counter() < target):
                 time.sleep(0)
 
-        self.frame = (self.frame + 1) % len(self.frames)
+        self.frame = (self.frame + 1) % self.frame_count
         if __debug__ and self.frame == 0:
             stop = time.perf_counter()
             log.debug(f"GIF Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}%")
             self.start = time.perf_counter()
         if self.frame == 0:
+            self.play_count += 1
+            if self.max_loops != 0 and self.play_count >= self.max_loops:
+                self.stop_animation()
+                log.debug(f"Stopping animation after {self.play_count} times.")
+                return None
             self.calculate_target_timestamps()
 
         #changing self.frame will change the image paint() uses.
@@ -345,14 +349,14 @@ class AnimatedImage(ImageHandlerBase):
         stop = time.perf_counter()
         if __debug__ and FRAME_DEBUG:
             log.debug(f"Frame took: {(stop - self.real_delay) * 1000:0.1f}ms. Plan: {self.planned_delay}. {(stop - self.real_delay) / self.planned_delay * 100 * 1000:0.2f}%.")
-            self.planned_delay = self.delays[self.frame]
+            self.planned_delay = self.frames[self.frame].delay
             self.real_delay = time.perf_counter()
 
-        base_delay = self.delays[self.frame]
+        base_delay = self.frames[self.frame].delay
         real_delay = (self.targets[self.frame] - time.perf_counter() * 1000)
+
         #Try to sleep for the adjusted time period, but don't adjust more than 5ms in either direction.
         ret = clamp(base_delay - 5, real_delay, base_delay + 5)
-        #ret = base_delay
         if SLEEP_0:
             return ret - SLEEP_OFFSET
         return ret
@@ -361,15 +365,20 @@ class AnimatedImage(ImageHandlerBase):
         """
         GIF encodes per-frame delays in increments of 0.01s (i.e. 10ms or 1cs). Browsers will not perfectly obey this.
         In practice it looks like too-small values are moved up to 100ms, so a delay of "1" is slower than "2".
-        This is for GIF specifically; it's possible APNG/WebP have different logic.
+        APNG and WebP use the same logic, but both formats allow more precise times.
         In theory this is browser-specific but every browser I tested had the same behavior.
         Ref: https://www.tumblr.com/pharanpostsartndevtrivia/126581964275/how-is-an-animated-gifs-time-delay-between
-        NOTE - input time needs to be in ms. PIL at least standardizes this.
+
+        NOTE - input time needs to be in ms. PIL standardizes this. Output is also ms.
         """
-        if value < 20:
+        if value < 11:
             return 100
         # APNG have have unusual denominators so PIL uses floats. Force integers.
         return int(value)
+
+    @property
+    def current_delay(self) -> int:
+        return self.frames[self.frame].delay
 
     def is_animated(self):
         return True
@@ -377,3 +386,59 @@ class AnimatedImage(ImageHandlerBase):
     def close(self) -> None:
         super().close()
         self.stop_animation()
+
+
+class ThreadBasedTimer():
+    def __init__(self, img: AnimatedImage):
+        self.stopped = False
+        self.img = img
+        self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
+
+    def start_animation(self):
+        if self.stopped:
+            log.debug('Joining old background thread.')
+            self.thread.join()
+            self.stopped = False
+            self.thread = threading.Thread(target=self._next_frame_thread, daemon=True)
+        log.debug("Starting background thread.")
+        self.thread.start()
+
+    def stop_animation(self):
+        self.stopped = True
+
+    def _next_frame_thread(self):
+        #In practice, self.frame will always be 0 here.
+        first_delay = self.img.current_delay
+        time.sleep(first_delay / 1000.0)
+        while not self.stopped:
+            next_delay = self.img._next_frame()
+            if next_delay is None:
+                return
+            #Times in s.
+            time.sleep(next_delay / 1000.0)
+
+
+class TimerBasedTimer():
+    def __init__(self, img: AnimatedImage):
+        self.stopped = False
+        self.img = img
+        self.handler = wx.EvtHandler()
+        self.timer = wx.Timer(self.handler)
+        self.handler.Bind(wx.EVT_TIMER, self._next_frame_timer, self.timer)
+
+    def start_animation(self):
+        self.timer.Start(self.img.current_delay - SLEEP_OFFSET, oneShot=True)
+        # self.stopped does not matter for timer, but set it for consistency.
+        self.stopped = False
+
+    def stop_animation(self):
+        self.stopped = True
+        self.timer.Stop()
+
+    def _next_frame_timer(self, event):
+        assert self.timer is not None
+        next_delay = self.img._next_frame()
+        if next_delay is None:
+            return
+        #Times in ms.
+        self.timer.Start(int(next_delay - SLEEP_OFFSET), oneShot=True)

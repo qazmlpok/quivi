@@ -129,11 +129,13 @@ class HotkeyCtrl(wx.TextCtrl):
         self.SetValue(name)
         self._name = name
         if event.GetKeyCode() != self._key_code or event.GetModifiers() != self._modifiers:
-            self._key_code = event.GetKeyCode()
-            self._modifiers = event.GetModifiers()
+            kc = event.GetKeyCode()
+            km = event.GetModifiers()
+            self._key_code = kc
+            self._modifiers = km
             self.GetEventHandler().ProcessEvent(
-                HotkeyUpdatedEvent(self.GetId(), self._name, self._key_code,
-                                   self._modifiers, self))
+                HotkeyUpdatedEvent(self.GetId(), self._name, kc, km, self)
+            )
         event.Skip(False)
         
     def OnChar(self, event: wx.KeyEvent):

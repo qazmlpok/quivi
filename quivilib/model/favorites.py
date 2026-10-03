@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Self
 
 from pubsub import pub as Publisher
+
 from quivilib.meta import PATH_SEP
 from quivilib.model.settings import Settings
 
@@ -48,7 +48,7 @@ class Favorite:
         return f'[{self.page}|{self.path}|{self.display}]'
     
     @classmethod
-    def deserialize(cls, inp) -> Self:
+    def deserialize(cls, inp) -> 'Favorite':
         """
         Opposite of serialize. Returns a new instance from a string.
         """

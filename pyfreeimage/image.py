@@ -47,7 +47,7 @@ class Image(BaseImageProt):
         self._dib = dib
 
     def save_bitmap(self, path):
-        return self.save(path, fif=CO.FIF_BMP)
+        self.save(path, fif=CO.FIF_BMP)
     def save(self, path, flags = 0, fif = CO.FIF_UNKNOWN):
         lib = self._lib
         dib = self._dib
