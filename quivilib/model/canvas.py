@@ -15,7 +15,7 @@ from quivilib.util import rescale_by_size_factor
 #Maybe a timestamp is more appropriate?
 STICKY_LIMIT = 2
 class Canvas(object):
-    def __init__(self, name, settings) -> None:
+    def __init__(self, name: str, settings) -> None:
         self.name = name
         if settings:
             self._get_str_setting: Callable[str, int] = partial(settings.get, 'Options')
@@ -304,10 +304,15 @@ class Canvas(object):
     def rotate(self, clockwise: int):
         if not self.img:
             return
+
+        x_offset = (self.width - self.height) // 2
+        y_offset = (self.height - self.width) // 2
+
         self.img.rotate(clockwise)
-        #TODO: Add a configuration option to disable this adjust if zoomed in/out.
-        #If I've zoomed in manually, I don't want this to reset the zoom.
-        self.adjust()
+
+        self.left += x_offset
+        self.top += y_offset
+
         self._sendMessage(f'{self.name}.changed')
 
     def shutdown_received(self):
@@ -317,7 +322,7 @@ class WallpaperCanvas(Canvas):
     """ Special canvas used for the wallpaper dialog. This is completely separate from the display canvas
     It includes some additional fit modes that don't make sense for the standard image display.
     """
-    def __init__(self, name, settings):
+    def __init__(self, name: str, settings):
         super().__init__(name, settings)
         self.tiled = False
         #Wallpaper canvas won't include settings.

@@ -19,7 +19,7 @@ ZOOM_FACTOR = 25
 log = logging.getLogger('control.canvas')
 
 class BaseCanvasController(object):
-    def __init__(self, name, view: CanvasLike, canvas: Canvas):
+    def __init__(self, name: str, view: CanvasLike, canvas: Canvas):
         self.name = name
         self.canvas = canvas
         self.canvas.set_view(view)
@@ -191,7 +191,7 @@ class CanvasController(BaseCanvasController):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name, view: CanvasLike, settings: Settings):
+    def __init__(self, name: str, view: CanvasLike, settings: Settings):
         self.settings: Settings = settings
         super().__init__(name, view, canvas=Canvas('canvas', settings))
 
@@ -339,8 +339,28 @@ class CanvasController(BaseCanvasController):
         self.set_zoom_by_fit_type(fit_type)
         Publisher.sendMessage(f'{self.name}.changed')
 
+    def print_canvas_info(self):
+        if not __debug__:
+            return
+        if self.canvas.img is None:
+            print("No image.")
+            return
+        halfw = self.view.width // 2
+        halfh = self.view.height // 2
+        print(f"Width x Height: {self.canvas.width} x {self.canvas.height}  ({self.canvas.img.base_width} x {self.canvas.img.base_height})")
+        print(f"Left: {self.canvas.left} ({self.canvas.left/self.canvas.width*100:0.2f}%)")
+        print(f"Top: {self.canvas.top} ({self.canvas.top/self.canvas.height*100:0.2f}%)")
+        print(f"Zoom: {self.canvas.zoom * 100:0.2f}%")
+        print(f"Left Center: {self.canvas.left - halfw} ({(self.canvas.left - halfw) / self.canvas.width * 100:0.2f}%)")
+        print(f"Top Center: {self.canvas.top - halfh} ({(self.canvas.top - halfh) / self.canvas.height * 100:0.2f}%)")
+        print()
+        print(f"View: {self.view.width} x {self.view.height}")
+        print()
+        print()
+
+
 class WallpaperCanvasController(BaseCanvasController):
-    def __init__(self, name, canvas: WallpaperCanvas, view: CanvasLike):
+    def __init__(self, name: str, canvas: WallpaperCanvas, view: CanvasLike):
         super().__init__(name, view, canvas)
         # Redefine self.canvas to the more-specific type
         self.canvas = canvas

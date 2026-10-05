@@ -319,6 +319,9 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.CLOSE_IMG, cat_name, control.canvas.close_img,
                                     'Close Image', 'Close the current image', [],
                                     flags=CommandFlags.NOMENU)
+            yield CommandDefinition(CommandName.DEBUG_CANVAS, cat_name, control.canvas.print_canvas_info,
+                                    'Print canvas info', 'Print some canvas info to stdout', [],
+                                    flags=CommandFlags.KB)
 
         #
         self.cmd_list = [x for x in list_items()]
@@ -424,6 +427,7 @@ class MenuDefinitionList():
             CommandName.MEMORY_INFO,
             CommandName.CHECK_UPDATE,
             CommandName.CLOSE_IMG,
+            CommandName.DEBUG_CANVAS,
         ))
         #Sub menus
         zoom_sub = MenuDefinition(MenuName.ZoomSub, 'Zoom', (

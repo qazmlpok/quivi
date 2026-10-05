@@ -205,6 +205,7 @@ class CommandName(IntEnum):
     CHECK_UPDATE = 29901
     CLOSE_IMG = 29902
     MEMORY_INFO = 29903
+    DEBUG_CANVAS = 29904
 #
 
 class MenuName(StrEnum):
