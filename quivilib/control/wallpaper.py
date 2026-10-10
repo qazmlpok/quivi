@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 import logging as log
 from subprocess import Popen, PIPE, call
+from typing import IO
 
 import wx
 from pubsub import pub as Publisher
@@ -64,7 +65,7 @@ class WallpaperController(object):
         
         item_index = self.model.container.selected_item_index
         path = self.model.container.items[item_index].path
-        f = self.model.container.open_image(item_index)
+        f: IO[bytes] = self.model.container.open_image(item_index)
         #can't use "with" because not every file-like object used here supports it
         img: BaseImageProt
         try:

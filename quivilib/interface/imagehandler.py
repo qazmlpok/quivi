@@ -12,6 +12,9 @@ from quivilib.util import rescale_by_size_factor
 log = logging.getLogger('IMG')
 
 
+def clamp(minvalue: float, value: float, maxvalue: float) -> float:
+    return max(minvalue, min(value, maxvalue))
+
 class BaseImageProt(Protocol):
     """Protocol for an image, direct from PIL/FreeImage.
     Or, rather, the wrapper classes used to standardize the interface."""
@@ -40,6 +43,10 @@ class BaseImageProt(Protocol):
         pass
 
     def fill(self, color) -> None:
+        pass
+
+    def close(self):
+        """Close the image. Release resources."""
         pass
 
 class ImageHandler(Protocol):
@@ -98,7 +105,12 @@ class ImageHandler(Protocol):
     def is_animated(self) -> bool:
         pass
 
+    def hide(self) -> None:
+        """Mark the image as no longer actively shown. Typically only important for animations - this should stop any timers."""
+        pass
+
     def close(self) -> None:
+        """ Close the image and release any resources. The object is no longer usable after this is called and should not be referenced."""
         pass
 
     @property
@@ -200,12 +212,11 @@ class ImageHandlerBase(ImageHandler):
     def set_callback(self, cb: Callable[[ImageHandler], None]) -> None:
         self.img_change_cb = cb
 
+    def hide(self) -> None:
+        pass
     def close(self) -> None:
         pass
 
-
-def clamp(minvalue: float, value: float, maxvalue: float) -> float:
-    return max(minvalue, min(value, maxvalue))
 
 #Excessive obnoxious debug messages.
 FRAME_DEBUG = False
@@ -383,8 +394,8 @@ class AnimatedImage(ImageHandlerBase):
     def is_animated(self):
         return True
 
-    def close(self) -> None:
-        super().close()
+    def hide(self) -> None:
+        super().hide()
         self.stop_animation()
 
 

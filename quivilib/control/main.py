@@ -320,7 +320,7 @@ class MainController(object):
         #Release any handle on the file...
         img = self.canvas.get_img()
         if filetype == ItemType.IMAGE and img:
-            img.close()
+            img.hide()
         container.delete_image(index, self.view)
         self.file_list.refresh_after_delete(index)
 

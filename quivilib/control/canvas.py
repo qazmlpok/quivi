@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import IO
 
 import wx
 from pubsub import pub as Publisher
@@ -285,7 +286,7 @@ class CanvasController(BaseCanvasController):
             Publisher.sendMessage('busy', busy=True)
             path = item.path
             item_index = container.items.index(item)
-            f = container.open_image(item_index)
+            f: IO[bytes] = container.open_image(item_index)
             # can't use "with" because not every file-like object used here supports it
             try:
                 with DebugTimer(path.name):

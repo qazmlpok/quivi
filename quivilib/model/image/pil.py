@@ -93,6 +93,9 @@ class PilWrapper(BaseImageProt):
     def save(self, path: str) -> None:
         #Type will be determined by path; there's no need to specify manually.
         self.img.save(path)
+    def close(self):
+        self.img.close()
+        self.img = None
     def __del__(self) -> None:
         if self.img:
             del self.img
@@ -213,6 +216,14 @@ class PilImage(ImageHandlerBase):
         #TODO: Implement delayed_fn. See freeimage.
         return bmp
 
+    def close(self) -> None:
+        self.img.close()
+        self.img = None
+        # I don't see a close method on wx.Bitmap
+        self.bmp = None # type: ignore[assignment]
+        self.zoomed_bmp = None
+        self.delayed_bmp = None
+
     @staticmethod
     def _get_extensions() -> list[str]:
         return [x.casefold() for x in Image.registered_extensions().keys()]
@@ -238,7 +249,7 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         loop = AnimatedPilImage.get_play_count(img.info, ext)
         count: int = img.n_frames
         frame_delays = [0] * count
-        frames: List[AnimationFrame] = [None] * count
+        frames: List[AnimationFrame] = [None] * count # type: ignore[assignment]
         #Get the img and delay data. This requires using img.seek to select each individual frame.
         for i in range(count):
             img.seek(i)
@@ -252,11 +263,11 @@ class AnimatedPilImage(PilImage, AnimatedImage):
             if img.mode != 'RGB':
                 frame = frame.convert('RGB')
                 def fn(me: AnimationFrame):
-                    pimg: PilWrapper = me.img
+                    pimg: PilWrapper = me.img # type: ignore[assignment]
                     return pimg
             else:
                 def fn(me: AnimationFrame):
-                    pimg: PilWrapper = me.img
+                    pimg: PilWrapper = me.img # type: ignore[assignment]
                     pimg.seek(me.idx)
                     return pimg
 

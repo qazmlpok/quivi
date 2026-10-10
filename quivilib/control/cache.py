@@ -26,9 +26,11 @@ class ImageCacheLoadRequest(object):
         self.container = container
         self.item = item
         self.path = item.path
-    def __eq__(self, other):
+    def __eq__(self, other: object):
         if not other:
             return False
+        if not isinstance(other, ImageCacheLoadRequest):
+            return NotImplemented
         cont_eq = (self.container is other.container)
         item_eq = (self.item == other.item)
         return cont_eq and item_eq
@@ -42,7 +44,7 @@ class ImageCacheLoadRequest(object):
 class ImageCacheLoaded(ImageCacheLoadRequest):
     """ An ImageCacheLoadRequest that has an actual image loaded.
     """
-    def __init__(self, src, settings) -> None:
+    def __init__(self, src: ImageCacheLoadRequest, settings) -> None:
         super().__init__(src.container, src.item)
         item_index = self.container.items.index(self.item)
         f = self.container.open_image(item_index)
@@ -54,6 +56,11 @@ class ImageCacheLoaded(ImageCacheLoadRequest):
         finally:
             f.close()
         self.img: ImageHandler = img
+
+    def drop(self):
+        """Called when an item is dropped from the cache."""
+        self.img.close()
+
 
 class ImageCache(object):
     def __init__(self, settings) -> None:
@@ -101,8 +108,10 @@ class ImageCache(object):
         with self.c_lock:
             if len(self.cache) >= meta.CACHE_SIZE:
                 removed = self.cache.pop()
+                removed.drop()
                 self.notify_cache_removed(removed)
                 log.debug(f'main: removed cache {removed.path}')
+                del removed
             self.cache.insert(0, request)
             request.img.delayed_load()
             self.notify_image_loaded(request)
@@ -113,6 +122,8 @@ class ImageCache(object):
         TODO: This does not clear out the queue. Shouldn't it?
         """
         with self.c_lock:
+            for x in self.cache:
+                x.drop()
             self.cache.clear()
             log.debug('main: cleared cache')
 
@@ -179,7 +190,6 @@ class ImageCache(object):
             for q in self.queue:
                 if q is None:
                     continue
-                print("Check cache:", q, q.container)
                 if q.container == old_cont:
                     log.debug('cache: Modifying queue container value...')
                     q.container = new_cont
@@ -209,6 +219,8 @@ class ImageCache(object):
                     log.debug('thread: request processed, notifying')
                     wx.CallAfter(self.on_image_loaded, loaded)
                     log.debug('thread: request processed notified')
+                    #Don't keep a stale reference in this long-running loop (shouldn't matter in practice...)
+                    del loaded
                 except Exception as ex:
                     tb = traceback.format_exc()
                     log.debug('thread: request raised an exception')

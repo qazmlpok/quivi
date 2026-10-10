@@ -180,7 +180,7 @@ class Image(BaseImageProt):
         surface = cairo.ImageSurface.create_for_data(b, img_format, width, height)
         
         if img is not self:
-            del img
+            img.close()
         return surface
     
     def maybeConvert32bit(self):
@@ -278,7 +278,12 @@ class Image(BaseImageProt):
             dic['strides'] = (self.pitch, bypp, 1)
             return dic
         raise AttributeError(name)
-        
+
+    def close(self):
+        if self._dib:
+            self._lib.Unload(self._dib)
+            self._dib = None
+
     def __del__(self):
         if self._dib:
             self._lib.Unload(self._dib)

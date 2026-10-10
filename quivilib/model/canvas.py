@@ -60,7 +60,7 @@ class Canvas(object):
                     return
                 self._sendMessage(f'{self.name}.changed')
         if self.img is not None:
-            self.img.close()
+            self.img.hide()
         self.img = img
         img.set_callback(load_cb)
         img.start_animation()
@@ -73,6 +73,7 @@ class Canvas(object):
 
     def close_img(self):
         if self.img:
+            self.img.hide()
             self.img.close()
             self.img = None
             self._sendMessage(f'{self.name}.changed')
