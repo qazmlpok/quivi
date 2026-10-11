@@ -21,7 +21,7 @@ class BaseImageProt(Protocol):
     width: int
     height: int
 
-    def save_bitmap(self, path: str):
+    def save_bitmap(self, path: str) -> None:
         pass
 
     def rescale(self, width: int, height: int) -> 'BaseImageProt':
@@ -31,12 +31,16 @@ class BaseImageProt(Protocol):
         pass
 
     def maybeConvert32bit(self) -> 'BaseImageProt':
+        """Return a 32 bit image - either the original or a copy.
+        Caller must release the original image if a copy is returned."""
         pass
 
     def convert_to_raw_bits(self, width_bytes=None) -> bytearray:
         pass
 
     def copy_region(self, left: int, top: int, right: int, bottom: int) -> 'BaseImageProt':
+        """Returns a new image that is a subset of the original, covering the provided coords"""
+        #I _think_ this needs to be free'd (PIL docs don't say), but only wallpaper uses this so whatever.
         pass
 
     def paste(self, src, left: int, top: int, alpha: int = 256) -> None:
@@ -61,6 +65,11 @@ class ImageHandler(Protocol):
     def OpenImage(cls, f:IO[bytes], path:str, delay=False) -> BaseImageProt:
         """Create a new image of the appropriate type. This bypasses the ImageHandler stuff.
         Used for direct access to the image data."""
+        pass
+    def load_for_display(self):
+        """Loads the images as either wx.Bitmap or a byte array.
+        This only needs to be called on the image that's actually displayed:
+        with Cairo wrapping PIL, for example, the PIL image does not need to be loaded."""
         pass
     def delayed_load(self) -> None:
         """Image loading can be deferred (i.e. for the cache). Calling this modifies local state to prepare the image data for actual display."""
@@ -150,6 +159,9 @@ class ImageHandlerBase(ImageHandler):
     "Height of the originally loaded image, without modification"
     img_change_cb: Callable[[ImageHandler], None] | None = None
     "Callback function used to inform the owning canvas of a change to the image"
+
+    def load_for_display(self) -> None:
+        raise Exception("Implement in subclass")
 
     @property
     def base_width(self):
@@ -294,12 +306,6 @@ class AnimatedImage(ImageHandlerBase):
     def get_display_bmp(self) -> wx.Bitmap:
         #Animated images won't support zooming without cairo.
         return self.frames[self.frame].get_bitmap()
-
-    def load_frames(self) -> None:
-        """Loads the images stored in self.frames. Call this before the img is closed.
-        This only needs to be called on the image that's actually displayed:
-        with Cairo wrapping PIL, for example, the PIL animated image does not need to be loaded."""
-        raise Exception("Implement in subclass")
 
     def calculate_target_timestamps(self):
         """Populates `self.targets` with the expected timestamps for each frame. Used to compensate for jitter and execution time.

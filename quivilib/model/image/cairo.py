@@ -36,14 +36,13 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         self.src = src
         self.img_path = src.img_path
         self.closed = False
-        img = self.convert_to_cairo_surface(src.getImg())
 
         self.rescale_delay = 0.2
         
-        self._original_width = self._width = img.get_width()
-        self._original_height = self._height = img.get_height()
+        self._original_width = self._width = src.width
+        self._original_height = self._height = src.height
         
-        self.img = img
+        self.img: ImageSurface = None
         #Set by the thread
         self.zoomed_bmp: cairo.ImageSurface|None = None
         self.zoomed_width = None
@@ -55,6 +54,10 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         #Pans need to be significantly faster, and thus require a lower quality filter.
         self._last_zoom = 1.0
         self._last_rot = 0
+
+    def load_for_display(self) -> None:
+        # Called after the constructor but before the img is closed.
+        self.img = self.convert_to_cairo_surface(self.src.getImg())
 
     def copy(self) -> ImageHandler:
         return CairoImage(src=self.src)
@@ -76,7 +79,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         Loads that data in as a cairo surface. Should work with either image loader.
         """
 
-        srcImage = img
+        origimg = img
         img_format = cairo.FORMAT_ARGB32
         width, height = img.width, img.height
         stride = cairo_stride_for_width(img_format, width)
@@ -87,7 +90,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         b = img.convert_to_raw_bits(width_bytes=stride)
         surface = cairo.ImageSurface.create_for_data(b, img_format, width, height)
         
-        if img is not srcImage:
+        if img is not origimg:
             img.close()
         return surface
 
@@ -319,7 +322,7 @@ class AnimatedCairoImage(CairoImage, AnimatedImage):
             return (converted, True)
         return (self.cairo_frames[number], False)
 
-    def load_frames(self) -> None:
+    def load_for_display(self) -> None:
         #Do not call this on src.
         self.cairo_frames = [self.convert_to_cairo_surface(x.get_frame_img(x)) for x in self.src.frames]
         self.img = self.cairo_frames[0]

@@ -39,7 +39,7 @@ def get_supported_extensions():
 supported_extensions = get_supported_extensions()
 
 
-def open_base_image(f, path, delay=False):
+def open_base_image(f, path: Path, delay=False):
     """Return a PIL/FreeImage image, without the additional logic provided by an ImageHandler
     Used for thumbnail generation and wallpaper - the extra baggage, including wx.Bitmap, is not needed."""
     ext = path.suffix.casefold()
@@ -60,7 +60,7 @@ def open_base_image(f, path, delay=False):
         return img
     raise Exception(f"Could not open {path} (unsupported extension?)")
 
-def open_img(f, path, delay=False) -> ImageHandler:
+def open_img(f, path: Path, delay=False) -> ImageHandler:
     """ Open the provided filehandle/path as an image.
     Wraps the image in a Cairo object if USE_CAIRO is True
     (This would also use GDI on Windows, if GDI was still supported)
@@ -74,8 +74,7 @@ def open_img(f, path, delay=False) -> ImageHandler:
             break
         except Exception:
             log.debug(traceback.format_exc())
-    if isinstance(img, AnimatedImage):
-        img.load_frames()
+    img.load_for_display()
     return img
 
 def open_direct(f, path: Path, delay=False) -> ImageHandler:
