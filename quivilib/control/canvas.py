@@ -124,12 +124,8 @@ class BaseCanvasController(object):
         if old_x != -1 and self._moving_image:
             dx, dy = x - old_x, y - old_y
             self._moved_image = True
-            scale_x = canvas.width / float(self.view.width)
-            scale_y = canvas.height / float(self.view.height)
-            scale_x = 1 if scale_x < 1 else scale_x
-            scale_y = 1 if scale_y < 1 else scale_y
-            canvas.left += int(dx * scale_x)
-            canvas.top += int(dy * scale_y)
+            canvas.left += int(dx)
+            canvas.top += int(dy)
             Publisher.sendMessage(f'{self.name}.changed')
         self._old_mouse_pos = x, y
 
@@ -139,7 +135,7 @@ class BaseCanvasController(object):
         # (Calls the setter _set_zoom)
         self.canvas.zoom *= zoom
 
-    def _zoom_to_point(self, zoom_in, x: int, y: int, zoom_scale:float=ZOOM_FACTOR):
+    def _zoom_to_point(self, zoom_in, x: int, y: int, zoom_scale: float=ZOOM_FACTOR):
         zoom = 1 + zoom_scale / 100.0
         zoom = zoom if zoom_in else 1.0 / zoom
         self.canvas.zoom_to_point(self.canvas.zoom * zoom, x, y)

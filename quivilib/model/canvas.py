@@ -330,9 +330,11 @@ class WallpaperCanvas(Canvas):
         self._get_str_setting = lambda x: ''
         self._get_int_setting = lambda x: 0
         self._get_bool_setting = lambda x: False
+
     def paint(self, dc):
         if not self.img:
             return
+
         #Wallpaper can additionally be tiled.
         if self.tiled:
             start_x = self.left % self.width
@@ -351,6 +353,7 @@ class WallpaperCanvas(Canvas):
         #The wallpaper fit uses a different set of options.
         if not self.img:
             return
+
         view_w = self.view.width
         view_h = self.view.height
         img_w = self.img.base_width
