@@ -94,8 +94,9 @@ class PilWrapper(BaseImageProt):
         #Type will be determined by path; there's no need to specify manually.
         self.img.save(path)
     def close(self):
-        self.img.close()
-        self.img = None
+        if self.img:
+            self.img.close()
+            self.img = None
     def __del__(self) -> None:
         if self.img:
             del self.img
@@ -226,8 +227,9 @@ class PilImage(ImageHandlerBase):
         return bmp
 
     def close(self) -> None:
-        self.img.close()
-        self.img = None
+        if self.img:
+            self.img.close()
+            self.img = None
         # I don't see a close method on wx.Bitmap
         self.bmp = None # type: ignore[assignment]
         self.zoomed_bmp = None
