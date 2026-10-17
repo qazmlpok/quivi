@@ -306,13 +306,30 @@ class Canvas(object):
         if not self.img:
             return
 
-        x_offset = (self.width - self.height) // 2
-        y_offset = (self.height - self.width) // 2
-
         self.img.rotate(clockwise)
 
-        self.left += x_offset
-        self.top += y_offset
+        if self.img.width < self.view.width and self.img.height < self.view.height:
+            #If zoomed out, rotate around the image center
+            x_offset = self.left + (self.height - self.width) // 2
+            y_offset = self.top + (self.width - self.height) // 2
+            self.left = x_offset
+            self.top = y_offset
+        else:
+            #If zoomed in, rotate around the canvas center
+            #Rotating clockwise will move a point from `(x, y)` to `(img.width - y, x)`
+            #The below calculations basically get the center from (left, top), rotate that, and convert back to left and top.
+
+            half_view = (self.view.width // 2, self.view.height // 2)
+            if clockwise == 1:
+                calc_left = -self.img.width - self.top + half_view[0] + half_view[1]
+                calc_top = self.left - half_view[0] + half_view[1]
+            else:
+                calc_left = self.top + half_view[0] - half_view[1]
+                calc_top = -self.img.height - self.left + half_view[0] + half_view[1]
+
+            # Override setter. This can push the image out of bounds. This is acceptable (desired) here.
+            self._left = calc_left
+            self._top = calc_top
 
         self._sendMessage(f'{self.name}.changed')
 

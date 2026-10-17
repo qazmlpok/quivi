@@ -351,7 +351,7 @@ class AnimatedImage(ImageHandlerBase):
         self.frame = (self.frame + 1) % self.frame_count
         if __debug__ and self.frame == 0:
             stop = time.perf_counter()
-            log.debug(f"GIF Loop complete. took: {(stop - self.start)*1000:0.1f}ms. {((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}%")
+            log.debug(f"Animation loop complete. took: {(stop - self.start)*1000:0.1f}ms. ({((stop - self.start)*1000.0) / self.loop_total * 100:0.2f}% of planned duration)")
             self.start = time.perf_counter()
         if self.frame == 0:
             self.play_count += 1
