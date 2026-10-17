@@ -269,20 +269,32 @@ class AnimatedCairoImage(CairoImage, AnimatedImage):
             return
 
         log.debug(f"Cairo: Starting background zoom ({width}x{height})")
+        start = time.perf_counter()
+        ee = self._delayed_resize_loop(width, height)
+        stop = time.perf_counter()
+        log.debug(f"Processing animated images {'(aborted) ' if ee else ''}took {(stop - start)*1000:0.1f}ms.")
         #Loop and create all frames.
+
+        self.zoomed_width = width
+    def _delayed_resize_loop(self, width: int, height: int) -> bool:
+        """Loop over images. Returns true on early exit"""
         for i in range(self.src.frame_count):
             if self._width != width or self._height != height:
                 # Make sure this isn't an out of order execution.
-                return
+                return True
             #re-implement rescale, since that works on state and not inputs. Should probably change.
             zoomed = self.src.frames[i].img.rescale(width, height)
             surface = self.convert_to_cairo_surface(zoomed)
 
+            # Do not call img_change_cb
+
             self.converted_cairo_frames[i] = surface
             log.debug(f"Cairo: Updated frame {i} ({width}x{height})")
 
-            #Do not call img_change_cb
-        self.zoomed_width = width
+            #Short pause between frames. This should (help) prevent stutter on the actual display.
+            #It should still be enough to always fully process the animation before the next loop.
+            time.sleep(10 / 1000)
+        return False
 
     def _maybe_scale_image(self):
         super()._maybe_scale_image()
