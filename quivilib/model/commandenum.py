@@ -206,6 +206,7 @@ class CommandName(IntEnum):
     CLOSE_IMG = 29902
     MEMORY_INFO = 29903
     DEBUG_CANVAS = 29904
+    REPLACE_CANVAS = 29905
 #
 
 class MenuName(StrEnum):

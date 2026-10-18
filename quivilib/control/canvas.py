@@ -355,6 +355,23 @@ class CanvasController(BaseCanvasController):
         print()
         print()
 
+    def debug_replace_canvas(self):
+        if __debug__:
+            oldmodel = self.canvas
+            self.replace_canvas()
+            print(f"Canvas replaced. ({id(oldmodel):8X}) -> ({id(self.canvas):8X})")
+            #Explicitly destroy the old value so if there are lingering references, they will quickly cause errors
+            oldmodel.scuttle()
+            #oldmodel.close_img()   #Just to make sure scuttle works.
+
+    def replace_canvas(self):
+        """Replace the canvas model with a new object"""
+        oldmodel = self.canvas
+        canvas = self.canvas = Canvas('canvas', self.settings, oldmodel)
+        #There's a sendMessage in the constructor. Move these to an optional parameter.
+        canvas.set_img_callback()
+        canvas.set_view(oldmodel.view)
+
 
 class WallpaperCanvasController(BaseCanvasController):
     def __init__(self, name: str, canvas: WallpaperCanvas, view: CanvasLike):

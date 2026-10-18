@@ -15,17 +15,24 @@ from quivilib.util import rescale_by_size_factor
 #Maybe a timestamp is more appropriate?
 STICKY_LIMIT = 2
 class Canvas(object):
-    def __init__(self, name: str, settings) -> None:
+    def __init__(self, name: str, settings, oldobj = None) -> None:
         self.name = name
         if settings:
             self._get_str_setting: Callable[str, int] = partial(settings.get, 'Options')
             self._get_int_setting: Callable[str, int] = partial(settings.getint, 'Options')
             self._get_bool_setting: Callable[str, bool] = partial(settings.getboolean, 'Options')
-        self.img: ImageHandler|None = None
-        self._zoom = 1.0
-        self._left = 0
-        self._top = 0
-        self.sticky = 0
+        if oldobj is None:
+            self.img: ImageHandler|None = None
+            self._zoom = 1.0
+            self._left = 0
+            self._top = 0
+            self.sticky = 0
+        else:
+            self.img = oldobj.img
+            self._zoom = oldobj._zoom
+            self._left = oldobj._left
+            self._top = oldobj._top
+            self.sticky = oldobj.sticky
         self.view: CanvasLike = None
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
         self.shutdown = False
@@ -53,16 +60,10 @@ class Canvas(object):
         """ Sets an already loaded image (by `image.open`) as the current image for display.
         Due to the cache it is normal that images are opened well before they are actually displayed
         """
-        def load_cb(who: ImageHandler):
-            if who == self.img:
-                if self.shutdown:
-                    #Try to prevent a race condition with animated images firing the callback in the midst of program shutdown
-                    return
-                self._sendMessage(f'{self.name}.changed')
         if self.img is not None:
             self.img.hide()
         self.img = img
-        img.set_callback(load_cb)
+        self.set_img_callback()
         img.start_animation()
         self._zoom = float(img.width) / float(img.base_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
@@ -70,6 +71,20 @@ class Canvas(object):
             self.adjust()
         self._sendMessage(f'{self.name}.image.loaded', img=self.img)
         self._sendMessage(f'{self.name}.changed')
+
+    def set_img_callback(self):
+        """Sets the callback on self.img. This is used so that when the underlying image changes
+        (due to animation or the cairo delayed resize), the canvas knows to re-draw the image"""
+        if self.img is None:
+            return
+        def load_cb(who: ImageHandler):
+            if who == self.img:
+                if self.shutdown:
+                    #Try to prevent a race condition with animated images firing the callback in the midst of program shutdown
+                    return
+                self._sendMessage(f'{self.name}.changed')
+
+        self.img.set_callback(load_cb)
 
     def close_img(self):
         if self.img:
@@ -335,6 +350,12 @@ class Canvas(object):
 
     def shutdown_received(self):
         self.shutdown = True
+
+    def scuttle(self):
+        #Set these to None so any attempt to use the old object triggers a bunch of errors.
+        proplist = ['name', 'img', 'view', '_zoom', '_left', '_top', '_sendMessage', 'paint', 'shutdown_received', 'load_img', 'close_img']
+        for n in proplist:
+            setattr(self, n, None)
 
 class WallpaperCanvas(Canvas):
     """ Special canvas used for the wallpaper dialog. This is completely separate from the display canvas

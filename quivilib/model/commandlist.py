@@ -322,6 +322,9 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.DEBUG_CANVAS, cat_name, control.canvas.print_canvas_info,
                                     'Print canvas info', 'Print some canvas info to stdout', [],
                                     flags=CommandFlags.KB)
+            yield CommandDefinition(CommandName.REPLACE_CANVAS, cat_name, control.canvas.debug_replace_canvas,
+                                    'Replace canvas with new object', 'Destroy the existing canvas and replace it', [],
+                                    flags=CommandFlags.KB)
 
         #
         self.cmd_list = [x for x in list_items()]
@@ -428,6 +431,7 @@ class MenuDefinitionList():
             CommandName.CHECK_UPDATE,
             CommandName.CLOSE_IMG,
             CommandName.DEBUG_CANVAS,
+            CommandName.REPLACE_CANVAS,
         ))
         #Sub menus
         zoom_sub = MenuDefinition(MenuName.ZoomSub, 'Zoom', (
