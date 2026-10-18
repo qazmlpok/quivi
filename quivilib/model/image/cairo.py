@@ -13,7 +13,7 @@ except ImportError:
     import cairo
     cairo_stride_for_width = cairo.Format.stride_for_width
 import wx
-from cairo._cairo import ImageSurface, Filter
+from cairo import ImageSurface
 from quivilib.interface.imagehandler import *
 
 log = logging.getLogger('cairo')
@@ -35,14 +35,14 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
     def __init__(self, src: ImageHandler, delay=False) -> None:
         self.src = src
         self.img_path = src.img_path
-        img = self.convert_to_cairo_surface(src.getImg())
+        self.closed = False
 
         self.rescale_delay = 0.2
         
-        self._original_width = self._width = img.get_width()
-        self._original_height = self._height = img.get_height()
+        self._original_width = self._width = src.width
+        self._original_height = self._height = src.height
         
-        self.img = img
+        self.img: ImageSurface = None
         #Set by the thread
         self.zoomed_bmp: cairo.ImageSurface|None = None
         self.zoomed_width = None
@@ -54,6 +54,10 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         #Pans need to be significantly faster, and thus require a lower quality filter.
         self._last_zoom = 1.0
         self._last_rot = 0
+
+    def load_for_display(self) -> None:
+        # Called after the constructor but before the img is closed.
+        self.img = self.convert_to_cairo_surface(self.src.getImg())
 
     def copy(self) -> ImageHandler:
         return CairoImage(src=self.src)
@@ -75,7 +79,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         Loads that data in as a cairo surface. Should work with either image loader.
         """
 
-        srcImage = img
+        origimg = img
         img_format = cairo.FORMAT_ARGB32
         width, height = img.width, img.height
         stride = cairo_stride_for_width(img_format, width)
@@ -86,8 +90,8 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         b = img.convert_to_raw_bits(width_bytes=stride)
         surface = cairo.ImageSurface.create_for_data(b, img_format, width, height)
         
-        if img is not srcImage:
-            del img
+        if img is not origimg:
+            img.close()
         return surface
 
     def delayed_load(self):
@@ -97,17 +101,25 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
     def _delayed_resize(self, width: int, height: int):
         if self.zoomed_width == width or self._original_width == width:
             return
+        if self.closed:
+            return
         zoomed = self._resize_img(width, height)
         if self._width == width and self._height == height:
+            old_zoomed = self.zoomed_bmp
             #Make sure this isn't an out of order execution.
             self.zoomed_bmp = zoomed
             self.zoomed_width = width
             log.debug(f"Cairo: Updated zoomed bitmap ({width}x{height})")
             if self.img_change_cb:
                 self.img_change_cb(self)
+            if old_zoomed:
+                old_zoomed.finish()
+        else:
+            zoomed.finish()
 
     def _maybe_scale_image(self):
         #Always clear out the timer and previous scaled image, if set.
+        old_zoomed = self.zoomed_bmp
         self.zoomed_bmp = None
         self.zoomed_width = None
         if self.timer is not None:
@@ -122,6 +134,8 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
             return
         self.timer = timer = threading.Timer(self.rescale_delay, self._delayed_resize, args=[self._width, self._height])
         timer.start()
+        if old_zoomed:
+            old_zoomed.finish()
 
     def resize(self, width: int, height: int) -> None:
         #The actual resizing will be done on-demand by a matrix transformation.
@@ -140,7 +154,7 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
     def _resize_img(self, width: int, height: int) -> ImageSurface:
         resized = self.src.rescale(width, height)
         ret = self.convert_to_cairo_surface(resized)
-        #del resized
+        resized.close()
         return ret
 
     def resize_by_factor(self, factor: float) -> None:
@@ -227,13 +241,24 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
         self.src.set_callback(wrapped_cb)
         super().set_callback(cb)
 
+    def close(self) -> None:
+        self.closed = True
+        self.src.close()
+        self.img.finish()
+        if self.zoomed_bmp is not None:
+            self.zoomed_bmp.finish()
+            self.zoomed_bmp = None
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
+
     @staticmethod
     def extensions():
         """ Extensions do not matter for Cairo. """
         return []
 
     @staticmethod
-    def filter_to_str(fmt: Filter) -> str:
+    def filter_to_str(fmt) -> str:
         if fmt == cairo.FILTER_FAST:
             return 'FAST'
         if fmt == cairo.FILTER_GOOD:
@@ -309,7 +334,7 @@ class AnimatedCairoImage(CairoImage, AnimatedImage):
             return (converted, True)
         return (self.cairo_frames[number], False)
 
-    def load_frames(self) -> None:
+    def load_for_display(self) -> None:
         #Do not call this on src.
         self.cairo_frames = [self.convert_to_cairo_surface(x.get_frame_img(x)) for x in self.src.frames]
         self.img = self.cairo_frames[0]
@@ -320,9 +345,9 @@ class AnimatedCairoImage(CairoImage, AnimatedImage):
     def stop_animation(self):
         #Stop animating the underlying image
         self.src.stop_animation()
-    def close(self) -> None:
-        super(CairoImage, self).close()
-        self.src.close()
+    def hide(self) -> None:
+        super(CairoImage, self).hide()
+        self.src.hide()
 
     def get_display_bmp(self):
         raise Exception("Should not be called - use get_display_surface instead.")

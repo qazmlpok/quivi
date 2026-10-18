@@ -49,11 +49,7 @@ class FreeImage(ImageHandlerBase):
         self.delay = delay
         self.img_path = path
 
-        if sys.platform != 'win32':
-            if self.delay:
-                self.bmp = None
-            else:
-                self.bmp = img.convert_to_wx_bitmap(wx)
+        self.bmp = None
 
         self._original_width = self.width = img.width
         self._original_height = self.height = img.height
@@ -61,6 +57,12 @@ class FreeImage(ImageHandlerBase):
         self.img = img
         self.zoomed_bmp = None
         self.rotation = 0
+
+    def load_for_display(self) -> None:
+        # Called after the constructor but before the img is closed.
+        if sys.platform != 'win32':
+            if not self.delay:
+                self.bmp = self.img.convert_to_wx_bitmap(wx)
 
     def getImg(self) -> BaseImageProt:
         return self.img

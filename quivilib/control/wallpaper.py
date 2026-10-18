@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 import logging as log
 from subprocess import Popen, PIPE, call
+from typing import IO
 
 import wx
 from pubsub import pub as Publisher
@@ -56,7 +57,9 @@ class WallpaperController(object):
         if self.img is not None:
             self.canvas.view = dialog.canvas_view
             self.canvas_controller = WallpaperCanvasController('wpcanvas', self.canvas, dialog.canvas_view)
-            self.canvas.load_img(self.img.copy(), False)
+            copy = self.img.copy()
+            copy.load_for_display()
+            self.canvas.load_img(copy, False)
             self.canvas_controller.update_cursor() # Hack - could move load_img into the ctor but that seems worse
         
     def on_set_wallpaper(self, *, pos_idx: int, color: wx.Colour):
@@ -64,7 +67,7 @@ class WallpaperController(object):
         
         item_index = self.model.container.selected_item_index
         path = self.model.container.items[item_index].path
-        f = self.model.container.open_image(item_index)
+        f: IO[bytes] = self.model.container.open_image(item_index)
         #can't use "with" because not every file-like object used here supports it
         img: BaseImageProt
         try:

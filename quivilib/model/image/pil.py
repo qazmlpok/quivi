@@ -59,7 +59,7 @@ class PilWrapper(BaseImageProt):
             im.putalpha(256)
         arr = bytearray(im.tobytes('raw', 'BGRa'))
         if im is not self.img:
-            del im
+            im.close()
         return arr
     def tobytes(self):
         return self.img.tobytes()
@@ -93,6 +93,10 @@ class PilWrapper(BaseImageProt):
     def save(self, path: str) -> None:
         #Type will be determined by path; there's no need to specify manually.
         self.img.save(path)
+    def close(self):
+        if self.img:
+            self.img.close()
+            self.img = None
     def __del__(self) -> None:
         if self.img:
             del self.img
@@ -117,10 +121,12 @@ class PilImage(ImageHandlerBase):
 
     @classmethod
     def OpenImage(cls, f: IO[bytes], path: str, delay=False, convert_to_32=True) -> Image.Image:
-        img = Image.open(f)
+        origimg = img = Image.open(f)
 
         if convert_to_32:
             img = PilImage._to_32(img)
+        if origimg is not img:
+            origimg.close()
         return img
 
     @classmethod
@@ -131,14 +137,17 @@ class PilImage(ImageHandlerBase):
         if (animated):
             return AnimatedPilImage(img, path, delay)
 
+        origimg = img
         img = PilImage._to_32(img)
+        if origimg is not img:
+            origimg.close()
         return PilImage(img, path, delay=delay)
 
     def __init__(self, img: Image.Image, path: str, delay=False) -> None:
         self.delay = delay
         self.img_path = path
 
-        self.bmp: wx.Bitmap = self._img_to_bmp(img)
+        self.bmp: wx.Bitmap | bytes = None
         
         self._original_width = self.width = img.size[0]
         self._original_height = self.height = img.size[1]
@@ -147,6 +156,10 @@ class PilImage(ImageHandlerBase):
         self.zoomed_bmp: wx.Bitmap|None = None
         self.delayed_bmp: tuple[int, int, bytes]|None = None
         self.rotation = 0
+
+    def load_for_display(self) -> None:
+        # Called after the constructor but before the img is closed.
+        self.bmp = self._img_to_bmp(self.img)
 
     def getImg(self) -> BaseImageProt:
         return self.img
@@ -213,6 +226,15 @@ class PilImage(ImageHandlerBase):
         #TODO: Implement delayed_fn. See freeimage.
         return bmp
 
+    def close(self) -> None:
+        if self.img:
+            self.img.close()
+            self.img = None
+        # I don't see a close method on wx.Bitmap
+        self.bmp = None # type: ignore[assignment]
+        self.zoomed_bmp = None
+        self.delayed_bmp = None
+
     @staticmethod
     def _get_extensions() -> list[str]:
         return [x.casefold() for x in Image.registered_extensions().keys()]
@@ -238,7 +260,7 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         loop = AnimatedPilImage.get_play_count(img.info, ext)
         count: int = img.n_frames
         frame_delays = [0] * count
-        frames: List[AnimationFrame] = [None] * count
+        frames: List[AnimationFrame] = [None] * count # type: ignore[assignment]
         #Get the img and delay data. This requires using img.seek to select each individual frame.
         for i in range(count):
             img.seek(i)
@@ -252,11 +274,11 @@ class AnimatedPilImage(PilImage, AnimatedImage):
             if img.mode != 'RGB':
                 frame = frame.convert('RGB')
                 def fn(me: AnimationFrame):
-                    pimg: PilWrapper = me.img
+                    pimg: PilWrapper = me.img # type: ignore[assignment]
                     return pimg
             else:
                 def fn(me: AnimationFrame):
-                    pimg: PilWrapper = me.img
+                    pimg: PilWrapper = me.img # type: ignore[assignment]
                     pimg.seek(me.idx)
                     return pimg
 
@@ -312,9 +334,14 @@ class AnimatedPilImage(PilImage, AnimatedImage):
         #Animated images just won't support zooming, at least unless cairo can be used.
         return AnimatedImage.get_display_bmp(self)
 
-    def load_frames(self) -> None:
+    def load_for_display(self) -> None:
         for x in self.frames:
             x.get_bitmap()
+        bmp = self.frames[0].bitmap
+        if bmp is not None:
+            self.bmp = bmp
+        else:
+            assert False
 
     #Disallow
     def resize(self, width: int, height: int) -> None:

@@ -60,7 +60,7 @@ class Canvas(object):
                     return
                 self._sendMessage(f'{self.name}.changed')
         if self.img is not None:
-            self.img.close()
+            self.img.hide()
         self.img = img
         img.set_callback(load_cb)
         img.start_animation()
@@ -73,6 +73,7 @@ class Canvas(object):
 
     def close_img(self):
         if self.img:
+            self.img.hide()
             self.img.close()
             self.img = None
             self._sendMessage(f'{self.name}.changed')
@@ -346,9 +347,11 @@ class WallpaperCanvas(Canvas):
         self._get_str_setting = lambda x: ''
         self._get_int_setting = lambda x: 0
         self._get_bool_setting = lambda x: False
+
     def paint(self, dc):
         if not self.img:
             return
+
         #Wallpaper can additionally be tiled.
         if self.tiled:
             start_x = self.left % self.width
@@ -367,6 +370,7 @@ class WallpaperCanvas(Canvas):
         #The wallpaper fit uses a different set of options.
         if not self.img:
             return
+
         view_w = self.view.width
         view_h = self.view.height
         img_w = self.img.base_width
