@@ -11,6 +11,7 @@ from pubsub import pub as Publisher
 from quivilib import meta
 from quivilib import util
 from quivilib.control.i18n import LanguageList
+from quivilib.gui.components.QuiviViewPanel import QuiviViewPanel
 from quivilib.gui.components.menu_bar import QuiviMenuBar
 from quivilib.gui.components.status_bar import QuiviStatusBar
 from quivilib.gui.debug_cache import DebugCacheDialog
@@ -18,7 +19,6 @@ from quivilib.gui.debug_memory import DebugMemoryDialog
 from quivilib.gui.file_list import FileListPanel
 from quivilib.i18n import _
 from quivilib.interface.canvasadapter import CanvasAdapter
-from quivilib.model.canvas import PaintedRegion
 from quivilib.model.command import Command
 from quivilib.model.commandenum import FitSettings
 from quivilib.model.container import Item
@@ -42,14 +42,10 @@ class MainWindow(wx.Frame):
         self.aui_mgr.SetManagedWindow(self)
         self.aui_mgr.SetFlags(self.aui_mgr.GetFlags() & ~wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE)
 
-        bundle = wx.IconBundle()
-        bundle.AddIcon(images.quivi16.Icon)
-        bundle.AddIcon(images.quivi32.Icon)
-        bundle.AddIcon(images.quivi48.Icon)
-        bundle.AddIcon(images.quivi256.Icon)
+        bundle = QuiviIconBundle()
         self.SetIcons(bundle)
 
-        # Timer that runs every 1s and broadcasts. So non-frame components can access a timer for simple stuff.
+        # Timer that runs every 1s and broadcasts. This allows non-frame components to access a timer for very simple stuff.
         self.global_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_global_timer, self.global_timer)
         self.global_timer.Start(1000)
@@ -68,16 +64,15 @@ class MainWindow(wx.Frame):
                              Name('file_list').Caption(_('Files')).Left().
                              Layer(1).Position(0).CloseButton(True).
                              DestroyOnClose(False).BestSize(300, 400))
-        
-        self.panel = wx.Panel(self)
-        self.panel.SetBackgroundStyle(wx.BG_STYLE_PAINT)
+
+        self.panel = QuiviViewPanel(self)
         self.aui_mgr.AddPane(self.panel, wx.aui.AuiPaneInfo().Name("content").CenterPane())
         
         self.aui_mgr.Update()
         self.bindings_and_subscriptions()
 
         if __debug__:
-            #This is created immediately because it listens for messages.
+            #These are created immediately because they listen for messages.
             self.dbg_cache_dialog = DebugCacheDialog(self)
             self.dbg_memory_dialog = DebugMemoryDialog(self)
 
@@ -89,10 +84,6 @@ class MainWindow(wx.Frame):
         self._bound_favorites: list[int] = []
 
     def bindings_and_subscriptions(self):
-        self.panel.Bind(wx.EVT_PAINT, self.on_panel_paint)
-        self.panel.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
-        self._bind_panel_mouse_events()
-        self.panel.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MOVE, self.on_move)
         self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -105,8 +96,6 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_container_opened, 'container.opened')
         Publisher.subscribe(self.on_image_opened, 'container.image.opened')
         Publisher.subscribe(self.on_language_changed, 'language.changed')
-        Publisher.subscribe(self.on_canvas_changed, 'canvas.changed')
-        Publisher.subscribe(self.on_canvas_cursor_changed, 'canvas.cursor.changed')
         Publisher.subscribe(self.on_menu_built, 'menu.built')
         Publisher.subscribe(self.on_favorites_reset, 'menu.reset_favorites')
         Publisher.subscribe(self.on_favorite_bind, 'menu.bind_favorite')
@@ -120,21 +109,7 @@ class MainWindow(wx.Frame):
         Publisher.subscribe(self.on_open_debug_memory_dialog, 'debug.open_memory_dialog')
         Publisher.subscribe(self.on_open_about_dialog, 'about.open_dialog')
         Publisher.subscribe(self.on_open_directory_dialog, 'file_list.open_directory_dialog')
-        Publisher.subscribe(self.on_bg_color_changed, 'settings.loaded')
-        Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackground')
-        Publisher.subscribe(self.on_bg_color_changed, 'settings.changed.Options.CustomBackgroundColor')
 
-    def _bind_panel_mouse_events(self):
-        def make_fn(btn_idx: int, evt_idx: int):
-            def fn(evt: wx.MouseEvent):
-                Publisher.sendMessage('canvas.mouse.event', button=btn_idx, event=evt_idx, x=evt.x, y=evt.y)
-                evt.Skip()
-            return fn
-        for button_idx, button in enumerate(('LEFT', 'MIDDLE', 'RIGHT', 'MOUSE_AUX1', 'MOUSE_AUX2')):
-            for event_idx, event in enumerate(('DOWN', 'UP')):
-                eid = getattr(wx, f'EVT_{button}_{event}')
-                self.panel.Bind(eid, make_fn(button_idx, event_idx))
-    
     @property
     def canvas_view(self):
         return CanvasAdapter(self.panel)
@@ -202,10 +177,6 @@ class MainWindow(wx.Frame):
         self.aui_mgr.UnInit()
         del self.aui_mgr
         self.Destroy()
-        
-    def on_mouse_motion(self, event: wx.MouseEvent):
-        Publisher.sendMessage('canvas.mouse.motion', x=event.GetX(), y=event.GetY())
-        event.Skip()
 
     def on_global_timer(self, event: wx.TimerEvent):
         Publisher.sendMessage("timer.pulse")
@@ -213,34 +184,6 @@ class MainWindow(wx.Frame):
     def on_settings_loaded(self, *, settings: Settings):
         self.load(settings)
         self.file_list_panel.load(settings)
-    
-    def on_panel_paint(self, event: wx.PaintEvent):
-        #In theory it is possible to only update the "dirty" areas but `self.GetUpdateRegion().GetBox()` always gives me (0,0,0,0).
-        dc: wx.DC
-        if meta.DOUBLE_BUFFERING:
-            dc = wx.BufferedPaintDC(self.panel)
-            dc.Clear()
-        else:
-            dc = wx.PaintDC(self.panel)
-        #This is required on Linux
-        dc.SetBackground(wx.Brush(self.panel.GetBackgroundColour()))
-        painted_region = PaintedRegion()
-        #The recipient will update the painted_region fields.
-        Publisher.sendMessage('canvas.painted', dc=dc, painted_region=painted_region)
-
-        #if meta.DOUBLE_BUFFERING is false, the image is slightly offset and it's possible to scroll the image outside the window on one side.
-        #This doesn't happen with double buffering. I have no idea why.
-        #The old code for a bug in linux did not work correctly and has no bearing on this issue.
-        pass
-        
-    def on_mouse_wheel(self, event: wx.MouseEvent):
-        lines = event.GetWheelRotation() / event.GetWheelDelta()
-        lines *= event.GetLinesPerAction()
-        if event.controlDown:
-            #Zoom instead of scrolling
-            Publisher.sendMessage('canvas.zoom_at', lines=lines, x=event.X, y=event.Y)
-        else:
-            Publisher.sendMessage('canvas.scrolled', lines=lines, horizontal=event.shiftDown)
 
     def on_fit_context_menu(self, event: wx.ContextMenuEvent):
         """Appears on right-clicking the status bar"""
@@ -269,12 +212,6 @@ class MainWindow(wx.Frame):
     
     def on_error(self, *, exception, tb):
         self.handle_error(exception, tb)
-        
-    def on_canvas_changed(self):
-        self.panel.Refresh(eraseBackground=False)
-
-    def on_canvas_cursor_changed(self, *, cursor: wx.Cursor):
-        self.panel.SetCursor(cursor)
 
     def on_menu_built(self, *, main_menu, all_menus, commands: list[Command]):
         """ Bind the functions for the menu commands.
@@ -372,13 +309,7 @@ class MainWindow(wx.Frame):
         self.menu_bar.do_download_update()
 
     def on_bg_color_changed(self, *, settings: Settings):
-        if settings.get('Options', 'CustomBackground') == '1':
-            color = settings.get('Options', 'CustomBackgroundColor').split(',')
-            color = wx.Colour(*[int(c) for c in color])
-        else:
-            color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_APPWORKSPACE)
-        self.panel.SetBackgroundColour(color)
-        self.panel.Refresh()
+        self.panel.on_bg_color_changed(settings=settings)
 
     def handle_error(self, exception, tb=None):
         from quivilib.gui.error import ErrorDialog
@@ -411,3 +342,13 @@ class MainWindow(wx.Frame):
         def handle_error(self, exception):
             self.Window.handle_error(exception)
             return False
+
+
+class QuiviIconBundle(wx.IconBundle):
+    """Icon bundle. Exists just to simplify the constructor a tiny bit."""
+    def __init__(self):
+        super().__init__()
+        self.AddIcon(images.quivi16.Icon)
+        self.AddIcon(images.quivi32.Icon)
+        self.AddIcon(images.quivi48.Icon)
+        self.AddIcon(images.quivi256.Icon)

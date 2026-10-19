@@ -225,7 +225,7 @@ class Image(BaseImageProt):
             raise RuntimeError('Unable to copy image')
         return self.__class__(dib)
     
-    def paste(self, src, left, top, alpha=256):
+    def paste(self, src: 'Image', left: int, top: int, alpha=256):
         copy_required = False
         nleft = left
         ntop = top

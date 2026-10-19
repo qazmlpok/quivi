@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import wx.aui
 from pubsub import pub as Publisher
 
@@ -9,7 +7,6 @@ from quivilib.i18n import _
 from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model.container import Item
 from quivilib.model.container.base import BaseContainer
-
 
 # The status bar is split into four fields.
 NAME_FIELD = 0
