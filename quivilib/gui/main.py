@@ -35,6 +35,7 @@ def _handle_error(exception, args, kwargs):
 
 
 class MainWindow(wx.Frame):
+    """The main Window for Quivi"""
     def __init__(self):
         wx.Frame.__init__(self, parent=None, id=-1, title=meta.APPNAME)
         self.aui_mgr = wx.aui.AuiManager()
