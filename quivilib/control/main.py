@@ -79,7 +79,7 @@ class MainController(object):
         
         self.i18n = I18NController(self, self.settings)
         self.cache = ImageCache(self.settings)
-        self.canvas = CanvasController('canvas', self.view.canvas_view, settings=self.settings)
+        self.canvas = self.create_canvas()
         #This will send messages due to opening the default container
         #TODO: Probably should move that out of the constructor...
         self.file_list = FileListController(self.model, self.model.container)
@@ -109,7 +109,10 @@ class MainController(object):
             self.file_list.open_path(file_to_open)
             
         self.update_checker = UpdateChecker(self.settings)
-        
+
+    def create_canvas(self, oldcontroller: CanvasController | None = None) -> CanvasController:
+        return CanvasController('canvas', self.view.canvas_view, settings=self.settings, oldcontroller=oldcontroller)
+
     def quit(self):
         self.view.Close()
         
@@ -127,7 +130,11 @@ class MainController(object):
         self.settings.set('Options', 'DetectSpreads', '0' if using_feature else '1')
         #This will reset zoom even if it isn't a spread - worth checking?
         self.canvas.set_zoom_by_current_fit()
-    
+
+    def select_next(self, skip: int):
+        """Instruct the filelist to navigate to the next (previous, if skip == -1) image or group of images"""
+        self.file_list.select_next(skip)
+
     def MaybeMaximize(self):
         """
         Set the MainWindow to fullscreen if the app was in fullscreen when last closed
@@ -373,6 +380,15 @@ class MainController(object):
     def open_debug_memory_dialog(self):
         if __debug__ and self.debugController:
             self.debugController.open_debug_memory_dialog()
+
+    def debug_replace_canvas(self):
+        if not __debug__:
+            return
+        old = self.canvas
+        self.canvas = self.create_canvas(old)
+        print(f"Canvas controller replaced. ({id(old):8X}) -> ({id(self.canvas):8X})")
+        # Explicitly destroy the old value so if there are lingering references, they will quickly cause errors
+        old.scuttle()
 
     def on_open_update_site(self, *, url):
         import webbrowser

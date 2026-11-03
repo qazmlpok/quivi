@@ -1,10 +1,10 @@
 import logging as log
 import traceback
 from pathlib import Path
+from typing import IO
 
 from quivilib import meta
-
-from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler, AnimatedImage
+from quivilib.interface.imagehandler import ImageHandler, SecondaryImageHandler
 
 IMG_CLASSES: list[type[SecondaryImageHandler]] = []
 IMG_LOAD_CLASSES: list[type[ImageHandler]] = []
@@ -39,7 +39,7 @@ def get_supported_extensions():
 supported_extensions = get_supported_extensions()
 
 
-def open_base_image(f, path: Path, delay=False):
+def open_base_image(f: IO[bytes], path: Path, delay=False):
     """Return a PIL/FreeImage image, without the additional logic provided by an ImageHandler
     Used for thumbnail generation and wallpaper - the extra baggage, including wx.Bitmap, is not needed."""
     ext = path.suffix.casefold()
@@ -60,7 +60,7 @@ def open_base_image(f, path: Path, delay=False):
         return img
     raise Exception(f"Could not open {path} (unsupported extension?)")
 
-def open_img(f, path: Path, delay=False) -> ImageHandler:
+def open_img(f: IO[bytes], path: Path, delay=False) -> ImageHandler:
     """ Open the provided filehandle/path as an image.
     Wraps the image in a Cairo object if USE_CAIRO is True
     (This would also use GDI on Windows, if GDI was still supported)
@@ -77,7 +77,7 @@ def open_img(f, path: Path, delay=False) -> ImageHandler:
     img.load_for_display()
     return img
 
-def open_direct(f, path: Path, delay=False) -> ImageHandler:
+def open_direct(f: IO[bytes], path: Path, delay=False) -> ImageHandler:
     """ Open the provided filehandle/path as an image.
     PIL/Freeimage is used to open the image, depending on configuration.
     """

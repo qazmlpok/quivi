@@ -45,6 +45,16 @@ class BaseCanvasController(object):
         self._current_cursor = None
         self.update_cursor()
 
+    @property
+    def view_width(self):
+        """Returns the width of the current display area (i.e. depends on the application window size)"""
+        return self.view.width
+
+    @property
+    def view_height(self):
+        """Returns the height of the current display area (i.e. depends on the application window size)"""
+        return self.view.height
+
     def update_cursor(self):
         """Update the mouse cursor depending on state.
         If there is no image, use the OS default cursor.
@@ -92,12 +102,12 @@ class BaseCanvasController(object):
     def on_canvas_scrolled(self, *, lines, horizontal=False):
         if horizontal:
             rtl = self.get_rtl_setting()
-            scr = self.view.width
+            scr = self.view_width
             inc = int(scr * (0.15 / 3) * lines)
             # Invert direction if in right-to-left mode. Mousewheel down should always be to the "end" of the image.
             self.canvas.scroll_hori(inc, rtl)
         else:
-            scr = self.view.height
+            scr = self.view_height
             inc = int(scr * (0.2 / 3) * lines)
             self.canvas.scroll_vert(inc)
         Publisher.sendMessage(f'{self.name}.changed')
@@ -155,10 +165,10 @@ class BaseCanvasController(object):
 
     def move_image(self, direction: MovementType, typ: MovementSize):
         if direction & MovementType.MOVE_HORI:
-            scr = self.view.width
+            scr = self.view_width
             scr_fn = self.canvas.scroll_hori
         else:
-            scr = self.view.height
+            scr = self.view_height
             scr_fn = self.canvas.scroll_vert
         scr_rev = direction & MovementType.MOVE_NEG
         if typ == MovementSize.MOVETYPE_LARGE:
@@ -188,11 +198,18 @@ class CanvasController(BaseCanvasController):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name: str, view: CanvasLike, settings: Settings):
+    def __init__(self, name: str, view: CanvasLike, settings: Settings, oldcontroller: CanvasController | None = None):
         self.settings: Settings = settings
-        super().__init__(name, view, canvas=Canvas('canvas', settings))
+        #PEP 823. Using 'and' gives wrong type hint.
+        oldcanvas = None
+        if oldcontroller is not None:
+            oldcanvas = oldcontroller.canvas
+        canvas = Canvas('canvas', settings, oldcanvas)
+        super().__init__(name, view, canvas=canvas)
 
         self.pending_request: ImageCacheLoadRequest|None = None
+        if oldcontroller is not None:
+            self.pending_request = oldcontroller.pending_request
         Publisher.subscribe(self.on_request_open_image, f'{self.name}.load.img')
         Publisher.subscribe(self.on_cache_image_loaded, 'cache.image_loaded')
         Publisher.subscribe(self.on_cache_image_load_error, 'cache.image_load_error')
@@ -311,7 +328,7 @@ class CanvasController(BaseCanvasController):
 
     #Zoom commands
     def zoom_reset(self):
-        self.canvas.zoom = 1
+        self.canvas.zoom_reset()
         Publisher.sendMessage(f'{self.name}.changed')
 
     def zoom_fit_width(self):
@@ -337,13 +354,14 @@ class CanvasController(BaseCanvasController):
         Publisher.sendMessage(f'{self.name}.changed')
 
     def print_canvas_info(self):
+        """Debug method - just dump a lot of canvas stuff to console."""
         if not __debug__:
             return
         if self.canvas.img is None:
             print("No image.")
             return
-        halfw = self.view.width // 2
-        halfh = self.view.height // 2
+        halfw = self.view_width // 2
+        halfh = self.view_height // 2
         print(f"Width x Height: {self.canvas.width} x {self.canvas.height}  ({self.canvas.img.base_width} x {self.canvas.img.base_height})")
         print(f"Left: {self.canvas.left} ({self.canvas.left/self.canvas.width*100:0.2f}%)")
         print(f"Top: {self.canvas.top} ({self.canvas.top/self.canvas.height*100:0.2f}%)")
@@ -351,27 +369,31 @@ class CanvasController(BaseCanvasController):
         print(f"Left Center: {self.canvas.left - halfw} ({(self.canvas.left - halfw) / self.canvas.width * 100:0.2f}%)")
         print(f"Top Center: {self.canvas.top - halfh} ({(self.canvas.top - halfh) / self.canvas.height * 100:0.2f}%)")
         print()
-        print(f"View: {self.view.width} x {self.view.height}")
+        print(f"View: {self.view_width} x {self.view_height}")
+        print(f"Class: {type(self)}  -- Canvas class: {type(self.canvas)}")
         print()
         print()
 
-    def debug_replace_canvas(self):
-        if not __debug__:
-            return
-        oldmodel = self.canvas
-        self.replace_canvas()
-        print(f"Canvas replaced. ({id(oldmodel):8X}) -> ({id(self.canvas):8X})")
-        #Explicitly destroy the old value so if there are lingering references, they will quickly cause errors
-        oldmodel.scuttle()
-        #oldmodel.close_img()   #Just to make sure scuttle works.
-
-    def replace_canvas(self):
-        """Replace the canvas model with a new object"""
-        oldmodel = self.canvas
-        canvas = self.canvas = Canvas('canvas', self.settings, oldmodel)
-        #There's a sendMessage in the constructor. Move these to an optional parameter.
-        canvas.set_img_callback()
-        canvas.set_view(oldmodel.view)
+    def scuttle(self):
+        #Unsubscribe from events
+        Publisher.unsubscribe(self.on_request_open_image, f'{self.name}.load.img')
+        Publisher.unsubscribe(self.on_cache_image_loaded, 'cache.image_loaded')
+        Publisher.unsubscribe(self.on_cache_image_load_error, 'cache.image_load_error')
+        Publisher.unsubscribe(self.on_timer, 'timer.pulse')
+        #Unsubscribe parent events
+        Publisher.unsubscribe(self.on_canvas_painted, f'{self.name}.painted')
+        Publisher.unsubscribe(self.on_canvas_resized, f'{self.name}.resized')
+        Publisher.unsubscribe(self.on_canvas_scrolled, f'{self.name}.scrolled')
+        Publisher.unsubscribe(self.on_canvas_zoom_point, f'{self.name}.zoom_at')
+        Publisher.unsubscribe(self.on_canvas_mouse_event, f'{self.name}.mouse.event')
+        Publisher.unsubscribe(self.on_canvas_mouse_motion, f'{self.name}.mouse.motion')
+        Publisher.unsubscribe(self.on_program_closed, 'program.closed')
+        # Trash the canvas too
+        self.canvas.scuttle()
+        # Set these to None so any attempt to use the old object triggers a bunch of errors.
+        proplist = ['name', 'canvas', 'view', '_current_cursor', 'on_request_open_image', 'on_cache_image_loaded']
+        for n in proplist:
+            setattr(self, n, None)
 
 
 class WallpaperCanvasController(BaseCanvasController):
@@ -385,8 +407,8 @@ class WallpaperCanvasController(BaseCanvasController):
         if self.canvas.tiled:
             painted_region.top = 0
             painted_region.left = 0
-            painted_region.width = self.view.width
-            painted_region.height = self.view.height
+            painted_region.width = self.view_width
+            painted_region.height = self.view_height
         else:
             painted_region.top = self.canvas.top
             painted_region.left = self.canvas.left

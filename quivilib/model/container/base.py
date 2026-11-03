@@ -181,12 +181,15 @@ class BaseContainer(object):
         raise NotImplementedError()
     
     def open_parent(self) -> 'BaseContainer':
+        """Returns a new BaseContainer representing the parent container (i.e. following the filesystem's idea of parent)."""
         raise NotImplementedError()
     
     def open_image(self, item_index: int) -> IO[bytes]:
+        """Opens the image at the given index. Returns the contents as bytes"""
         raise NotImplementedError()
     
     def _list_paths(self) -> list[tuple[Path, datetime|None]]:
+        """Returns paths to all the items within the container. Includes ".." as a special item if appropriate."""
         raise NotImplementedError()
 
     @staticmethod

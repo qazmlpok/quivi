@@ -1,24 +1,24 @@
 #TODO: (1,3) Add: option to detect best background color
 #TODO: (3,4) Add: multiple monitor support
 
-import sys
-import re
-from pathlib import Path
 import logging as log
+import re
+import sys
+from pathlib import Path
 from subprocess import Popen, PIPE, call
 from typing import IO
 
 import wx
 from pubsub import pub as Publisher
 
+from quivilib.control.canvas import WallpaperCanvasController
 from quivilib.gui.wallpaper import WallpaperDialog
 from quivilib.i18n import _
 from quivilib.interface.imagehandler import ImageHandler, BaseImageProt
 from quivilib.model import App
+from quivilib.model import image
 from quivilib.model.canvas import WallpaperCanvas
 from quivilib.model.commandenum import FitSettings
-from quivilib.control.canvas import WallpaperCanvasController
-from quivilib.model import image
 
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
 
@@ -141,7 +141,7 @@ class WallpaperController(object):
         
     @property
     def preview_scale(self):
-        return wx.Display(0).GetGeometry().width / float(self.canvas.view.width)
+        return wx.Display(0).GetGeometry().width / float(self.canvas.view_width)
 
 
 def _set_wallpaper(img, position: FitSettings.WallpaperFitType, color: wx.Colour):

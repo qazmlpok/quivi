@@ -1,17 +1,18 @@
-import sys, os
 import io
-from pathlib import Path
-from zipfile import ZipFile as PyZipFile, ZipInfo
+import os
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Protocol, IO
+from zipfile import ZipFile as PyZipFile, ZipInfo
 
 from pubsub import pub as Publisher
+
+from quivilib import tempdir
+from quivilib.meta import PATH_SEP
 from quivilib.model.container import Item, ItemType, SortOrder
 from quivilib.model.container.base import BaseContainer
 from quivilib.model.container.directory import DirectoryContainer
-from quivilib.meta import PATH_SEP
-from quivilib import tempdir
-
-from typing import Protocol, IO
 
 
 class CompressedFileFormat(Protocol):
@@ -22,7 +23,7 @@ class CompressedFileFormat(Protocol):
         pass
     def list_files(self) -> list[tuple[Path, datetime]]:
         pass
-    def open_file(self, path) -> IO[bytes]:
+    def open_file(self, path: Path) -> IO[bytes]:
         pass
     def close(self) -> None:
         pass
@@ -30,7 +31,7 @@ class CompressedFileFormat(Protocol):
 def _copy_files(f_read, f_write):
     f_write.write(f_read.read())
 
-def _is_hidden(path) -> bool:
+def _is_hidden(path: Path) -> bool:
     if sys.platform != 'win32' and path.name.startswith('.'):
         return True
     return False
@@ -40,6 +41,7 @@ class ZipFile(CompressedFileFormat):
     #TODO: (3,4) Improve: how to deal with password protected files?
     
     def __init__(self, path: Path) -> None:
+        super().__init__(path)
         self.path = path
         self.file = PyZipFile(path, 'r')
         self.mapping = {}
@@ -47,7 +49,7 @@ class ZipFile(CompressedFileFormat):
             self.mapping[Path(f.filename)] = f
         
     @staticmethod
-    def is_valid_extension(ext):
+    def is_valid_extension(ext: str):
         return ext.lower() in ['.zip', '.cbz']
     
     def list_files(self) -> list[tuple[Path, datetime]]:
@@ -55,7 +57,7 @@ class ZipFile(CompressedFileFormat):
                 for path,info in self.mapping.items()
                 if not info.is_dir()]
         
-    def open_file(self, path) -> IO[bytes]:
+    def open_file(self, path: Path) -> IO[bytes]:
         encpath: str|ZipInfo
         if path in self.mapping:
             encpath = self.mapping[path]
@@ -67,12 +69,14 @@ class ZipFile(CompressedFileFormat):
         self.file.close()
         self.file = None    # type: ignore[assignment]
 
+
 class RarFileExternal(CompressedFileFormat):
     @staticmethod
-    def is_valid_extension(ext):
+    def is_valid_extension(ext: str):
         return ext.lower() in ['.rar', '.cbr']
 
     def __init__(self, path: Path) -> None:
+        super().__init__(path)
         #Import here to delay creation of the temp dir until it's needed.
         import rarfile
         rarfile.HACK_TMP_DIR = tempdir.get_temp_dir()
@@ -87,14 +91,14 @@ class RarFileExternal(CompressedFileFormat):
                 for f in self.file.infolist() 
                 if f.filename[-1] not in '\\/']
         
-    def open_file(self, path) -> IO[bytes]:
+    def open_file(self, path: Path) -> IO[bytes]:
         return io.BytesIO(self.file.read(self.conv_path(path)))
 
     def close(self) -> None:
         self.file.close()
         self.file = None    # type: ignore[assignment]
 
-    def conv_path(self, path):
+    def conv_path(self, path: Path):
         npath = str(path)
         #rarfile doesn't like Windows backslashes
         #Anything else? There's a " 0" file, for example. Might be ".."
@@ -174,7 +178,7 @@ class CompressedContainer(BaseContainer):
         return True
     
     @staticmethod
-    def is_valid_extension(ext):
+    def is_valid_extension(ext: str):
         return ZipFile.is_valid_extension(ext) or RarFileExternal.is_valid_extension(ext)
     
     @property
@@ -198,7 +202,7 @@ class CompressedContainer(BaseContainer):
             return super().get_item_path(item_index)
         return self.path / self.items[item_index].path
     
-    def get_item_name(self, item_index):
+    def get_item_name(self, item_index: int):
         return str(self.items[item_index].path)
         
     def _save_container(self, item: Item) -> Path:

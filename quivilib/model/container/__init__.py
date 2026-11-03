@@ -65,7 +65,10 @@ class Item(object):
     
     def __ne__(self, other):
         return not self.__eq__(other)
-    
+
+    def __hash__(self):
+        return hash(self.path)
+
     def __str__(self):
         return str(self.path)
     __repr__ = __str__

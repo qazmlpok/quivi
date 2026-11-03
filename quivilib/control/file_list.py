@@ -42,7 +42,9 @@ class FileListController(object):
         Publisher.subscribe(self.on_move_file, 'file_list.move_file')
         self.pending_request = None
         self._last_opened_item = None
+        "Used to determine _direction"
         self._direction = 1
+        "1 if moving forwards, -1 if moving backwards. Used for cache preloading"
         self.show_hidden = False
         self._set_container(start_container)
         
@@ -100,12 +102,9 @@ class FileListController(object):
         if item.typ == ItemType.IMAGE:
             log.debug(f"fl: requesting load for {item_index}")
             Publisher.sendMessage('canvas.load.img', container=container, item=item, preload=False)
+            self._direction = 1 if self._last_opened_item is None or item_index >= self._last_opened_item else -1
             #If cache enabled, additionally send preload requests.
             if meta.CACHE_ENABLED:
-                if self._last_opened_item is None or item_index >= self._last_opened_item:
-                    self._direction = 1
-                else:
-                    self._direction = -1
                 for i in range(meta.PREFETCH_COUNT):
                     idx = item_index + ((i + 1) * self._direction)
                     if 0 < idx < len(container.items) and container.items[idx].typ == ItemType.IMAGE:
@@ -305,10 +304,11 @@ class FileListController(object):
             self.model.container.close_container()
         self.model.container = container
         self._last_opened_item = None
+        should_open_first = self.model.settings.getint('Options', 'OpenFirst')
         if not skip_open:
             for idx, item in enumerate(self.model.container.items):
                 if item.typ == ItemType.IMAGE:
-                    if self.model.settings.getint('Options', 'OpenFirst') and self.model.container.selected_item_index == -1:
+                    if should_open_first and self.model.container.selected_item_index == -1:
                         self.model.container.selected_item = idx
                         self.open_item(idx)
                     else:
@@ -316,7 +316,7 @@ class FileListController(object):
                         log.debug("fl: requesting prefetch of first image in container...")
                         Publisher.sendMessage('cache.load_image', request=request)
                     break
-        if self.model.settings.getint('Options', 'OpenFirst') and self.model.container.selected_item_index == -1:
+        if should_open_first and self.model.container.selected_item_index == -1:
             idx = -1
             if len(self.model.container.items) > 0:
                 idx = 0

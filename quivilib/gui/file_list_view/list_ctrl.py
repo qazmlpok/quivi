@@ -70,12 +70,12 @@ class FileList(wx.ListCtrl, FileListViewBase):
         item = self.GetItem(index, col)
         return item.GetText()
 
-    def OnGetItemText(self, item: int, col: int):
-        if col == 0:
+    def OnGetItemText(self, item: int, column: int):
+        if column == 0:
             return self.container.get_item_name(item)
-        elif col == 1:
+        elif column == 1:
             return self.container.get_item_extension(item)
-        elif col == 2:
+        elif column == 2:
             date = self.container.get_item_last_modified(item)
             if date:
                 return date.strftime('%c')
@@ -167,16 +167,13 @@ class FileList(wx.ListCtrl, FileListViewBase):
         #event.Veto()
         
     def _adjust_columns(self):
-        #TODO: (1,?) Fix: When making window smaller, a horizontal scroll
-        #    appears sometimes. It shouldn't.
+        #TODO: (1,?) Fix: When making window smaller, a horizontal scroll appears sometimes. It shouldn't.
         width = self.GetClientSize()[0]
-        used_width = sum(self.GetColumnWidth(i) for i
-                         in range(1, self.GetColumnCount()))
+        used_width = sum(self.GetColumnWidth(i) for i in range(1, self.GetColumnCount()))
         self.SetColumnWidth(0, width - used_width - 5)
         
     def save(self, settings_lst: list[tuple[str, str, str]]):
-        widths = ','.join(str(self.GetColumnWidth(i))
-                          for i in range(self.GetColumnCount()))
+        widths = ','.join(str(self.GetColumnWidth(i)) for i in range(self.GetColumnCount()))
         settings_lst.append(('Window', 'FileListColumnsWidth', widths))
     
     def load(self, settings: Settings):

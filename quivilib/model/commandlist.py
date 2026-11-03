@@ -100,10 +100,10 @@ class CommandDefinitionList():
                                     flags=CommandFlags.KB)
 
             cat_name = __('F&older')
-            yield CommandDefinition(CommandName.SELECT_NEXT, cat_name, partial(control.file_list.select_next, 1),
+            yield CommandDefinition(CommandName.SELECT_NEXT, cat_name, partial(control.select_next, 1),
                                     __('Select/Open &next'), __('Select the next item; if it is an image, show it'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_END), (wx.ACCEL_NORMAL, wx.WXK_SPACE)])
-            yield CommandDefinition(CommandName.SELECT_PREVIOUS, cat_name, partial(control.file_list.select_next, -1),
+            yield CommandDefinition(CommandName.SELECT_PREVIOUS, cat_name, partial(control.select_next, -1),
                                     __('Select/Open &previous'), __('Select the previous item; if it is an image, show it'),
                                     [(wx.ACCEL_NORMAL, wx.WXK_HOME)])
             yield CommandDefinition(CommandName.OPEN_SELECTED_DIRECTORY, cat_name, control.file_list.open_selected_container,
@@ -322,7 +322,7 @@ class CommandDefinitionList():
             yield CommandDefinition(CommandName.DEBUG_CANVAS, cat_name, control.canvas.print_canvas_info,
                                     'Print canvas info', 'Print some canvas info to stdout', [],
                                     flags=CommandFlags.KB)
-            yield CommandDefinition(CommandName.REPLACE_CANVAS, cat_name, control.canvas.debug_replace_canvas,
+            yield CommandDefinition(CommandName.REPLACE_CANVAS, cat_name, control.debug_replace_canvas,
                                     'Replace canvas with new object', 'Destroy the existing canvas and replace it', [],
                                     flags=CommandFlags.KB)
 

@@ -14,18 +14,17 @@ from quivilib.util import DebugTimer
 log = logging.getLogger('cache')
 log.setLevel(logging.ERROR)
 
-# TODO: I want to save the resolution for any image that has been loaded, even if it is unloaded.
-# Should that go in here?
-
 
 class ImageCacheLoadRequest(object):
     """ Data class containing the necessary information for loading an image
     i.e. the physical path.
     """
+
     def __init__(self, container: BaseContainer, item) -> None:
         self.container = container
         self.item = item
         self.path = item.path
+
     def __eq__(self, other: object):
         if not other:
             return False
@@ -47,10 +46,10 @@ class ImageCacheLoaded(ImageCacheLoadRequest):
     """
     def __init__(self, src: ImageCacheLoadRequest, settings) -> None:
         super().__init__(src.container, src.item)
-        item_index = self.container.items.index(self.item)
-        f = self.container.open_image(item_index)
+        self.item_index = self.container.items.index(self.item)
+        f = self.container.open_image(self.item_index)
         assert f is not None, "Failed to open image from container"
-        #can't use "with" because not every file-like object used here supports it
+        # can't use "with" because not every file-like object used here supports it
         try:
             with DebugTimer(f'Cache: {self.path.name}'):
                 img = image.open_img(f, self.path, delay=True)
@@ -68,14 +67,15 @@ class ImageCache(object):
         self.settings = settings
         self.shutdown = False
         self.semaphore = Semaphore(0)
+        self.processing_request: ImageCacheLoadRequest | None = None
+        self.thread = Thread(target=self.run, daemon=True)
+        # Queue (Requests to load an image)
         self.queue: list[ImageCacheLoadRequest] = []
         self.q_lock = Lock()
+        # Cache (Fully loaded images)
         self.cache: list[ImageCacheLoaded] = []
         self.c_lock = Lock()
-        self.thread = Thread(target=self.run, daemon=True)
-        self.processing_request: ImageCacheLoadRequest | None = None
-
-        #Subscriptions
+        # Subscriptions
         Publisher.subscribe(self.on_load_image, 'cache.load_image')
         Publisher.subscribe(self.on_clear_pending, 'cache.clear_pending')
         Publisher.subscribe(self.on_flush, 'cache.flush')
@@ -168,7 +168,7 @@ class ImageCache(object):
         Invoked by message passing.
         """
         log.debug('main: on closed')
-        #log.debug('main: clearing pending...')
+        # log.debug('main: clearing pending...')
         self.on_clear_pending()
         self.shutdown = True
         log.debug('main: releasing...')

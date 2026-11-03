@@ -15,7 +15,7 @@ from quivilib.util import rescale_by_size_factor
 #Maybe a timestamp is more appropriate?
 STICKY_LIMIT = 2
 class Canvas(object):
-    def __init__(self, name: str, settings, oldobj = None) -> None:
+    def __init__(self, name: str, settings, oldobj: 'Canvas|None' = None) -> None:
         self.name = name
         if settings:
             self._get_str_setting: Callable[str, int] = partial(settings.get, 'Options')
@@ -56,6 +56,16 @@ class Canvas(object):
         """
         self.view = view
 
+    @property
+    def view_width(self):
+        """Returns the width of the current display area (i.e. depends on the application window size)"""
+        return self.view.width
+
+    @property
+    def view_height(self):
+        """Returns the height of the current display area (i.e. depends on the application window size)"""
+        return self.view.height
+
     def load_img(self, img: ImageHandler, adjust=True) -> None:
         """ Sets an already loaded image (by `image.open`) as the current image for display.
         Due to the cache it is normal that images are opened well before they are actually displayed
@@ -63,7 +73,7 @@ class Canvas(object):
         if self.img is not None:
             self.img.hide()
         self.img = img
-        self.set_img_callback()
+        self.set_img_callback(img)
         img.start_animation()
         self._zoom = float(img.width) / float(img.base_width)
         self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
@@ -72,19 +82,23 @@ class Canvas(object):
         self._sendMessage(f'{self.name}.image.loaded', img=self.img)
         self._sendMessage(f'{self.name}.changed')
 
-    def set_img_callback(self):
+    def set_img_callback(self, img: ImageHandler|None):
         """Sets the callback on self.img. This is used so that when the underlying image changes
         (due to animation or the cairo delayed resize), the canvas knows to re-draw the image"""
-        if self.img is None:
+        if img is None:
             return
         def load_cb(who: ImageHandler):
-            if who == self.img:
+            if self.img_is_active(who):
                 if self.shutdown:
                     #Try to prevent a race condition with animated images firing the callback in the midst of program shutdown
                     return
                 self._sendMessage(f'{self.name}.changed')
 
-        self.img.set_callback(load_cb)
+        img.set_callback(load_cb)
+
+    def img_is_active(self, img: ImageHandler):
+        """Return true if the specified image is currently displayed. Used in the image-update callback to see if the request is still meaningful."""
+        return img == self.img
 
     def close_img(self):
         if self.img:
@@ -98,19 +112,30 @@ class Canvas(object):
         fit_type = self._get_str_setting('FitType')
         fit_type = FitSettings.get_fittype(fit_type)
         self.set_zoom_by_fit_type(fit_type)
-        
+
+    def is_spread(self, img: ImageHandler):
+        """ Determine if the given image is a spread - two manga pages joined together as a single image
+        Typical manga page aspect ratio is about 1:1.4 (taller than wide). Joining doubles width, giving about 1.4:1 instead.
+        """
+        if not img:
+            return False
+        img_w = img.base_width
+        img_h = img.base_height
+        return img_w > (img_h * 1.3)
+
+    def zoom_reset(self):
+        self.zoom = 1
+
     def set_zoom_by_fit_type(self, fit_type: FitSettings.FitType, scr_w = -1):
         if not self.img:
             return
-        view_w = self.view.width
-        view_h = self.view.height
+        view_w = self.view_width
+        view_h = self.view_height
         spread = self._get_bool_setting('DetectSpreads')
         img_w = self.img.base_width
         img_h = self.img.base_height
         is_spread = False
-        if spread and img_w > (img_h * 1.3):
-            #Normal page layout is taller than it is long. If this is not true,
-            #assume it's two pages combined. display may be improved by calculating the width based on the "half" pages
+        if spread and self.is_spread(self.img):
             img_w = (img_w+1) // 2
             #Used for status bar updates. Will be reported even if it doesn't matter (e.g. fit height). Is this bad?
             is_spread = True
@@ -188,16 +213,16 @@ class Canvas(object):
 
     @property
     def width(self):
-        if self.img:
-            return self.img.width
-        else:
+        """Returns the width of the current image (0 if there is no image)"""
+        if not self.img:
             return 0
+        return self.img.width
     @property
     def height(self):
-        if self.img:
-            return self.img.height
-        else:
+        """Returns the height of the current image (0 if there is no image)"""
+        if not self.img:
             return 0
+        return self.img.height
 
     @property
     def left(self):
@@ -205,7 +230,7 @@ class Canvas(object):
     @left.setter
     def left(self, left):
         img_w = self.width
-        scr_w = self.view.width
+        scr_w = self.view_width
         if scr_w:
             if img_w > scr_w:
                 if left > 0:
@@ -225,7 +250,7 @@ class Canvas(object):
     @top.setter
     def top(self, top):
         img_h = self.height
-        scr_h = self.view.height
+        scr_h = self.view_height
         if scr_h:
             if img_h > scr_h:
                 if top > 0:
@@ -258,7 +283,7 @@ class Canvas(object):
         #If the scroll didn't move at all, scroll to the left/right instead (if possible)
         #To avoid accidental left/right scrolling, a counter is used to "delay" the scroll.
         side_scroll = self._get_bool_setting('HorizontalScrollAtBottom')
-        if (side_scroll and old_top == self.top and self.width > self.view.width):
+        if (side_scroll and old_top == self.top and self.width > self.view_width):
             self.sticky += 1
             if self.sticky > STICKY_LIMIT:
                 rtl = self._get_bool_setting('UseRightToLeft')
@@ -268,8 +293,8 @@ class Canvas(object):
         
     def center(self):
         #TODO: Should rename. This only centers if the img is smaller than the viewport
-        scr_w = self.view.width
-        scr_h = self.view.height
+        scr_w = self.view_width
+        scr_h = self.view_height
         img_w = self.width
         img_h = self.height
         if img_w > scr_w:
@@ -293,12 +318,12 @@ class Canvas(object):
     
     @property
     def y_centered(self):
-        scr_h = self.view.height
+        scr_h = self.view_height
         img_h = self.height
         return (self.top == scr_h // 2 - img_h // 2)
     @property
     def x_centered(self):
-        scr_w = self.view.width
+        scr_w = self.view_width
         img_w = self.width
         return (self.left == scr_w // 2 - img_w // 2)
     @property
@@ -323,7 +348,7 @@ class Canvas(object):
 
         self.img.rotate(clockwise)
 
-        if self.img.width < self.view.width and self.img.height < self.view.height:
+        if self.img.width < self.view_width and self.img.height < self.view_height:
             #If zoomed out, rotate around the image center
             x_offset = self.left + (self.height - self.width) // 2
             y_offset = self.top + (self.width - self.height) // 2
@@ -334,7 +359,7 @@ class Canvas(object):
             #Rotating clockwise will move a point from `(x, y)` to `(img.width - y, x)`
             #The below calculations basically get the center from (left, top), rotate that, and convert back to left and top.
 
-            half_view = (self.view.width // 2, self.view.height // 2)
+            half_view = (self.view_width // 2, self.view_height // 2)
             if clockwise == 1:
                 calc_left = -self.img.width - self.top + half_view[0] + half_view[1]
                 calc_top = self.left - half_view[0] + half_view[1]
@@ -381,8 +406,8 @@ class WallpaperCanvas(Canvas):
             start_y = self.top % self.height
             if start_y > 0:
                 start_y -= self.height
-            for x in range(start_x, self.view.width, self.width):
-                for y in range(start_y, self.view.height, self.height):
+            for x in range(start_x, self.view_width, self.width):
+                for y in range(start_y, self.view_height, self.height):
                     self.img.paint(dc, x, y)
         else:
             super().paint(dc)
@@ -392,8 +417,8 @@ class WallpaperCanvas(Canvas):
         if not self.img:
             return
 
-        view_w = self.view.width
-        view_h = self.view.height
+        view_w = self.view_width
+        view_h = self.view_height
         img_w = self.img.base_width
         img_h = self.img.base_height
         self.tiled = False
