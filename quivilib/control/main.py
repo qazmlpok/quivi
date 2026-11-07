@@ -111,7 +111,7 @@ class MainController(object):
         self.update_checker = UpdateChecker(self.settings)
 
     def create_canvas(self, oldcontroller: CanvasController | None = None) -> CanvasController:
-        return CanvasController('canvas', self.view.canvas_view, settings=self.settings, oldcontroller=oldcontroller)
+        return CanvasController(self.view.canvas_view, settings=self.settings, oldcontroller=oldcontroller)
 
     def quit(self):
         self.view.Close()
@@ -306,7 +306,7 @@ class MainController(object):
         container.delete_self(self.view)
         Publisher.sendMessage("cache.flush")
 
-    def delete_image(self, direct=True):
+    def delete_image(self, direct=True) -> None:
         """ Deletes the currently opened image. Only works when viewing a directory of images - there's no attempt to modify zip archives.
         The `direct` parameter is true if this was called directly via command, false if called by `delete`. This only affects messaging.
         """

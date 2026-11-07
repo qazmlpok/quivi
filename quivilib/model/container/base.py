@@ -27,13 +27,13 @@ class BaseContainer(object):
     @sort_order.setter
     def sort_order(self, order: SortOrder) -> None:
         if order == SortOrder.NAME:
-            def keyfn(elem):
+            def keyfn(elem: Item):
                 return str(elem.path)
         elif order == SortOrder.TYPE:
-            def keyfn(elem):
+            def keyfn(elem: Item):
                 return elem.typ, str(elem.path)
         elif order == SortOrder.EXTENSION:
-            def keyfn(elem):
+            def keyfn(elem: Item):
                 return elem.ext, elem.namebase
         elif order == SortOrder.LAST_MODIFIED:
             keyfn = operator.attrgetter('typ', 'last_modified')
@@ -104,7 +104,7 @@ class BaseContainer(object):
     def name(self):
         pass
 
-    def get_item_name(self, item_index):
+    def get_item_name(self, item_index: int) -> str:
         path = self.items[item_index]
         if not path.name and path.drive:
             return path.drive
@@ -161,14 +161,14 @@ class BaseContainer(object):
         """ Return true if this container allows deleting contents (zip files could but don't, for example). """
         raise NotImplementedError()
 
-    def delete_image(self, index: int, window):
+    def delete_image(self, index: int, window) -> None:
         raise NotImplementedError()
 
     def can_delete_self(self) -> bool:
         """ Return true if this container can be deleted while open. Deleting directories is not allowed. """
         raise NotImplementedError()
 
-    def delete_self(self, window):
+    def delete_self(self, window) -> None:
         raise NotImplementedError()
         
     @property

@@ -198,14 +198,14 @@ class CanvasController(BaseCanvasController):
     #      send repeated messages.
     #TODO: (1,3) Improve: messages should only be sent if something has really changed
     
-    def __init__(self, name: str, view: CanvasLike, settings: Settings, oldcontroller: CanvasController | None = None):
+    def __init__(self, view: CanvasLike, settings: Settings, oldcontroller: CanvasController | None = None):
         self.settings: Settings = settings
         #PEP 823. Using 'and' gives wrong type hint.
         oldcanvas = None
         if oldcontroller is not None:
             oldcanvas = oldcontroller.canvas
         canvas = Canvas('canvas', settings, oldcanvas)
-        super().__init__(name, view, canvas=canvas)
+        super().__init__('canvas', view, canvas=canvas)
 
         self.pending_request: ImageCacheLoadRequest|None = None
         if oldcontroller is not None:
@@ -268,7 +268,7 @@ class CanvasController(BaseCanvasController):
             cursor = wx.NullCursor
         elif self._moving_image:
             cursor = self._moving_cursor
-        elif self._last_cursor_move is not None and setting > 0 and ts - self._last_cursor_move > setting:
+        elif self._last_cursor_move is not None and 0 < setting < ts - self._last_cursor_move:
             cursor = self._blank_cursor
         else:
             cursor = self._default_cursor

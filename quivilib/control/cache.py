@@ -8,6 +8,7 @@ from pubsub import pub as Publisher
 from quivilib import meta
 from quivilib.interface.imagehandler import ImageHandler
 from quivilib.model import image
+from quivilib.model.container import Item, ItemType
 from quivilib.model.container.base import BaseContainer
 from quivilib.util import DebugTimer
 
@@ -20,7 +21,7 @@ class ImageCacheLoadRequest(object):
     i.e. the physical path.
     """
 
-    def __init__(self, container: BaseContainer, item) -> None:
+    def __init__(self, container: BaseContainer, item: Item) -> None:
         self.container = container
         self.item = item
         self.path = item.path

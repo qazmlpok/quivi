@@ -19,7 +19,7 @@ class CompressedFileFormat(Protocol):
     def __init__(self, path: Path) -> None:
         pass
     @staticmethod
-    def is_valid_extension(ext) -> bool:
+    def is_valid_extension(ext: str) -> bool:
         pass
     def list_files(self) -> list[tuple[Path, datetime]]:
         pass
@@ -49,7 +49,7 @@ class ZipFile(CompressedFileFormat):
             self.mapping[Path(f.filename)] = f
         
     @staticmethod
-    def is_valid_extension(ext: str):
+    def is_valid_extension(ext: str) -> bool:
         return ext.lower() in ['.zip', '.cbz']
     
     def list_files(self) -> list[tuple[Path, datetime]]:
@@ -72,7 +72,7 @@ class ZipFile(CompressedFileFormat):
 
 class RarFileExternal(CompressedFileFormat):
     @staticmethod
-    def is_valid_extension(ext: str):
+    def is_valid_extension(ext: str) -> bool:
         return ext.lower() in ['.rar', '.cbr']
 
     def __init__(self, path: Path) -> None:
@@ -98,7 +98,7 @@ class RarFileExternal(CompressedFileFormat):
         self.file.close()
         self.file = None    # type: ignore[assignment]
 
-    def conv_path(self, path: Path):
+    def conv_path(self, path: Path) -> str:
         npath = str(path)
         #rarfile doesn't like Windows backslashes
         #Anything else? There's a " 0" file, for example. Might be ".."
@@ -148,7 +148,7 @@ class CompressedContainer(BaseContainer):
             self.file.close()
 
     @property
-    def can_move(self):
+    def can_move(self) -> bool:
         return True
     
     @property
@@ -178,7 +178,7 @@ class CompressedContainer(BaseContainer):
         return True
     
     @staticmethod
-    def is_valid_extension(ext: str):
+    def is_valid_extension(ext: str) -> bool:
         return ZipFile.is_valid_extension(ext) or RarFileExternal.is_valid_extension(ext)
     
     @property
@@ -194,7 +194,7 @@ class CompressedContainer(BaseContainer):
     def can_delete_self(self) -> bool:
         return True
 
-    def delete_self(self, window):
+    def delete_self(self, window) -> None:
         BaseContainer._delete_file(self._path, window)
 
     def get_item_path(self, item_index: int) -> Path:
@@ -202,7 +202,7 @@ class CompressedContainer(BaseContainer):
             return super().get_item_path(item_index)
         return self.path / self.items[item_index].path
     
-    def get_item_name(self, item_index: int):
+    def get_item_name(self, item_index: int) -> str:
         return str(self.items[item_index].path)
         
     def _save_container(self, item: Item) -> Path:
@@ -221,7 +221,7 @@ class CompressedContainer(BaseContainer):
 
 
 class VirtualCompressedContainer(CompressedContainer):
-    def __init__(self, path: Path, name: str, parent_names: list[str], parent_paths: list[Path], original_container_path: Path, sort_order: SortOrder, show_hidden: bool):
+    def __init__(self, path: Path, name: str, parent_names: list[str], parent_paths: list[Path], original_container_path: Path, sort_order: SortOrder, show_hidden: bool) -> None:
         """Create a VirtualCompressedContainer (a compressed file inside another
         compressed file).
         

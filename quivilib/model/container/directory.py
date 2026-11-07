@@ -82,7 +82,7 @@ class DirectoryContainer(BaseContainer):
     def can_delete_self(self) -> bool:
         return False
 
-    def delete_image(self, index: int, window):
+    def delete_image(self, index: int, window) -> None:
         path = self.items[index].path
         BaseContainer._delete_file(path, window)
     

@@ -1,9 +1,9 @@
 Pillow>=9.5.0
 attrdict3>=2.0.2
-wxPython>=4.1.0
+wxPython>=4.3.0
 PyPubSub>=4.0.0
 pywin32>=304;platform_system == "Windows"
-rarfile>=4.0
+rarfile>=4.2
 cairocffi>=1.7.1
 configparser>=3.2
 natsort>=8
