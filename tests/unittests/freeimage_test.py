@@ -1,11 +1,9 @@
-
-
+import os.path
 import unittest
-import sys
-
-import pyfreeimage as fi
 
 import wx
+
+import pyfreeimage as fi
 
 
 class Test(unittest.TestCase):
@@ -28,7 +26,8 @@ class Test(unittest.TestCase):
         self.assertTrue('.jpg' in dic)
         
     def test_convert_wx(self):
+        self.assertFalse(os.path.exists('./tests/out/python.bmp'))
         img = fi.Image.load('./tests/python.png')
         bmp = img.convert_to_wx_bitmap(wx)
         bmp.SaveFile('./tests/out/python.bmp', wx.BITMAP_TYPE_BMP)
-        
+        self.assertTrue(os.path.exists('./tests/out/python.bmp'))

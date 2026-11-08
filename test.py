@@ -33,6 +33,10 @@ class AllTests(unittest.TestSuite):
         os.makedirs(order, exist_ok = True)
         os.makedirs(nested_1, exist_ok = True)
         os.makedirs(nested_2, exist_ok = True)
+
+        outfolder = os.path.join('tests', 'out')
+        if not os.path.exists(outfolder):
+            os.mkdir(outfolder)
         
         order_files = ['1.png', '10.png', '10a.png', '11.png', '11a.png', '1a.png', '2.png', '2a.png', '8.png', '8a.png', '9.png', '9a.png', 'a10.png', 'a11.png', 'a9.png']
         c_files = ['1.png', '10.png', '11.png', '2.png', '8.png', '9.png',]
@@ -43,6 +47,9 @@ class AllTests(unittest.TestSuite):
             shutil.copyfile(src, os.path.join(nested_2, f))
         #This needs to be a zip.
         shutil.make_archive(os.path.join('tests', 'Order_nested'), 'zip', os.path.join('tests', 'Order_nested'))
+
+        #Cleanup generated files (explicitly list them - not trusting a walk)
+        AllTests.delete('./tests/out/python.bmp')
     
     @staticmethod
     def filenameToModuleName(filename):
@@ -58,7 +65,13 @@ class AllTests(unittest.TestSuite):
                 path =  os.path.join(root, f)
                 if f.endswith('.py') and not f.startswith('.') and not f.startswith('__'):
                     yield AllTests.filenameToModuleName(path)
-       
+
+    @staticmethod
+    def delete(path: str):
+        print(os.getcwd())
+        if os.path.exists(path) and os.path.isfile(path):
+            os.remove(path)
+
     def runTests(self):
         unittest.TextTestRunner(verbosity=1).run(self)
     
