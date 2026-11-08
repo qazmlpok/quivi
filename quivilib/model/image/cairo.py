@@ -243,8 +243,13 @@ class CairoImage(ImageHandlerBase, SecondaryImageHandler):
 
     def close(self) -> None:
         self.closed = True
-        self.src.close()
-        self.img.finish()
+        self.img_change_cb = None
+        if self.src is not None:
+            self.src.close()
+            self.src = None
+        if self.img is not None:
+            self.img.finish()
+            self.img = None
         if self.zoomed_bmp is not None:
             self.zoomed_bmp.finish()
             self.zoomed_bmp = None

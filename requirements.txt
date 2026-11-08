@@ -7,3 +7,5 @@ rarfile>=4.0
 cairocffi>=1.7.1
 configparser>=3.2
 natsort>=8
+wxWidgets
+pubsub
