@@ -1,5 +1,5 @@
 from quivilib.model.container.directory import DirectoryContainer
-from quivilib.model.canvas import Canvas
+from quivilib.model.canvas.canvas import Canvas
 from quivilib.model.favorites import Favorites
 from quivilib.model.settings import Settings
 

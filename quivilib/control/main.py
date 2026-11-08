@@ -9,7 +9,7 @@ from pubsub import pub as Publisher
 from quivilib import meta
 from quivilib import tempdir, util
 from quivilib.control.cache import ImageCache
-from quivilib.control.canvas import CanvasController
+from quivilib.control.canvas.canvas import CanvasController
 from quivilib.control.check_update import UpdateChecker
 from quivilib.control.debug import DebugController
 from quivilib.control.file_list import FileListController
@@ -47,7 +47,7 @@ class MainController(object):
             pass
         
         if meta.DEBUG:
-            log.basicConfig(encoding='utf8')
+            log.basicConfig()
             log_file = Path(wx.StandardPaths.Get().GetUserDataDir()) / self.LOG_FILE_NAME
             fh = log.FileHandler(log_file, mode='w', encoding='utf8')
             fh.setLevel(meta.LOG_LEVEL)

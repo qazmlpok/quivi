@@ -11,13 +11,13 @@ from typing import IO
 import wx
 from pubsub import pub as Publisher
 
-from quivilib.control.canvas import WallpaperCanvasController
+from quivilib.control.canvas.wallpapercanvas import WallpaperCanvasController
 from quivilib.gui.wallpaper import WallpaperDialog
 from quivilib.i18n import _
 from quivilib.interface.imagehandler import ImageHandler, BaseImageProt
 from quivilib.model import App
 from quivilib.model import image
-from quivilib.model.canvas import WallpaperCanvas
+from quivilib.model.canvas.wallpapercanvas import WallpaperCanvas
 from quivilib.model.commandenum import FitSettings
 
 WALLPAPER_FILE_NAME = 'Quivi Wallpaper.bmp'
@@ -56,7 +56,7 @@ class WallpaperController(object):
         #canvas_view is a CanvasAdapter with a width and height property.
         if self.img is not None:
             self.canvas.view = dialog.canvas_view
-            self.canvas_controller = WallpaperCanvasController('wpcanvas', self.canvas, dialog.canvas_view)
+            self.canvas_controller = WallpaperCanvasController(self.canvas, dialog.canvas_view)
             copy = self.img.copy()
             copy.load_for_display()
             self.canvas.load_img(copy, False)

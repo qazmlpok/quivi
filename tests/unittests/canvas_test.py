@@ -1,6 +1,6 @@
 
 
-from quivilib.model.canvas import Canvas
+from quivilib.model.canvas.canvas import Canvas
 from quivilib.model.settings import Settings
 
 import unittest
@@ -8,7 +8,7 @@ import unittest
 
 class Test(unittest.TestCase):
     def setUp(self):
-        self.c = Canvas('canvas', Settings('invalidfile'))
+        self.c = Canvas(Settings('invalidfile'))
         class View(object):
             def __init__(self):
                 self.width = self.height = 0

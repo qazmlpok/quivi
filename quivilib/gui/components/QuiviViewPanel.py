@@ -3,7 +3,7 @@ import wx.aui
 from pubsub import pub as Publisher
 
 from quivilib import meta
-from quivilib.model.canvas import PaintedRegion
+from quivilib.model.canvas.basecanvas import PaintedRegion
 from quivilib.model.settings import Settings
 
 

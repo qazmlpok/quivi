@@ -47,7 +47,7 @@ class QuiviStatusBar(wx.StatusBar):
     def on_image_loading(self, *, item):
         self.SetStatusText(_('Loading...'), NAME_FIELD)
 
-    def on_image_loaded(self, *, img: ImageHandler):
+    def on_image_loaded(self, *, img: ImageHandler | None):
         if img is None:
             self.SetStatusText('', SIZE_FIELD)
             self.SetStatusText('', ZOOM_FIELD)

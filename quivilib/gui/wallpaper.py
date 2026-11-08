@@ -3,7 +3,7 @@ import wx.lib.colourselect as csel
 from pubsub import pub as Publisher
 
 from quivilib.interface.canvasadapter import CanvasAdapter
-from quivilib.model.canvas import PaintedRegion
+from quivilib.model.canvas.basecanvas import PaintedRegion
 from quivilib.i18n import _
 from quivilib import util
 
