@@ -9,8 +9,8 @@ class WallpaperCanvas(BaseCanvas):
     """ Special canvas used for the wallpaper dialog. This is completely separate from the display canvas
     It includes some additional fit modes that don't make sense for the standard image display.
     """
-    def __init__(self, name: str, settings):
-        super().__init__(name, settings)
+    def __init__(self, settings):
+        super().__init__('wpcanvas', settings)
         self.tiled = False
         #Wallpaper canvas won't include settings.
         self._get_str_setting = lambda x: ''

@@ -34,7 +34,7 @@ class WallpaperController(object):
     def __init__(self, model: App):
         self.model = model
         self.img: ImageHandler|None = None
-        self.canvas = WallpaperCanvas('wpcanvas', None)
+        self.canvas = WallpaperCanvas(None)
         self.canvas_controller = None
         Publisher.subscribe(self.on_dialog_opened, 'wallpaper.dialog_opened')
         Publisher.subscribe(self.on_set_wallpaper, 'wallpaper.set')

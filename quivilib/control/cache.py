@@ -61,6 +61,7 @@ class ImageCacheLoaded(ImageCacheLoadRequest):
     def drop(self):
         """Called when an item is dropped from the cache."""
         self.img.close()
+        self.img = None # type: ignore[assignment]
 
 
 class ImageCache(object):
@@ -82,12 +83,13 @@ class ImageCache(object):
         Publisher.subscribe(self.on_flush, 'cache.flush')
         Publisher.subscribe(self.on_program_closed, 'program.closed')
         Publisher.subscribe(self.on_container_moved, 'cache.move_file')
+        Publisher.subscribe(self.on_evict, 'cache.evict')
 
         self.thread.start()
 
     def on_load_image(self, *, request: ImageCacheLoadRequest, preload=False) -> None:
-        """Add a ImageCacheLoadRequest to the queue. If the image is already in the cache,
-        immediately send the image_loaded message instead.
+        """Add a ImageCacheLoadRequest to the queue.
+        If the image is already in the cache, immediately send the image_loaded message instead.
         Invoked by message passing.
         """
         hit = False
@@ -191,12 +193,23 @@ class ImageCache(object):
                     c.container = new_cont
         with self.q_lock:
             for q in self.queue:
-                if q is None:
-                    continue
                 if q.container == old_cont:
                     log.debug('cache: Modifying queue container value...')
                     q.container = new_cont
 
+    def on_evict(self, *, img: ImageHandler):
+        """Forcibly remove an item from the cache.
+        Currently only called when manually closing an image. The cache keeps a reference and shouldn't."""
+        with self.c_lock:
+            for c in self.cache:
+                if c.img is img:
+                    log.debug(f"cache: Evicting {c.path}")
+                    #Assumption: This is only called for a closed image, so don't call close again.
+                    self.cache.remove(c)
+                    return
+            log.debug(f"cache: Failed to evict requested image.")
+
+    #region Background Thread
     def run(self) -> None:
         """ Main thread loop for the forked thread.
         """
@@ -243,3 +256,4 @@ class ImageCache(object):
             wx.CallAfter(self.notify_image_load_error, req, e, tb)
         # Ignores success of the request, only that there was a request.
         return True
+    #endregion

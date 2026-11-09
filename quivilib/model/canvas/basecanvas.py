@@ -104,16 +104,12 @@ class BaseCanvas(object):
 
     def close_img(self):
         if self.img:
+            self._sendMessage('cache.evict', img=self.img)
             self.img.hide()
             self.img.close()
             self.img = None
             self._sendMessage(f'{self.name}.changed')
             self._sendMessage(f'{self.name}.image.loaded', img=None)
-
-    def adjust(self):
-        fit_type = self._get_str_setting('FitType')
-        fit_type = FitSettings.get_fittype(fit_type)
-        self.set_zoom_by_fit_type(fit_type)
 
     def is_spread(self, img: ImageHandler):
         """ Determine if the given image is a spread - two manga pages joined together as a single image
@@ -124,6 +120,12 @@ class BaseCanvas(object):
         img_w = img.base_width
         img_h = img.base_height
         return img_w > (img_h * 1.3)
+
+    #region Zoom
+    def adjust(self):
+        fit_type = self._get_str_setting('FitType')
+        fit_type = FitSettings.get_fittype(fit_type)
+        self.set_zoom_by_fit_type(fit_type)
 
     def zoom_reset(self):
         self.zoom = 1
@@ -212,7 +214,9 @@ class BaseCanvas(object):
             self.left += old_w // 2 - self.width // 2
             self.top += old_h // 2 - self.height // 2
             self._sendMessage(f'{self.name}.zoom.changed', zoom=self._zoom)
+    #endregion
 
+    #region Width Height Top Left
     @property
     def width(self):
         """Returns the width of the current image (0 if there is no image)"""
@@ -265,6 +269,7 @@ class BaseCanvas(object):
                 elif top > scr_h - img_h:
                     top = scr_h - img_h
         self._top = top
+    #endregion
 
     def scroll_hori(self, amount, reverse_direction = False):
         """ Scrolls the canvas. Just calls _set_left.
