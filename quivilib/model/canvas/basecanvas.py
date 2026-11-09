@@ -23,6 +23,7 @@ class BaseCanvas(object):
             self._get_str_setting: Callable[str, int] = partial(settings.get, 'Options')
             self._get_int_setting: Callable[str, int] = partial(settings.getint, 'Options')
             self._get_bool_setting: Callable[str, bool] = partial(settings.getboolean, 'Options')
+        # PEP 823 should make this more sensible.
         if oldobj is None:
             self.img: ImageHandler|None = None
             self._zoom = 1.0
@@ -130,7 +131,7 @@ class BaseCanvas(object):
     def zoom_reset(self):
         self.zoom = 1
 
-    def set_zoom_by_fit_type(self, fit_type: FitSettings.FitType, scr_w = -1):
+    def set_zoom_by_fit_type(self, fit_type: FitSettings.FitType|int, scr_w = -1):
         if not self.img:
             return
         view_w = self.view_width
@@ -164,7 +165,7 @@ class BaseCanvas(object):
         self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=is_spread)
 
-    def _zoom_image(self, zoom) -> bool:
+    def _zoom_image(self, zoom: float) -> bool:
         """ Shared logic between zoom_to_center (default behavior) and zoom_to_point (new behavior)
         This is still kinda confused because zoom_to_center is used as a setter.
         Returns True if the zoom level changed. Caller needs to handle the left/top adjustment.
@@ -188,7 +189,7 @@ class BaseCanvas(object):
                 return False
             return True
         return False
-    def zoom_to_point(self, zoom, x:int, y:int) -> None:
+    def zoom_to_point(self, zoom: float, x: int, y: int) -> None:
         old_w = self.width
         old_h = self.height
         if self._zoom_image(zoom):
@@ -202,7 +203,7 @@ class BaseCanvas(object):
     def zoom(self) -> float:
         return self._zoom
     @zoom.setter
-    def zoom(self, zoom:float) -> None:
+    def zoom(self, zoom: float) -> None:
         #TODO: (1,3) Refactor: maybe this should be another method;
         #    like this, there are several places in this file where
         #    self._zoom is set and a message must be sent.
@@ -271,14 +272,14 @@ class BaseCanvas(object):
         self._top = top
     #endregion
 
-    def scroll_hori(self, amount, reverse_direction = False):
+    def scroll_hori(self, amount: int, reverse_direction = False):
         """ Scrolls the canvas. Just calls _set_left.
         """
         if reverse_direction:
             amount = -amount
         self.left += amount
     
-    def scroll_vert(self, amount, reverse_direction = False):
+    def scroll_vert(self, amount: int, reverse_direction = False):
         """ Scrolls the canvas. Calls _set_top.
         However if the image is wider than the viewport and the canvas is already scrolled
         to the top (or bottom, depending on direction), it will instead scroll left/right.
@@ -322,21 +323,7 @@ class BaseCanvas(object):
             #center
             self.top = scr_h // 2 - img_h // 2
         self.sticky = 0
-    
-    @property
-    def y_centered(self):
-        scr_h = self.view_height
-        img_h = self.height
-        return (self.top == scr_h // 2 - img_h // 2)
-    @property
-    def x_centered(self):
-        scr_w = self.view_width
-        img_w = self.width
-        return (self.left == scr_w // 2 - img_w // 2)
-    @property
-    def centered(self):
-        return self.x_centered and self.y_centered
-    
+
     def copy_to_clipboard(self):
         if self.img is not None:
             self.img.copy_to_clipboard()

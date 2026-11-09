@@ -35,7 +35,23 @@ class WallpaperCanvas(BaseCanvas):
         else:
             super().paint(dc)
 
-    def set_zoom_by_fit_type(self, fit_type: FitSettings.WallpaperFitType, scr_w = -1):
+    @property
+    def y_centered(self):
+        scr_h = self.view_height
+        img_h = self.height
+        return (self.top == scr_h // 2 - img_h // 2)
+
+    @property
+    def x_centered(self):
+        scr_w = self.view_width
+        img_w = self.width
+        return (self.left == scr_w // 2 - img_w // 2)
+
+    @property
+    def centered(self):
+        return self.x_centered and self.y_centered
+
+    def set_zoom_by_fit_type(self, fit_type: FitSettings.WallpaperFitType|int, scr_w = -1):
         #The wallpaper fit uses a different set of options.
         if not self.img:
             return
@@ -70,4 +86,3 @@ class WallpaperCanvas(BaseCanvas):
         else:
             self.center()
         Publisher.sendMessage(f'{self.name}.fit.changed', FitType=fit_type, IsSpread=False)
-    #

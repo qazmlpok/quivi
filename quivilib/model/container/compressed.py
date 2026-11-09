@@ -51,6 +51,10 @@ class ZipFile(CompressedFileFormat):
     @staticmethod
     def is_valid_extension(ext: str) -> bool:
         return ext.lower() in ['.zip', '.cbz']
+
+    def is_solid(self):
+        #zip does not support solid archives
+        return False
     
     def list_files(self) -> list[tuple[Path, datetime]]:
         return [(path, datetime(*info.date_time))
@@ -63,6 +67,8 @@ class ZipFile(CompressedFileFormat):
             encpath = self.mapping[path]
         else:
             encpath = str(path)
+        # This could return a filehandle instead of slurping bytes. This appears to have no benefit in the general case.
+        #return self.file.open(encpath)
         return io.BytesIO(self.file.read(encpath))
 
     def close(self) -> None:
@@ -85,6 +91,9 @@ class RarFileExternal(CompressedFileFormat):
         self.file = PyRarFile(path, 'r')
         #Force an exception if the file is invalid
         self.list_files()
+
+    def is_solid(self):
+        return self.file.is_solid()
     
     def list_files(self):
         return [(Path(f.filename), datetime(*f.date_time))
@@ -92,6 +101,8 @@ class RarFileExternal(CompressedFileFormat):
                 if f.filename[-1] not in '\\/']
         
     def open_file(self, path: Path) -> IO[bytes]:
+        #This could return a filehandle instead of slurping bytes (do not do this on a solid archive). This appears to have no benefit in the general case.
+        #return self.file.open(self.conv_path(path))
         return io.BytesIO(self.file.read(self.conv_path(path)))
 
     def close(self) -> None:
